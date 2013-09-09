@@ -43,12 +43,11 @@ class Plan(webapp2.RequestHandler):
 class Optimize(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
-        target = self.request.get("target")
     
         dlog = RACompiler()
         dlog.fromDatalog(query)
     
-        targetalgebra = globals()[target] # assume the argument is in local scope
+        targetalgebra = MyriaAlgebra
         dlog.optimize(target=targetalgebra, eliminate_common_subexpressions=False)
     
         optimized = format_rule(dlog.physicalplan)
