@@ -29,14 +29,6 @@
 <div class="label">Self-join</div>
 <div class="example">A(x,z) :- R(x,y),R(y,z)</div>
 <div class="label">Partition Results</div>
-<!--<div class="example red">A@h(x,y)(x,z) :- R(x,y,z)</div>
-<div class="label">Broadcast Results</div>
-<div class="example red">A@*(x) :- R(x,y,z)</div>
-<div class="label">Explicit Timestep</div>
-<div class="example red">A(x)#0 :- R(x,y,z)</div>
-<div class="label">Relative Timestep</div>
-<div class="example red">A(x)#t-1 :- R(x,y,z)</div>
--->
 <div class="label">Triangle</div>
 <div class="example">A(x,z) :- R(x,y),S(y,z),T(z,x)</div>
 <div class="label">Cross Product</div>
@@ -49,10 +41,6 @@ B(w) :- A(3,w)</div>
 <div class="label">Two Independent Rules</div>
 <div class="example">A(x,z) :- R(x,y,z);
 B(w) :- C(3,w)</div>
-<!--<div class="label">Transitive Closure</div>
-<div class="example">A(x,z) :- R(x,z);
-A(x,z) :- A(x,y), R(y,z)
-</div>-->
 </div>
           </div>
         </div>
