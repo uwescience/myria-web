@@ -1,5 +1,6 @@
 from raco import RACompiler
 from raco.language import MyriaAlgebra
+from raco.myrialang import compile_to_json
 from google.appengine.ext.webapp import template
 import os.path
 
@@ -57,17 +58,18 @@ class Optimize(webapp2.RequestHandler):
 class Compile(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
-        target = self.request.get("target")
     
         dlog = RACompiler()
         dlog.fromDatalog(query)
+        # Cache logical plan
+        cached_logicalplan = str(dlog.logicalplan)
     
-        targetalgebra = globals()[target] # assume the argument is in local scope
-        dlog.optimize(target=targetalgebra, eliminate_common_subexpressions=False)
+        # Generate physical plan
+        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
     
-        compiled = dlog.compile()
+        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan)
     
-        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.headers['Content-Type'] = 'application/json'
         self.response.write(compiled)
 
 
