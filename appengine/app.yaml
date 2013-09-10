@@ -1,4 +1,4 @@
-application: datalogcompiler
+application: myria-web
 version: 1
 runtime: python27
 api_version: 1
@@ -10,4 +10,4 @@ handlers:
 - url: /js
   static_dir: js
 - url: /.*
-  script: datalogcompiler.app
+  script: myria_web_main.app
