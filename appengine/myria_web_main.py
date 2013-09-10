@@ -1,6 +1,7 @@
 from raco import RACompiler
 from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
+from raco.viz import plan_to_dot
 from google.appengine.ext.webapp import template
 import os.path
 
@@ -74,12 +75,30 @@ class Compile(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(compiled)
 
+class Dot(webapp2.RequestHandler):
+    def get(self):
+        query = self.request.get("query")
+        svg_type = self.request.get("type")
+
+        dlog = RACompiler()
+        dlog.fromDatalog(query)
+
+        if svg_type is None or len(svg_type) == 0 or svg_type.lower() == "ra":
+            plan = dlog.logicalplan
+        elif svg_type.lower() == "myria":
+            plan = dlog.physicalplan
+        else:
+            self.abort(400, detail="argument type expected 'ra' or 'myria'")
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write(plan_to_dot(plan))
 
 app = webapp2.WSGIApplication([
    ('/', MainPage),
    ('/plan',Plan),
    ('/optimize',Optimize),
-   ('/compile',Compile)
+   ('/compile',Compile),
+   ('/dot',Dot)
   ],
   debug=True
 )
