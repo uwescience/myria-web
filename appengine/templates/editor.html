@@ -6,70 +6,71 @@
 <script type="text/javascript" src="js/jquery-1.8.2.min.js"></script>
 <script type="text/javascript" src="js/editor.js"></script>
 <script type="text/javascript" src="js/viz.js">
-// This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
+	// This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
 </script>
 
 </head>
 <body>
-  <div class="content">
-    <div class="top_block header">
-      <div class="content" class="title">
-<h2>Datalog Compiler</h2> 
-      </div>
-    </div>
-    <div class="background region">
-      <div class="background menu">
-      </div>
-    </div>
-        <div class="left_block menu">
-          <div class="content">
-<div class="examples">
-<div><em>Examples (click)</em></div>
-<div class="label">Select</div>
-<div class="example">A(x) :- R(x,3)</div>
-<div class="label">Select2</div>
-<div class="example">A(x) :- R(x,y),S(y,z,4),z<3</div>
-<div class="label">Self-join</div>
-<div class="example">A(x,z) :- R(x,y),R(y,z)</div>
-<div class="label">Partition Results</div>
-<div class="label">Triangle</div>
-<div class="example">A(x,z) :- R(x,y),S(y,z),T(z,x)</div>
-<div class="label">Cross Product</div>
-<div class="example">A(x,z) :- R(x,y),S(y),T(z)</div>
-<div class="label">Two cycles</div>
-<div class="example">A(x,z) :- R(x,y),S(y,a,z),T(z,b,x),W(a,b)</div>
-<div class="label">Two Chained Rules</div>
-<div class="example">A(x,z) :- R(x,y,z);
-B(w) :- A(3,w)</div>
-<div class="label">Two Independent Rules</div>
-<div class="example">A(x,z) :- R(x,y,z);
-B(w) :- C(3,w)</div>
-</div>
-          </div>
-        </div>
-    <div class="center_block region">
-      <div class="content">
-<div class="instructions">1) Write your datalog here, perhaps starting from one of the examples at the left</div>
-<div class="instructions">(Note: Recursion and aggregation are still being tested)</div>
-<textarea cols="83" rows="10" id="query">
+	<div class="content">
+		<div class="top_block header">
+			<div class="content" class="title">
+				<h2>Datalog Compiler</h2>
+			</div>
+		</div>
+		<div class="background region">
+			<div class="background menu"></div>
+		</div>
+		<div class="left_block menu">
+			<div class="content">
+				<div class="examples">
+					<div>
+						<em>Examples (click)</em>
+					</div>
+					<div class="label">Select</div>
+					<div class="example">A(x) :- R(x,3)</div>
+					<div class="label">Select2</div>
+					<div class="example">A(x) :- R(x,y),S(y,z,4),z<3</div>
+					<div class="label">Self-join</div>
+					<div class="example">A(x,z) :- R(x,y),R(y,z)</div>
+					<div class="label">Partition Results</div>
+					<div class="label">Triangle</div>
+					<div class="example">A(x,z) :- R(x,y),S(y,z),T(z,x)</div>
+					<div class="label">Cross Product</div>
+					<div class="example">A(x,z) :- R(x,y),S(y),T(z)</div>
+					<div class="label">Two cycles</div>
+					<div class="example">A(x,z) :- R(x,y),S(y,a,z),T(z,b,x),W(a,b)</div>
+					<div class="label">Two Chained Rules</div>
+					<div class="example">A(x,z) :- R(x,y,z); B(w) :- A(3,w)</div>
+					<div class="label">Two Independent Rules</div>
+					<div class="example">A(x,z) :- R(x,y,z); B(w) :- C(3,w)</div>
+				</div>
+			</div>
+		</div>
+		<div class="center_block region">
+			<div class="content">
+				<div class="instructions">1) Write your datalog here, perhaps
+					starting from one of the examples at the left</div>
+				<div class="instructions">(Note: Recursion and aggregation are
+					still being tested)</div>
+				<textarea cols="83" rows="10" id="query">
 {{ query }}
 </textarea>
-<div/>
-<div class="instructions">2) Compile datalog to RA (automatic if you select an example)</div>
-<input class="planner" type="submit" value="to RA"> 
-<div class="display" id="plan">
-{{ plan }}
-</div>
-<div class="instructions">3) Select a target language to generate a physical plan</div>
-<input class="optimizer" type="submit" value="MyriaAlgebra">
-<div class="display" id="optimized">
-</div>
-<div class="instructions">4) Compile the physical plan to the target language or system</div>
-<input class="compiler" type="submit" value="Compile"> 
-<div id="#response"/>
-<div id="sig"/>
-      </div>
-    </div>
-  </div>
+				<div />
+				<div class="instructions">2) Compile datalog to RA (automatic
+					if you select an example)</div>
+				<input class="planner" type="submit" value="to RA">
+				<div class="display" id="plan">{{ plan }}</div>
+				<div class="instructions">3) Select a target language to
+					generate a physical plan</div>
+				<input class="optimizer" type="submit" value="MyriaAlgebra">
+				<div class="display" id="optimized"></div>
+				<div class="instructions">4) Compile the physical plan to the
+					target language or system</div>
+				<input class="compiler" type="submit" value="Compile">
+				<div id="#response" />
+				<div id="sig" />
+			</div>
+		</div>
+	</div>
 </body>
 </html>
