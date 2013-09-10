@@ -46,7 +46,10 @@ html, body {
 
 .right_block {
   display: block;
-  float: right; 
+  float: right;
+  border-style:solid;
+  border-width:1px;
+  padding:2px;
 }
 
 .center_block {
@@ -98,4 +101,7 @@ html, body {
   padding-bottom: 0px;
 }
 
-
+svg {
+  width: 220px;
+  display: block;
+}
