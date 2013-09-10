@@ -24,6 +24,8 @@ class MainPage(webapp2.RequestHandler):
         dlog = RACompiler()
         dlog.fromDatalog(query)
         plan = format_rule(dlog.logicalplan)
+        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        myria_plan = format_rule(dlog.physicalplan)
     
         self.response.headers['Content-Type'] = 'text/html'
     
