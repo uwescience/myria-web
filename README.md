@@ -24,3 +24,11 @@ You must have the [Google AppEngine SDK](https://developers.google.com/appengine
   ```
 
   And then point your browser at `localhost:8080` to view the application.
+
+# Updating the code
+
+To update the submodule to the latest from master, run this code:
+
+```sh
+git submodule update --recursive --remote
+``
