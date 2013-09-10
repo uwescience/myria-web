@@ -47,8 +47,7 @@ class Optimize(webapp2.RequestHandler):
         dlog = RACompiler()
         dlog.fromDatalog(query)
     
-        targetalgebra = MyriaAlgebra
-        dlog.optimize(target=targetalgebra, eliminate_common_subexpressions=False)
+        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
     
         optimized = format_rule(dlog.physicalplan)
     
