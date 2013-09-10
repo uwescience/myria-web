@@ -1,6 +1,3 @@
-// the last language that was selected
-var target_language = "CCAlgebra";
-
 function handleerrors(request, display) {
   request.success(function(result) {
     var formatted = result.split("\n").join("<br>");
@@ -29,14 +26,13 @@ function getplan() {
 function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = $("#query").val();
-  target_language = $(this).val(); //global variable
-  var request = $.get("optimize", {query:query, target:target_language});
+  var request = $.get("optimize", {query:query, target:"MyriaAlgebra"});
   handleerrors(request, "#optimized");
 }
 
 function compileplan() {
   var query = $("#query").val();
-  var url = "compile?" + $.param({query:query, target:target_language});
+  var url = "compile?" + $.param({query:query, target:"MyriaAlgebra"});
   document.location.href=url;
 }
 
@@ -44,14 +40,13 @@ $(document).ready(function(){
   $("#query").bind('keyup change', function() {
   $(".display").empty();
 });
-  $(".planner").click(getplan);
-  $(".optimizer").click(optimizeplan);
+  $(".planner").click(optimizeplan);
   $(".compiler").click(compileplan);
   $(".example").click(function(){
 $(".display").empty();
 var example_query = $(this).text();
 $("#query").val(example_query);
-getplan();
+optimizeplan();
 });
   $(".display").css("border-style", "solid");
   $(".error").css("font-color", "red");
