@@ -31,4 +31,4 @@ To update the submodule to the latest from master, run this code:
 
 ```sh
 git submodule update --recursive --remote
-``
+```
