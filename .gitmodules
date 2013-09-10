@@ -1,3 +1,4 @@
 [submodule "datalogcompiler"]
 	path = datalogcompiler
 	url = git@github.com:uwescience/datalogcompiler.git
+	branch = master
