@@ -17,3 +17,7 @@ handlers:
 # This must be last
 - url: /.*
   script: myria_web_main.app
+
+libraries:
+- name: webapp2
+  version: latest
