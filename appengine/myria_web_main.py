@@ -4,7 +4,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import plan_to_dot
 from google.appengine.ext.webapp import template
 import os.path
-
+import traceback
 import webapp2
 
 defaultquery = """A(x,z) :- R(x,y),S(y,z),T(z,x)"""
@@ -18,8 +18,17 @@ def programplan(query,target):
 def format_rule(expressions):
     return "\n".join(["%s = %s" % e for e in expressions])
 
-
-class MainPage(webapp2.RequestHandler):
+class RequestHandlerBase(webapp2.RequestHandler):
+    def handle_exception(self, exception, debug_mode):
+        if isinstance(exception, webapp2.HTTPException):
+            self.response.set_status(exception.code)
+            self.response.out.write(str(exception))
+        else:
+            self.response.set_status(500)
+            self.response.out.write(traceback.format_exc(exception))
+        self.response.headers['Content-Type'] = 'text/plain'
+        
+class MainPage(RequestHandlerBase):
     def get(self,query=defaultquery):
 
         dlog = RACompiler()
@@ -34,7 +43,7 @@ class MainPage(webapp2.RequestHandler):
     
         self.response.out.write(template.render(path, locals()))
 
-class Plan(webapp2.RequestHandler):
+class Plan(RequestHandlerBase):
     def get(self):
         query = self.request.get("query")
         dlog = RACompiler()
@@ -44,7 +53,7 @@ class Plan(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(plan)
 
-class Optimize(webapp2.RequestHandler):
+class Optimize(RequestHandlerBase):
     def get(self):
         query = self.request.get("query")
     
@@ -58,7 +67,7 @@ class Optimize(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(optimized)
 
-class Compile(webapp2.RequestHandler):
+class Compile(RequestHandlerBase):
     def get(self):
         query = self.request.get("query")
     
@@ -75,7 +84,7 @@ class Compile(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(compiled)
 
-class Dot(webapp2.RequestHandler):
+class Dot(RequestHandlerBase):
     def get(self):
         query = self.request.get("query")
         svg_type = self.request.get("type")
