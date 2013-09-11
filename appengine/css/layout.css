@@ -111,8 +111,18 @@ html, body {
 }
 
 .label {
-	font-size: small;
+	font-size: normal;
 	font-style: italic;
+}
+
+.example {
+	font-size: 11px;
+	font-family: "Monaco", monospace;
+}
+
+#query {
+	font-size: 11px;
+	font-family: "Monaco", monospace;
 }
 
 svg {
