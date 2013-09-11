@@ -7,7 +7,7 @@ import os.path
 import traceback
 import webapp2
 
-defaultquery = """A(x,z) :- R(x,y),S(y,z),T(z,x)"""
+defaultquery = """A(x) :- R(x,3)"""
 
 def programplan(query,target):
     dlog = RACompiler()

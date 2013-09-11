@@ -101,7 +101,22 @@ html, body {
   padding-bottom: 0px;
 }
 
+.display {
+	border-style: solid;
+    width: 600px;
+}
+
+.error {
+	font-color: red;
+}
+
+.label {
+	font-size: small;
+	font-style: italic;
+}
+
 svg {
-  width: 220px;
+  width: 400px;
+  height: 400px;
   display: block;
 }
