@@ -5,9 +5,15 @@ api_version: 1
 threadsafe: true
 
 handlers:
+- url: /favicon\.ico
+  expiration: "7d"
+  static_files: favicon.ico
+  upload: favicon\.ico
 - url: /css
   static_dir: css 
 - url: /js
   static_dir: js
+
+# This must be last
 - url: /.*
   script: myria_web_main.app
