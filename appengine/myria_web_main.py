@@ -86,6 +86,7 @@ class Dot(webapp2.RequestHandler):
         if svg_type is None or len(svg_type) == 0 or svg_type.lower() == "ra":
             plan = dlog.logicalplan
         elif svg_type.lower() == "myria":
+            dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
             plan = dlog.physicalplan
         else:
             self.abort(400, detail="argument type expected 'ra' or 'myria'")

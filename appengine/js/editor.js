@@ -23,6 +23,14 @@ function getplan() {
 		query : query
 	});
 	handleerrors(request, "#plan");
+	var request = $.get("dot", {
+		query : query,
+		type : 'ra'
+	});
+	request.success(function(dot) {
+		var result = Viz(dot, "svg");
+		$('#relational_svg').html(result);
+	})
 };
 
 function optimizeplan() {
@@ -33,6 +41,14 @@ function optimizeplan() {
 		target : "MyriaAlgebra"
 	});
 	handleerrors(request, "#optimized");
+	var request = $.get("dot", {
+		query : query,
+		type : 'myria'
+	});
+	request.success(function(dot) {
+		var result = Viz(dot, "svg");
+		$('#myria_svg').html(result);
+	})
 }
 
 function compileplan() {
