@@ -60,14 +60,17 @@ function compileplan() {
 	document.location.href = url;
 }
 
+function resetResults() {
+	$(".display").empty();
+	$("svg").empty();	
+}
+
 $(document).ready(function() {
-	$("#query").bind('keyup change', function() {
-		$(".display").empty();
-	});
+	$("#query").bind('keyup change', resetResults);
 	$(".planner").click(optimizeplan);
 	$(".compiler").click(compileplan);
 	$(".example").click(function() {
-		$(".display").empty();
+		resetResults();
 		var example_query = $(this).text();
 		$("#query").val(example_query);
 		optimizeplan();
