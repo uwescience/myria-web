@@ -78,4 +78,5 @@ $(document).ready(function() {
 	$(".label").css("font-style", "italic");
 	$(".display").css("width", 600);
 	$(".display").css("height", 100);
+	optimizeplan();
 });
