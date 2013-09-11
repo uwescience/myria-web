@@ -119,4 +119,6 @@ svg {
   width: 400px;
   height: 400px;
   display: block;
+  border-style: solid;
+  border-width: 1px;
 }
