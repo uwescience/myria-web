@@ -19,7 +19,7 @@ function handleerrors(request, display) {
 }
 
 function getplan() {
-	var query = $("#query").val();
+	var query = editor.getValue();
 	var request = $.get("plan", {
 		query : query
 	});
@@ -36,7 +36,7 @@ function getplan() {
 
 function optimizeplan() {
 	getplan(); // make sure the plan matches the query
-	var query = $("#query").val();
+	var query = editor.getValue();
 	var request = $.get("optimize", {
 		query : query,
 	});
@@ -52,7 +52,7 @@ function optimizeplan() {
 }
 
 function compileplan() {
-	var query = $("#query").val();
+	var query = editor.getValue();
 	var url = "compile?" + $.param({
 		query : query,
 	});
@@ -93,7 +93,7 @@ function checkQueryStatus(query_id) {
 
 function executeplan() {
 	optimizeplan(); // make sure the plan matches the query
-	var query = $("#query").val();
+	var query = editor.getValue();
 	var request = $.ajax("execute", {
 		type : 'POST',
 		data : {
@@ -116,14 +116,16 @@ function resetResults() {
 }
 
 $(document).ready(function() {
-	$("#query").bind('keyup change', resetResults);
+	editor.on("change", resetResults);
+	editor.on("keydown", resetResults);
+	editor.on("keypress", resetResults);
 	$(".planner").click(optimizeplan);
 	$(".compiler").click(compileplan);
 	$(".executor").click(executeplan);
 	$(".example").click(function() {
 		resetResults();
 		var example_query = $(this).text();
-		$("#query").val(example_query);
+		editor.setValue(example_query);
 		optimizeplan();
 	});
 	optimizeplan();

@@ -3,6 +3,8 @@
 <title>Myria Web Frontend</title>
 
 <link href="css/layout.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="js/codemirror.js"></script>
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
 <script type="text/javascript" src="js/jquery-1.8.2.min.js"></script>
 <script type="text/javascript" src="js/editor.js"></script>
 <script type="text/javascript" src="js/viz.js">
@@ -37,12 +39,12 @@
 					<div class="label">Cross Product</div>
 					<div class="example">A(x,z) :- S(x),T(z)</div>
 					<div class="label">Two cycles</div>
-					<div class="example">A(x,z) :- R(x,y),S(y,a,z), T(z,b,x),W(a,b)</div>
+					<div class="example">A(x,z) :- R(x,y),S(y,a,z),T(z,b,x),W(a,b)</div>
 					<div class="label">Two Chained Rules</div>
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- A(3,w)</div>
 					<div class="label">Two Independent Rules</div>
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- C(3,w)</div>
-					<br><br>
+					<br> <br>
 					<div class="label">Project TwitterK</div>
 					<div class="example">JustX(x) :- TwitterK(x,y)</div>
 					<div class="label">Self Join TwitterK</div>
@@ -64,7 +66,7 @@
 					starting from one of the examples at the left</div>
 				<div class="instructions">(Note: Recursion and aggregation are
 					still being tested)</div>
-				<textarea cols="83" rows="10" id="query">{{ query }}</textarea>
+				<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
 				<div></div>
 				<input class="planner" type="submit" value="Go">
 
@@ -86,4 +88,10 @@
 		</div>
 	</div>
 </body>
+<script>
+	var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
+		mode : 'application/js',
+		lineNumbers : true
+	});
+</script>
 </html>
