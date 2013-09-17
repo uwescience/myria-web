@@ -39,7 +39,6 @@ function optimizeplan() {
 	var query = $("#query").val();
 	var request = $.get("optimize", {
 		query : query,
-		target : "MyriaAlgebra"
 	});
 	handleerrors(request, "#optimized");
 	var request = $.get("dot", {
@@ -56,7 +55,6 @@ function compileplan() {
 	var query = $("#query").val();
 	var url = "compile?" + $.param({
 		query : query,
-		target : "MyriaAlgebra"
 	});
 	document.location.href = url;
 }
@@ -100,7 +98,6 @@ function executeplan() {
 		type : 'POST',
 		data : {
 			query : query,
-			target : "MyriaAlgebra"
 		},
 		statusCode : {
 			200 : displayQueryStatus,
