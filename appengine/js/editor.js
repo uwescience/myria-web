@@ -103,8 +103,10 @@ function executeplan() {
 			200 : displayQueryStatus,
 			201 : displayQueryStatus,
 			202 : displayQueryStatus,
-			400 : displayQueryStatus
 		}
+	});
+	request.error(function(jqXHR, textStatus, errorThrown) {
+		$('#executed').text(jqXHR.responseText);
 	});
 }
 
