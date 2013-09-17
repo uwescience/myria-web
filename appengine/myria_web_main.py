@@ -3,11 +3,14 @@ from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import plan_to_dot
 from google.appengine.ext.webapp import template
+import myria
 import os.path
 import webapp2
 
 defaultquery = """A(x) :- R(x,3)"""
-
+hostname = "localhost"
+port = 8753
+        
 def programplan(query,target):
     dlog = RACompiler()
 
@@ -29,6 +32,12 @@ class MainPage(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/html'
     
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            workers = connection.workers()
+            connection_string = "(%s:%d [%d workers])" % (hostname, port, len(workers))
+        except myria.MyriaError:
+            connection_string = "(unable to connect to %s:%d)" % (hostname, port)
     
         self.response.out.write(template.render(path, locals()))
 
