@@ -42,6 +42,13 @@
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- A(3,w)</div>
 					<div class="label">Two Independent Rules</div>
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- C(3,w)</div>
+					<br><br>
+					<div class="label">Project TwitterK</div>
+					<div class="example">JustX(x) :- TwitterK(x,y)</div>
+					<div class="label">Self Join TwitterK</div>
+					<div class="example">SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)</div>
+					<div class="label">Triangles TwitterK</div>
+					<div class="example">Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)</div>
 				</div>
 			</div>
 		</div>
