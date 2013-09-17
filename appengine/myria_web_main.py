@@ -84,12 +84,14 @@ class Compile(webapp2.RequestHandler):
         self.response.write(compiled)
 
 class Execute(webapp2.RequestHandler):
-    def get(self):
-        self.response.headers['Content-Type'] = 'application/json'
+    def post(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         except myria.MyriaError:
+            self.response.headers['Content-Type'] = 'text/plain'
             self.response.write("Unable to connect to REST server to issue query")
+            self.response.status = 503
+            return
 
         query = self.request.get("query")
 
@@ -104,12 +106,40 @@ class Execute(webapp2.RequestHandler):
 
         # Issue the query
         try:
-            ret = connection.submit_query(compiled)
+            query_status = connection.submit_query(compiled)
+            query_url = 'http://%s:%d/execute?query_id=%d' % (hostname, port, query_status['query_id'])
+            ret = {'query_status' : query_status, 'url' : query_url}
+            self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
+            self.response.headers['Content-Location'] = query_url
+            self.response.write(json.dumps(ret))
+            return
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write(e)
+            return
+
+    def get(self):
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        except myria.MyriaError:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write("Unable to connect to REST server to issue query")
+            return
+
+        query_id = self.request.get("query_id")
+
+        try:
+            query_status = connection.get_query_status(query_id)
+            self.response.headers['Content-Type'] = 'application/json'
+            ret = {'query_status' : query_status, 'url' : self.request.url}
             self.response.write(json.dumps(ret))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
+
 
 class Dot(webapp2.RequestHandler):
     def get(self):

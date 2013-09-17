@@ -61,28 +61,51 @@ function compileplan() {
 	document.location.href = url;
 }
 
-function displayQueryStatus(queryStatus) {
+function displayQueryStatus(data) {
+	var queryStatus = data['query_status'];
 	var start_time = queryStatus['start_time'];
-	var end_time = queryStatus['end_time'];
+	var end_time = queryStatus['finish_time'];
 	var elapsed = queryStatus['elapsed_nanos'] / 1e9;
 	var status = queryStatus['status'];
 	var query_id = queryStatus['query_id'];
 	$("#executed").text(
 			"#" + query_id + " status:" + status + " start:" + start_time
 					+ " end:" + end_time + " elapsed: " + elapsed);
+	if (!end_time) {
+		setTimeout(function() {
+			checkQueryStatus(query_id);
+		}, 1000);
+	}
+}
+
+function checkQueryStatus(query_id) {
+	$.ajax("execute", {
+		type : 'GET',
+		data : {
+			query_id : query_id
+		},
+		statusCode : {
+			200 : displayQueryStatus,
+			201 : displayQueryStatus,
+			202 : displayQueryStatus,
+			400 : displayQueryStatus
+		}
+	});
 }
 
 function executeplan() {
 	optimizeplan(); // make sure the plan matches the query
 	var query = $("#query").val();
 	var request = $.ajax("execute", {
+		type : 'POST',
 		data : {
 			query : query,
 			target : "MyriaAlgebra"
 		},
 		statusCode : {
-			202 : displayQueryStatus,
 			200 : displayQueryStatus,
+			201 : displayQueryStatus,
+			202 : displayQueryStatus,
 			400 : displayQueryStatus
 		}
 	});
