@@ -6,11 +6,12 @@ function handleerrors(request, display) {
 	});
 
 	request.error(function(jqXHR, textStatus, errorThrown) {
-		if (textStatus == 'timeout')
+		if (textStatus == 'timeout') {
 			$(display).text("Server is not responding");
+			return;
+		}
 
-		if (textStatus == 'error')
-			var msg = '<div class="error"><a href="';
+		var msg = '<div class="error"><a href="';
 		msg = msg + this.url;
 		msg = msg + '">Error</a></div>';
 		$(display).html(msg);
@@ -60,15 +61,43 @@ function compileplan() {
 	document.location.href = url;
 }
 
+function displayQueryStatus(queryStatus) {
+	var start_time = queryStatus['start_time'];
+	var end_time = queryStatus['end_time'];
+	var elapsed = queryStatus['elapsed_nanos'] / 1e9;
+	var status = queryStatus['status'];
+	var query_id = queryStatus['query_id'];
+	$("#executed").text(
+			"#" + query_id + " status:" + status + " start:" + start_time
+					+ " end:" + end_time + " elapsed: " + elapsed);
+}
+
+function executeplan() {
+	optimizeplan(); // make sure the plan matches the query
+	var query = $("#query").val();
+	var request = $.ajax("execute", {
+		data : {
+			query : query,
+			target : "MyriaAlgebra"
+		},
+		statusCode : {
+			202 : displayQueryStatus,
+			200 : displayQueryStatus,
+			400 : displayQueryStatus
+		}
+	});
+}
+
 function resetResults() {
 	$(".display").empty();
-	$("svg").empty();	
+	$("svg").empty();
 }
 
 $(document).ready(function() {
 	$("#query").bind('keyup change', resetResults);
 	$(".planner").click(optimizeplan);
 	$(".compiler").click(compileplan);
+	$(".executor").click(executeplan);
 	$(".example").click(function() {
 		resetResults();
 		var example_query = $(this).text();
