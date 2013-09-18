@@ -81,7 +81,7 @@ class Compile(webapp2.RequestHandler):
         compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan)
 
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(compiled)
+        self.response.write(json.dumps(compiled))
 
 class Execute(webapp2.RequestHandler):
     def post(self):
