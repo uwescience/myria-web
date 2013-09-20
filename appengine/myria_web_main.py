@@ -9,8 +9,8 @@ import os.path
 import webapp2
 
 defaultquery = """A(x) :- R(x,3)"""
-hostname = "localhost"
-port = 8753
+hostname = "vega.cs.washington.edu"
+port = 1776
 
 def programplan(query, target):
     dlog = RACompiler()
