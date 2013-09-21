@@ -113,6 +113,7 @@ html, body {
 .label {
 	font-size: normal;
 	font-style: italic;
+	color: #000;
 }
 
 .example {
