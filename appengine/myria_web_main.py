@@ -30,9 +30,10 @@ class RedirectToEditor(webapp2.RequestHandler):
             self.redirect("/editor", True)
 
 class MyriaPage(webapp2.RequestHandler):
-    def get_connection_string(self):
+    def get_connection_string(self, connection=None):
         try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            if connection is None:
+                connection = myria.MyriaConnection(hostname=hostname, port=port)
             workers = connection.workers()
             alive = connection.workers_alive()
             connection_string = "%s:%d [%d/%d]" % (hostname, port, len(alive), len(workers))
@@ -54,10 +55,17 @@ class Queries(MyriaPage):
 
 class Datasets(MyriaPage):
     def get(self):
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            datasets = connection.datasets()
+        except myria.MyriaError:
+            connection = None
+            datasets = []
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        connection_string = self.get_connection_string()
+        connection_string = self.get_connection_string(connection)
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, locals()))

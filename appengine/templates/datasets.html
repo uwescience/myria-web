@@ -40,5 +40,9 @@
 		<!-- /.navbar-collapse -->
 	</nav>
 
-
+	<ul>
+	{% for d in datasets %}
+	 <li>{{d.relation_key.relation_name}}: <a href="{{d.uri}}/data?format=json">See JSON</a></li>
+	{% endfor %}
+	</ul>
 </html>
