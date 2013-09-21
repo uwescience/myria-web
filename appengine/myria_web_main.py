@@ -6,6 +6,7 @@ from google.appengine.ext.webapp import template
 import json
 import myria
 import os.path
+import urllib
 import webapp2
 
 defaultquery = """A(x) :- R(x,3)"""
@@ -21,25 +22,61 @@ def programplan(query, target):
 def format_rule(expressions):
     return "\n".join(["%s = %s" % e for e in expressions])
 
-class MainPage(webapp2.RequestHandler):
-    def get(self, query=defaultquery):
+class RedirectToEditor(webapp2.RequestHandler):
+    def get(self, query=None):
+        if query is not None:
+            self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
+        else:
+            self.redirect("/editor", True)
 
+class MyriaPage(webapp2.RequestHandler):
+    def get_connection_string(self):
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            workers = connection.workers()
+            alive = connection.workers_alive()
+            connection_string = "(%s:%d [%d/%d])" % (hostname, port, len(alive), len(workers))
+        except myria.MyriaError:
+            connection_string = "(unable to connect to %s:%d)" % (hostname, port)
+        return connection_string
+
+
+class Queries(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        connection_string = self.get_connection_string()
+        # .. load and render the template
+        path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
+        self.response.out.write(template.render(path, locals()))
+
+
+class Datasets(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        connection_string = self.get_connection_string()
+        # .. load and render the template
+        path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
+        self.response.out.write(template.render(path, locals()))
+
+
+class Editor(MyriaPage):
+    def get(self, query=defaultquery):
         dlog = RACompiler()
         dlog.fromDatalog(query)
         plan = format_rule(dlog.logicalplan)
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
         myria_plan = format_rule(dlog.physicalplan)
 
+        # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-
+        # .. connection string
+        connection_string = self.get_connection_string()
+        # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
-        try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port)
-            workers = connection.workers()
-            connection_string = "(%s:%d [%d workers])" % (hostname, port, len(workers))
-        except myria.MyriaError:
-            connection_string = "(unable to connect to %s:%d)" % (hostname, port)
-
         self.response.out.write(template.render(path, locals()))
 
 class Plan(webapp2.RequestHandler):
@@ -161,7 +198,10 @@ class Dot(webapp2.RequestHandler):
         self.response.write(plan_to_dot(plan))
 
 app = webapp2.WSGIApplication([
-   ('/', MainPage),
+   ('/', RedirectToEditor),
+   ('/editor', Editor),
+   ('/queries', Queries),
+   ('/datasets', Datasets),
    ('/plan', Plan),
    ('/optimize', Optimize),
    ('/compile', Compile),
