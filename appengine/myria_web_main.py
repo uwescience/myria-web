@@ -6,6 +6,7 @@ from google.appengine.ext.webapp import template
 import json
 import myria
 import os.path
+import sys
 import urllib
 import webapp2
 
@@ -21,6 +22,22 @@ def programplan(query, target):
 
 def format_rule(expressions):
     return "\n".join(["%s = %s" % e for e in expressions])
+
+def get_datasets(connection=None):
+    if connection is None:
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        except myria.MyriaError:
+            return []
+    try:
+        return connection.datasets()
+    except myria.MyriaError:
+        return []
+
+def get_schema_map(datasets=None, connection=None):
+    if datasets is None:
+        datasets = get_datasets(connection)
+    return { d['relation_key']['relation_name'] : zip(d['schema']['column_names'], d['schema']['column_types']) for d in datasets}
 
 class RedirectToEditor(webapp2.RequestHandler):
     def get(self, query=None):
@@ -123,7 +140,10 @@ class Compile(webapp2.RequestHandler):
         # Generate physical plan
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
 
-        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan)
+        # Get the schema map for compiling the query
+        schema_map = get_schema_map()
+        # .. and compile it
+        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(compiled))
@@ -147,7 +167,11 @@ class Execute(webapp2.RequestHandler):
 
         # Generate physical plan
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
-        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan)
+
+        # Get the schema map for compiling the query
+        schema_map = get_schema_map(connection=connection)
+        # .. and compile
+        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
 
         # Issue the query
         try:
