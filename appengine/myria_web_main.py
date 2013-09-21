@@ -35,9 +35,9 @@ class MyriaPage(webapp2.RequestHandler):
             connection = myria.MyriaConnection(hostname=hostname, port=port)
             workers = connection.workers()
             alive = connection.workers_alive()
-            connection_string = "(%s:%d [%d/%d])" % (hostname, port, len(alive), len(workers))
+            connection_string = "%s:%d [%d/%d]" % (hostname, port, len(alive), len(workers))
         except myria.MyriaError:
-            connection_string = "(unable to connect to %s:%d)" % (hostname, port)
+            connection_string = "unable to connect to %s:%d" % (hostname, port)
         return connection_string
 
 
