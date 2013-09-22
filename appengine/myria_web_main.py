@@ -6,7 +6,6 @@ from google.appengine.ext.webapp import template
 import json
 import myria
 import os.path
-import sys
 import urllib
 import webapp2
 
@@ -70,13 +69,12 @@ class MyriaPage(webapp2.RequestHandler):
         return connection_string
 
 def nano_to_str(elapsed):
+    if elapsed is None:
+        return None
     s = elapsed / 1000000000.0
-    print s
     m, s = divmod(s, 60)
-    print m, s
     h, m = divmod(m, 60)
     d, h = divmod(h, 24)
-    print d, h
     elapsed_str = ' %fs' % s
     if m > 0:
         elapsed_str = '%dm ' % m + elapsed_str
