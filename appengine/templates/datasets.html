@@ -40,9 +40,30 @@
 		<!-- /.navbar-collapse -->
 	</nav>
 
-	<ul>
-	{% for d in datasets %}
-	 <li>{{d.relation_key.relation_name}}: <a href="{{d.uri}}/data?format=json">See JSON</a></li>
-	{% endfor %}
-	</ul>
+	<div class="panel panel-primary">
+		<div class="panel-heading">
+			<h3 class="panel-title">Datasets in Myria</h3>
+		</div>
+		<div class="panel-body">
+			<table class="table">
+			<thead>
+				<tr>
+					<th>Relation name</th>
+					<th>Creating query</th>
+					<th>Create time</th>
+					<th>Download</th>
+				</tr>
+				</thead>
+				{% for d in datasets %}
+				<tr>
+					<td><a href="{{d.uri}}">{{d.relation_key.relation_name}}</a></td>
+					<td>{{d.query_id}}</td>
+					<td>{{d.created}}</td>
+					<td><a href="{{d.uri}}/data?format=json">JSON</a> <a href="{{d.uri}}/data?format=csv">CSV</a> <a href="{{d.uri}}/data?format=tsv">TSV</a></td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</body>
 </html>
