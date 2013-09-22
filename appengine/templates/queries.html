@@ -35,4 +35,34 @@
 		</div>
 		<!-- /.navbar-collapse -->
 	</nav>
+	
+		<div class="panel panel-primary">
+		<div class="panel-heading">
+			<h3 class="panel-title">Myria Query Log</h3>
+		</div>
+		<div class="panel-body">
+			<table class="table">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Status</th>
+					<th>Logical plan</th>
+					<th>Time elapsed</th>
+					<th>Finished</th>
+				</tr>
+				</thead>
+				{% for q in queries %}
+				<tr>
+					<td><a href="{{q.url}}">{{q.query_id}}</a></td>
+					<td>{{q.raw_query}}</td>
+					<td>{{q.status}}</td>
+					<td>{{q.elapsed_str}}</td>
+					<td>{{q.finish_time}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	
+	</body>
 </html>

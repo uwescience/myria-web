@@ -34,6 +34,17 @@ def get_datasets(connection=None):
     except myria.MyriaError:
         return []
 
+def get_queries(connection=None):
+    if connection is None:
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        except myria.MyriaError:
+            return []
+    try:
+        return connection.queries()
+    except myria.MyriaError:
+        return []
+
 def get_schema_map(datasets=None, connection=None):
     if datasets is None:
         datasets = get_datasets(connection)
@@ -58,13 +69,39 @@ class MyriaPage(webapp2.RequestHandler):
             connection_string = "unable to connect to %s:%d" % (hostname, port)
         return connection_string
 
+def nano_to_str(elapsed):
+    s = elapsed / 1000000000.0
+    print s
+    m, s = divmod(s, 60)
+    print m, s
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    print d, h
+    elapsed_str = ' %fs' % s
+    if m > 0:
+        elapsed_str = '%dm ' % m + elapsed_str
+    if h > 0:
+        elapsed_str = '%dh ' % h + elapsed_str
+    if d > 0:
+        elapsed_str = '%dd ' % d + elapsed_str
+    return elapsed_str
 
 class Queries(MyriaPage):
     def get(self):
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            queries = connection.queries()
+        except myria.MyriaError:
+            connection = None
+            queries = []
+
+        for q in queries:
+            q['elapsed_str'] = nano_to_str(q['elapsed_nanos'])
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        connection_string = self.get_connection_string()
+        connection_string = self.get_connection_string(connection)
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
         self.response.out.write(template.render(path, locals()))
