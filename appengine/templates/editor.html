@@ -73,8 +73,14 @@
 					<div class="example">JustX(x) :- TwitterK(x,y)</div>
 					<div class="label">Self Join TwitterK</div>
 					<div class="example">SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)</div>
-					<div class="label">Triangles TwitterK</div>
-					<div class="example">Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)</div>
+					<!--  <div class="label">Triangles TwitterK</div>
+					<div class="example">Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)</div> -->
+					<br> <br>					
+					<div class="label">NCCDC Filtered to Attack Window</div>
+					<div class="example">attackwindow(src, dst, time) :-
+	nccdc(src, dst, proto, time, a, b, c)
+    , time > 1366475761
+    , time < 1366475821</div>
 				</div>
 			</div>
 		</div>
