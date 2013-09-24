@@ -91,6 +91,19 @@
 					<div class="example">InDegree(dst, count(time)) :- nccdc(src, dst, proto, time, x, y, z)
 
 Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
+					<br>				
+					<div class="label">SP2Bench Q10</div>
+					<div class="example">Q10(subject, predicate) :-
+    sp2bench_1m(subject, predicate, 'person:Paul_Erdoes')</div>
+					<div class="label">SP2Bench Q3a</div>
+					<div class="example">Q3a(article) :-
+    sp2bench_1m(article, 'rdf:type', 'bench:Article')
+    , sp2bench_1m(article, 'swrc:pages', value)</div>
+					<div class="label">SP2Bench Q1</div>
+					<div class="example">Q1(yr) :-
+    sp2bench_1m(journal, 'rdf:type', 'bench:Journal')
+    , sp2bench_1m(journal, 'dc:title', 'Journal 1 (1940)')
+    , sp2bench_1m(journal, 'dcterms:issued', yr)</div>
 				</div>
 			</div>
 		</div>
