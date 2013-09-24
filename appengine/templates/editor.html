@@ -75,6 +75,10 @@
 					<div class="example">SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)</div>
 					<div class="label">In Degrees from TwitterK</div>
 					<div class="example">InDegree(x, COUNT(y)) :- TwitterK(x,y)</div>
+					<div class="label">Two Hops Count in TwitterK</div>
+					<div class="example">TwoHopsCountK(x, z, COUNT(y)) :- TwitterK(x,y), TwitterK(y, z)</div>
+					<!--  <div class="label">Two Hops Distinct Count in TwitterK</div>
+					<div class="example">TwoHopsDistinctCountK(x, z, COUNT(y)) :- TwoHopsK(x, y, z)</div> -->
 					<!--  <div class="label">Triangles TwitterK</div>
 					<div class="example">Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)</div> -->
 					<br> <br>					
