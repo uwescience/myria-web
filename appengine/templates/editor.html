@@ -108,7 +108,7 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 					still being tested)</div>
 				<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
 				<div></div>
-				<input class="planner" type="submit" value="Go">
+				<button type="button" class="planner btn btn-primary">Go</button>
 
 				<div class="instructions">2) Datalog parsed as Relational
 					Algebra</div>
@@ -118,10 +118,10 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 
 				<div class="display" id="optimized"></div>
 				<div class="instructions">4) Execute the query:</div>
-				<input class="executor" type="submit" value="Execute">
+				<button type="button" class="executor btn btn-success">Execute</button>
 				<div class="display" id="executed"></div>
 				<div class="instructions">5) Download the Myria plan as JSON:</div>
-				<input class="compiler" type="submit" value="Compile">
+				<button type="button" class="compiler btn btn-warning">Compile</button>
 				<div id="#response"></div>
 				<div id="sig"></div>
 			</div>
