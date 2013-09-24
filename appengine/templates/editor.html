@@ -104,22 +104,25 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 			<div class="content">
 				<div class="panel panel-info">
 					<div class="panel-heading">
-						Write your Datalog here, perhaps starting from one of the examples
-						at the left.<br> (Note: Recursion and aggregation are still
-						being tested)
+						<h3 class="panel-title">
+							Write your Datalog here, perhaps starting from one of the
+							examples at the left.<br> (Note: Recursion and aggregation
+							are still being tested)
+						</h3>
 					</div>
 					<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
 					<button type="button" class="planner btn btn-info">Go</button>
 				</div>
 
 				<div class="panel panel-warning">
-					<div class="panel-heading">Datalog parsed as Relational
-						Algebra</div>
+					<div class="panel-heading">
+						<h3 class="panel-title">Datalog parsed as Relational Algebra</h3>
+					</div>
 					<div class="panel-body">
 						<div id="plan"></div>
 					</div>
-					<div class="panel-heading">Relational algebra converted and
-						optimized into a Myria Physical Plan</div>
+					<div class="panel-heading"><h3 class="panel-title">Relational algebra converted and
+						optimized into a Myria Physical Plan</h3></div>
 					<div class="panel-body">
 						<div id="optimized"></div>
 					</div>
