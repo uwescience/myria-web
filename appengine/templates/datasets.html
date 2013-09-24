@@ -57,8 +57,8 @@
 				</thead>
 				{% for d in datasets %}
 				<tr>
-					<td><a href="{{d.uri}}">{{d.relation_key.relation_name}}</a></td>
-					<td><a href="{{d.query_url}}">{{d.query_id}}</a></td>
+					<td><a href="{{d.uri}}" target="_blank">{{d.relation_key.relation_name}}</a></td>
+					<td><a href="{{d.query_url}}" target=_blank>{{d.query_id}}</a></td>
 					<td>{{d.created}}</td>
 					<td><a href="{{d.uri}}/data?format=json">JSON</a> <a href="{{d.uri}}/data?format=csv">CSV</a> <a href="{{d.uri}}/data?format=tsv">TSV</a></td>
 				</tr>

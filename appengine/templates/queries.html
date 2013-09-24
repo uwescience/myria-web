@@ -54,7 +54,7 @@
 				</thead>
 				{% for q in queries %}
 				<tr class="{{q.bootstrap_status}}">
-					<td><a href="{{q.url}}">{{q.query_id}}</a></td>
+					<td><a href="{{q.url}}" target="_blank">{{q.query_id}}</a></td>
 					<td>{{q.raw_query}}</td>
 					<td>{{q.status}}</td>
 					<td>{{q.elapsed_str}}</td>
