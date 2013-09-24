@@ -192,10 +192,16 @@ class Compile(webapp2.RequestHandler):
         # Get the schema map for compiling the query
         schema_map = get_schema_map()
         # .. and compile it
-        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
-
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(compiled))
+        try:
+            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(compiled))
+            return
+        except ValueError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            self.response.status = 400
+            return
 
 class Execute(webapp2.RequestHandler):
     def post(self):
@@ -203,7 +209,7 @@ class Execute(webapp2.RequestHandler):
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         except myria.MyriaError:
             self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Unable to connect to REST server to issue query")
+            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
             self.response.status = 503
             return
 
@@ -220,7 +226,13 @@ class Execute(webapp2.RequestHandler):
         # Get the schema map for compiling the query
         schema_map = get_schema_map(connection=connection)
         # .. and compile
-        compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
+        try:
+            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
+        except ValueError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            self.response.status = 400
+            return
 
         # Issue the query
         try:
@@ -235,7 +247,7 @@ class Execute(webapp2.RequestHandler):
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 400
-            self.response.write(e)
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
             return
 
     def get(self):
@@ -244,7 +256,7 @@ class Execute(webapp2.RequestHandler):
         except myria.MyriaError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
-            self.response.write("Unable to connect to REST server to issue query")
+            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
             return
 
         query_id = self.request.get("query_id")
