@@ -101,11 +101,6 @@ html, body {
   padding-bottom: 0px;
 }
 
-.display {
-	border-style: solid;
-    width: 600px;
-}
-
 .error {
 	font-color: red;
 }

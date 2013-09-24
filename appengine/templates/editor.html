@@ -102,26 +102,38 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 		</div>
 		<div class="center_block region">
 			<div class="content">
-				<div class="instructions">1) Write your datalog here, perhaps
-					starting from one of the examples at the left</div>
-				<div class="instructions">(Note: Recursion and aggregation are
-					still being tested)</div>
-				<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
-				<div></div>
-				<button type="button" class="planner btn btn-primary">Go</button>
+				<div class="panel panel-info">
+					<div class="panel-heading">
+						Write your Datalog here, perhaps starting from one of the examples
+						at the left.<br> (Note: Recursion and aggregation are still
+						being tested)
+					</div>
+					<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
+					<button type="button" class="planner btn btn-info">Go</button>
+				</div>
 
-				<div class="instructions">2) Datalog parsed as Relational
-					Algebra</div>
-				<div class="display" id="plan"></div>
-				<div class="instructions">3) Relational algebra converted and
-					optimized into a Myria Physical Plan</div>
+				<div class="panel panel-warning">
+					<div class="panel-heading">Datalog parsed as Relational
+						Algebra</div>
+					<div class="panel-body">
+						<div id="plan"></div>
+					</div>
+					<div class="panel-heading">Relational algebra converted and
+						optimized into a Myria Physical Plan</div>
+					<div class="panel-body">
+						<div id="optimized"></div>
+					</div>
+					<button type="button" class="compiler btn btn-warning">Myria
+						JSON</button>
+				</div>
 
-				<div class="display" id="optimized"></div>
-				<div class="instructions">4) Execute the query:</div>
-				<button type="button" class="executor btn btn-success">Execute</button>
-				<div class="display" id="executed"></div>
-				<div class="instructions">5) Download the Myria plan as JSON:</div>
-				<button type="button" class="compiler btn btn-warning">Compile</button>
+				<div class="panel">
+					<button type="button" class="executor btn btn-success">Execute
+						the Query</button>
+					<div class="panel-body">
+						<div id="executed"></div>
+					</div>
+				</div>
 				<div id="#response"></div>
 				<div id="sig"></div>
 			</div>
