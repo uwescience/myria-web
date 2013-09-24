@@ -121,6 +121,10 @@ html, body {
 	font-family: "Monaco", monospace;
 }
 
+.navbar-inverse .navbar-brand {
+	color: #ffffff;
+}
+
 svg {
   width: 400px;
   height: 400px;
