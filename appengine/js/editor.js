@@ -92,6 +92,7 @@ function checkQueryStatus(query_id) {
 }
 
 function executeplan() {
+	$('#executed').text('...');
 	optimizeplan(); // make sure the plan matches the query
 	var query = editor.getValue();
 	var request = $.ajax("execute", {
