@@ -95,6 +95,14 @@ class Queries(MyriaPage):
 
         for q in queries:
             q['elapsed_str'] = nano_to_str(q['elapsed_nanos'])
+            if q['status'] == 'KILLED':
+                q['bootstrap_status'] = 'danger'
+            elif q['status'] == 'SUCCESS':
+                q['bootstrap_status'] = 'success'
+            elif q['status'] == 'RUNNING':
+                q['bootstrap_status'] = 'warning'
+            else:
+                q['bootstrap_status'] = ''
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'

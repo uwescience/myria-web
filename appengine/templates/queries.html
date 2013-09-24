@@ -41,18 +41,18 @@
 			<h3 class="panel-title">Myria Query Log</h3>
 		</div>
 		<div class="panel-body">
-			<table class="table">
+			<table class="table table-condensed">
 				<thead>
 					<tr>
 						<th>#</th>
-						<th>Status</th>
 						<th>Logical plan</th>
+						<th>Status</th>
 						<th>Time elapsed</th>
 						<th>Finished</th>
 					</tr>
 				</thead>
 				{% for q in queries %}
-				<tr>
+				<tr class="{{q.bootstrap_status}}">
 					<td><a href="{{q.url}}">{{q.query_id}}</a></td>
 					<td>{{q.raw_query}}</td>
 					<td>{{q.status}}</td>
