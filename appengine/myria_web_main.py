@@ -114,6 +114,12 @@ class Datasets(MyriaPage):
             connection = None
             datasets = []
 
+        for d in datasets:
+            try:
+                d['query_url'] = 'http://%s:%d/query/query-%d' % (hostname, port, d['query_id'])
+            except:
+                pass
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
