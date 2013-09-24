@@ -68,7 +68,7 @@
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- A(3,w)</div> -->
 					<div class="label">Two Independent Rules</div>
 					<div class="example">A(x,z) :- R(x,y,z); B(w) :- C(3,w)</div>
-					<br> <br>
+					<br>
 					<div class="label">Project TwitterK</div>
 					<div class="example">JustX(x) :- TwitterK(x,y)</div>
 					<div class="label">Self Join TwitterK</div>
@@ -76,17 +76,21 @@
 					<div class="label">In Degrees from TwitterK</div>
 					<div class="example">InDegree(x, COUNT(y)) :- TwitterK(x,y)</div>
 					<div class="label">Two Hops Count in TwitterK</div>
-					<div class="example">TwoHopsCountK(x, z, COUNT(y)) :- TwitterK(x,y), TwitterK(y, z)</div>
+					<div class="example">TwoHopsCountK(x,z,COUNT(y)) :- TwitterK(x,y), TwitterK(y,z)</div>
 					<!--  <div class="label">Two Hops Distinct Count in TwitterK</div>
 					<div class="example">TwoHopsDistinctCountK(x, z, COUNT(y)) :- TwoHopsK(x, y, z)</div> -->
 					<!--  <div class="label">Triangles TwitterK</div>
 					<div class="example">Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)</div> -->
-					<br> <br>					
+					<br>				
 					<div class="label">NCCDC Filtered to Attack Window</div>
 					<div class="example">attackwindow(src, dst, time) :-
-	nccdc(src, dst, proto, time, a, b, c)
+	nccdc(src,dst,proto,time, x, y, z)
     , time > 1366475761
     , time < 1366475821</div>
+					<div class="label">NCCDC DDOS Victims</div>
+					<div class="example">InDegree(dst, count(time)) :- nccdc(src, dst, proto, time, x, y, z)
+
+Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 				</div>
 			</div>
 		</div>
