@@ -13,7 +13,7 @@ function handleerrors(request, display) {
 
 		var msg = '<div class="error"><a href="';
 		msg = msg + this.url;
-		msg = msg + '">Error</a></div>';
+		msg = msg + '" target="_blank">Error</a></div>';
 		$(display).html(msg);
 	});
 }
@@ -56,7 +56,7 @@ function compileplan() {
 	var url = "compile?" + $.param({
 		query : query,
 	});
-	document.location.href = url;
+	window.open(url, '_blank');
 }
 
 function displayQueryStatus(data) {
