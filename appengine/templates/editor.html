@@ -118,12 +118,12 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 						<h3 class="panel-title">Datalog parsed as Relational Algebra</h3>
 					</div>
 					<div class="panel-body">
-						<div id="plan"></div>
+						<div id="plan" class="display"></div>
 					</div>
 					<div class="panel-heading"><h3 class="panel-title">Relational algebra converted and
 						optimized into a Myria Physical Plan</h3></div>
 					<div class="panel-body">
-						<div id="optimized"></div>
+						<div id="optimized" class="display"></div>
 					</div>
 					<button type="button" class="compiler btn btn-warning">Myria
 						JSON</button>
@@ -133,7 +133,7 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000</div>
 					<button type="button" class="executor btn btn-success">Execute
 						the Query</button>
 					<div class="panel-body">
-						<div id="executed"></div>
+						<div id="executed" class="display"></div>
 					</div>
 				</div>
 				<div id="#response"></div>
