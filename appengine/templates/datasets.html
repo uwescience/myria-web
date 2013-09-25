@@ -1,46 +1,8 @@
-<html>
-<head>
-<title>Myria Web Frontend</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-<link href="css/layout.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="js/codemirror.js"></script>
-<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="js/jquery-1.8.2.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script type="text/javascript" src="js/viz.js">
-	// This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
-</script>
+{% extends "base.html" %}
 
-</head>
-<body>
-	<nav class="navbar navbar-inverse" role="navigation">
-		<!-- Brand and toggle get grouped for better mobile display -->
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse"
-				data-target=".navbar-ex1-collapse">
-				<span class="sr-only">Toggle navigation</span> <span
-					class="icon-bar"></span> <span class="icon-bar"></span> <span
-					class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand">Myria Web Frontend</a>
-		</div>
+{% block datasets_active %} class="active"{% endblock %}
 
-		<!-- Collect the nav links, forms, and other content for toggling -->
-		<div class="collapse navbar-collapse navbar-ex1-collapse">
-			<ul class="nav navbar-nav">
-				<li><a href="/editor">Editor</a></li>
-				<li><a href="/queries">Queries</a></li>
-				<li class="active"><a href="/datasets">Datasets</a></li>
-			</ul>
-			<ul class="nav navbar-nav navbar-right">
-				<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
-				<li><a>{{connection_string}}</a></li>
-			</ul>
-		</div>
-		<!-- /.navbar-collapse -->
-	</nav>
-
+{% block content %}
 	<div class="panel panel-primary">
 		<div class="panel-heading">
 			<h3 class="panel-title">Datasets in Myria</h3>
@@ -66,5 +28,4 @@
 			</table>
 		</div>
 	</div>
-</body>
-</html>
+{% endblock %}
