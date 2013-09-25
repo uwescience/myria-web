@@ -31,6 +31,8 @@ function getplan() {
 	request.success(function(dot) {
 		var result = Viz(dot, "svg");
 		$('#relational_svg').html(result);
+		$('svg').width('100%');
+		$('svg').height('100%');
 	})
 };
 
@@ -48,6 +50,8 @@ function optimizeplan() {
 	request.success(function(dot) {
 		var result = Viz(dot, "svg");
 		$('#myria_svg').html(result);
+		$('svg').width('100%');
+		$('svg').height('100%');
 	})
 }
 

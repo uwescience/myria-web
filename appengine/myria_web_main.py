@@ -142,11 +142,11 @@ class Editor(MyriaPage):
         # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
         datalog_examples = [
           ('Select', '''A(x) :- R(x,3)'''),
-          ('Select2', '''A(x) :- R(x,y),S(y,z,4),z<3'''),
-          ('Self-join', '''A(x,z) :- R(x,y),R(y,z)'''),
-          ('Triangle', '''A(x,z) :- R(x,y),S(y,z),T(z,x)'''),
-          ('Cross Product', '''A(x,z) :- S(x),T(z)'''),
-          ('Two cycles', 'A(x,z) :- R(x,y),S(y,a,z),T(z,b,x),W(a,b)'),
+          ('Select2', '''A(x) :- R(x,y), S(y,z,4), z<3'''),
+          ('Self-join', '''A(x,z) :- R(x,y), R(y,z)'''),
+          ('Triangle', '''A(x,z) :- R(x,y), S(y,z), T(z,x)'''),
+          ('Cross Product', '''A(x,z) :- S(x), T(z)'''),
+          ('Two cycles', 'A(x,z) :- R(x,y), S(y,a,z), T(z,b,x), W(a,b)'),
           ('Two Chained Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- A(3,w)'),
           ('Two Independent Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- C(3,w)'),
           ('Project TwitterK', 'JustX(x) :- TwitterK(x,y)'),
