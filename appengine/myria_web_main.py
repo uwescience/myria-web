@@ -135,58 +135,78 @@ class Datasets(MyriaPage):
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, locals()))
-
-
-class Editor(MyriaPage):
-    def get(self, query=defaultquery):
-        # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
-        datalog_examples = [
-          ('Select', '''A(x) :- R(x,3)'''),
-          ('Select2', '''A(x) :- R(x,y), S(y,z,4), z<3'''),
-          ('Self-join', '''A(x,z) :- R(x,y), R(y,z)'''),
-          ('Triangle', '''A(x,z) :- R(x,y), S(y,z), T(z,x)'''),
-          ('Cross Product', '''A(x,z) :- S(x), T(z)'''),
-          ('Two cycles', 'A(x,z) :- R(x,y), S(y,a,z), T(z,b,x), W(a,b)'),
-          ('Two Chained Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- A(3,w)'),
-          ('Two Independent Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- C(3,w)'),
-          ('Project TwitterK', 'JustX(x) :- TwitterK(x,y)'),
-          ('Self Join TwitterK', 'SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)'),
-          ('In Degrees from TwitterK', 'InDegree(x, COUNT(y)) :- TwitterK(x,y)'),
-          ('Two Hops Count in TwitterK', 'TwoHopsCountK(x,z,COUNT(y)) :- TwitterK(x,y), TwitterK(y,z)'),
-          ('Triangles TwitterK', 'Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)'),
-          ('NCCDC Filtered to Attack Window', '''attackwindow(src, dst, time) :-
+# Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
+datalog_examples = [
+  ('Select', '''A(x) :- R(x,3)'''),
+  ('Select2', '''A(x) :- R(x,y), S(y,z,4), z<3'''),
+  ('Self-join', '''A(x,z) :- R(x,y), R(y,z)'''),
+  ('Triangle', '''A(x,z) :- R(x,y), S(y,z), T(z,x)'''),
+  ('Cross Product', '''A(x,z) :- S(x), T(z)'''),
+  ('Two cycles', 'A(x,z) :- R(x,y), S(y,a,z), T(z,b,x), W(a,b)'),
+  ('Two Chained Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- A(3,w)'),
+  ('Two Independent Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- C(3,w)'),
+  ('Project TwitterK', 'JustX(x) :- TwitterK(x,y)'),
+  ('Self Join TwitterK', 'SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)'),
+  ('In Degrees from TwitterK', 'InDegree(x, COUNT(y)) :- TwitterK(x,y)'),
+  ('Two Hops Count in TwitterK', 'TwoHopsCountK(x,z,COUNT(y)) :- TwitterK(x,y), TwitterK(y,z)'),
+  ('Triangles TwitterK', 'Triangles(x,y,z) :- TwitterK(x,y), TwitterK(y,z), TwitterK(z,x)'),
+  ('NCCDC Filtered to Attack Window', '''attackwindow(src, dst, time) :-
     nccdc(src,dst,proto,time, x, y, z)
     , time > 1366475761
     , time < 1366475821'''),
-          ('NCCDC DDOS Victims', '''InDegree(dst, count(time)) :- nccdc(src, dst, proto, time, x, y, z)
+  ('NCCDC DDOS Victims', '''InDegree(dst, count(time)) :- nccdc(src, dst, proto, time, x, y, z)
 
 Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
-          ('SP2Bench Q10', '''Q10(subject, predicate) :-
+  ('SP2Bench Q10', '''Q10(subject, predicate) :-
     sp2bench_1m(subject, predicate, 'person:Paul_Erdoes')'''),
-          ('SP2Bench Q3a', '''Q3a(article) :-
+  ('SP2Bench Q3a', '''Q3a(article) :-
     sp2bench_1m(article, 'rdf:type', 'bench:Article')
     , sp2bench_1m(article, 'swrc:pages', value)'''),
-          ('SP2Bench Q1', '''Q1(yr) :-
+  ('SP2Bench Q1', '''Q1(yr) :-
     sp2bench_1m(journal, 'rdf:type', 'bench:Journal')
     , sp2bench_1m(journal, 'dc:title', 'Journal 1 (1940)')
     , sp2bench_1m(journal, 'dcterms:issued', yr)''')
-        ]
+]
 
-        examples = { 'datalog' : datalog_examples }
+myria_examples = []
 
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-        plan = format_rule(dlog.logicalplan)
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
-        myria_plan = format_rule(dlog.physicalplan)
+examples = { 'datalog' : datalog_examples,
+             'myria' : myria_examples }
 
+class Examples(MyriaPage):
+    def get(self):
+        # Get the language
+        language = self.request.get('language')
+        if not language:
+            # default to Datalog
+            language = 'datalog'
+        else:
+            language = language.strip().lower()
+        # Is language recognized?
+        if language not in examples:
+        # Is the language recognized?
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 404
+            self.response.write('Error 404 (Not Found): language %s not found' % language)
+            return
+        # Return the objects as json
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(examples[language]))
+
+class Editor(MyriaPage):
+    def get(self, query=defaultquery):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
+        template_vars = {}
+        # .. pass in the query
+        template_vars['query'] = query
+        # .. pass in the Datalog examples to start
+        template_vars['examples'] = examples['datalog']
         # .. connection string
-        connection_string = self.get_connection_string()
+        template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
-        self.response.out.write(template.render(path, locals()))
+        self.response.out.write(template.render(path, template_vars))
 
 class Plan(webapp2.RequestHandler):
     def get(self):
@@ -334,7 +354,8 @@ app = webapp2.WSGIApplication([
    ('/optimize', Optimize),
    ('/compile', Compile),
    ('/execute', Execute),
-   ('/dot', Dot)
+   ('/dot', Dot),
+   ('/examples', Examples),
   ],
   debug=True
 )

@@ -120,6 +120,59 @@ function resetResults() {
 	$("svg").empty();
 }
 
+function updateExamples(language) {
+	var doUpdateExamples = function(data) {
+		var examplesList = $('#examples-list'); 
+		examplesList.empty();
+		if (data.length == 0) {
+			examplesList.append('No ' + language +' examples found');
+			return;
+		}
+		/* Populate the list of examples. */
+		for (var i = 0; i < data.length; ++i) {
+			examplesList.append('<div class="label">'+data[i][0]+'</div>');
+			examplesList.append('<div class="example">'+data[i][1]+'</div>');
+		}
+		/* Restore the click functionality on the examples. */
+		$(".example").click(function() {
+			resetResults();
+			var example_query = $(this).text();
+			editor.setValue(example_query);
+			optimizeplan();
+		});
+	}
+	$.ajax("examples", {
+		type : 'GET',
+		data : {
+			language : language
+		},
+		success : doUpdateExamples
+	});
+}
+
+function changeLanguage() {
+	/* First make sure it's a valid language. */
+	var languages = ['Datalog', 'Myria'];
+	var language = $(this).text();
+	var i = languages.indexOf(language);
+	if (i == -1) {
+		return false;
+	}
+	
+	/* Now let's update the UI around the language selector button. */
+	languages.splice(i,1);
+	$('#parse-btn').text("Parse "+language);
+	var languageMenu = $('#language-menu');
+	languageMenu.empty();
+	for (var i=0; i < languages.length; ++i) {
+		languageMenu.append('<li><a class="changer">'+languages[i]+'</a></li>');
+	}
+	$(".changer").click(changeLanguage);
+	
+	/* Now let's update the examples. */
+	updateExamples(language);
+}
+
 $(document).ready(function() {
 	editor.on("change", resetResults);
 	editor.on("keydown", resetResults);
@@ -127,6 +180,7 @@ $(document).ready(function() {
 	$(".planner").click(optimizeplan);
 	$(".compiler").click(compileplan);
 	$(".executor").click(executeplan);
+	$(".changer").click(changeLanguage);
 	$(".example").click(function() {
 		resetResults();
 		var example_query = $(this).text();
