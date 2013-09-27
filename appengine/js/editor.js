@@ -192,15 +192,14 @@ function changeLanguage() {
  * This function populates the modal dialog box with the contents of the clicked SVG.
  */
 function showSvgModal() {
-	$('#svg-modal-body').empty();
+	$('#svg-modal-output').empty();
 	// DOM walking to find the correct SVG for this button press. Sensitive to webpage changes.
-	var parentHeader = this.parentNode.parentNode;
+	var parentHeader = this.parentNode;
 	var svgOutput = parentHeader.nextElementSibling.firstElementChild;
-	// Clone the <output> that contains the SVG, and rename it so the DOM doesn't have duplicate IDs
-	var newSvgOutput = svgOutput.cloneNode(true);
-	newSvgOutput.id = 'svg-modal-svg-object';
-	// Stick it in the SVG body
-	$('#svg-modal-body').append(newSvgOutput);
+	var svgModalOutput = document.getElementById("svg-modal-output");
+	for (var i=0; i < svgOutput.childElementCount; ++i) {
+		svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));		
+	}
 }
 
 $(document).ready(function() {
