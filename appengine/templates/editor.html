@@ -3,10 +3,6 @@
 {% block extra_head %}
 <script type="text/javascript" src="js/codemirror.js"></script>
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="js/editor.js"></script>
-<script type="text/javascript" src="js/viz.js">
-	// This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
-</script>
 {% endblock %}
 
 {% block editor_active %} class="active"{% endblock %}
@@ -97,4 +93,8 @@
 		lineNumbers : true
 	});
 </script>
+<script type="text/javascript" src="js/viz.js">
+	// This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
+</script>
+<script type="text/javascript" src="js/editor.js"></script>
 {% endblock %}
