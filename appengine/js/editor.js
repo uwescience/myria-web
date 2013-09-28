@@ -134,21 +134,22 @@ function updateExamples(language) {
 		examplesList.empty();
 		if (data.length == 0) {
 			examplesList.append('No ' + language + ' examples found');
-			return;
+		} else {
+			/* Populate the list of examples. */
+			for ( var i = 0; i < data.length; ++i) {
+				examplesList.append('<div class="label">' + data[i][0]
+						+ '</div>');
+				examplesList.append('<div class="example">' + data[i][1]
+						+ '</div>');
+			}
+			/* Restore the click functionality on the examples. */
+			$(".example").click(function() {
+				resetResults();
+				var example_query = $(this).text();
+				editor.setValue(example_query);
+				optimizeplan();
+			});
 		}
-		/* Populate the list of examples. */
-		for ( var i = 0; i < data.length; ++i) {
-			examplesList.append('<div class="label">' + data[i][0] + '</div>');
-			examplesList
-					.append('<div class="example">' + data[i][1] + '</div>');
-		}
-		/* Restore the click functionality on the examples. */
-		$(".example").click(function() {
-			resetResults();
-			var example_query = $(this).text();
-			editor.setValue(example_query);
-			optimizeplan();
-		});
 		/*
 		 * Finally, set the global variable editorLanguage to the new language.
 		 * This makes all the API calls back use this query parameter.
@@ -189,16 +190,18 @@ function changeLanguage() {
 }
 
 /**
- * This function populates the modal dialog box with the contents of the clicked SVG.
+ * This function populates the modal dialog box with the contents of the clicked
+ * SVG.
  */
 function showSvgModal() {
 	$('#svg-modal-output').empty();
-	// DOM walking to find the correct SVG for this button press. Sensitive to webpage changes.
+	// DOM walking to find the correct SVG for this button press. Sensitive to
+	// webpage changes.
 	var parentHeader = this.parentNode;
 	var svgOutput = parentHeader.nextElementSibling.firstElementChild;
 	var svgModalOutput = document.getElementById("svg-modal-output");
-	for (var i=0; i < svgOutput.childElementCount; ++i) {
-		svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));		
+	for ( var i = 0; i < svgOutput.childElementCount; ++i) {
+		svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));
 	}
 }
 

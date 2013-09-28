@@ -1,4 +1,6 @@
 from raco import RACompiler
+from raco.myrial import parser as MyrialParser
+from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import plan_to_dot
@@ -168,7 +170,13 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
     , sp2bench_1m(journal, 'dcterms:issued', yr)''')
 ]
 
-myria_examples = []
+myria_examples = [
+  ('JustX', '''T1 = SCAN(public:adhoc:Twitter, follower:int, followee:int);
+
+T2 = [FROM T1 EMIT x=$0];
+
+STORE (T2, JustX);'''),
+]
 
 examples = { 'datalog' : datalog_examples,
              'myria' : myria_examples }
@@ -211,9 +219,19 @@ class Editor(MyriaPage):
 class Plan(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-        plan = format_rule(dlog.logicalplan)
+        language = self.request.get("language")
+        if language is None or language.strip().lower() == "datalog":
+            dlog = RACompiler()
+            dlog.fromDatalog(query)
+            plan = format_rule(dlog.logicalplan)
+        else:
+            parser = MyrialParser.Parser()
+            processor = MyrialInterpreter.StatementProcessor()
+            import sys
+            parsed = parser.parse(query)
+            print >> sys.stderr, parsed
+            processor.evaluate(parsed)
+            plan = format_rule(processor.output_symbols)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(plan)
