@@ -29,7 +29,7 @@ function getplan() {
 	handleerrors(request, "#plan");
 	var request = $.get("dot", {
 		query : query,
-		type : 'ra',
+		type : 'logical',
 		language : editorLanguage
 	});
 	request.success(function(dot) {
@@ -50,7 +50,7 @@ function optimizeplan() {
 	handleerrors(request, "#optimized");
 	var request = $.get("dot", {
 		query : query,
-		type : 'myria',
+		type : 'physical',
 		language : editorLanguage
 	});
 	request.success(function(dot) {

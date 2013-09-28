@@ -15,11 +15,41 @@ defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
 port = 1776
 
-def programplan(query, target):
-    dlog = RACompiler()
+def get_plan(query, language, plan_type):
+    # Fix up the language string
+    if language is None:
+        language = "datalog"
+    language = language.strip().lower()
 
-    dlog.fromDatalog(query)
-    return dlog.logicalplan
+    if language == "datalog":
+        dlog = RACompiler()
+        dlog.fromDatalog(query)
+        if not dlog.logicalplan:
+            raise SyntaxError("Unable to parse Datalog from query '''%s'''" % query)
+        if plan_type == 'logical':
+            return dlog.logicalplan
+        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        if plan_type == 'physical':
+            return dlog.physicalplan
+    elif language == "myria":
+        parser = MyrialParser.Parser()
+        processor = MyrialInterpreter.StatementProcessor()
+        parsed = parser.parse(query)
+        processor.evaluate(parsed)
+        if plan_type == 'logical':
+            return processor.output_symbols
+        if plan_type == 'physical':
+            raise NotImplementedError('Myria physical plans')
+    else:
+        raise NotImplementedError('Language %s is not supported' % language)
+
+    raise NotImplementedError('Should not be able to get here')
+
+def get_logical_plan(query, language):
+    return get_plan(query, language, 'logical')
+
+def get_physical_plan(query, language=None):
+    return get_plan(query, language, 'physical')
 
 def format_rule(expressions):
     return "\n".join(["%s = %s" % e for e in expressions])
@@ -171,7 +201,8 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
 ]
 
 myria_examples = [
-  ('JustX', '''T1 = SCAN(public:adhoc:Twitter, follower:int, followee:int);
+  ('JustX', '''T1 = SCAN(public:adhoc:Twitter,
+          follower:int, followee:int);
 
 T2 = [FROM T1 EMIT x=$0];
 
@@ -220,32 +251,16 @@ class Plan(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
-        if language is None or language.strip().lower() == "datalog":
-            dlog = RACompiler()
-            dlog.fromDatalog(query)
-            plan = format_rule(dlog.logicalplan)
-        else:
-            parser = MyrialParser.Parser()
-            processor = MyrialInterpreter.StatementProcessor()
-            import sys
-            parsed = parser.parse(query)
-            print >> sys.stderr, parsed
-            processor.evaluate(parsed)
-            plan = format_rule(processor.output_symbols)
+        plan = get_logical_plan(query, language)
 
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(plan)
+        self.response.write(format_rule(plan))
 
 class Optimize(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
-
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
-
-        optimized = format_rule(dlog.physicalplan)
+        language = self.request.get("language")
+        optimized = get_physical_plan(query, language)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(optimized)
@@ -287,20 +302,18 @@ class Execute(webapp2.RequestHandler):
             return
 
         query = self.request.get("query")
+        language = self.request.get("language")
 
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-        # Cache logical plan
-        cached_logicalplan = str(dlog.logicalplan)
+        cached_logicalplan = str(get_logical_plan(query, language))
 
         # Generate physical plan
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        physicalplan = get_physical_plan(query, language)
 
         # Get the schema map for compiling the query
         schema_map = get_schema_map(connection=connection)
         # .. and compile
         try:
-            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, schema_map)
         except ValueError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write("Error 400 (Bad Request): %s" % str(e))
@@ -347,18 +360,10 @@ class Execute(webapp2.RequestHandler):
 class Dot(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
-        svg_type = self.request.get("type")
+        language = self.request.get("language")
+        plan_type = self.request.get("type")
 
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-
-        if svg_type is None or len(svg_type) == 0 or svg_type.lower() == "ra":
-            plan = dlog.logicalplan
-        elif svg_type.lower() == "myria":
-            dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
-            plan = dlog.physicalplan
-        else:
-            self.abort(400, detail="argument type expected 'ra' or 'myria'")
+        plan = get_plan(query, language, plan_type)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(plan_to_dot(plan))
