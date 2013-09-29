@@ -65,6 +65,25 @@ def get_datasets(connection=None):
     except myria.MyriaError:
         return []
 
+class MyriaCatalog:
+    def __init__(self, connection=None):
+        if not connection:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        self.connection = connection
+
+    def get_scheme(self, relation_name):
+        relation_key = {
+                'user_name' : 'public',
+                'program_name' : 'adhoc',
+                'relation_name' : relation_name
+        }
+        try:
+            dataset_info = self.connection.dataset(relation_key)
+        except myria.MyriaError:
+            return None
+        scheme = dataset_info['schema']
+        return zip(scheme['column_names'], scheme['column_types'])
+
 def get_queries(connection=None):
     if connection is None:
         try:
@@ -75,11 +94,6 @@ def get_queries(connection=None):
         return connection.queries()
     except myria.MyriaError:
         return []
-
-def get_schema_map(datasets=None, connection=None):
-    if datasets is None:
-        datasets = get_datasets(connection)
-    return { d['relation_key']['relation_name'] : zip(d['schema']['column_names'], d['schema']['column_types']) for d in datasets}
 
 class RedirectToEditor(webapp2.RequestHandler):
     def get(self, query=None):
@@ -277,11 +291,14 @@ class Compile(webapp2.RequestHandler):
         # Generate physical plan
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
 
-        # Get the schema map for compiling the query
-        schema_map = get_schema_map()
+        # Get the Catalog needed to get schemas for compiling the query
+        try:
+            catalog = MyriaCatalog()
+        except myria.MyriaError:
+            catalog = None
         # .. and compile it
         try:
-            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, schema_map)
+            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, catalog)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(compiled))
             return
@@ -309,11 +326,14 @@ class Execute(webapp2.RequestHandler):
         # Generate physical plan
         physicalplan = get_physical_plan(query, language)
 
-        # Get the schema map for compiling the query
-        schema_map = get_schema_map(connection=connection)
+        # Get the Catalog needed to get schemas for compiling the query
+        try:
+            catalog = MyriaCatalog()
+        except myria.MyriaError:
+            catalog = None
         # .. and compile
         try:
-            compiled = compile_to_json(query, cached_logicalplan, physicalplan, schema_map)
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
         except ValueError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write("Error 400 (Bad Request): %s" % str(e))
