@@ -38,7 +38,7 @@ function getplan() {
 		$('svg').width('100%');
 		$('svg').height('100%');
 	})
-};
+}
 
 function optimizeplan() {
 	getplan(); // make sure the plan matches the query
@@ -58,7 +58,7 @@ function optimizeplan() {
 		$('#myria_svg').html(result);
 		$('svg').width('100%');
 		$('svg').height('100%');
-	})
+	});
 }
 
 function compileplan() {
@@ -77,8 +77,8 @@ function displayQueryStatus(data) {
 	var status = queryStatus['status'];
 	var query_id = queryStatus['query_id'];
 	$("#executed").text(
-			"#" + query_id + " status:" + status + " start:" + start_time
-					+ " end:" + end_time + " elapsed: " + elapsed);
+			"#" + query_id + " status:" + status + " start:" + start_time +
+					" end:" + end_time + " elapsed: " + elapsed);
 	if (!end_time) {
 		setTimeout(function() {
 			checkQueryStatus(query_id);
@@ -132,15 +132,15 @@ function updateExamples(language) {
 	var doUpdateExamples = function(data) {
 		var examplesList = $('#examples-list');
 		examplesList.empty();
-		if (data.length == 0) {
+		if (data.length === 0) {
 			examplesList.append('No ' + language + ' examples found');
 		} else {
 			/* Populate the list of examples. */
 			for ( var i = 0; i < data.length; ++i) {
-				examplesList.append('<div class="label">' + data[i][0]
-						+ '</div>');
-				examplesList.append('<div class="example">' + data[i][1]
-						+ '</div>');
+				examplesList.append('<div class="label">' + data[i][0] +
+						'</div>');
+				examplesList.append('<div class="example">' + data[i][1] +
+						'</div>');
 			}
 			/* Restore the click functionality on the examples. */
 			$(".example").click(function() {
@@ -179,9 +179,9 @@ function changeLanguage() {
 	$('#parse-btn').text("Parse " + language);
 	var languageMenu = $('#language-menu');
 	languageMenu.empty();
-	for ( var i = 0; i < languages.length; ++i) {
-		languageMenu.append('<li><a class="changer">' + languages[i]
-				+ '</a></li>');
+	for ( var j = 0; j < languages.length; ++j) {
+		languageMenu.append('<li><a class="changer">' + languages[j] +
+			'</a></li>');
 	}
 	$(".changer").click(changeLanguage);
 
