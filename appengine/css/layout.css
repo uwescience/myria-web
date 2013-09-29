@@ -16,3 +16,13 @@
 .modal-open, .modal-open .navbar-fixed-top {
 	margin-right: auto !important;
 }
+
+.zoom-range {
+	width: 300px;
+}
+
+.modal-body input[type=range] {
+	height: 10px;
+	margin-left: 5px;
+}
+

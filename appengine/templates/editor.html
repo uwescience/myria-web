@@ -94,7 +94,12 @@
 			<div class="modal-content">
 				<div class="modal-body" id ="svg-modal-body">
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<output id="svg-modal-output"></output>
+					<span class="zoom-label">Zoom: </span><input type="range" class="zoom-range" step="0.05" min="0.4" max="0.9">
+					<div class="parent">
+						<div id="zoom-canvas">
+							<output id="svg-modal-output"></output>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

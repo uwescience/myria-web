@@ -203,6 +203,12 @@ function showSvgModal() {
 	for ( var i = 0; i < svgOutput.childElementCount; ++i) {
 		svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));
 	}
+
+	var panzoom = $('#zoom-canvas').panzoom({
+		maxScale: 5,
+		minScale: 0.9,
+		$zoomRange: $(".modal-body .zoom-range")
+	});
 }
 
 $(document).ready(function() {
