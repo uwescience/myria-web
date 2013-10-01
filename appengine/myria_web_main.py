@@ -5,15 +5,22 @@ from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import plan_to_dot
 from google.appengine.ext.webapp import template
-import json
+
 import myria
+
+import json
 import os.path
+from threading import Lock
 import urllib
 import webapp2
 
 defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
 port = 1776
+# We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
+# .. see uwescience/datalogcompiler#39
+# ..    (https://github.com/uwescience/datalogcompiler/issues/39)
+myrial_parser_lock = Lock()
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -32,10 +39,13 @@ def get_plan(query, language, plan_type):
         if plan_type == 'physical':
             return dlog.physicalplan
     elif language == "myria":
-        parser = MyrialParser.Parser()
-        processor = MyrialInterpreter.StatementProcessor()
-        parsed = parser.parse(query)
-        processor.evaluate(parsed)
+        # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
+        # .. and App Engine uses multiple threads.
+        with myrial_parser_lock:
+            parser = MyrialParser.Parser()
+            processor = MyrialInterpreter.StatementProcessor()
+            parsed = parser.parse(query)
+            processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.output_symbols
         if plan_type == 'physical':
