@@ -21,6 +21,7 @@ port = 1776
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
 myrial_parser_lock = Lock()
+myrial_parser = MyrialParser.Parser()
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -42,8 +43,7 @@ def get_plan(query, language, plan_type):
         # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
         # .. and App Engine uses multiple threads.
         with myrial_parser_lock:
-            parser = MyrialParser.Parser()
-            parsed = parser.parse(query)
+            parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor()
         processor.evaluate(parsed)
         if plan_type == 'logical':
