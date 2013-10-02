@@ -43,9 +43,9 @@ def get_plan(query, language, plan_type):
         # .. and App Engine uses multiple threads.
         with myrial_parser_lock:
             parser = MyrialParser.Parser()
-            processor = MyrialInterpreter.StatementProcessor()
             parsed = parser.parse(query)
-            processor.evaluate(parsed)
+        processor = MyrialInterpreter.StatementProcessor()
+        processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.output_symbols
         if plan_type == 'physical':
