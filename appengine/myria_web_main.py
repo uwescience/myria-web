@@ -3,7 +3,8 @@ from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
-from raco.viz import plan_to_dot
+from raco.viz import get_dot
+from raco import scheme
 from google.appengine.ext.webapp import template
 
 import myria
@@ -39,17 +40,21 @@ def get_plan(query, language, plan_type):
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
         if plan_type == 'physical':
             return dlog.physicalplan
+        else:
+            raise NotImplementedError('Datalog plan type %s' % plan_type)
     elif language == "myria":
         # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
         # .. and App Engine uses multiple threads.
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
-        processor = MyrialInterpreter.StatementProcessor()
+        processor = MyrialInterpreter.StatementProcessor(MyriaCatalog())
         processor.evaluate(parsed)
         if plan_type == 'logical':
-            return processor.output_symbols
-        if plan_type == 'physical':
+            return processor.get_output()
+        elif plan_type == 'physical':
             raise NotImplementedError('Myria physical plans')
+        else:
+            raise NotImplementedError('Myria plan type %s' % plan_type)
     else:
         raise NotImplementedError('Language %s is not supported' % language)
 
@@ -62,7 +67,9 @@ def get_physical_plan(query, language=None):
     return get_plan(query, language, 'physical')
 
 def format_rule(expressions):
-    return "\n".join(["%s = %s" % e for e in expressions])
+    if isinstance(expressions, list):
+        return "\n".join(["%s = %s" % e for e in expressions])
+    return str(expressions)
 
 def get_datasets(connection=None):
     if connection is None:
@@ -91,8 +98,8 @@ class MyriaCatalog:
             dataset_info = self.connection.dataset(relation_key)
         except myria.MyriaError:
             return None
-        scheme = dataset_info['schema']
-        return zip(scheme['column_names'], scheme['column_types'])
+        schema = dataset_info['schema']
+        return scheme.Scheme(zip(schema['column_names'], schema['column_types']))
 
 def get_queries(connection=None):
     if connection is None:
@@ -191,6 +198,7 @@ class Datasets(MyriaPage):
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, locals()))
+
 # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
 datalog_examples = [
   ('Select', '''A(x) :- R(x,3)'''),
@@ -225,12 +233,43 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
 ]
 
 myria_examples = [
-  ('JustX', '''T1 = SCAN(public:adhoc:Twitter,
-          follower:int, followee:int);
+  ('JustX', '''T1 = SCAN(Twitter);
 
 T2 = [FROM T1 EMIT x=$0];
 
 STORE (T2, JustX);'''),
+  ('Sigma-Clipping', '''Points = SCAN(public:adhoc:Points, v:float);
+
+aggs = [FROM Points EMIT _sum=SUM(v), sumsq=SUM(v*v), cnt=COUNT(v)];
+newBad = SCAN(empty, v:float);
+
+bounds = [FROM Points EMIT lower=MIN(v), upper=MAX(v)];
+
+DO
+    -- Incrementally update aggs and stats
+    new_aggs = [FROM newBad EMIT _sum=SUM(v), sumsq=SUM(v*v), cnt=COUNT(v)];
+    aggs = [FROM aggs, new_aggs EMIT _sum=aggs._sum - new_aggs._sum,
+            sumsq=aggs.sumsq - new_aggs.sumsq, cnt=aggs.cnt - new_aggs.cnt];
+
+    stats = [FROM aggs EMIT mean=_sum/cnt,
+             std=SQRT(1.0/(cnt*(cnt-1)) * (cnt * sumsq - _sum * _sum))];
+
+    -- Compute the new bounds
+    newBounds = [FROM stats EMIT lower=mean - 2 * std, upper=mean + 2 * std];
+
+    tooLow = [FROM Points, bounds, newBounds WHERE newBounds.lower > v
+              AND v >= bounds.lower EMIT v=Points.v];
+    tooHigh = [FROM Points, bounds, newBounds WHERE newBounds.upper < v
+               AND v <= bounds.upper EMIT v=Points.v];
+    newBad = UNIONALL(tooLow, tooHigh);
+
+    bounds = newBounds;
+    continue = [FROM newBad EMIT COUNT(v) > 0];
+WHILE continue;
+
+output = [FROM Points, bounds WHERE Points.v > bounds.lower AND
+          Points.v < bounds.upper EMIT v=Points.v];
+DUMP(output);''')
 ]
 
 examples = { 'datalog' : datalog_examples,
@@ -396,7 +435,7 @@ class Dot(webapp2.RequestHandler):
         plan = get_plan(query, language, plan_type)
 
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(plan_to_dot(plan))
+        self.response.write(get_dot(plan))
 
 app = webapp2.WSGIApplication([
    ('/', RedirectToEditor),
