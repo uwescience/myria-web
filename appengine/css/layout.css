@@ -17,12 +17,8 @@
 	margin-right: auto !important;
 }
 
-.zoom-range {
-	width: 300px;
-}
-
-.modal-body input[type=range] {
+.modal-header input[type=range] {
+	width: 250px;
 	height: 10px;
-	margin-left: 5px;
+	margin: 0 30px 0 5px;
 }
-

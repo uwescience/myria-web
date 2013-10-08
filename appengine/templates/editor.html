@@ -66,7 +66,7 @@
 			<div id="#response"></div>
 			<div id="sig"></div>
 		</div>
-		
+
 		<div class="col-xs-4">
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -92,9 +92,12 @@
 	<div class="modal fade" id="show-svg" role="dialog">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<div class="modal-body" id ="svg-modal-body">
+				<div class="modal-header">
+					<span class="zoom-label">Zoom: </span><input type="range" class="zoom-range">
+					<button type="button" class="btn btn-sm zoom-reset">reset view</button>
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<span class="zoom-label">Zoom: </span><input type="range" class="zoom-range" step="0.05" min="0.4" max="0.9">
+				</div>
+				<div class="modal-body" id ="svg-modal-body">
 					<div class="parent">
 						<div id="zoom-canvas">
 							<output id="svg-modal-output"></output>

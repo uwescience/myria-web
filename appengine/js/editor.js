@@ -206,9 +206,10 @@ function showSvgModal() {
 
 	var panzoom = $('#zoom-canvas').panzoom({
 		maxScale: 5,
-		minScale: 0.9,
-		$zoomRange: $(".modal-body .zoom-range")
-	});
+		minScale: 1,
+		$zoomRange: $(".modal-body .zoom-range"),
+		$reset: $(".modal-body .zoom-reset")
+	}).panzoom("reset");
 }
 
 $(document).ready(function() {
