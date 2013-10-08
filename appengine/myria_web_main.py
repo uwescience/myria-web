@@ -180,6 +180,8 @@ class Queries(MyriaPage):
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        connection_string = self.get_connection_string(connection)
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
         self.response.out.write(template.render(path, locals()))
@@ -202,6 +204,8 @@ class Datasets(MyriaPage):
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        connection_string = self.get_connection_string(connection)
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, locals()))
