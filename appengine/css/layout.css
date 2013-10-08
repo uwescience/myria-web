@@ -11,6 +11,7 @@
 .example {
 	font-size: 11px;
 	font-family: "Monaco", monospace;
+	cursor: pointer;
 }
 
 .modal-open, .modal-open .navbar-fixed-top {
