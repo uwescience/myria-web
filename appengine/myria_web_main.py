@@ -178,13 +178,15 @@ class Queries(MyriaPage):
             else:
                 q['bootstrap_status'] = ''
 
+        template_vars = {'queries': queries}
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        connection_string = self.get_connection_string(connection)
+        template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
-        self.response.out.write(template.render(path, locals()))
+        self.response.out.write(template.render(path, template_vars))
 
 
 class Datasets(MyriaPage):
@@ -202,13 +204,15 @@ class Datasets(MyriaPage):
             except:
                 pass
 
+        template_vars = {'datasets': datasets}
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        connection_string = self.get_connection_string(connection)
+        template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
-        self.response.out.write(template.render(path, locals()))
+        self.response.out.write(template.render(path, template_vars))
 
 # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
 datalog_examples = [
