@@ -451,13 +451,3 @@ app = webapp2.WSGIApplication([
   ],
   debug=True
 )
-
-"""
-TODO: 
-Debug conditions: A(x,z) :- R(x,p1,y),R(y,p2,z),R(z,p3,w)
-Multiple rules
-Recursion
-Show graph visually
-Protobuf
-Show parse errors (with link to error)
-"""
