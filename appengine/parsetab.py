@@ -1,1 +1,0 @@
-../datalogcompiler/parsetab.py
