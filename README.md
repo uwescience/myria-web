@@ -14,8 +14,16 @@ You must have the [Google App Engine SDK](https://developers.google.com/App Engi
   git submodule init
   git submodule update
   ```
+  
+2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `datalogcompiler` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
-2. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. 
+  ```sh
+  ./myrial.py examples/reachable.myl
+  ```
+  
+  in the `datalogcompiler` subdirectory.
+  
+3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. 
 
   Alternatively, from the command line, you may launch:
   
