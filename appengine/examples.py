@@ -37,10 +37,10 @@ myria_examples = [
 T2 = [FROM T1 EMIT x=$0];
 
 STORE (T2, JustX);'''),
-  ('Sigma-Clipping', '''Points = SCAN(public:adhoc:Points, v:float);
+  ('Sigma-Clipping', '''Points = SCAN(sc_points);
 
 aggs = [FROM Points EMIT _sum=SUM(v), sumsq=SUM(v*v), cnt=COUNT(v)];
-newBad = SCAN(empty, v:float);
+newBad = EMPTY(v:float);
 
 bounds = [FROM Points EMIT lower=MIN(v), upper=MAX(v)];
 
