@@ -137,7 +137,7 @@ function updateExamples(language) {
 		} else {
 			/* Populate the list of examples. */
 			for ( var i = 0; i < data.length; ++i) {
-				examplesList.append('<div class="label">' + data[i][0] +
+				examplesList.append('<div class="example-label">' + data[i][0] +
 						'</div>');
 				examplesList.append('<div class="example">' + data[i][1] +
 						'</div>');
