@@ -52,9 +52,9 @@ def get_plan(query, language, plan_type):
         processor = MyrialInterpreter.StatementProcessor(MyriaCatalog())
         processor.evaluate(parsed)
         if plan_type == 'logical':
-            return processor.get_output()
+            return processor.get_logical_plan()
         elif plan_type == 'physical':
-            raise NotImplementedError('Myria physical plans')
+            return processor.get_physical_plan()
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     else:
