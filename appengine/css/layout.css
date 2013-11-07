@@ -14,10 +14,6 @@
 	cursor: pointer;
 }
 
-.modal-open, .modal-open .navbar-fixed-top {
-	margin-right: auto !important;
-}
-
 .modal-header input[type=range] {
 	width: 250px;
 	height: 10px;
