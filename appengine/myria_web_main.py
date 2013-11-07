@@ -256,7 +256,13 @@ class Plan(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
-        plan = get_logical_plan(query, language)
+        try:
+            plan = get_logical_plan(query, language)
+        except MyrialInterpreter.NoSuchRelationException as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write("Error 400 (Bad Request): Relation %s not found" % str(e))
+            self.response.status = 400
+            return
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(format_rule(plan))
@@ -266,7 +272,13 @@ class Optimize(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
-        optimized = get_physical_plan(query, language)
+        try:
+            optimized = get_physical_plan(query, language)
+        except MyrialInterpreter.NoSuchRelationException as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write("Error 400 (Bad Request): Relation %s not found" % str(e))
+            self.response.status = 400
+            return
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(optimized)
