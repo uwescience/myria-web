@@ -153,8 +153,11 @@ function updateExamples(language) {
 		/*
 		 * Finally, set the global variable editorLanguage to the new language.
 		 * This makes all the API calls back use this query parameter.
+		 * 
+		 * Then trigger the first example.
 		 */
 		editorLanguage = language;
+		$(".example").first().click();
 	}
 	$.ajax("examples", {
 		type : 'GET',
