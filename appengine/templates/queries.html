@@ -19,7 +19,7 @@
 					</tr>
 				</thead>
 				{% for q in queries %}
-				<tr class="{{q.bootstrap_status}}">
+				<tr class="{{q.bootstrap_status}} query-row" data-status="{{q.status}}" data-id="{{q.query_id}}">
 					<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.query_id}}</a></td>
 					<td class="query-raw">{{q.raw_query}}</td>
 					<td class="query-status">{{q.status}}</td>
