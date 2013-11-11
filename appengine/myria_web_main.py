@@ -190,6 +190,19 @@ class Queries(MyriaPage):
         self.response.out.write(template.render(path, template_vars))
 
 
+class Queryvis(MyriaPage):
+    def get(self):
+        template_vars = {}
+
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        template_vars['connection_string'] = self.get_connection_string()
+        # .. load and render the template
+        path = os.path.join(os.path.dirname(__file__), 'templates/queryvis.html')
+        self.response.out.write(template.render(path, template_vars))
+
+
 class Datasets(MyriaPage):
     def get(self):
         try:
@@ -399,6 +412,7 @@ app = webapp2.WSGIApplication(
         ('/', RedirectToEditor),
         ('/editor', Editor),
         ('/queries', Queries),
+        ('/queryvis', Queryvis),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
