@@ -1,5 +1,5 @@
 svg {
-  font: 12px sans-serif;
+  font: 11px sans-serif;
   shape-rendering: crispEdges;
 }
 
@@ -22,12 +22,12 @@ rect.background {
 }
 
 text.title {
-	font-size: 15px;
+	font-size: 13px;
 	font-weight: bold;
 }
 
 text.subtitle {
-	font-size: 12px;
+	font-size: 11px;
 	fill: #999;
 }
 
