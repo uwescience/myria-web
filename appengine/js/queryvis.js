@@ -83,7 +83,7 @@ function load(data) {
     eventdata = [];
 
     qf.operators.forEach(function(operator) {
-        operator.events.combined.forEach(function(event) {
+        operator.events.forEach(function(event) {
             var end = event.end;
             if (end)
                 end = new Date(end);

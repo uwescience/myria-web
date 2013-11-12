@@ -33,111 +33,88 @@ EXAMPLE_DETAILS = {
             'type': "Join",
             'name': "join(x,y)",
             'depth': 0,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 4,
-                        'end': 15,
-                        'type': 1
-                    },
-                    {
-                        'begin': 20,
-                        'end': None,
-                        'type': 2
-                    }
-                ],
-                'single': [
-                    {
-                        'time': 20,
-                        'type': 4
-                    }
-                ],
-            }
+            'events': [
+                {
+                    'begin': 4,
+                    'end': 15,
+                    'type': 1
+                },
+                {
+                    'begin': 20,
+                    'end': None,
+                    'type': 2
+                }
+            ]
         }, {
             'type': "MergeConsumer",
             'name': "mergeConsumer()",
             'depth': 0,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 10,
-                        'end': 17,
-                        'type': 3
-                    },
-                    {
-                        'begin': 25,
-                        'end': 30,
-                        'type': 1
-                    }
-                ],
-                'single': []
-            }
+            'events': [
+                {
+                    'begin': 10,
+                    'end': 17,
+                    'type': 3
+                },
+                {
+                    'begin': 25,
+                    'end': 30,
+                    'type': 1
+                }
+            ]
         }, {
             'type': "ShuffleProducer",
             'name': "shuffleProducer1()",
             'depth': 1,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 12,
-                        'end': 13,
-                        'type': 2
-                    },
-                    {
-                        'begin': 23,
-                        'end': 36,
-                        'type': 4
-                    }
-                ],
-                'single': []
-            }
+            'events': [
+                {
+                    'begin': 12,
+                    'end': 13,
+                    'type': 2
+                },
+                {
+                    'begin': 23,
+                    'end': 36,
+                    'type': 4
+                }
+            ]
         }, {
             'type': "ShuffeProducer",
             'name': "shuffleProducer2()",
             'depth': 1,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 10,
-                        'end': 16,
-                        'type': 1
-                    }
-                ],
-                'single': []
-            }
+            'events':[
+                {
+                    'begin': 10,
+                    'end': 16,
+                    'type': 1
+                }
+            ]
         }, {
             'type': "MultiwayHashJoin",
             'name': "join(x,z)",
             'depth': 2,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 2,
-                        'end': 20,
-                        'type': 3
-                    }
-                ],
-                'single': []
-            }
+            'events': [
+                {
+                    'begin': 2,
+                    'end': 20,
+                    'type': 3
+                }
+            ]
         }, {
             'type': "Union",
             'name': "union(a,b)",
             'depth': 0,
-            'events': {
-                'combined': [
-                    {
-                        'begin': 2,
-                        'end': 3,
-                        'type': 5
-                    },
-                    {
-                        'begin': 10,
-                        'end': 12,
-                        'type': 3
-                    }
-                ],
-                'single': []
-            }
+            'events': [
+                {
+                    'begin': 2,
+                    'end': 3,
+                    'type': 5
+                },
+                {
+                    'begin': 10,
+                    'end': 12,
+                    'type': 3
+                }
+            ]
         }
     ]
 }
