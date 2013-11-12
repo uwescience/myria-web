@@ -19,15 +19,19 @@
 					</tr>
 				</thead>
 				{% for q in queries %}
-				<tr class="{{q.bootstrap_status}}">
-					<td><a href="{{q.url}}" target="_blank">{{q.query_id}}</a></td>
-					<td>{{q.raw_query}}</td>
-					<td>{{q.status}}</td>
-					<td>{{q.elapsed_str}}</td>
-					<td>{{q.finish_time}}</td>
+				<tr class="{{q.bootstrap_status}} query-row" data-status="{{q.status}}" data-id="{{q.query_id}}">
+					<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.query_id}}</a></td>
+					<td class="query-raw">{{q.raw_query}}</td>
+					<td class="query-status">{{q.status}}</td>
+					<td class="query-elapsed">{{q.elapsed_str}}</td>
+					<td class="query-finish">{{q.finish_time}}</td>
 				</tr>
 				{% endfor %}
 			</table>
 		</div>
 	</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/queries.js"></script>
 {% endblock %}
