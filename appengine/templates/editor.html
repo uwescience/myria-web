@@ -114,7 +114,9 @@
 <script>
 	var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
 		mode : 'application/js',
-		lineNumbers : true
+		lineNumbers : true,
+		lineWrapping : true,
+		viewportMargin: Infinity
 	});
 </script>
 <script type="text/javascript" src="js/viz.js">
