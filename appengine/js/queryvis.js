@@ -1,123 +1,3 @@
-//data
-var data =
-{
-    begin: 4,
-    now: 35,
-    operators: [
-        {
-            type: "Join",
-            name: "join(x,y)",
-            depth: 0,
-            events: {
-                combined: [
-                    {
-                        begin: 4,
-                        end: 15,
-                        type: 1
-                    },
-                    {
-                        begin: 20,
-                        end: null,
-                        type: 2
-                    }
-                ],
-                single: [
-                    {
-                        time: 20,
-                        type: 4
-                    }
-                ],
-            }
-        }, {
-            type: "MergeConsumer",
-            name: "mergeConsumer()",
-            depth: 0,
-            events: {
-                combined: [
-                    {
-                        begin: 10,
-                        end: 17,
-                        type: 3
-                    },
-                    {
-                        begin: 25,
-                        end: 30,
-                        type: 1
-                    }
-                ],
-                single: []
-            }
-        }, {
-            type: "ShuffleProducer",
-            name: "shuffleProducer1()",
-            depth: 1,
-            events: {
-                combined: [
-                    {
-                        begin: 12,
-                        end: 13,
-                        type: 2
-                    },
-                    {
-                        begin: 23,
-                        end: 36,
-                        type: 4
-                    }
-                ],
-                single: []
-            }
-        }, {
-            type: "ShuffeProducer",
-            name: "shuffleProducer2()",
-            depth: 1,
-            events: {
-                combined: [
-                    {
-                        begin: 10,
-                        end: 16,
-                        type: 1
-                    }
-                ],
-                single: []
-            }
-        },{
-            type: "MultiwayHashJoin",
-            name: "join(x,z)",
-            depth: 2,
-            events: {
-                combined: [
-                    {
-                        begin: 2,
-                        end: 20,
-                        type: 3
-                    }
-                ],
-                single: []
-            }
-        }, {
-            type: "Union",
-            name: "union(a,b)",
-            depth: 0,
-            events: {
-                combined: [
-                    {
-                        begin: 2,
-                        end: 3,
-                        type: 5
-                    },
-                    {
-                        begin: 10,
-                        end: 12,
-                        type: 3
-                    }
-                ],
-                single: []
-            }
-        }
-    ]
-};
-
-
 var margin = {top: 20, right: 20, bottom: 40, left: 30},
     treeWidth = 200,
     width = 1000 - margin.left - margin.right,
@@ -270,7 +150,9 @@ function load(data) {
                 return "pointer";
             }
         })
-        .on("click", laneClick);
+        .on("click", function(d) {
+            laneClick(d, data);
+        });
 
     titleEnter.append("text")
         .attr("class", "title");
@@ -333,7 +215,7 @@ function load(data) {
     //svg.select("g.y.axis").transition().call(yAxis);
 }
 
-function laneClick(d) {
+function laneClick(d, data) {
     // toggle visibility of all direct children
     var index = d.index + 1,
         depth = d.depth;
@@ -352,17 +234,19 @@ function laneClick(d) {
     load(data);
 }
 
+$.getJSON('/execute', {query_id: 9, details:1}, function(querystatus) {
+    var data = querystatus.details;
+    // set the index, visible and hasChildren fields
+    var i = 0;
+    data.operators.forEach(function(operator) {
+        operator.visible = operator.depth === 0;
+        operator.index = i++;
+        if (data.operators.length > i) {
+            operator.hasChildren = data.operators[i].depth > data.operators[operator.index].depth;
+        } else {
+            operator.hasChildren = false;
+        }
+    });
 
-// set the index, visible and hasChildren fields
-var i = 0;
-data.operators.forEach(function(operator) {
-    operator.visible = operator.depth === 0;
-    operator.index = i++;
-    if (data.operators.length > i) {
-        operator.hasChildren = data.operators[i].depth > data.operators[operator.index].depth;
-    } else {
-        operator.hasChildren = false;
-    }
+    load(data);
 });
-
-load(data);

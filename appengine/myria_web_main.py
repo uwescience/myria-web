@@ -25,6 +25,123 @@ port = 1776
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
 
+EXAMPLE_DETAILS = {
+    'begin': 4,
+    'now': 35,
+    'operators': [
+        {
+            'type': "Join",
+            'name': "join(x,y)",
+            'depth': 0,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 4,
+                        'end': 15,
+                        'type': 1
+                    },
+                    {
+                        'begin': 20,
+                        'end': None,
+                        'type': 2
+                    }
+                ],
+                'single': [
+                    {
+                        'time': 20,
+                        'type': 4
+                    }
+                ],
+            }
+        }, {
+            'type': "MergeConsumer",
+            'name': "mergeConsumer()",
+            'depth': 0,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 10,
+                        'end': 17,
+                        'type': 3
+                    },
+                    {
+                        'begin': 25,
+                        'end': 30,
+                        'type': 1
+                    }
+                ],
+                'single': []
+            }
+        }, {
+            'type': "ShuffleProducer",
+            'name': "shuffleProducer1()",
+            'depth': 1,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 12,
+                        'end': 13,
+                        'type': 2
+                    },
+                    {
+                        'begin': 23,
+                        'end': 36,
+                        'type': 4
+                    }
+                ],
+                'single': []
+            }
+        }, {
+            'type': "ShuffeProducer",
+            'name': "shuffleProducer2()",
+            'depth': 1,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 10,
+                        'end': 16,
+                        'type': 1
+                    }
+                ],
+                'single': []
+            }
+        }, {
+            'type': "MultiwayHashJoin",
+            'name': "join(x,z)",
+            'depth': 2,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 2,
+                        'end': 20,
+                        'type': 3
+                    }
+                ],
+                'single': []
+            }
+        }, {
+            'type': "Union",
+            'name': "union(a,b)",
+            'depth': 0,
+            'events': {
+                'combined': [
+                    {
+                        'begin': 2,
+                        'end': 3,
+                        'type': 5
+                    },
+                    {
+                        'begin': 10,
+                        'end': 12,
+                        'type': 3
+                    }
+                ],
+                'single': []
+            }
+        }
+    ]
+}
+
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -228,6 +345,7 @@ class Datasets(MyriaPage):
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, template_vars))
 
+
 class Examples(MyriaPage):
     def get(self):
         # Get the language
@@ -385,11 +503,14 @@ class Execute(webapp2.RequestHandler):
             return
 
         query_id = self.request.get("query_id")
+        show_details = self.request.get("details", False) in ["true", "1"]
 
         try:
             query_status = connection.get_query_status(query_id)
             self.response.headers['Content-Type'] = 'application/json'
             ret = {'query_status': query_status, 'url': self.request.url}
+            if show_details:
+                ret['details'] = EXAMPLE_DETAILS
             self.response.write(json.dumps(ret))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
