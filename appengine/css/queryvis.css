@@ -1,0 +1,33 @@
+svg {
+  font: 12px sans-serif;
+  shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #bbb;
+}
+
+rect.lane {
+}
+
+rect.background {
+  fill: gray;
+  fill-opacity: 0.15;
+}
+
+.nowLine {
+  stroke: red;
+  stroke-width: 1.5;
+}
+
+text.title {
+	font-size: 15px;
+	font-weight: bold;
+}
+
+text.subtitle {
+	font-size: 12px;
+	fill: #999;
+}
+

@@ -2,7 +2,20 @@
 
 {% block queries_active %} class="active"{% endblock %}
 
+{% block extra_head %}
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+{% endblock %}
+
 {% block content %}
 	<h1>Query execution</h1>
 	<p class="lead">Visualize query execution.</p>
+
+	<p>
+        <div id="fragment"></div>
+    </p>
+{% endblock %}
+
+{% block footer %}
+	<script type="text/javascript" src="js/queryvis.js"></script>
 {% endblock %}
