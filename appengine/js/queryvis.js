@@ -64,7 +64,7 @@ chart.append('line')
     .attr('y2', height)
     .attr('class', 'nowLine');
 
-var eventdata = [];
+var statedata = [];
 
 function falatten(operators, depth) {}
 
@@ -80,17 +80,17 @@ function load(data) {
     x.domain([beginDate, nowDate]);
     y.domain(qf.operators.map(function(d) { return d.name; }));
 
-    eventdata = [];
+    statedata = [];
 
     qf.operators.forEach(function(operator) {
-        operator.events.forEach(function(event) {
-            var end = event.end;
+        operator.states.forEach(function(state) {
+            var end = state.end;
             if (end)
                 end = new Date(end);
-            eventdata.push({
+            statedata.push({
                 "oid": operator.name,
-                "type": event.type,
-                "begin": new Date(event.begin),
+                "name": state.name,
+                "begin": new Date(state.begin),
                 "end": end
             });
         });
@@ -98,15 +98,15 @@ function load(data) {
 
     /* Lanes */
 
-    // use an index function to identify events
+    // use an index function to identify states
     var lane = lanes.selectAll("rect")
-        .data(eventdata, function(d) { return d.oid + d.begin.getTime(); });
+        .data(statedata, function(d) { return d.oid + d.begin.getTime(); });
 
     lane.enter().append("rect")
         .style("opacity", 0)
         .attr("clip-path", "url(#clip)")
-        .style("fill", function(d) { return color(d.type); })
-        .attr('class', 'lane');
+        .style("fill", function(d) { return color(d.name); })
+        .attr("class", "lane");
 
     lane
         .transition()

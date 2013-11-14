@@ -33,86 +33,86 @@ EXAMPLE_DETAILS = {
             'type': "Join",
             'name': "join(x,y)",
             'depth': 0,
-            'events': [
+            'states': [
                 {
                     'begin': 4,
                     'end': 15,
-                    'type': 1
+                    'name': 'sleep'
                 },
                 {
                     'begin': 20,
                     'end': None,
-                    'type': 2
+                    'name': 'compute'
                 }
             ]
         }, {
             'type': "MergeConsumer",
             'name': "mergeConsumer()",
             'depth': 0,
-            'events': [
+            'states': [
                 {
                     'begin': 10,
                     'end': 17,
-                    'type': 3
+                    'name': 'sleep'
                 },
                 {
                     'begin': 25,
                     'end': 30,
-                    'type': 1
+                    'name': 'wait'
                 }
             ]
         }, {
             'type': "ShuffleProducer",
             'name': "shuffleProducer1()",
             'depth': 1,
-            'events': [
+            'states': [
                 {
                     'begin': 12,
                     'end': 13,
-                    'type': 2
+                    'name': 'compute'
                 },
                 {
                     'begin': 23,
                     'end': 36,
-                    'type': 4
+                    'name': 'receive'
                 }
             ]
         }, {
             'type': "ShuffeProducer",
             'name': "shuffleProducer2()",
             'depth': 1,
-            'events':[
+            'states':[
                 {
                     'begin': 10,
                     'end': 16,
-                    'type': 1
+                    'name': 'compute'
                 }
             ]
         }, {
             'type': "MultiwayHashJoin",
             'name': "join(x,z)",
             'depth': 2,
-            'events': [
+            'states': [
                 {
                     'begin': 2,
                     'end': 20,
-                    'type': 3
+                    'name': 'compute'
                 }
             ]
         }, {
             'type': "Union",
             'name': "union(a,b)",
             'depth': 0,
-            'events': [
+            'states': [
                 {
                     'begin': 2,
                     'end': 3,
-                    'type': 5
+                    'name': 'sleep'
                 },
                 {
                     'begin': 10,
                     'end': 12,
-                    'type': 3
+                    'name': 'wait'
                 }
             ]
         }
