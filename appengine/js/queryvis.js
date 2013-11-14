@@ -1,7 +1,7 @@
 var margin = {top: 20, right: 20, bottom: 40, left: 30},
     treeWidth = 200,
-    width = 1000 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom,
+    width = parseInt(d3.select('#chart').style('width'), 10) - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom,
     chartWidth = width - treeWidth;
 
 var animationDuration = 750;
@@ -23,7 +23,7 @@ var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
 
-var svg = d3.select('#fragment').append("svg")
+var svg = d3.select('#chart').append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
