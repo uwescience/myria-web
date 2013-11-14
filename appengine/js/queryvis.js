@@ -1,3 +1,11 @@
+var state_colors = {
+    "sleep": "gray",
+    "compute": "orangered",
+    "wait": "dodgerblue",
+    "receive": "orange",
+    "send": "olivedrab"
+};
+
 var margin = {top: 20, right: 20, bottom: 40, left: 30},
     treeWidth = 200,
     width = parseInt(d3.select('#chart').style('width'), 10) - margin.left - margin.right,
@@ -5,8 +13,6 @@ var margin = {top: 20, right: 20, bottom: 40, left: 30},
     chartWidth = width - treeWidth;
 
 var animationDuration = 750;
-
-var color = d3.scale.category10();
 
 var x = d3.time.scale()
     .range([0, chartWidth]);
@@ -105,7 +111,7 @@ function load(data) {
     lane.enter().append("rect")
         .style("opacity", 0)
         .attr("clip-path", "url(#clip)")
-        .style("fill", function(d) { return color(d.name); })
+        .style("fill", function(d) { return state_colors[d.name]; })
         .attr("class", "lane");
 
     lane

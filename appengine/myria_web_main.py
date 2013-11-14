@@ -96,7 +96,7 @@ EXAMPLE_DETAILS = {
                 {
                     'begin': 2,
                     'end': 20,
-                    'name': 'compute'
+                    'name': 'send'
                 }
             ]
         }, {
