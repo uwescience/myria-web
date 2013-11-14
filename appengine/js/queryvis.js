@@ -48,8 +48,8 @@ chart.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(0," + height + ")");
 
-chart.append('text')
-    .attr({'id': 'xLabel', 'x': chartWidth/2, 'y': height + margin.bottom*2/3, 'text-anchor': 'middle'})
+chart.append("text")
+    .attr({"id": "xLabel", "x": chartWidth/2, "y": height + margin.bottom*2/3, "text-anchor": "middle"})
     .text("Time (s)");
 
 /*chart.append("g")
@@ -65,10 +65,10 @@ chart.append("defs").append("clipPath")
 var lanes = chart.append("g")
     .attr("class", "lanes");
 
-chart.append('line')
-    .attr('y1', 0)
-    .attr('y2', height)
-    .attr('class', 'nowLine');
+chart.append("line")
+    .attr("y1", 0)
+    .attr("y2", height)
+    .attr("class", 'nowLine');
 
 var statedata = [];
 
@@ -84,7 +84,7 @@ function load(data) {
     });
 
     x.domain([beginDate, nowDate]);
-    y.domain(qf.operators.map(function(d) { return d.name; }));
+    y.domain(qf.operators.map(function(d) { return d.lane; }));
 
     statedata = [];
 
@@ -93,35 +93,35 @@ function load(data) {
             var end = state.end;
             if (end)
                 end = new Date(end);
+            var begin = new Date(state.begin);
             statedata.push({
-                "oid": operator.name,
+                "lane": operator.lane,
                 "name": state.name,
-                "begin": new Date(state.begin),
+                "begin": begin,
                 "end": end
             });
         });
     });
 
-    /* Lanes */
+    /* Boxes */
 
-    // use an index function to identify states
-    var lane = lanes.selectAll("rect")
-        .data(statedata, function(d) { return d.oid + d.begin.getTime(); });
+    var box = lanes.selectAll("rect")
+        .data(statedata, function(d) { return d.lane +  d.begin.getTime(); });
 
-    lane.enter().append("rect")
+    box.enter().append("rect")
         .style("opacity", 0)
         .attr("clip-path", "url(#clip)")
         .style("fill", function(d) { return state_colors[d.name]; })
-        .attr("class", "lane");
+        .attr("class", "box");
 
-    lane
+    box
         .transition()
         .duration(animationDuration)
         .attr("x", function(d) {
             return x(d.begin);
         })
         .attr("y", function(d) {
-            return y(d.oid);
+            return y(d.lane);
         })
         .attr("width", function(d, i) {
             if (d.end) {
@@ -133,22 +133,39 @@ function load(data) {
         .attr("height", y.rangeBand())
         .style("opacity", 1);
 
-    lane.exit()
+    box.exit()
         .transition()
         .duration(animationDuration)
         .style("opacity", 0)
         .remove();
 
+    /* Labels */
+
+    label = lanes.selectAll('text')
+        .data(statedata, function (d) { return d.lane + d.begin.getTime(); });
+
+    label.enter().append('text')
+        .text(function (d) { return d.name; });
+
+    label
+        .transition()
+        .duration(animationDuration)
+        .attr('x', function(d) { return x(d.begin) + y.rangeBand()/4; })
+        .attr('y', function(d) { return y(d.lane) + y.rangeBand()/2 + 3; })
+        .attr('text-anchor', 'begin')
+        .attr('class', 'box-label');
+
+    label.exit().remove();
+
     /* Titles */
 
-    // use an index function to identify operators
     var title = svg.selectAll("g.label")
-        .data(qf.operators, function(d) { return d.index; });
+        .data(qf.operators, function(d) { return d.lane; });
 
     var titleEnter = title.enter()
         .append("g")
         .style("opacity", 0)
-        .attr("transform", function(d) { return "translate(" + (20 * d.depth) + "," + (y(d.name) + y.rangeBand()/2) + ")"; })
+        .attr("transform", function(d) { return "translate(" + (20 * d.depth) + "," + (y(d.lane) + y.rangeBand()/2) + ")"; })
         .style("text-anchor", "begin")
         .attr("class", "label")
         .style("cursor", function(d) {
@@ -185,7 +202,7 @@ function load(data) {
             if (d.hasChildren) {
                 dx += 18;
             }
-            return "translate(" + dx + "," + (y(d.name) + y.rangeBand()/2) + ")";
+            return "translate(" + dx + "," + (y(d.lane) + y.rangeBand()/2) + ")";
         });
 
     title.select("text.icon")
@@ -223,17 +240,17 @@ function load(data) {
 
 function laneClick(d, data) {
     // toggle visibility of all direct children
-    var index = d.index + 1,
+    var lane = d.lane + 1,
         depth = d.depth;
-    var hide = data.operators[index].visible;
-    for (; index < data.operators.length && data.operators[index].depth > depth; index++) {
+    var hide = data.operators[lane].visible;
+    for (; lane < data.operators.length && data.operators[lane].depth > depth; lane++) {
         if (hide) {
-            if (data.operators[index].depth > depth) {
-                data.operators[index].visible = false;
+            if (data.operators[lane].depth > depth) {
+                data.operators[lane].visible = false;
             }
         } else {
-            if (data.operators[index].depth === depth + 1) {
-                data.operators[index].visible = true;
+            if (data.operators[lane].depth === depth + 1) {
+                data.operators[lane].visible = true;
             }
         }
     }
@@ -242,13 +259,13 @@ function laneClick(d, data) {
 
 $.getJSON('/execute', {query_id: 9, details:1}, function(querystatus) {
     var data = querystatus.details;
-    // set the index, visible and hasChildren fields
+    // set the lane, visible and hasChildren fields
     var i = 0;
     data.operators.forEach(function(operator) {
         operator.visible = operator.depth === 0;
-        operator.index = i++;
+        operator.lane = i++;
         if (data.operators.length > i) {
-            operator.hasChildren = data.operators[i].depth > data.operators[operator.index].depth;
+            operator.hasChildren = data.operators[i].depth > data.operators[operator.lane].depth;
         } else {
             operator.hasChildren = false;
         }

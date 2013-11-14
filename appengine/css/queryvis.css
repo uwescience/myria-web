@@ -8,7 +8,7 @@ svg {
   stroke: #bbb;
 }
 
-rect.lane {
+rect.box {
 }
 
 rect.background {
@@ -31,3 +31,7 @@ text.subtitle {
 	fill: #999;
 }
 
+text.box-label {
+  font: 12px sans-serif;
+  fill: white;
+}

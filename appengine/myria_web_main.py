@@ -94,7 +94,7 @@ EXAMPLE_DETAILS = {
             'depth': 2,
             'states': [
                 {
-                    'begin': 2,
+                    'begin': 4,
                     'end': 20,
                     'name': 'send'
                 }
@@ -105,8 +105,8 @@ EXAMPLE_DETAILS = {
             'depth': 0,
             'states': [
                 {
-                    'begin': 2,
-                    'end': 3,
+                    'begin': 5,
+                    'end': 6,
                     'name': 'sleep'
                 },
                 {
