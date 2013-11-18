@@ -72,7 +72,7 @@ chart.append("line")
 
 var statedata = [];
 
-function falatten(operators, depth) {}
+var template = _.template("<strong><%- name %></strong><br/>Duration: <%- duration %> ms");
 
 function load(data) {
     var qf = JSON.parse(JSON.stringify(data));
@@ -109,6 +109,9 @@ function load(data) {
         .data(statedata, function(d) { return d.lane +  d.begin.getTime(); });
 
     box.enter().append("rect")
+        .tooltip(function(d) {
+            return template({"name": d.name, "duration": d.end - d.begin});
+        })
         .style("opacity", 0)
         .attr("clip-path", "url(#clip)")
         .style("fill", function(d) { return state_colors[d.name]; })
@@ -138,24 +141,6 @@ function load(data) {
         .duration(animationDuration)
         .style("opacity", 0)
         .remove();
-
-    /* Labels */
-
-    label = lanes.selectAll('text')
-        .data(statedata, function (d) { return d.lane + d.begin.getTime(); });
-
-    label.enter().append('text')
-        .text(function (d) { return d.name; });
-
-    label
-        .transition()
-        .duration(animationDuration)
-        .attr('x', function(d) { return x(d.begin) + y.rangeBand()/4; })
-        .attr('y', function(d) { return y(d.lane) + y.rangeBand()/2 + 3; })
-        .attr('text-anchor', 'begin')
-        .attr('class', 'box-label');
-
-    label.exit().remove();
 
     /* Titles */
 
