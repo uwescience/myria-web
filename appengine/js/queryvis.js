@@ -72,7 +72,8 @@ chart.append("line")
 
 var statedata = [];
 
-var template = _.template("<strong><%- name %></strong><br/>Duration: <%- duration %> ms");
+var boxTemplate = _.template("Duration: <%- duration %> ms");
+var titleTemplate = _.template("Foo");
 
 function load(data) {
     var qf = JSON.parse(JSON.stringify(data));
@@ -109,8 +110,11 @@ function load(data) {
         .data(statedata, function(d) { return d.lane +  d.begin.getTime(); });
 
     box.enter().append("rect")
-        .tooltip(function(d) {
-            return template({"name": d.name, "duration": d.end - d.begin});
+        .popover(function(d) {
+            return {
+                title: d.name,
+                content: boxTemplate({"duration": d.end - d.begin})
+            };
         })
         .style("opacity", 0)
         .attr("clip-path", "url(#clip)")
@@ -177,6 +181,13 @@ function load(data) {
     titleEnter.append("text")
         .attr("dy", "1.2em")
         .attr("class", "subtitle");
+
+    titleEnter.popover(function(d) {
+        return {
+            title: "Foo",
+            content: titleTemplate()
+        };
+    });
 
     title
         .transition()
@@ -247,7 +258,7 @@ $.getJSON('/execute', {query_id: 9, details:1}, function(querystatus) {
     // set the lane, visible and hasChildren fields
     var i = 0;
     data.operators.forEach(function(operator) {
-        operator.visible = operator.depth === 0;
+        operator.visible = true;  // operator.depth === 0;
         operator.lane = i++;
         if (data.operators.length > i) {
             operator.hasChildren = data.operators[i].depth > data.operators[operator.lane].depth;
