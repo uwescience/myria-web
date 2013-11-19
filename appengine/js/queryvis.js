@@ -11,28 +11,41 @@ var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %><
 var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
 
 var ganttChart = function(selector, query_id) {
-    var margin = {top: 20, right: 20, bottom: 40, left: 30},
+    var margin = {top: 10, right: 10, bottom: 20, left: 10},
         treeWidth = 200,
         width = parseInt(d3.select(selector).style('width'), 10) - margin.left - margin.right,
-        height = 350 - margin.top - margin.bottom,
-        chartWidth = width - treeWidth;
+        height = 400 - margin.top - margin.bottom,
+        miniHeight = 30,
+        chartMargin = 40,
+        chartWidth = width - treeWidth,
+        chartHeight = height - miniHeight - chartMargin;
 
     var animationDuration = 750;
 
     var x = d3.time.scale()
         .range([0, chartWidth]);
 
+    var x2 = d3.time.scale()
+        .range([0, chartWidth]);
+
     var y = d3.scale.ordinal()
-        .rangeRoundBands([0, height], 0.2, 0.1);
+        .rangeRoundBands([0, chartHeight], 0.2, 0.1);
 
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("bottom")
-        .tickSize(-height);
+        .tickSize(-chartHeight);
+
+    var xAxis2 = d3.svg.axis()
+        .scale(x2)
+        .orient("bottom")
+        .tickSize(-miniHeight);
 
     var yAxis = d3.svg.axis()
         .scale(y)
         .orient("left");
+
+    /* charts and hierarchy */
 
     var svg = d3.select('#chart').append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -44,36 +57,60 @@ var ganttChart = function(selector, query_id) {
         .attr("class", "chart")
         .attr("transform", "translate(" + treeWidth + ", 0)");
 
+    var hierarchy = svg.append("g")
+        .attr("class", "hierarchy");
+
+    var mini = svg.append('g')
+        .attr('transform', 'translate(' + treeWidth + ',' + (chartHeight + chartMargin) + ')')
+        .attr('width', chartWidth)
+        .attr('height', miniHeight)
+        .attr('class', 'mini');
+
+    /* main chart */
+
     chart.append("rect")
         .attr("width", chartWidth)
-        .attr("height", height)
+        .attr("height", chartHeight)
         .attr("class", "background");
 
     chart.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")");
+        .attr("transform", "translate(0," + chartHeight + ")");
 
     chart.append("text")
-        .attr({"id": "xLabel", "x": chartWidth/2, "y": height + margin.bottom*2/3, "text-anchor": "middle"})
+        .attr({"id": "xLabel", "x": chartWidth/2, "y": chartHeight + 30, "text-anchor": "middle"})
         .text("Time (s)");
-
-    /*chart.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);*/
 
     chart.append("defs").append("clipPath")
         .attr("id", "clip")
       .append("rect")
         .attr("width", chartWidth)
-        .attr("height", height);
+        .attr("height", chartHeight);
 
     var lanes = chart.append("g")
         .attr("class", "lanes");
 
     chart.append("line")
         .attr("y1", 0)
-        .attr("y2", height)
+        .attr("y2", chartHeight)
         .attr("class", 'nowLine');
+
+    /* mini and brush */
+
+    var brush = d3.svg.brush()
+        .x(x2)
+        .on("brush", brushed);
+
+    mini.append('g')
+        .attr('class', 'x brush')
+        .call(brush)
+        .selectAll('rect')
+            .attr('y', 1)
+            .attr('height', miniHeight - 1);
+
+    mini.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + miniHeight + ")");
 
     /* state data as an array */
     var stateData = [];
@@ -97,6 +134,17 @@ var ganttChart = function(selector, query_id) {
         var beginDate = new Date(data.begin),
             nowDate = new Date(data.now);
 
+        x2.domain([beginDate, nowDate]);
+
+        mini.select("g.x.axis").call(xAxis2);
+
+        redraw();
+    }
+
+    function redraw() {
+        var beginDate = new Date(data.begin),
+            nowDate = new Date(data.now);
+
         var visibleLanes = {};
         getNodes({ children: data.hierarchy }, visibleLanes);
 
@@ -106,7 +154,7 @@ var ganttChart = function(selector, query_id) {
 
         var visibleNodes = _.values(visibleLanes);
 
-        x.domain([beginDate, nowDate]);
+        x.domain(brush.empty() ? [beginDate, nowDate] : brush.extent());
         y.domain(_.keys(visibleLanes));
 
         /* Boxes */
@@ -129,13 +177,8 @@ var ganttChart = function(selector, query_id) {
             .attr("class", "box");
 
         box
-            .transition()
-            .duration(animationDuration)
             .attr("x", function(d) {
                 return x(d.begin);
-            })
-            .attr("y", function(d) {
-                return y(d.lane);
             })
             .attr("width", function(d, i) {
                 if (d.end) {
@@ -143,6 +186,11 @@ var ganttChart = function(selector, query_id) {
                 } else {
                     return x(nowDate) - x(d.begin);
                 }
+            })
+            .transition()
+            .duration(animationDuration)
+            .attr("y", function(d) {
+                return y(d.lane);
             })
             .attr("height", y.rangeBand())
             .style("opacity", 1);
@@ -154,7 +202,7 @@ var ganttChart = function(selector, query_id) {
             .remove();
 
         /* Titles */
-        var title = svg.selectAll("g.label")
+        var title = hierarchy.selectAll("g.label")
             .data(visibleNodes, function(d) { return d.lane; });
 
         var titleEnter = title.enter()
@@ -246,8 +294,13 @@ var ganttChart = function(selector, query_id) {
             .attr('x1', x(nowDate))
             .attr('x2', x(nowDate));
 
-        svg.select("g.x.axis").transition().duration(animationDuration).call(xAxis);
+        chart.select("g.x.axis").call(xAxis);
     }
+
+    function brushed() {
+        redraw();
+    }
+
 
     function laneClick(d, data) {
         d.childrenVisible = !d.childrenVisible;

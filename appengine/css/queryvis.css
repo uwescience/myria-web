@@ -35,3 +35,10 @@ text.box-label {
   font: 12px sans-serif;
   fill: white;
 }
+
+.brush .extent {
+  stroke: #fff;
+  fill: blue;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
