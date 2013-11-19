@@ -70,27 +70,24 @@ chart.append("line")
     .attr("y2", height)
     .attr("class", 'nowLine');
 
-var statedata = [];
-
 var boxTemplate = _.template("Duration: <%- duration %> ms");
 var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
 var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
 
 function load(data) {
-    var qf = JSON.parse(JSON.stringify(data));
-    var beginDate = new Date(qf.begin),
-        nowDate = new Date(qf.now);
+    var beginDate = new Date(data.begin),
+        nowDate = new Date(data.now);
 
-    qf.operators = qf.operators.filter(function(d) {
+    var filteredOperators = data.operators.filter(function(d) {
         return d.visible;
     });
 
     x.domain([beginDate, nowDate]);
-    y.domain(qf.operators.map(function(d) { return d.lane; }));
+    y.domain(filteredOperators.map(function(d) { return d.lane; }));
 
-    statedata = [];
+    var statedata = [];
 
-    qf.operators.forEach(function(operator) {
+    filteredOperators.forEach(function(operator) {
         operator.states.forEach(function(state) {
             var end = state.end;
             if (end)
@@ -113,7 +110,7 @@ function load(data) {
     box.enter().append("rect")
         .popover(function(d) {
             if (d.end === null)
-                d.end = qf.now;
+                d.end = data.now;
             var duration = d.end - d.begin;
             return {
                 title: d.name,
@@ -153,7 +150,7 @@ function load(data) {
     /* Titles */
 
     var title = svg.selectAll("g.label")
-        .data(qf.operators, function(d) { return d.lane; });
+        .data(filteredOperators, function(d) { return d.lane; });
 
     var titleEnter = title.enter()
         .append("g")
@@ -187,15 +184,15 @@ function load(data) {
         .attr("class", "subtitle");
 
     titleEnter.popover(function(d) {
-        var data = _.groupBy(d.states, "name");
+        var agg = _.groupBy(d.states, "name");
         var content = "";
         var sum = function(memo, num){
             if (num.end === null)
-                num.end = qf.now;
+                num.end = data.now;
             return memo + num.end - num.begin;
         };
-        for (var state in data) {
-            var time = _.reduce(data[state], sum, 0);
+        for (var state in agg) {
+            var time = _.reduce(agg[state], sum, 0);
             content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
         }
         return {
