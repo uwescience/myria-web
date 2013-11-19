@@ -73,7 +73,8 @@ chart.append("line")
 var statedata = [];
 
 var boxTemplate = _.template("Duration: <%- duration %> ms");
-var titleTemplate = _.template("Foo");
+var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
+var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
 
 function load(data) {
     var qf = JSON.parse(JSON.stringify(data));
@@ -111,9 +112,12 @@ function load(data) {
 
     box.enter().append("rect")
         .popover(function(d) {
+            if (d.end === null)
+                d.end = qf.now;
+            var duration = d.end - d.begin;
             return {
                 title: d.name,
-                content: boxTemplate({"duration": d.end - d.begin})
+                content: boxTemplate({duration: duration})
             };
         })
         .style("opacity", 0)
@@ -183,9 +187,20 @@ function load(data) {
         .attr("class", "subtitle");
 
     titleEnter.popover(function(d) {
+        var data = _.groupBy(d.states, "name");
+        var content = "";
+        var sum = function(memo, num){
+            if (num.end === null)
+                num.end = qf.now;
+            return memo + num.end - num.begin;
+        };
+        for (var state in data) {
+            var time = _.reduce(data[state], sum, 0);
+            content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
+        }
         return {
-            title: "Foo",
-            content: titleTemplate()
+            title: titleTemplate({ name: d.name, type: d.type }),
+            content: content
         };
     });
 
