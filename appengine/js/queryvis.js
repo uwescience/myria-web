@@ -157,49 +157,31 @@ function load(data) {
         .style("opacity", 0)
         .attr("transform", function(d) { return "translate(" + (20 * d.depth) + "," + (y(d.lane) + y.rangeBand()/2) + ")"; })
         .style("text-anchor", "begin")
-        .attr("class", "label")
-        .style("cursor", function(d) {
-            if (d.hasChildren) {
-                return "pointer";
-            }
-        })
-        .on("click", function(d) {
-            laneClick(d, data);
-        });
+        .attr("class", "label");
 
     titleEnter.append("text")
-        .attr("class", "title");
-
-    titleEnter.append("text")
-        .attr("dx", -18)
+        .attr("dx", -20)
         .attr("font-family", "Glyphicons Halflings")
         .attr("font-size", "16px")
         .attr("width", 20)
         .attr("height", 20)
-        .attr("dy", 8)
-        .attr("class", "icon");
+        .attr("dy", 9)
+        .attr("class", "icon")
+        .style("cursor", function(d) {
+            if (d.hasChildren) {
+                return "pointer";
+            }
+        });
 
-    titleEnter.append("text")
+    var labelTextEnter = title.append("g")
+        .attr("class", "labelText");
+
+    labelTextEnter.append("text")
+        .attr("class", "title");
+
+    labelTextEnter.append("text")
         .attr("dy", "1.2em")
         .attr("class", "subtitle");
-
-    titleEnter.popover(function(d) {
-        var agg = _.groupBy(d.states, "name");
-        var content = "";
-        var sum = function(memo, num){
-            if (num.end === null)
-                num.end = data.now;
-            return memo + num.end - num.begin;
-        };
-        for (var state in agg) {
-            var time = _.reduce(agg[state], sum, 0);
-            content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
-        }
-        return {
-            title: titleTemplate({ name: d.name, type: d.type }),
-            content: content
-        };
-    });
 
     title
         .transition()
@@ -216,16 +198,41 @@ function load(data) {
     title.select("text.icon")
         .text(function(d) {
             if (d.hasChildren) {
-                return "\ue080";
+                if (d.childrenVisible) {
+                    return "\ue080";
+                } else {
+                    return "\ue114";
+                }
             }
         })
-        .attr("class", "icon");
+        .attr("class", "icon")
+        .on("click", function(d) {
+            laneClick(d, data);
+        });
 
     title.select("text.title")
         .text(function(d) {
             return d.name;
         })
         .attr("class", "title");
+
+    title.select("g.labelText").popover(function(d) {
+        var agg = _.groupBy(d.states, "name");
+        var content = "";
+        var sum = function(memo, num){
+            if (num.end === null)
+                num.end = data.now;
+            return memo + num.end - num.begin;
+        };
+        for (var state in agg) {
+            var time = _.reduce(agg[state], sum, 0);
+            content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
+        }
+        return {
+            title: titleTemplate({ name: d.name, type: d.type }),
+            content: content
+        };
+    });
 
     title.select("text.subtitle")
         .text(function(d) { return  d.type; })
@@ -247,7 +254,8 @@ function load(data) {
 }
 
 function laneClick(d, data) {
-    // toggle visibility of all direct children
+    // toggle visibility of all children
+    data.operators[d.lane].childrenVisible = !data.operators[d.lane].childrenVisible;
     var lane = d.lane + 1,
         depth = d.depth;
     var hide = data.operators[lane].visible;
@@ -271,6 +279,7 @@ $.getJSON('/execute', {query_id: 9, details:1}, function(querystatus) {
     var i = 0;
     data.operators.forEach(function(operator) {
         operator.visible = true;  // operator.depth === 0;
+        operator.childrenVisible = false;
         operator.lane = i++;
         if (data.operators.length > i) {
             operator.hasChildren = data.operators[i].depth > data.operators[operator.lane].depth;
