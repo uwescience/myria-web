@@ -6,6 +6,10 @@ var state_colors = {
     "send": "olivedrab"
 };
 
+var boxTemplate = _.template("Duration: <%- duration %> ms");
+var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
+var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
+
 var ganttChart = function(selector, query_id) {
     var margin = {top: 20, right: 20, bottom: 40, left: 30},
         treeWidth = 200,
@@ -71,41 +75,43 @@ var ganttChart = function(selector, query_id) {
         .attr("y2", height)
         .attr("class", 'nowLine');
 
-    var boxTemplate = _.template("Duration: <%- duration %> ms");
-    var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
-    var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
+    /* state data as an array */
+    var stateData = [];
+    /* hierarchy and general data */
+    var data = {};
 
-    function load(data) {
+    function getNodes(node, nodes) {
+        if ('lane' in node) {
+            node.hasChildren = node.children.length > 0;
+            nodes[node.lane] = node;
+            if (!node.childrenVisible) {
+                return;
+            }
+        }
+        node.children.forEach(function(child) {
+            getNodes(child, nodes);
+        });
+    }
+
+    function draw() {
         var beginDate = new Date(data.begin),
             nowDate = new Date(data.now);
 
-        var filteredOperators = data.operators.filter(function(d) {
-            return d.visible;
+        var visibleLanes = {};
+        getNodes({ children: data.hierarchy }, visibleLanes);
+
+        var visibleStates = _.filter(stateData, function(d) {
+            return visibleLanes[d.lane];
         });
+
+        var visibleNodes = _.values(visibleLanes);
 
         x.domain([beginDate, nowDate]);
-        y.domain(filteredOperators.map(function(d) { return d.lane; }));
-
-        var statedata = [];
-
-        filteredOperators.forEach(function(operator) {
-            operator.states.forEach(function(state) {
-                var end = state.end;
-                if (end)
-                    end = new Date(end);
-                var begin = new Date(state.begin);
-                statedata.push({
-                    "lane": operator.lane,
-                    "name": state.name,
-                    "begin": begin,
-                    "end": end
-                });
-            });
-        });
+        y.domain(_.keys(visibleLanes));
 
         /* Boxes */
         var box = lanes.selectAll("rect")
-            .data(statedata, function(d) { return d.lane +  d.begin.getTime(); });
+            .data(visibleStates, function(d) { return d.id; });
 
         box.enter().append("rect")
             .popover(function(d) {
@@ -148,9 +154,8 @@ var ganttChart = function(selector, query_id) {
             .remove();
 
         /* Titles */
-
         var title = svg.selectAll("g.label")
-            .data(filteredOperators, function(d) { return d.lane; });
+            .data(visibleNodes, function(d) { return d.lane; });
 
         var titleEnter = title.enter()
             .append("g")
@@ -199,9 +204,9 @@ var ganttChart = function(selector, query_id) {
             .text(function(d) {
                 if (d.hasChildren) {
                     if (d.childrenVisible) {
-                        return "\ue080";
-                    } else {
                         return "\ue114";
+                    } else {
+                        return "\ue080";
                     }
                 }
             })
@@ -217,17 +222,10 @@ var ganttChart = function(selector, query_id) {
             .attr("class", "title");
 
         title.select("g.labelText").popover(function(d) {
-            var agg = _.groupBy(d.states, "name");
             var content = "";
-            var sum = function(memo, num){
-                if (num.end === null)
-                    num.end = data.now;
-                return memo + num.end - num.begin;
-            };
-            for (var state in agg) {
-                var time = _.reduce(agg[state], sum, 0);
+            _.each(d.times, function(time, state) {
                 content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
-            }
+            });
             return {
                 title: titleTemplate({ name: d.name, type: d.type }),
                 content: content
@@ -244,7 +242,6 @@ var ganttChart = function(selector, query_id) {
             .remove();
 
         /* Other elements */
-
         svg.select('.nowLine')
             .attr('x1', x(nowDate))
             .attr('x2', x(nowDate));
@@ -253,43 +250,62 @@ var ganttChart = function(selector, query_id) {
     }
 
     function laneClick(d, data) {
-        // toggle visibility of all children
-        data.operators[d.lane].childrenVisible = !data.operators[d.lane].childrenVisible;
-        var lane = d.lane + 1,
-            depth = d.depth;
-        var hide = data.operators[lane].visible;
-        for (; lane < data.operators.length && data.operators[lane].depth > depth; lane++) {
-            if (hide) {
-                if (data.operators[lane].depth > depth) {
-                    data.operators[lane].visible = false;
-                }
-            } else {
-                if (data.operators[lane].depth === depth + 1) {
-                    data.operators[lane].visible = true;
-                }
-            }
-        }
-        load(data);
+        d.childrenVisible = !d.childrenVisible;
+        draw();
+    }
+
+    /* import loaded data into internal data structures */
+    function importTree(node, lane, depth) {
+        node.lane = lane++;
+        node.depth = depth;
+        node.childrenVisible = true;
+        node.states.forEach(function(state) {
+            var end = state.end;
+            if (end)
+                end = new Date(end);
+            var begin = new Date(state.begin);
+            stateData.push({
+                "id": node.lane + begin.getTime(),
+                "lane": node.lane,
+                "name": state.name,
+                "begin": begin,
+                "end": end
+            });
+        });
+
+        // aggregate data
+        node['times'] = {};
+        var agg = _.groupBy(node.states, "name");
+        var content = "";
+        var sum = function(memo, num){
+            if (num.end === null)
+                num.end = data.now;
+            return memo + num.end - num.begin;
+        };
+        _.each(agg, function(arr, state) {
+            var time = _.reduce(arr, sum, 0);
+            node['times'][state] = time;
+        });
+
+        // state data is in stateData
+        delete node.states;
+
+        depth++;
+        node.children.forEach(function(child) {
+            lane = importTree(child, lane, depth);
+        });
+        return lane;
     }
 
     $.getJSON('/execute', {query_id: query_id, details:1}, function(querystatus) {
-        var data = querystatus.details;
-        // set the lane, visible and hasChildren fields
-        var i = 0;
-        data.operators.forEach(function(operator) {
-            operator.visible = true;  // operator.depth === 0;
-            operator.childrenVisible = false;
-            operator.lane = i++;
-            if (data.operators.length > i) {
-                operator.hasChildren = data.operators[i].depth > data.operators[operator.lane].depth;
-            } else {
-                operator.hasChildren = false;
-            }
+        var rawData = querystatus.details;
+        data = rawData;
+        var lane = 0;
+        data.hierarchy.forEach(function(node) {
+            lane = importTree(node, lane, 0);
         });
-
-        load(data);
+        draw();
     });
-
 };
 
 ganttChart('#chart', 9);

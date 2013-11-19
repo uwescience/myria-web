@@ -28,11 +28,10 @@ myrial_parser = MyrialParser.Parser()
 EXAMPLE_DETAILS = {
     'begin': 4,
     'now': 35,
-    'operators': [
+    'hierarchy': [
         {
             'type': "Join",
             'name': "join(x,y)",
-            'depth': 0,
             'states': [
                 {
                     'begin': 4,
@@ -44,11 +43,11 @@ EXAMPLE_DETAILS = {
                     'end': None,
                     'name': 'compute'
                 }
-            ]
+            ],
+            'children': []
         }, {
             'type': "MergeConsumer",
             'name': "mergeConsumer()",
-            'depth': 0,
             'states': [
                 {
                     'begin': 10,
@@ -60,49 +59,51 @@ EXAMPLE_DETAILS = {
                     'end': 30,
                     'name': 'wait'
                 }
-            ]
-        }, {
-            'type': "ShuffleProducer",
-            'name': "shuffleProducer1()",
-            'depth': 1,
-            'states': [
+            ],
+            'children': [
                 {
-                    'begin': 12,
-                    'end': 13,
-                    'name': 'compute'
-                },
-                {
-                    'begin': 23,
-                    'end': 36,
-                    'name': 'receive'
-                }
-            ]
-        }, {
-            'type': "ShuffeProducer",
-            'name': "shuffleProducer2()",
-            'depth': 1,
-            'states':[
-                {
-                    'begin': 10,
-                    'end': 16,
-                    'name': 'compute'
-                }
-            ]
-        }, {
-            'type': "MultiwayHashJoin",
-            'name': "join(x,z)",
-            'depth': 2,
-            'states': [
-                {
-                    'begin': 4,
-                    'end': 20,
-                    'name': 'send'
+                    'type': "ShuffleProducer",
+                    'name': "shuffleProducer1()",
+                    'states': [
+                        {
+                            'begin': 12,
+                            'end': 13,
+                            'name': 'compute'
+                        },
+                        {
+                            'begin': 23,
+                            'end': 36,
+                            'name': 'receive'
+                        }
+                    ],
+                    'children': []
+                }, {
+                    'type': "ShuffeProducer",
+                    'name': "shuffleProducer2()",
+                    'states':[
+                        {
+                            'begin': 10,
+                            'end': 16,
+                            'name': 'compute'
+                        }
+                    ],
+                    'children': [{
+                        'type': "MultiwayHashJoin",
+                        'name': "join(x,z)",
+                        'states': [
+                            {
+                                'begin': 4,
+                                'end': 20,
+                                'name': 'send'
+                            }
+                        ],
+                        'children': []
+                    }]
                 }
             ]
         }, {
             'type': "Union",
             'name': "union(a,b)",
-            'depth': 0,
             'states': [
                 {
                     'begin': 5,
@@ -114,7 +115,8 @@ EXAMPLE_DETAILS = {
                     'end': 12,
                     'name': 'wait'
                 }
-            ]
+            ],
+            'children': []
         }
     ]
 }
