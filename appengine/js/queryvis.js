@@ -31,6 +31,9 @@ var ganttChart = function(selector, query_id) {
     var y = d3.scale.ordinal()
         .rangeRoundBands([0, chartHeight], 0.2, 0.1);
 
+    var y2 = d3.scale.linear()
+        .range([0, miniHeight]);
+
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("bottom")
@@ -101,6 +104,8 @@ var ganttChart = function(selector, query_id) {
         .x(x2)
         .on("brush", brushed);
 
+    miniLanes = mini.append("g");
+
     mini.append('g')
         .attr('class', 'x brush')
         .call(brush)
@@ -130,32 +135,67 @@ var ganttChart = function(selector, query_id) {
         });
     }
 
+    // generates a single path for each item class in the mini display
+    // ugly - but draws mini 2x faster than append lines or line generator
+    // is there a better way to do a bunch of lines as a single path with d3?
+    // from: http://bl.ocks.org/bunkat/1962173
+    function getPaths(items) {
+        var paths = {}, d, offset = 0.5 * y2(1) + 0.5, result = [];
+        _.each(items, function(d) {
+            if (!paths[d.name]) paths[d.name] = '';
+            if (d.end === null)
+                    d.end = data.now;
+            paths[d.name] += ["M", x2(d.begin), (y2(d.lane) + offset), "H", x2(d.end)].join(" ");
+        });
+
+        for (var name in paths) {
+            result.push({name: name, path: paths[name]});
+        }
+
+        return result;
+    }
+
+    var numberLanes = 0;
+
     function draw() {
         var beginDate = new Date(data.begin),
             nowDate = new Date(data.now);
 
         x2.domain([beginDate, nowDate]);
 
+        y2.domain([0, numberLanes]);
+
+        miniLanes.selectAll("miniItems")
+            .data(getPaths(stateData))
+            .enter().append("path")
+            .attr("class", function(d) { return "miniItem " + d.name; })
+            .attr("d", function(d) { return d.path; })
+            .style("stroke", function(d) { return state_colors[d.name]; });
+
         mini.select("g.x.axis").call(xAxis2);
 
+        recalculateVisible();
         redraw();
+    }
+
+    var visibleLanes, visibleStates, visibleNodes;
+    function recalculateVisible() {
+        visibleLanes = {};
+        getNodes({ children: data.hierarchy }, visibleLanes);
+
+        visibleStates = _.filter(stateData, function(d) {
+            return visibleLanes[d.lane];
+        });
+
+        visibleNodes = _.values(visibleLanes);
+        y.domain(_.keys(visibleLanes));
     }
 
     function redraw() {
         var beginDate = new Date(data.begin),
             nowDate = new Date(data.now);
 
-        var visibleLanes = {};
-        getNodes({ children: data.hierarchy }, visibleLanes);
-
-        var visibleStates = _.filter(stateData, function(d) {
-            return visibleLanes[d.lane];
-        });
-
-        var visibleNodes = _.values(visibleLanes);
-
         x.domain(brush.empty() ? [beginDate, nowDate] : brush.extent());
-        y.domain(_.keys(visibleLanes));
 
         /* Boxes */
         var box = lanes.selectAll("rect")
@@ -304,7 +344,8 @@ var ganttChart = function(selector, query_id) {
 
     function laneClick(d, data) {
         d.childrenVisible = !d.childrenVisible;
-        draw();
+        recalculateVisible();
+        redraw();
     }
 
     /* import loaded data into internal data structures */
@@ -357,6 +398,7 @@ var ganttChart = function(selector, query_id) {
         data.hierarchy.forEach(function(node) {
             lane = importTree(node, lane, 0);
         });
+        numberLanes = lane;
         draw();
     });
 };

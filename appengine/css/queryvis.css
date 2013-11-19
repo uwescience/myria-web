@@ -37,8 +37,13 @@ text.box-label {
 }
 
 .brush .extent {
-  stroke: #fff;
+  stroke: gray;
   fill: blue;
   fill-opacity: .125;
   shape-rendering: crispEdges;
+}
+
+.miniItem {
+  stroke-opacity: .5;
+  stroke-width: 5;
 }

@@ -72,7 +72,7 @@ EXAMPLE_DETAILS = {
                         },
                         {
                             'begin': 23,
-                            'end': 36,
+                            'end': None,
                             'name': 'receive'
                         }
                     ],
