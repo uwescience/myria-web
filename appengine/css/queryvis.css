@@ -19,7 +19,7 @@ rect.box {
 
 rect.background {
   fill: gray;
-  fill-opacity: 0.15;
+  fill-opacity: 0.1;
 }
 
 .nowLine {
@@ -78,7 +78,7 @@ text.subtitle {
 
 .rulerInfo rect {
   fill: black;
-  fill-opacity: .4;
+  fill-opacity: .8;
 }
 
 .rulerInfo text {

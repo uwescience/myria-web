@@ -16,6 +16,8 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         width = chartWidth,
         height = 150 - margin.top - margin.bottom;
 
+    var bisectTime = d3.bisector(function(d) { return d.time; }).right;
+
     var x = d3.time.scale()
         .range([0, width]);
 
@@ -24,6 +26,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
 
     var xAxis = d3.svg.axis()
         .scale(x)
+        .tickSize(-height)
         .orient("bottom");
 
     var yAxis = d3.svg.axis()
@@ -46,7 +49,24 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         .attr("width", width + treeWidth + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
-        .attr("transform", "translate(" + (margin.left + treeWidth) + "," + margin.top + ")");
+        .attr("transform", "translate(" + (margin.left + treeWidth) + "," + margin.top + ")")
+        .attr("class", "chart");
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+      .append("text")
+        .attr("class", "label")
+        .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Time (s)");
+
+    svg.append("rect")
+        .attr("width", chartWidth)
+        .attr("height", height)
+        .attr("class", "background");
 
     svg.append("defs").append("clipPath")
         .attr("id", "chartclip")
@@ -54,6 +74,24 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         .attr("width", chartWidth)
         .attr("height", height + 10)
         .attr("y", -10);
+
+    /* Ruler */
+    var tooltip = svg
+        .append("g")
+        .attr({"class": "rulerInfo"})
+        .attr("transform", "translate(" + [10, height + 10] + ")");
+
+    tooltip.append("svg:rect");
+
+    var tttext = tooltip.append("svg:text")
+        .attr("text-anchor", "left");
+
+    svg.on("mouseleave", function (e) {
+        svg.select(".ruler").style("display", "none");
+        svg
+            .select(".rulerInfo")
+            .style("opacity", 0);
+    });
 
     var wholeDomain;
 
@@ -67,21 +105,12 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         x.domain(wholeDomain);
         y.domain(d3.extent(data, function(d) { return d.value; }));
 
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis)
-          .append("text")
-            .attr("class", "label")
-            .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Time (s)");
+        yAxis.ticks(y.domain()[1]);
 
         svg.append("g")
-          .attr("class", "y axis")
-          .call(yAxis)
-        .append("text")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", -40)
             .attr("dy", ".71em")
@@ -99,6 +128,34 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
             .datum(data)
             .attr("class", "line")
             .attr("d", line);
+
+        svg.select("g.x.axis").call(xAxis);
+
+        svg.on("mousemove", function (e) {
+            d3.select(".ruler")
+                .style("display", "block")
+                .style("left", d3.event.pageX + "px");
+
+            var xPixels = d3.mouse(this)[0],
+                xValue = x.invert(xPixels);
+
+            var i = bisectTime(data, xValue),
+                d0 = data[i - 1];
+
+            svg
+                .select(".rulerInfo")
+                .style("opacity", 1)
+                .attr("transform", "translate(" + [xPixels + 5, height + 14] + ")");
+
+            tttext.text("time: " + xValue.getMilliseconds() + " #: " + d0.value);
+
+            var bbox = tttext.node().getBBox();
+            tooltip.select("rect")
+                .attr("width", bbox.width + 10)
+                .attr("height", bbox.height + 6)
+                .attr("x", bbox.x - 5)
+                .attr("y", bbox.y - 3);
+        });
     });
 
     function brushed(brush) {
@@ -171,7 +228,6 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         .attr('class', 'mini');
 
     /* main chart */
-
     chart.append("rect")
         .attr("width", chartWidth)
         .attr("height", chartHeight)
@@ -239,8 +295,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
     tooltip.append("svg:rect");
 
     var tttext = tooltip.append("svg:text")
-        .attr("text-anchor", "left")
-        .text("Foo");
+        .attr("text-anchor", "left");
 
     chart.on("mousemove", function (e) {
         ruler
