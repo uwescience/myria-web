@@ -27,7 +27,7 @@ myrial_parser = MyrialParser.Parser()
 
 EXAMPLE_DETAILS = {
     'begin': 4,
-    'now': 35,
+    'end': 35,
     'hierarchy': [
         {
             'type': "Join",

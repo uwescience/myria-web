@@ -96,7 +96,7 @@ var ganttChart = function(selector, query_id) {
     chart.append("line")
         .attr("y1", 0)
         .attr("y2", chartHeight)
-        .attr("class", 'nowLine');
+        .attr("class", 'endLine');
 
     /* mini and brush */
 
@@ -144,7 +144,7 @@ var ganttChart = function(selector, query_id) {
         _.each(items, function(d) {
             if (!paths[d.name]) paths[d.name] = '';
             if (d.end === null)
-                    d.end = data.now;
+                    d.end = data.end;
             paths[d.name] += ["M", x2(d.begin), (y2(d.lane) + offset), "H", x2(d.end)].join(" ");
         });
 
@@ -159,9 +159,9 @@ var ganttChart = function(selector, query_id) {
 
     function draw() {
         var beginDate = new Date(data.begin),
-            nowDate = new Date(data.now);
+            endDate = new Date(data.end);
 
-        x2.domain([beginDate, nowDate]);
+        x2.domain([beginDate, endDate]);
 
         y2.domain([0, numberLanes]);
 
@@ -193,9 +193,9 @@ var ganttChart = function(selector, query_id) {
 
     function redraw() {
         var beginDate = new Date(data.begin),
-            nowDate = new Date(data.now);
+            endDate = new Date(data.end);
 
-        x.domain(brush.empty() ? [beginDate, nowDate] : brush.extent());
+        x.domain(brush.empty() ? [beginDate, endDate] : brush.extent());
 
         /* Boxes */
         var box = lanes.selectAll("rect")
@@ -204,7 +204,7 @@ var ganttChart = function(selector, query_id) {
         box.enter().append("rect")
             .popover(function(d) {
                 if (d.end === null)
-                    d.end = data.now;
+                    d.end = data.end;
                 var duration = d.end - d.begin;
                 return {
                     title: d.name,
@@ -224,7 +224,7 @@ var ganttChart = function(selector, query_id) {
                 if (d.end) {
                    return x(d.end) - x(d.begin);
                 } else {
-                    return x(nowDate) - x(d.begin);
+                    return x(endDate) - x(d.begin);
                 }
             })
             .transition()
@@ -330,9 +330,9 @@ var ganttChart = function(selector, query_id) {
             .remove();
 
         /* Other elements */
-        svg.select('.nowLine')
-            .attr('x1', x(nowDate))
-            .attr('x2', x(nowDate));
+        svg.select('.endLine')
+            .attr('x1', x(endDate))
+            .attr('x2', x(endDate));
 
         chart.select("g.x.axis").call(xAxis);
     }
@@ -373,7 +373,7 @@ var ganttChart = function(selector, query_id) {
         var content = "";
         var sum = function(memo, num){
             if (num.end === null)
-                num.end = data.now;
+                num.end = data.end;
             return memo + num.end - num.begin;
         };
         _.each(agg, function(arr, state) {
