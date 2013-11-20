@@ -391,8 +391,7 @@ var ganttChart = function(selector, query_id) {
         return lane;
     }
 
-    $.getJSON('/execute', {query_id: query_id, details:1}, function(querystatus) {
-        var rawData = querystatus.details;
+    $.getJSON('/stats', {query_id: query_id, format: 'states'}, function(rawData) {
         data = rawData;
         var lane = 0;
         data.hierarchy.forEach(function(node) {

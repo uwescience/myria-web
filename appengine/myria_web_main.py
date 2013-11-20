@@ -121,6 +121,17 @@ EXAMPLE_DETAILS = {
     ]
 }
 
+EXAMPLE_UTILIZATION = {
+    'max': 4,
+    'begin': 4,
+    'end': 35,
+    'data': [
+        [0, 3],
+        [2, 1],
+        [3, 2]
+    ]
+}
+
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -496,6 +507,32 @@ class Execute(webapp2.RequestHandler):
             self.response.write(e)
 
 
+class Stats(webapp2.RequestHandler):
+    def get(self):
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        except myria.MyriaError:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
+            return
+
+        query_id = self.request.get("query_id")
+
+        format = self.request.get("format")
+
+        try:
+            ret = {}
+            if format == "states":
+                ret = EXAMPLE_DETAILS
+            elif format == "utilization":
+                ret = EXAMPLE_UTILIZATION
+            self.response.write(json.dumps(ret))
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write(e)
+
+
 class Dot(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
@@ -513,6 +550,7 @@ app = webapp2.WSGIApplication(
         ('/editor', Editor),
         ('/queries', Queries),
         ('/queryvis', Queryvis),
+        ('/stats', Stats),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
