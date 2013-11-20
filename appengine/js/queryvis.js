@@ -233,7 +233,20 @@ var ganttChart = function(selector, query_id) {
                 return y(d.lane);
             })
             .attr("height", y.rangeBand())
-            .style("opacity", 1);
+            .style("opacity", 0.75);
+
+        box.on("mouseover", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(animationDuration/3)
+                    .style({opacity: 1});
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(animationDuration)
+                    .style({opacity: 0.75});
+            });
 
         box.exit()
             .transition()
