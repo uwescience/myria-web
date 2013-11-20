@@ -212,6 +212,33 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         .attr("class", "x axis")
         .attr("transform", "translate(0," + miniHeight + ")");
 
+
+    /* ruler */
+    var ruler = d3.select("body")
+        .append("div")
+        .attr("class", "ruler");
+
+    var tooltip = d3.select("body")
+        .append("div")
+        .attr("id", "rulerInfo");
+
+    chart.on("mousemove", function (e) {
+        ruler
+            .style("display", "block")
+            .style("left", d3.event.pageX + "px");
+
+        tooltip
+            .style("display", "block")
+            .style("left", d3.event.pageX + 10 + "px")
+            .style("top", d3.event.pageY + "px")
+            .text("time: " + x.invert(d3.mouse(this)[0]).getMilliseconds());
+    });
+
+    chart.on("mouseleave", function (e) {
+        ruler.style("display", "none");
+        tooltip.style("display", "none");
+    });
+
     /* state data as an array */
     var stateData = [];
     /* hierarchy and general data */

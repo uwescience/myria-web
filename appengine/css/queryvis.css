@@ -62,3 +62,23 @@ text.box-label {
   stroke-width: 0;
   fill-opacity: .25;
 }
+
+.ruler {
+  position: fixed;
+  display: none;
+  top: 0px;
+  bottom: 0px;
+  background: #000;
+  opacity: 0.5;
+  z-index: 2;
+  width: 1px;
+  pointer-events: none;
+}
+
+#rulerInfo {
+  position: absolute;
+  padding: 4px;
+  background-color:rgba(0,0,0,0.8);
+  color: #eee;
+  border-radius: 5px;
+}
