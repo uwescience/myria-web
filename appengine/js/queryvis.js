@@ -10,6 +10,7 @@ var boxTemplate = _.template("Duration: <%- duration %> ms");
 var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
 var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
 
+var animationDuration = 750;
 
 var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
@@ -87,7 +88,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         .attr("text-anchor", "left");
 
     svg.on("mouseleave", function (e) {
-        svg.select(".ruler").style("display", "none");
+        d3.select(".ruler").style("display", "none");
         svg
             .select(".rulerInfo")
             .style("opacity", 0);
@@ -134,7 +135,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         svg.on("mousemove", function (e) {
             d3.select(".ruler")
                 .style("display", "block")
-                .style("left", d3.event.pageX + "px");
+                .style("left", d3.event.pageX - 1 + "px");
 
             var xPixels = d3.mouse(this)[0],
                 xValue = x.invert(xPixels);
@@ -145,7 +146,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
             svg
                 .select(".rulerInfo")
                 .style("opacity", 1)
-                .attr("transform", "translate(" + [xPixels + 5, height + 14] + ")");
+                .attr("transform", "translate(" + [xPixels + 6, height + 14] + ")");
 
             tttext.text("time: " + xValue.getMilliseconds() + " #: " + d0.value);
 
@@ -177,8 +178,6 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         chartMargin = 47,
         chartWidth = width - treeWidth,
         chartHeight = height - miniHeight - chartMargin;
-
-    var animationDuration = 750;
 
     var x = d3.time.scale()
         .range([0, chartWidth]);
@@ -300,12 +299,12 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
     chart.on("mousemove", function (e) {
         ruler
             .style("display", "block")
-            .style("left", d3.event.pageX + "px");
+            .style("left", d3.event.pageX - 1 + "px");
 
         chart
             .select(".rulerInfo")
             .style("opacity", 1)
-            .attr("transform", "translate(" + [d3.mouse(this)[0] + 5, chartHeight + 14] + ")");
+            .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, chartHeight + 14] + ")");
 
         tttext.text("time: " + x.invert(d3.mouse(this)[0]).getMilliseconds());
 

@@ -5,13 +5,17 @@ svg {
 
 .axis path, .axis line {
   fill: none;
-  stroke: #bbb;
+  stroke: #ccc;
 }
 
 .axis .label {
   font-size: 11px;
   font-weight: normal;
-  fill: #333;
+  fill: #555;
+}
+
+.tick text {
+  fill: #555;
 }
 
 rect.box {
