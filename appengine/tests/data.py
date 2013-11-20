@@ -86,7 +86,7 @@ EXAMPLE_DETAILS = {
                 {
                     'begin': 10,
                     'end': 12,
-                    'name': 'wait'
+                    'name': 'compute'
                 }
             ],
             'children': []

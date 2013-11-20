@@ -10,10 +10,105 @@ var boxTemplate = _.template("Duration: <%- duration %> ms");
 var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
 var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
 
-var ganttChart = function(selector, query_id) {
+
+var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
+    var margin = {top: 10, right: 10, bottom: 30, left: 10 },
+        width = chartWidth,
+        height = 200 - margin.top - margin.bottom;
+
+    var x = d3.time.scale()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .tickFormat(d3.format("d"))
+        .orient("left");
+
+    var area = d3.svg.area()
+        .interpolate("step-after")
+        .x(function(d) { return x(d.time); })
+        .y0(height)
+        .y1(function(d) { return y(d.value); });
+
+    var line = d3.svg.line()
+        .interpolate("step-after")
+        .x(function(d) { return x(d.time); })
+        .y(function(d) { return y(d.value); });
+
+    var svg = d3.select(chartSelector).append("svg")
+        .attr("width", width + treeWidth + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + (margin.left + treeWidth) + "," + margin.top + ")");
+
+    svg.append("defs").append("clipPath")
+        .attr("id", "chartclip")
+      .append("rect")
+        .attr("width", chartWidth)
+        .attr("height", height + 10)
+        .attr("y", -10);
+
+    var wholeDomain;
+
+    d3.csv("/stats?format=utilization&query_id=" + query_id, function(error, data) {
+        data.forEach(function(d) {
+            d.time = new Date(parseInt(d.time, 10));
+        });
+
+        wholeDomain = d3.extent(data, function(d) { return d.time; });
+
+        x.domain(wholeDomain);
+        y.domain(d3.extent(data, function(d) { return d.value; }));
+
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+        svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -50)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Number of nodes working");
+
+        svg.append("path")
+            .attr("clip-path", "url(#chartclip)")
+            .datum(data)
+            .attr("class", "area")
+            .attr("d", area);
+
+        svg.append("path")
+            .attr("clip-path", "url(#chartclip)")
+            .datum(data)
+            .attr("class", "line")
+            .attr("d", line);
+    });
+
+    function brushed(brush) {
+        x.domain(brush.empty() ? wholeDomain : brush.extent());
+        svg.select("path.area").attr("d", area);
+        svg.select("path.line").attr("d", line);
+        svg.select(".x.axis").call(xAxis);
+    }
+
+    return brushed;
+};
+
+var ganttChart = function(ganttSelector, chartSelector, query_id) {
     var margin = {top: 10, right: 10, bottom: 20, left: 10},
         treeWidth = 200,
-        width = parseInt(d3.select(selector).style('width'), 10) - margin.left - margin.right,
+        width = parseInt(d3.select(ganttSelector).style('width'), 10) - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom,
         miniHeight = 30,
         chartMargin = 40,
@@ -50,7 +145,7 @@ var ganttChart = function(selector, query_id) {
 
     /* charts and hierarchy */
 
-    var svg = d3.select('#chart').append("svg")
+    var svg = d3.select(ganttSelector).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
@@ -352,8 +447,10 @@ var ganttChart = function(selector, query_id) {
 
     function brushed() {
         redraw();
+        if (utilizationChart) {
+            utilizationChart(brush);
+        }
     }
-
 
     function laneClick(d, data) {
         d.childrenVisible = !d.childrenVisible;
@@ -404,6 +501,11 @@ var ganttChart = function(selector, query_id) {
         return lane;
     }
 
+    var utilizationChart;
+    if (chartSelector) {
+        utilizationChart = makeChart(chartSelector, query_id, chartWidth, treeWidth);
+    }
+
     $.getJSON('/stats', {query_id: query_id, format: 'states'}, function(rawData) {
         data = rawData;
         var lane = 0;
@@ -415,4 +517,4 @@ var ganttChart = function(selector, query_id) {
     });
 };
 
-ganttChart('#chart', 9);
+ganttChart('#gantt', '#chart', 9);

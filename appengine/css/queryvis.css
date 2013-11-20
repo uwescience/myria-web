@@ -47,3 +47,18 @@ text.box-label {
   stroke-opacity: .5;
   stroke-width: 5;
 }
+
+.line {
+  shape-rendering: auto;
+  fill: transparent;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.area {
+  fill: steelblue;
+  shape-rendering: auto;
+  stroke: steelblue;
+  stroke-width: 0;
+  fill-opacity: .25;
+}

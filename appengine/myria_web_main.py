@@ -3,6 +3,7 @@ import os.path
 from threading import Lock
 import urllib
 import webapp2
+import csv
 
 from raco import RACompiler
 from raco.myrial import parser as MyrialParser
@@ -420,9 +421,15 @@ class Stats(webapp2.RequestHandler):
             ret = {}
             if format == "states":
                 ret = EXAMPLE_DETAILS
+                self.response.write(json.dumps(ret))
             elif format == "utilization":
                 ret = get_utilization(EXAMPLE_DETAILS)
-            self.response.write(json.dumps(ret))
+                self.response.headers['Content-Type'] = 'application/csv'
+                writer = csv.writer(self.response.out)
+                writer.writerow(['time', 'value'])
+                writer.writerows(ret['data'])
+            else:
+                raise Exception('Not valid')
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
