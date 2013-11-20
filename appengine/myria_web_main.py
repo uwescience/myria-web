@@ -15,6 +15,8 @@ from examples import examples
 from google.appengine.ext.webapp import template
 
 import myria
+from states_to_utilization import get_utilization
+from tests.data import EXAMPLE_DETAILS
 
 defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
@@ -24,113 +26,6 @@ port = 1776
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
-
-EXAMPLE_DETAILS = {
-    'begin': 4,
-    'end': 35,
-    'hierarchy': [
-        {
-            'type': "Join",
-            'name': "join(x,y)",
-            'states': [
-                {
-                    'begin': 4,
-                    'end': 15,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 20,
-                    'end': None,
-                    'name': 'compute'
-                }
-            ],
-            'children': []
-        }, {
-            'type': "MergeConsumer",
-            'name': "mergeConsumer()",
-            'states': [
-                {
-                    'begin': 10,
-                    'end': 17,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 25,
-                    'end': 30,
-                    'name': 'wait'
-                }
-            ],
-            'children': [
-                {
-                    'type': "ShuffleProducer",
-                    'name': "shuffleProducer1()",
-                    'states': [
-                        {
-                            'begin': 12,
-                            'end': 13,
-                            'name': 'compute'
-                        },
-                        {
-                            'begin': 23,
-                            'end': None,
-                            'name': 'receive'
-                        }
-                    ],
-                    'children': []
-                }, {
-                    'type': "ShuffeProducer",
-                    'name': "shuffleProducer2()",
-                    'states':[
-                        {
-                            'begin': 10,
-                            'end': 16,
-                            'name': 'compute'
-                        }
-                    ],
-                    'children': [{
-                        'type': "MultiwayHashJoin",
-                        'name': "join(x,z)",
-                        'states': [
-                            {
-                                'begin': 4,
-                                'end': 20,
-                                'name': 'send'
-                            }
-                        ],
-                        'children': []
-                    }]
-                }
-            ]
-        }, {
-            'type': "Union",
-            'name': "union(a,b)",
-            'states': [
-                {
-                    'begin': 5,
-                    'end': 6,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 10,
-                    'end': 12,
-                    'name': 'wait'
-                }
-            ],
-            'children': []
-        }
-    ]
-}
-
-EXAMPLE_UTILIZATION = {
-    'max': 4,
-    'begin': 4,
-    'end': 35,
-    'data': [
-        [0, 3],
-        [2, 1],
-        [3, 2]
-    ]
-}
 
 
 def get_plan(query, language, plan_type):
@@ -518,7 +413,7 @@ class Stats(webapp2.RequestHandler):
             return
 
         query_id = self.request.get("query_id")
-
+        worker_id = self.request.get("worker_id")
         format = self.request.get("format")
 
         try:
@@ -526,7 +421,7 @@ class Stats(webapp2.RequestHandler):
             if format == "states":
                 ret = EXAMPLE_DETAILS
             elif format == "utilization":
-                ret = EXAMPLE_UTILIZATION
+                ret = get_utilization(EXAMPLE_DETAILS)
             self.response.write(json.dumps(ret))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
