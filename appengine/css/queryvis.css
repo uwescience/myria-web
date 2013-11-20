@@ -8,6 +8,12 @@ svg {
   stroke: #bbb;
 }
 
+.axis .label {
+  font-size: 11px;
+  font-weight: normal;
+  fill: #333;
+}
+
 rect.box {
 }
 
@@ -29,11 +35,6 @@ text.title {
 text.subtitle {
 	font-size: 11px;
 	fill: #999;
-}
-
-text.box-label {
-  font: 12px sans-serif;
-  fill: white;
 }
 
 .brush .extent {
@@ -75,10 +76,12 @@ text.box-label {
   pointer-events: none;
 }
 
-#rulerInfo {
-  position: absolute;
-  padding: 4px;
-  background-color:rgba(0,0,0,0.8);
-  color: #eee;
-  border-radius: 5px;
+.rulerInfo rect {
+  fill: black;
+  fill-opacity: .4;
+}
+
+.rulerInfo text {
+  font-size: 12px;
+  fill: white;
 }

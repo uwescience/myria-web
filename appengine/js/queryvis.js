@@ -14,7 +14,7 @@ var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></
 var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
         width = chartWidth,
-        height = 200 - margin.top - margin.bottom;
+        height = 150 - margin.top - margin.bottom;
 
     var x = d3.time.scale()
         .range([0, width]);
@@ -68,16 +68,22 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         y.domain(d3.extent(data, function(d) { return d.value; }));
 
         svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis);
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .append("text")
+            .attr("class", "label")
+            .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Time (s)");
 
         svg.append("g")
           .attr("class", "y axis")
           .call(yAxis)
         .append("text")
             .attr("transform", "rotate(-90)")
-            .attr("y", -50)
+            .attr("y", -40)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
             .text("Number of nodes working");
@@ -111,7 +117,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         width = parseInt(d3.select(ganttSelector).style('width'), 10) - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom,
         miniHeight = 30,
-        chartMargin = 40,
+        chartMargin = 47,
         chartWidth = width - treeWidth,
         chartHeight = height - miniHeight - chartMargin;
 
@@ -173,10 +179,9 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
 
     chart.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + chartHeight + ")");
-
-    chart.append("text")
-        .attr({"id": "xLabel", "x": chartWidth/2, "y": chartHeight + 30, "text-anchor": "middle"})
+        .attr("transform", "translate(0," + chartHeight + ")")
+      .append("text")
+        .call(xAxisLabel)
         .text("Time (s)");
 
     chart.append("defs").append("clipPath")
@@ -194,7 +199,6 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         .attr("class", 'endLine');
 
     /* mini and brush */
-
     var brush = d3.svg.brush()
         .x(x2)
         .on("brush", brushed);
@@ -210,33 +214,59 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
 
     mini.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + miniHeight + ")");
+        .attr("transform", "translate(0," + miniHeight + ")")
+      .append("text")
+        .call(xAxisLabel)
+        .text("Time (s)");
 
+    function xAxisLabel(selection) {
+        selection.attr("class", "label")
+            .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
+            .attr("dy", ".71em")
+            .style("text-anchor", "end");
+    }
 
     /* ruler */
     var ruler = d3.select("body")
         .append("div")
         .attr("class", "ruler");
 
-    var tooltip = d3.select("body")
-        .append("div")
-        .attr("id", "rulerInfo");
+    var tooltip = chart
+        .append("g")
+        .attr({"class": "rulerInfo"})
+        .attr("transform", "translate(" + [10, chartHeight + 10] + ")");
+
+    tooltip.append("svg:rect");
+
+    var tttext = tooltip.append("svg:text")
+        .attr("text-anchor", "left")
+        .text("Foo");
 
     chart.on("mousemove", function (e) {
         ruler
             .style("display", "block")
             .style("left", d3.event.pageX + "px");
 
-        tooltip
-            .style("display", "block")
-            .style("left", d3.event.pageX + 10 + "px")
-            .style("top", d3.event.pageY + "px")
-            .text("time: " + x.invert(d3.mouse(this)[0]).getMilliseconds());
+        chart
+            .select(".rulerInfo")
+            .style("opacity", 1)
+            .attr("transform", "translate(" + [d3.mouse(this)[0] + 5, chartHeight + 14] + ")");
+
+        tttext.text("time: " + x.invert(d3.mouse(this)[0]).getMilliseconds());
+
+        var bbox = tttext.node().getBBox();
+        tooltip.select("rect")
+            .attr("width", bbox.width + 10)
+            .attr("height", bbox.height + 6)
+            .attr("x", bbox.x - 5)
+            .attr("y", bbox.y - 3);
     });
 
     chart.on("mouseleave", function (e) {
         ruler.style("display", "none");
-        tooltip.style("display", "none");
+        chart
+            .select(".rulerInfo")
+            .style("opacity", 0);
     });
 
     /* state data as an array */
@@ -377,7 +407,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             .remove();
 
         /* Titles */
-        var title = hierarchy.selectAll("g.label")
+        var title = hierarchy.selectAll("g.title")
             .data(visibleNodes, function(d) { return d.lane; });
 
         var titleEnter = title.enter()
@@ -385,7 +415,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             .style("opacity", 0)
             .attr("transform", function(d) { return "translate(" + (20 * d.depth) + "," + (y(d.lane) + y.rangeBand()/2) + ")"; })
             .style("text-anchor", "begin")
-            .attr("class", "label");
+            .attr("class", "title");
 
         titleEnter.append("text")
             .attr("dx", -20)
@@ -401,13 +431,13 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
                 }
             });
 
-        var labelTextEnter = title.append("g")
-            .attr("class", "labelText");
+        var titleTextEnter = title.append("g")
+            .attr("class", "title-text");
 
-        labelTextEnter.append("text")
+        titleTextEnter.append("text")
             .attr("class", "title");
 
-        labelTextEnter.append("text")
+        titleTextEnter.append("text")
             .attr("dy", "1.2em")
             .attr("class", "subtitle");
 
@@ -444,7 +474,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             })
             .attr("class", "title");
 
-        title.select("g.labelText").popover(function(d) {
+        title.select("g.title-text").popover(function(d) {
             var content = "";
             _.each(d.times, function(time, state) {
                 content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
