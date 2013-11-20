@@ -418,6 +418,8 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
                     content: boxTemplate({duration: duration})
                 };
             })
+            .attr("rx", 2)
+            .attr("ry", 2)
             .style("opacity", 0)
             .attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return state_colors[d.name]; })
