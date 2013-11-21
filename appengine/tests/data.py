@@ -1,18 +1,18 @@
 EXAMPLE_DETAILS = {
-    'begin': 4,
-    'end': 35,
+    'begin': 40,
+    'end': 350,
     'hierarchy': [
         {
             'type': "Join",
             'name': "join(x,y)",
             'states': [
                 {
-                    'begin': 4,
-                    'end': 15,
+                    'begin': 40,
+                    'end': 150,
                     'name': 'sleep'
                 },
                 {
-                    'begin': 20,
+                    'begin': 200,
                     'end': None,
                     'name': 'compute'
                 }
@@ -23,13 +23,13 @@ EXAMPLE_DETAILS = {
             'name': "mergeConsumer()",
             'states': [
                 {
-                    'begin': 10,
-                    'end': 17,
+                    'begin': 100,
+                    'end': 170,
                     'name': 'sleep'
                 },
                 {
-                    'begin': 25,
-                    'end': 30,
+                    'begin': 250,
+                    'end': 300,
                     'name': 'wait'
                 }
             ],
@@ -39,12 +39,12 @@ EXAMPLE_DETAILS = {
                     'name': "shuffleProducer1()",
                     'states': [
                         {
-                            'begin': 12,
-                            'end': 13,
+                            'begin': 120,
+                            'end': 130,
                             'name': 'compute'
                         },
                         {
-                            'begin': 23,
+                            'begin': 230,
                             'end': None,
                             'name': 'receive'
                         }
@@ -55,8 +55,8 @@ EXAMPLE_DETAILS = {
                     'name': "shuffleProducer2()",
                     'states':[
                         {
-                            'begin': 10,
-                            'end': 16,
+                            'begin': 100,
+                            'end': 160,
                             'name': 'compute'
                         }
                     ],
@@ -65,8 +65,8 @@ EXAMPLE_DETAILS = {
                         'name': "join(x,z)",
                         'states': [
                             {
-                                'begin': 4,
-                                'end': 20,
+                                'begin': 40,
+                                'end': 200,
                                 'name': 'send'
                             }
                         ],
@@ -79,13 +79,13 @@ EXAMPLE_DETAILS = {
             'name': "union(a,b)",
             'states': [
                 {
-                    'begin': 5,
-                    'end': 6,
+                    'begin': 50,
+                    'end': 60,
                     'name': 'sleep'
                 },
                 {
-                    'begin': 10,
-                    'end': 12,
+                    'begin': 100,
+                    'end': 120,
                     'name': 'compute'
                 }
             ],
@@ -95,17 +95,11 @@ EXAMPLE_DETAILS = {
 }
 
 EXAMPLE_UTILIZATION = {
-    'max': 2,
-    'begin': 4,
-    'end': 35,
+    'max': 3,
+    'begin': 40,
+    'end': 350,
     'data': [
-        [4, 1],
-        [5, 2],
-        [6, 1],
-        [10, 2],
-        [15, 1],
-        [17, 0],
-        [20, 1],
-        [35, 0]
+        [40, 1], [50, 2], [60, 1], [100, 2], [100, 3],
+        [120, 2], [150, 1], [170, 0], [200, 1], [350, 0]
     ]
 }
