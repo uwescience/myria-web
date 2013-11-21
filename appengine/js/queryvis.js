@@ -6,11 +6,34 @@ var state_colors = {
     "send": "olivedrab"
 };
 
-var boxTemplate = _.template("Duration: <%- duration %> ms");
-var titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>");
-var stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>");
+var boxTemplate = _.template("Duration: <%- duration %>"),
+    titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
+    stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
+    chartTooltipTemplate = _.template("Time: <%- time %> #: <%- number %>"),
+    ganttTooltipTemplate = _.template("Time: <%- time %>");
 
 var animationDuration = 750;
+
+function timeFormat(formats) {
+  return function(date) {
+    var i = formats.length - 1, f = formats[i];
+    while (!f[1](date)) f = formats[--i];
+    return f[0](date);
+  };
+}
+
+var customTimeFormat = timeFormat([
+  [d3.time.format("%Y"), function() { return true; }],
+  [d3.time.format("%B"), function(d) { return d.getMonth(); }],
+  [d3.time.format("%b %d"), function(d) { return d.getDate() != 1; }],
+  [d3.time.format("%a %d"), function(d) { return d.getDay() && d.getDate() != 1; }],
+  [d3.time.format("%H o'clock"), function(d) { return d.getHours(); }],
+  [d3.time.format("noon"), function(d) { return d.getHours() == 12; }],
+  [d3.time.format("midnight"), function(d) { return d.getHours() == 24; }],
+  [d3.time.format("%H:%M"), function(d) { return d.getMinutes(); }],
+  [d3.time.format(":%S"), function(d) { return d.getSeconds(); }],
+  [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
+]);
 
 var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
@@ -27,6 +50,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
 
     var xAxis = d3.svg.axis()
         .scale(x)
+        .tickFormat(customTimeFormat)
         .tickSize(-height)
         .orient("bottom");
 
@@ -62,7 +86,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
         .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("Time (s)");
+        .text("Time");
 
     svg.append("rect")
         .attr("width", chartWidth)
@@ -148,7 +172,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
                 .style("opacity", 1)
                 .attr("transform", "translate(" + [xPixels + 6, height + 14] + ")");
 
-            tttext.text("time: " + xValue.getMilliseconds() + " #: " + d0.value);
+            tttext.text(chartTooltipTemplate({time: customTimeFormat(xValue), number: d0.value}));
 
             var bbox = tttext.node().getBBox();
             tooltip.select("rect")
@@ -180,6 +204,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         chartHeight = height - miniHeight - chartMargin;
 
     var x = d3.time.scale()
+        .clamp(true)
         .range([0, chartWidth]);
 
     var x2 = d3.time.scale()
@@ -193,11 +218,13 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
 
     var xAxis = d3.svg.axis()
         .scale(x)
+        .tickFormat(customTimeFormat)
         .orient("bottom")
         .tickSize(-chartHeight);
 
     var xAxis2 = d3.svg.axis()
         .scale(x2)
+        .tickFormat(customTimeFormat)
         .orient("bottom")
         .tickSize(-miniHeight);
 
@@ -236,8 +263,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         .attr("class", "x axis")
         .attr("transform", "translate(0," + chartHeight + ")")
       .append("text")
-        .call(xAxisLabel)
-        .text("Time (s)");
+        .call(xAxisLabel);
 
     chart.append("defs").append("clipPath")
         .attr("id", "clip")
@@ -271,14 +297,14 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         .attr("class", "x axis")
         .attr("transform", "translate(0," + miniHeight + ")")
       .append("text")
-        .call(xAxisLabel)
-        .text("Time (s)");
+        .call(xAxisLabel);
 
     function xAxisLabel(selection) {
         selection.attr("class", "label")
             .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
             .attr("dy", ".71em")
-            .style("text-anchor", "end");
+            .style("text-anchor", "end")
+            .text("Time");
     }
 
     /* ruler */
@@ -306,7 +332,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             .style("opacity", 1)
             .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, chartHeight + 14] + ")");
 
-        tttext.text("time: " + x.invert(d3.mouse(this)[0]).getMilliseconds());
+        tttext.text(ganttTooltipTemplate({ time: customTimeFormat(x.invert(d3.mouse(this)[0])) }));
 
         var bbox = tttext.node().getBBox();
         tooltip.select("rect")
@@ -414,7 +440,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
                 var duration = d.end - d.begin;
                 return {
                     title: d.name,
-                    content: boxTemplate({duration: duration})
+                    content: boxTemplate({duration: customTimeFormat(new Date(duration))})
                 };
             })
             .attr("rx", 2)
@@ -525,7 +551,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
         title.select("g.title-text").popover(function(d) {
             var content = "";
             _.each(d.times, function(time, state) {
-                content += stateTemplate({state: state, color: state_colors[state], time: time}) + "<br/>";
+                content += stateTemplate({state: state, color: state_colors[state], time: customTimeFormat(new Date(time))}) + "<br/>";
             });
             return {
                 title: titleTemplate({ name: d.name, type: d.type }),
