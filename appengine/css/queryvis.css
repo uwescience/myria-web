@@ -41,6 +41,11 @@ text.subtitle {
 	fill: #999;
 }
 
+text.icon {
+  font-size: 12px;
+  fill: #666;
+}
+
 .brush .extent {
   stroke: gray;
   fill: blue;

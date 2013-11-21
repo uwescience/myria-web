@@ -474,18 +474,14 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             .attr("class", "title");
 
         titleEnter.append("text")
-            .attr("dx", -20)
+            .attr("dx", -18)
             .attr("font-family", "Glyphicons Halflings")
             .attr("font-size", "16px")
             .attr("width", 20)
             .attr("height", 20)
-            .attr("dy", 9)
+            .attr("dy", 8)
             .attr("class", "icon")
-            .style("cursor", function(d) {
-                if (d.hasChildren) {
-                    return "pointer";
-                }
-            });
+            .style("cursor", "pointer");
 
         var titleTextEnter = title.append("g")
             .attr("class", "title-text");
@@ -502,11 +498,7 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
             .duration(animationDuration)
             .style("opacity", 1)
             .attr("transform", function(d) {
-                var dx = (25 * d.depth);
-                if (d.hasChildren) {
-                    dx += 18;
-                }
-                return "translate(" + dx + "," + (y(d.lane) + y.rangeBand()/2) + ")";
+                return "translate(" + [10 + 25 * d.depth, (y(d.lane) + y.rangeBand()/2)] + ")";
             });
 
         title.select("text.icon")
