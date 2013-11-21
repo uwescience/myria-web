@@ -286,18 +286,21 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
 
     miniLanes = mini.append("g");
 
-    mini.append('g')
-        .attr('class', 'x brush')
-        .call(brush)
-        .selectAll('rect')
-            .attr('y', 1)
-            .attr('height', miniHeight - 1);
-
     mini.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + miniHeight + ")")
       .append("text")
         .call(xAxisLabel);
+
+    mini.append('g')
+        .attr('class', 'x brush')
+        .call(brush)
+        .selectAll('rect')
+            .attr('y', 0)
+            .attr('height', miniHeight);
+
+    mini.select("rect.background")
+        .style("visibility", "visible");
 
     function xAxisLabel(selection) {
         selection.attr("class", "label")

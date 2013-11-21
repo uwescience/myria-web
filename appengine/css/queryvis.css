@@ -22,8 +22,8 @@ rect.box {
 }
 
 rect.background {
-  fill: gray;
-  fill-opacity: 0.1;
+  fill: lightgray;
+  fill-opacity: 0.15;
 }
 
 .nowLine {
@@ -48,8 +48,8 @@ text.icon {
 
 .brush .extent {
   stroke: gray;
-  fill: blue;
-  fill-opacity: .25;
+  fill: steelblue;
+  fill-opacity: .3;
   shape-rendering: crispEdges;
 }
 
