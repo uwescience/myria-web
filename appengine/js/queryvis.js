@@ -35,7 +35,7 @@ var customTimeFormat = timeFormat([
   [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
 ]);
 
-var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
+var makeChart = function(chartSelector, chartWidth, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
         width = chartWidth,
         height = 150 - margin.top - margin.bottom;
@@ -120,7 +120,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
 
     var wholeDomain;
 
-    d3.csv("/stats?format=utilization&query_id=" + query_id, function(error, data) {
+    d3.csv("/statsdata?aggregated=1&query_id=" + query_id + "&fragment_id=" + fragment_id, function(error, data) {
         data.forEach(function(d) {
             d.time = new Date(parseInt(d.time, 10));
         });
@@ -193,7 +193,7 @@ var makeChart = function(chartSelector, query_id, chartWidth, treeWidth) {
     return brushed;
 };
 
-var ganttChart = function(ganttSelector, chartSelector, query_id) {
+var ganttChart = function(ganttSelector, chartSelector) {
     var margin = {top: 10, right: 10, bottom: 20, left: 10},
         treeWidth = 200,
         width = parseInt(d3.select(ganttSelector).style('width'), 10) - margin.left - margin.right,
@@ -636,11 +636,17 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
     }
 
     var utilizationChart;
-    if (chartSelector) {
-        utilizationChart = makeChart(chartSelector, query_id, chartWidth, treeWidth);
+    if (!onlyGantt) {
+        utilizationChart = makeChart(chartSelector, chartWidth, treeWidth);
     }
 
-    $.getJSON('/stats', {query_id: query_id, format: 'states'}, function(rawData) {
+    var args = {'query_id': query_id, 'fragment_id': fragment_id, format: 'states'};
+
+    if (onlyGantt) {
+        args.worker_id = worker_id;
+    }
+
+    $.getJSON('/statsdata', args, function(rawData) {
         data = rawData;
         var lane = 0;
         data.hierarchy.forEach(function(node) {
@@ -651,4 +657,4 @@ var ganttChart = function(ganttSelector, chartSelector, query_id) {
     });
 };
 
-ganttChart('#gantt', '#chart', 9);
+ganttChart('#gantt', '#chart');

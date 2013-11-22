@@ -1,0 +1,13 @@
+{% extends "vis.html" %}
+
+{% block lead %}
+	<p class="lead">Details of the execution of query fragment {{ fragment_id }} on worker {{ worker_id }}.</p>
+{% endblock %}
+
+{% block footer %}
+	<script>
+		var onlyGantt = true;
+		var worker_id = "{{ worker_id }}";
+	</script>
+	{{ super() }}
+{% endblock %}

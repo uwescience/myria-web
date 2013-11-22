@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block queries_active %} class="active"{% endblock %}
+
+{% block extra_head %}
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+{% endblock %}
+
+{% block extra_container_class %}my-fluid-container{% endblock %}
+
+{% block content %}
+	<h1>Query execution of query {{ query_id }} </h1>
+
+	<p class="lead">
+		{% block lead %}
+		{% endblock %}
+	</p>
+
+	<p>
+		<div id="chart"></div>
+        <div id="gantt"></div>
+    </p>
+{% endblock %}
+
+{% block footer %}
+	<script>
+		var fragment_id = "{{ fragment_id }}";
+		var query_id = "{{ query_id }}";
+	</script>
+	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
+{% endblock %}

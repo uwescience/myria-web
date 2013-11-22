@@ -13,7 +13,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco import scheme
 from examples import examples
-from google.appengine.ext.webapp import template
+import jinja2
 
 import myria
 from states_to_utilization import get_utilization
@@ -28,6 +28,11 @@ port = 1776
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
 
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader('templates'),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -189,21 +194,30 @@ class Queries(MyriaPage):
         # .. connection string
         template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('queries.html')
+        self.response.out.write(template.render(template_vars))
 
 
-class Queryvis(MyriaPage):
+class Stats(MyriaPage):
     def get(self):
-        template_vars = {}
+        template_vars = {
+            'query_id': self.request.get("query_id"),
+            'fragment_id': self.request.get("fragment_id"),
+            'worker_id': self.request.get("worker_id"),
+            'format': self.request.get("format")
+        }
+
+        tmpl = 'queryvis.html'
+        if template_vars['worker_id']:
+            tmpl = 'operatorvis.html'
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/queryvis.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template(tmpl)
+        self.response.out.write(template.render(template_vars))
 
 
 class Datasets(MyriaPage):
@@ -228,8 +242,8 @@ class Datasets(MyriaPage):
         # .. connection string
         template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('datasets.html')
+        self.response.out.write(template.render(template_vars))
 
 
 class Examples(MyriaPage):
@@ -265,8 +279,8 @@ class Editor(MyriaPage):
         # .. connection string
         template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('editor.html')
+        self.response.out.write(template.render(template_vars))
 
 
 class Plan(webapp2.RequestHandler):
@@ -403,7 +417,7 @@ class Execute(webapp2.RequestHandler):
             self.response.write(e)
 
 
-class Stats(webapp2.RequestHandler):
+class StatsData(webapp2.RequestHandler):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
@@ -414,22 +428,24 @@ class Stats(webapp2.RequestHandler):
             return
 
         query_id = self.request.get("query_id")
+        fragment_id = self.request.get("fragment_id")
         worker_id = self.request.get("worker_id")
-        format = self.request.get("format")
+        aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
             ret = {}
-            if format == "states":
+            if worker_id:
                 ret = EXAMPLE_DETAILS
                 self.response.write(json.dumps(ret))
-            elif format == "utilization":
+            elif aggregated:
                 ret = get_utilization(EXAMPLE_DETAILS)
                 self.response.headers['Content-Type'] = 'application/csv'
                 writer = csv.writer(self.response.out)
                 writer.writerow(['time', 'value'])
                 writer.writerows(ret['data'])
             else:
-                raise Exception('Not valid')
+                ret = EXAMPLE_DETAILS
+                self.response.write(json.dumps(ret))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
@@ -451,8 +467,8 @@ app = webapp2.WSGIApplication(
         ('/', RedirectToEditor),
         ('/editor', Editor),
         ('/queries', Queries),
-        ('/queryvis', Queryvis),
         ('/stats', Stats),
+        ('/statsdata', StatsData),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
