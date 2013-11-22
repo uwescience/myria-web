@@ -1,98 +1,240 @@
 EXAMPLE_DETAILS = {
-    'begin': 40,
-    'end': 350,
-    'hierarchy': [
+    "begin":1385161173528741000,
+    "end":1385161174349295000,
+    "hierachy":[
         {
-            'type': "Join",
-            'name': "join(x,y)",
-            'states': [
+            "children":[
                 {
-                    'begin': 40,
-                    'end': 150,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 200,
-                    'end': None,
-                    'name': 'compute'
-                }
-            ],
-            'children': []
-        }, {
-            'type': "MergeConsumer",
-            'name': "mergeConsumer()",
-            'states': [
-                {
-                    'begin': 100,
-                    'end': 170,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 250,
-                    'end': 300,
-                    'name': 'wait'
-                }
-            ],
-            'children': [
-                {
-                    'type': "ShuffleProducer",
-                    'name': "shuffleProducer1()",
-                    'states': [
+                    "children":[],
+                    "name":"Scan(R)",
+                    "states":[
                         {
-                            'begin': 120,
-                            'end': 130,
-                            'name': 'compute'
+                            "begin":1385161173528741000,
+                            "end":1385161173611847000,
+                            "name":"compute"
                         },
                         {
-                            'begin': 230,
-                            'end': None,
-                            'name': 'receive'
-                        }
-                    ],
-                    'children': []
-                }, {
-                    'type': "ShuffeProducer",
-                    'name': "shuffleProducer2()",
-                    'states':[
+                            "begin":1385161173611847000,
+                            "end":1385161173837280000,
+                            "name":"sleep"
+                        },
                         {
-                            'begin': 100,
-                            'end': 160,
-                            'name': 'compute'
+                            "begin":1385161173837280000,
+                            "end":1385161173872481000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161173872481000,
+                            "end":1385161173922842000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161173922842000,
+                            "end":1385161173974722000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161173974722000,
+                            "end":1385161173979533000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161173979533000,
+                            "end":1385161174044227000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174044227000,
+                            "end":1385161174054064000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174054064000,
+                            "end":1385161174078035000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174078035000,
+                            "end":1385161174119296000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174119296000,
+                            "end":1385161174161624000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174161624000,
+                            "end":1385161174193845000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174193845000,
+                            "end":1385161174222874000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174222874000,
+                            "end":1385161174226755000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174226755000,
+                            "end":1385161174261993000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174261993000,
+                            "end":1385161174266659000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174266659000,
+                            "end":1385161174321959000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174321959000,
+                            "end":1385161174337865000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174337865000,
+                            "end":1385161174346110000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174346110000,
+                            "end":1385161174348207000,
+                            "name":"sleep"
+                        },
+                        {
+                            "begin":1385161174348207000,
+                            "end":1385161174349295000,
+                            "name":"compute"
+                        },
+                        {
+                            "begin":1385161174349295000,
+                            "end":1385161174349399000,
+                            "name":"sleep"
                         }
                     ],
-                    'children': [{
-                        'type': "MultiwayHashJoin",
-                        'name': "join(x,z)",
-                        'states': [
-                            {
-                                'begin': 40,
-                                'end': 200,
-                                'name': 'send'
-                            }
-                        ],
-                        'children': []
-                    }]
-                }
-            ]
-        }, {
-            'type': "Union",
-            'name': "union(a,b)",
-            'states': [
-                {
-                    'begin': 50,
-                    'end': 60,
-                    'name': 'sleep'
-                },
-                {
-                    'begin': 100,
-                    'end': 120,
-                    'name': 'compute'
+                    "type":"TableScan"
                 }
             ],
-            'children': []
+            "name":"Shuffle(R)",
+            "states":[
+                {
+                    "begin":1385161173528741000,
+                    "end":1385161173611847000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161173611847000,
+                    "end":1385161173837280000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161173837280000,
+                    "end":1385161173872481000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161173872481000,
+                    "end":1385161173922842000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161173922842000,
+                    "end":1385161173974722000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161173974722000,
+                    "end":1385161173979533000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161173979533000,
+                    "end":1385161174044227000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174044227000,
+                    "end":1385161174054064000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174054064000,
+                    "end":1385161174078035000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174078035000,
+                    "end":1385161174119296000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174119296000,
+                    "end":1385161174161624000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174161624000,
+                    "end":1385161174193845000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174193845000,
+                    "end":1385161174222874000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174222874000,
+                    "end":1385161174226755000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174226755000,
+                    "end":1385161174261993000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174261993000,
+                    "end":1385161174266659000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174266659000,
+                    "end":1385161174321959000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174321959000,
+                    "end":1385161174337865000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174337865000,
+                    "end":1385161174346110000,
+                    "name":"wait"
+                },
+                {
+                    "begin":1385161174346110000,
+                    "end":1385161174348207000,
+                    "name":"compute"
+                },
+                {
+                    "begin":1385161174348207000,
+                    "end":1385161174349295000,
+                    "name":"wait"
+                }
+            ],
+            "type":"ShuffleProducer"
         }
     ]
 }
+
 
 EXAMPLE_UTILIZATION = {
     'max': 3,
