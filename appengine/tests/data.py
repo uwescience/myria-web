@@ -1,7 +1,7 @@
 EXAMPLE_DETAILS = {
     "begin":1385161173528741000,
     "end":1385161174349295000,
-    "hierachy":[
+    "hierarchy":[
         {
             "children":[
                 {
