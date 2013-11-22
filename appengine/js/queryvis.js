@@ -83,7 +83,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
         .call(xAxis)
       .append("text")
         .attr("class", "label")
-        .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
+        .attr({"id": "xLabel", "x": chartWidth - 6, "y": -12, "text-anchor": "middle"})
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Time");
@@ -304,7 +304,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
 
     function xAxisLabel(selection) {
         selection.attr("class", "label")
-            .attr({"id": "xLabel", "x": chartWidth, "y": -12, "text-anchor": "middle"})
+            .attr({"id": "xLabel", "x": chartWidth - 6, "y": -12, "text-anchor": "middle"})
             .attr("dy", ".71em")
             .style("text-anchor", "end")
             .text("Time");
