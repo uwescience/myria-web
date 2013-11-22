@@ -433,19 +433,16 @@ class StatsData(webapp2.RequestHandler):
         aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
-            ret = {}
-            if worker_id:
-                ret = EXAMPLE_DETAILS
-                self.response.write(json.dumps(ret))
-            elif aggregated:
-                ret = get_utilization(EXAMPLE_DETAILS)
+            logs = EXAMPLE_DETAILS
+            #logs = connection.get_profile_logs(query_id, fragment_id, worker_id)
+            if aggregated:
+                ret = get_utilization(logs)
                 self.response.headers['Content-Type'] = 'application/csv'
                 writer = csv.writer(self.response.out)
                 writer.writerow(['time', 'value'])
                 writer.writerows(ret['data'])
             else:
-                ret = EXAMPLE_DETAILS
-                self.response.write(json.dumps(ret))
+                self.response.write(json.dumps(logs))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
