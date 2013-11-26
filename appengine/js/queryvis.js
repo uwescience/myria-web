@@ -1,9 +1,9 @@
 var state_colors = {
-    "sleep": "gray",
-    "compute": "orangered",
-    "wait": "dodgerblue",
-    "receive": "orange",
-    "send": "olivedrab"
+    "sleep": "#c7c7c7",
+    "compute": "#ff7f0e",
+    "wait": "#6baed6",
+    "receive": "#fd8d3c",
+    "send": "#2ca02c"
 };
 
 var boxTemplate = _.template("Duration: <%- duration %>"),
@@ -492,11 +492,9 @@ var ganttChart = function(ganttSelector, chartSelector) {
                     content: boxTemplate({duration: customFullTimeFormat(duration)})
                 };
             })
-            .attr("rx", 2)
-            .attr("ry", 2)
-            .style("opacity", 0)
             .attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return state_colors[d.name]; })
+            .style("stroke", function(d) { return d3.rgb(state_colors[d.name]).darker(0.5); })
             .attr("class", "box");
 
         box
@@ -515,20 +513,17 @@ var ganttChart = function(ganttSelector, chartSelector) {
             .attr("y", function(d) {
                 return y(d.lane);
             })
-            .attr("height", y.rangeBand())
-            .style("opacity", 0.75);
+            .attr("height", y.rangeBand());
 
         box.on("mouseover", function() {
                 d3.select(this)
-                    .transition()
-                    .duration(animationDuration/3)
-                    .style({opacity: 1});
+                    .style("fill", function(d) { return d3.rgb(state_colors[d.name]).darker(0.6); });
             })
             .on("mouseout", function() {
                 d3.select(this)
                     .transition()
-                    .duration(animationDuration)
-                    .style({opacity: 0.75});
+                    .duration(animationDuration/2)
+                    .style("fill", function(d) { return state_colors[d.name]; });
             });
 
         box.exit()

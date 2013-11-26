@@ -61,16 +61,14 @@ text.icon {
 .line {
   shape-rendering: auto;
   fill: transparent;
-  stroke: steelblue;
+  stroke: #1f77b4;
   stroke-width: 1.5px;
 }
 
 .area {
-  fill: steelblue;
+  fill: #9ecae1;
   shape-rendering: auto;
-  stroke: steelblue;
   stroke-width: 0;
-  fill-opacity: .25;
 }
 
 .ruler {
