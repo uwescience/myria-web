@@ -216,6 +216,10 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
             var i = bisectTime(data, xValue),
                 d0 = data[i - 1];
 
+            if (d0 === undefined) {
+                return;
+            }
+
             svg
                 .select(".rulerInfo")
                 .style("opacity", 1)
@@ -282,7 +286,6 @@ var ganttChart = function(ganttSelector, chartSelector) {
         .orient("left");
 
     /* charts and hierarchy */
-
     var svg = d3.select(ganttSelector).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
