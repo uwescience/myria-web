@@ -16,30 +16,73 @@ var animationDuration = 750;
 
 function timeFormat(formats) {
   return function(date) {
-    if (date % 1e9 !== 0) {
-        return (date % 1e9).toExponential(2) + " ns";
-    }
-
-    date = new Date(date/1e9);
-
     var i = formats.length - 1, f = formats[i];
     while (!f[1](date)) f = formats[--i];
     return f[0](date);
   };
 }
 
-var customTimeFormat = timeFormat([
+function timeFormatNs(formats) {
+  return function(date) {
+    if (date % 1e6 !== 0) {
+        return (date % 1e6).toExponential(2) + " ns";
+    }
+
+    return timeFormat(formats)(new Date(date/1e6));
+  };
+}
+
+var customTimeFormat = timeFormatNs([
   [d3.time.format("%Y"), function() { return true; }],
   [d3.time.format("%B"), function(d) { return d.getMonth(); }],
   [d3.time.format("%b %d"), function(d) { return d.getDate() != 1; }],
   [d3.time.format("%a %d"), function(d) { return d.getDay() && d.getDate() != 1; }],
-  [d3.time.format("%H o'clock"), function(d) { return d.getHours(); }],
+  [d3.time.format("%H"), function(d) { return d.getHours(); }],
   [d3.time.format("noon"), function(d) { return d.getHours() == 12; }],
   [d3.time.format("midnight"), function(d) { return d.getHours() == 24; }],
   [d3.time.format("%H:%M"), function(d) { return d.getMinutes(); }],
   [d3.time.format(":%S"), function(d) { return d.getSeconds(); }],
   [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
 ]);
+
+function divmod(a, b) {
+    return [Math.floor(a/b), a%b];
+}
+
+function customFullTimeFormat(d) {
+    var str = "", ms, ns, s, m, h, x;
+
+    x = divmod(d, 1e6);
+    ns = x[1];
+    x = divmod(x[0], 1000);
+    ms = x[1];
+    x = divmod(x[0], 60);
+    s = x[1];
+    x = divmod(x[0], 60);
+    m = x[1];
+    h = x[0];
+
+    if (h) {
+        str += h + " H ";
+    }
+    if (m) {
+        str += m + " m ";
+    }
+    if (s) {
+        str += s + " s ";
+    }
+    if (ms) {
+        if (s) {
+            str += d3.format("03d")(ms) + " ms ";
+        } else {
+            str += ms + " ms ";
+        }
+    }
+    if (ns) {
+        str += d3.format("06d")(ns) + " ns ";
+    }
+    return str;
+}
 
 var makeChart = function(chartSelector, chartWidth, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
@@ -178,7 +221,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
                 .style("opacity", 1)
                 .attr("transform", "translate(" + [xPixels + 6, height + 14] + ")");
 
-            tttext.text(chartTooltipTemplate({time: xValue, number: customTimeFormat(d0.value)}));
+            tttext.text(chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.value}));
 
             var bbox = tttext.node().getBBox();
             tooltip.select("rect")
@@ -341,7 +384,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
             .style("opacity", 1)
             .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, chartHeight + 14] + ")");
 
-        tttext.text(ganttTooltipTemplate({ time: x.invert(d3.mouse(this)[0]) }));
+        tttext.text(ganttTooltipTemplate({ time: customFullTimeFormat(x.invert(d3.mouse(this)[0])) }));
 
         var bbox = tttext.node().getBBox();
         tooltip.select("rect")
@@ -443,7 +486,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
                 var duration = d.end - d.begin;
                 return {
                     title: d.name,
-                    content: boxTemplate({duration: duration})
+                    content: boxTemplate({duration: customFullTimeFormat(duration)})
                 };
             })
             .attr("rx", 2)
@@ -554,7 +597,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
         title.select("g.title-text").popover(function(d) {
             var content = "";
             _.each(d.times, function(time, state) {
-                content += stateTemplate({state: state, color: state_colors[state], time: time }) + "<br/>";
+                content += stateTemplate({state: state, color: state_colors[state], time: customFullTimeFormat(time) }) + "<br/>";
             });
             return {
                 title: titleTemplate({ name: d.name, type: d.type }),
