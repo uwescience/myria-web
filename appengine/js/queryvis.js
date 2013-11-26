@@ -16,6 +16,12 @@ var animationDuration = 750;
 
 function timeFormat(formats) {
   return function(date) {
+    if (date % 1e9 !== 0) {
+        return (date % 1e9).toExponential(2) + " ns";
+    }
+
+    date = new Date(date/1e9);
+
     var i = formats.length - 1, f = formats[i];
     while (!f[1](date)) f = formats[--i];
     return f[0](date);
@@ -42,7 +48,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
 
     var bisectTime = d3.bisector(function(d) { return d.time; }).right;
 
-    var x = d3.time.scale()
+    var x = d3.scale.linear()
         .range([0, width]);
 
     var y = d3.scale.linear()
@@ -122,7 +128,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
 
     d3.csv("/statsdata?aggregated=1&query_id=" + query_id + "&fragment_id=" + fragment_id, function(error, data) {
         data.forEach(function(d) {
-            d.time = new Date(parseInt(d.time, 10));
+            d.time = parseInt(d.time, 10);
         });
 
         wholeDomain = d3.extent(data, function(d) { return d.time; });
@@ -172,7 +178,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
                 .style("opacity", 1)
                 .attr("transform", "translate(" + [xPixels + 6, height + 14] + ")");
 
-            tttext.text(chartTooltipTemplate({time: customTimeFormat(xValue), number: d0.value}));
+            tttext.text(chartTooltipTemplate({time: xValue, number: customTimeFormat(d0.value)}));
 
             var bbox = tttext.node().getBBox();
             tooltip.select("rect")
@@ -203,11 +209,11 @@ var ganttChart = function(ganttSelector, chartSelector) {
         chartWidth = width - treeWidth,
         chartHeight = height - miniHeight - chartMargin;
 
-    var x = d3.time.scale()
+    var x = d3.scale.linear()
         .clamp(true)
         .range([0, chartWidth]);
 
-    var x2 = d3.time.scale()
+    var x2 = d3.scale.linear()
         .range([0, chartWidth]);
 
     var y = d3.scale.ordinal()
@@ -335,7 +341,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
             .style("opacity", 1)
             .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, chartHeight + 14] + ")");
 
-        tttext.text(ganttTooltipTemplate({ time: customTimeFormat(x.invert(d3.mouse(this)[0])) }));
+        tttext.text(ganttTooltipTemplate({ time: x.invert(d3.mouse(this)[0]) }));
 
         var bbox = tttext.node().getBBox();
         tooltip.select("rect")
@@ -393,10 +399,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
     var numberLanes = 0;
 
     function draw() {
-        var beginDate = new Date(data.begin),
-            endDate = new Date(data.end);
-
-        x2.domain([beginDate, endDate]);
+        x2.domain([data.begin, data.end]);
 
         y2.domain([0, numberLanes]);
 
@@ -427,10 +430,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
     }
 
     function redraw() {
-        var beginDate = new Date(data.begin),
-            endDate = new Date(data.end);
-
-        x.domain(brush.empty() ? [beginDate, endDate] : brush.extent());
+        x.domain(brush.empty() ? [data.begin, data.end] : brush.extent());
 
         /* Boxes */
         var box = lanes.selectAll("rect")
@@ -443,7 +443,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
                 var duration = d.end - d.begin;
                 return {
                     title: d.name,
-                    content: boxTemplate({duration: customTimeFormat(new Date(duration))})
+                    content: boxTemplate({duration: duration})
                 };
             })
             .attr("rx", 2)
@@ -461,7 +461,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
                 if (d.end) {
                    return x(d.end) - x(d.begin);
                 } else {
-                    return x(endDate) - x(d.begin);
+                    return x(data.end) - x(d.begin);
                 }
             })
             .transition()
@@ -554,7 +554,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
         title.select("g.title-text").popover(function(d) {
             var content = "";
             _.each(d.times, function(time, state) {
-                content += stateTemplate({state: state, color: state_colors[state], time: customTimeFormat(new Date(time))}) + "<br/>";
+                content += stateTemplate({state: state, color: state_colors[state], time: time }) + "<br/>";
             });
             return {
                 title: titleTemplate({ name: d.name, type: d.type }),
@@ -573,8 +573,8 @@ var ganttChart = function(ganttSelector, chartSelector) {
 
         /* Other elements */
         svg.select('.endLine')
-            .attr('x1', x(endDate))
-            .attr('x2', x(endDate));
+            .attr('x1', x(data.end))
+            .attr('x2', x(data.end));
 
         chart.select("g.x.axis").call(xAxis);
     }
@@ -598,16 +598,12 @@ var ganttChart = function(ganttSelector, chartSelector) {
         node.depth = depth;
         node.childrenVisible = true;
         node.states.forEach(function(state) {
-            var end = state.end;
-            if (end)
-                end = new Date(end);
-            var begin = new Date(state.begin);
             stateData.push({
-                "id": node.lane + begin.getTime(),
+                "id": node.lane + state.begin,
                 "lane": node.lane,
                 "name": state.name,
-                "begin": begin,
-                "end": end
+                "begin": state.begin,
+                "end": state.end
             });
         });
 
