@@ -207,7 +207,7 @@ class Stats(MyriaPage):
             'format': self.request.get("format")
         }
 
-        tmpl = 'queryvis.html'
+        tmpl = 'fragmentvis.html'
         if template_vars['worker_id']:
             tmpl = 'operatorvis.html'
 
