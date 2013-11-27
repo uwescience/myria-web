@@ -211,7 +211,7 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
                 .style("left", d3.event.pageX - 1 + "px");
 
             var xPixels = d3.mouse(this)[0],
-                xValue = x.invert(xPixels);
+                xValue = Math.round(x.invert(xPixels));
 
             var i = bisectTime(data, xValue),
                 d0 = data[i - 1];
@@ -387,7 +387,8 @@ var ganttChart = function(ganttSelector, chartSelector) {
             .style("opacity", 1)
             .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, chartHeight + 14] + ")");
 
-        tttext.text(ganttTooltipTemplate({ time: customFullTimeFormat(x.invert(d3.mouse(this)[0])) }));
+        var xValue = Math.round(x.invert(d3.mouse(this)[0]));
+        tttext.text(ganttTooltipTemplate({ time: customFullTimeFormat(xValue) }));
 
         var bbox = tttext.node().getBBox();
         tooltip.select("rect")
