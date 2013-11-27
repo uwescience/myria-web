@@ -1,0 +1,12 @@
+{% extends "vis.html" %}
+
+{% block lead %}
+	<p class="lead">Visualization of all query fragments across all workers.</p>
+{% endblock %}
+
+{% block charts %}
+	{% for fragment_id in fragments %}
+	    <div class="chart" data-type="line"
+	    	data-query="{{ query_id }}" data-fragment="{{ fragment_id }}"></div>
+	{% endfor %}
+{% endblock %}

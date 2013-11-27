@@ -84,15 +84,20 @@ function customFullTimeFormat(d) {
     return str;
 }
 
-var makeChart = function(chartSelector, chartWidth, treeWidth) {
+var ruler = d3.select("body")
+    .append("div")
+    .attr("class", "ruler");
+
+var lineChart = function(element, treeWidth) {
     var margin = {top: 10, right: 10, bottom: 30, left: 10 },
-        width = chartWidth,
-        height = 150 - margin.top - margin.bottom;
+        width = parseInt(element.style('width'), 10) - margin.left - margin.right,
+        height = 150 - margin.top - margin.bottom,
+        chartWidth = width - treeWidth;
 
     var bisectTime = d3.bisector(function(d) { return d.time; }).right;
 
     var x = d3.scale.linear()
-        .range([0, width]);
+        .range([0, chartWidth]);
 
     var y = d3.scale.linear()
         .range([height, 0]);
@@ -119,23 +124,12 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
         .x(function(d) { return x(d.time); })
         .y(function(d) { return y(d.value); });
 
-    var svg = d3.select(chartSelector).append("svg")
-        .attr("width", width + treeWidth + margin.left + margin.right)
+    var svg = element.append("svg")
+        .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
         .attr("transform", "translate(" + (margin.left + treeWidth) + "," + margin.top + ")")
         .attr("class", "chart");
-
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-      .append("text")
-        .attr("class", "label")
-        .attr({"id": "xLabel", "x": chartWidth - 6, "y": -12, "text-anchor": "middle"})
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Time");
 
     svg.append("rect")
         .attr("width", chartWidth)
@@ -169,7 +163,11 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
 
     var wholeDomain;
 
-    d3.csv("/statsdata?aggregated=1&query_id=" + query_id + "&fragment_id=" + fragment_id, function(error, data) {
+    var url = "/statsdata?aggregated=1";
+    url += "&query_id=" + element.attr('data-query');
+    url += "&fragment_id=" + element.attr('data-fragment');
+
+    d3.csv(url, function(error, data) {
         data.forEach(function(d) {
             d.time = parseInt(d.time, 10);
         });
@@ -180,16 +178,6 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
         y.domain(d3.extent(data, function(d) { return d.value; }));
 
         yAxis.ticks(y.domain()[1]);
-
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-          .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", -40)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Number of nodes working");
 
         svg.append("path")
             .attr("clip-path", "url(#chartclip)")
@@ -202,6 +190,27 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
             .datum(data)
             .attr("class", "line")
             .attr("d", line);
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .append("text")
+            .attr("class", "label")
+            .attr({"id": "xLabel", "x": chartWidth - 6, "y": -12, "text-anchor": "middle"})
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Time");
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -40)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Number of nodes working");
 
         svg.select("g.x.axis").call(xAxis);
 
@@ -246,10 +255,10 @@ var makeChart = function(chartSelector, chartWidth, treeWidth) {
     return brushed;
 };
 
-var ganttChart = function(ganttSelector, chartSelector) {
+var ganttChart = function(element) {
     var margin = {top: 10, right: 10, bottom: 20, left: 10},
         treeWidth = 200,
-        width = parseInt(d3.select(ganttSelector).style('width'), 10) - margin.left - margin.right,
+        width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom,
         miniHeight = 30,
         chartMargin = 47,
@@ -286,7 +295,7 @@ var ganttChart = function(ganttSelector, chartSelector) {
         .orient("left");
 
     /* charts and hierarchy */
-    var svg = d3.select(ganttSelector).append("svg")
+    var svg = element.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
@@ -363,10 +372,6 @@ var ganttChart = function(ganttSelector, chartSelector) {
     }
 
     /* ruler */
-    var ruler = d3.select("body")
-        .append("div")
-        .attr("class", "ruler");
-
     var tooltip = chart
         .append("g")
         .attr({"class": "rulerInfo"})
@@ -674,14 +679,15 @@ var ganttChart = function(ganttSelector, chartSelector) {
     }
 
     var utilizationChart;
-    if (!onlyGantt) {
-        utilizationChart = makeChart(chartSelector, chartWidth, treeWidth);
+    if (element.attr('data-ref')) {
+        var el = d3.select(element.attr('data-ref'));
+        utilizationChart = lineChart(el, treeWidth);
     }
 
-    var args = {'query_id': query_id, 'fragment_id': fragment_id, format: 'states'};
+    var args = {'query_id': element.attr('data-query'), 'fragment_id': element.attr('data-fragment'), format: 'states'};
 
-    if (onlyGantt) {
-        args.worker_id = worker_id;
+    if (element.attr('data-worker')) {
+        args.worker_id = element.attr('data-worker');
     }
 
     $.getJSON('/statsdata', args, function(rawData) {
@@ -695,4 +701,13 @@ var ganttChart = function(ganttSelector, chartSelector) {
     });
 };
 
-ganttChart('#gantt', '#chart');
+// use data bindings to attach charts
+d3.selectAll('.chart').each(function() {
+    element = d3.select(this);
+    var type = element.attr('data-type');
+    if (type === 'gantt') {
+        ganttChart(element);
+    } else if (type === 'line') {
+        lineChart(element, 10);
+    }
+});

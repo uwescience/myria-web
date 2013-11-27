@@ -207,9 +207,22 @@ class Stats(MyriaPage):
             'format': self.request.get("format")
         }
 
-        tmpl = 'fragmentvis.html'
-        if template_vars['worker_id']:
-            tmpl = 'operatorvis.html'
+        tmpl = 'queryvis.html'
+        if template_vars['fragment_id']:
+            tmpl = 'fragmentvis.html'
+            if template_vars['worker_id']:
+                tmpl = 'operatorvis.html'
+
+        if tmpl == 'queryvis.html':
+            try:
+                connection = myria.MyriaConnection(hostname=hostname, port=port)
+            except myria.MyriaError:
+                self.response.headers['Content-Type'] = 'text/plain'
+                self.response.status = 503
+                self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
+                return
+            num = connection.get_number_fragments(template_vars['query_id'])
+            template_vars['fragments'] = range(num)
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -433,8 +446,8 @@ class StatsData(webapp2.RequestHandler):
         aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
-            logs = json.load(open('data/join_qf_3.json'))
-            #logs = connection.get_profile_logs(query_id, fragment_id, worker_id)
+            #logs = json.load(open('data/join_qf_3.json'))
+            logs = connection.get_profile_logs(query_id, fragment_id, worker_id)
             if aggregated:
                 ret = get_utilization(logs)
                 self.response.headers['Content-Type'] = 'application/csv'

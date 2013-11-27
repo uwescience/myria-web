@@ -4,9 +4,12 @@
 	<p class="lead">Details of the execution of query fragment {{ fragment_id }} on all workers.</p>
 {% endblock %}
 
-{% block footer %}
-	<script>
-		var onlyGantt = false;
-	</script>
-	{{ super() }}
+{% block charts %}
+	<p>
+		<div id="line-chart" data-type="line"
+        	data-query="{{ query_id }}" data-fragment="{{ fragment_id }}"></div>
+        <div class="chart" data-type="gantt"
+        	data-query="{{ query_id }}" data-fragment="{{ fragment_id }}" data-worker="{{ worker_id }}"
+        	data-ref="#line-chart"></div>
+    </p>
 {% endblock %}
