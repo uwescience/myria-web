@@ -446,7 +446,6 @@ class StatsData(webapp2.RequestHandler):
         aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
-            #logs = json.load(open('data/join_qf_3.json'))
             logs = connection.get_profile_logs(query_id, fragment_id, worker_id)
             if aggregated:
                 ret = get_utilization(logs)
