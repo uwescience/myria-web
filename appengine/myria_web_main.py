@@ -433,7 +433,7 @@ class Execute(webapp2.RequestHandler):
 class StatsData(webapp2.RequestHandler):
     def get(self):
         try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            connection = myria.MyriaConnection(hostname=hostname, port=port, timeout=600)
         except myria.MyriaError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
