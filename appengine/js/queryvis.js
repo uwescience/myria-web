@@ -698,7 +698,7 @@ var ganttChart = function(element) {
         });
         numberLanes = lane;
         draw();
-    });
+    }).error(function(error){throw error;});
 };
 
 // use data bindings to attach charts
