@@ -696,7 +696,11 @@ var ganttChart = function(element) {
         utilizationChart = lineChart(el, treeWidth);
     }
 
-    var args = {'query_id': element.attr('data-query'), 'fragment_id': element.attr('data-fragment')};
+    var args = {'query_id': element.attr('data-query')};
+
+    if (element.attr('data-fragment')) {
+        args.fragment_id = element.attr('data-fragment');
+    }
 
     if (element.attr('data-worker')) {
         args.worker_id = element.attr('data-worker');

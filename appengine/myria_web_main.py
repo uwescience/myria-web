@@ -1,5 +1,4 @@
 import json
-import os.path
 from threading import Lock
 import urllib
 import webapp2
@@ -20,8 +19,10 @@ from states_to_utilization import get_utilization
 from tests.data import EXAMPLE_DETAILS
 
 defaultquery = """A(x) :- R(x,3)"""
-hostname = "vega.cs.washington.edu"
-port = 1776
+hostname = "dbserver02.cs.washington.edu"
+port = 9013
+#hostname = "localhost"
+#port = 8753
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -212,6 +213,8 @@ class Stats(MyriaPage):
             tmpl = 'fragmentvis.html'
             if template_vars['worker_id']:
                 tmpl = 'operatorvis.html'
+        if template_vars['worker_id']:
+            tmpl = 'planvis.html'
 
         if tmpl == 'queryvis.html':
             try:
@@ -446,7 +449,32 @@ class StatsData(webapp2.RequestHandler):
         aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
-            logs = connection.get_profile_logs(query_id, fragment_id, worker_id)
+            if not fragment_id and worker_id:
+                frags = []
+                begins = []
+                ends = []
+                for fid in connection.get_fragment_ids(query_id):
+                    try:
+                        data = connection.get_profile_logs(
+                            query_id, fid, worker_id)
+                        frag = {}
+                        frag['type'] = "Fragment"
+                        frag['children'] = data['hierarchy']
+                        frag['states'] = []
+                        frag['name'] = "Fragment {}".format(fid)
+                        frags.append(frag)
+                        begins.append(data['begin'])
+                        ends.append(data['end'])
+                    except:
+                        pass
+                logs = {}
+                logs['begin'] = min(begins)
+                logs['end'] = max(ends)
+                logs['hierarchy'] = frags
+            else:
+                logs = connection.get_profile_logs(
+                    query_id, fragment_id, worker_id)
+
             if aggregated:
                 ret = get_utilization(logs)
                 self.response.headers['Content-Type'] = 'application/csv'
