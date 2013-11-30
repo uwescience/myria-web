@@ -6,6 +6,8 @@ var state_colors = {
     "send": "#2ca02c"
 };
 
+var nestedState = "wait";
+
 var boxTemplate = _.template("Duration: <%- duration %>"),
     titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
@@ -517,9 +519,19 @@ var ganttChart = function(element) {
             .transition()
             .duration(animationDuration)
             .attr("y", function(d) {
-                return y(d.lane);
+                if (d.name === nestedState) {
+                    return y(d.lane) + y.rangeBand()/2;
+                } else {
+                    return y(d.lane);
+                }
             })
-            .attr("height", y.rangeBand());
+            .attr("height", function(d) {
+                if (d.name === nestedState) {
+                    return y.rangeBand()/2;
+                } else {
+                    return y.rangeBand();
+                }
+            });
 
         box.on("mouseover", function() {
                 d3.select(this)
