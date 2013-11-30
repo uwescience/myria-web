@@ -221,8 +221,8 @@ class Stats(MyriaPage):
                 self.response.status = 503
                 self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
                 return
-            num = connection.get_number_fragments(template_vars['query_id'])
-            template_vars['fragments'] = range(num)
+            frags = connection.get_fragment_ids(template_vars['query_id'])
+            template_vars['fragments'] = frags
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
