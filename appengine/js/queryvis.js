@@ -520,14 +520,14 @@ var ganttChart = function(element) {
             .duration(animationDuration)
             .attr("y", function(d) {
                 if (d.name === nestedState) {
-                    return y(d.lane) + y.rangeBand()/2;
+                    return y(d.lane) + y.rangeBand()/3;
                 } else {
                     return y(d.lane);
                 }
             })
             .attr("height", function(d) {
                 if (d.name === nestedState) {
-                    return y.rangeBand()/2;
+                    return y.rangeBand()*2/3;
                 } else {
                     return y.rangeBand();
                 }
