@@ -208,13 +208,17 @@ class Stats(MyriaPage):
             'format': self.request.get("format")
         }
 
-        tmpl = 'queryvis.html'
-        if template_vars['fragment_id']:
+        defined = [bool(x) for x in
+                   [template_vars['fragment_id'], template_vars['worker_id']]]
+
+        if defined == [False, False]:
+            tmpl = 'queryvis.html'
+        elif defined == [True, False]:
             tmpl = 'fragmentvis.html'
-            if template_vars['worker_id']:
-                tmpl = 'operatorvis.html'
-        if template_vars['worker_id']:
+        elif defined == [False, True]:
             tmpl = 'planvis.html'
+        elif defined == [True, True]:
+            tmpl = 'operatorvis.html'
 
         if tmpl == 'queryvis.html':
             try:
