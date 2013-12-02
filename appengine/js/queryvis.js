@@ -714,7 +714,10 @@ var ganttChart = function(element) {
         });
         numberLanes = lane;
         draw();
-    }).error(function(error){throw error;});
+    }).fail(function(jqxhr, textStatus, error) {
+        var err = textStatus + ", " + error;
+        console.error("Request Failed: " + err);
+    });
 };
 
 // use data bindings to attach charts
