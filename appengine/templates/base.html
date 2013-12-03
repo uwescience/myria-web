@@ -11,54 +11,54 @@
 {% block extra_head %}{% endblock %}
 </head>
 <body>
-	<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-		<!-- Brand and toggle get grouped for better mobile display -->
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse"
-				data-target=".navbar-ex1-collapse">
-				<span class="sr-only">Toggle navigation</span> <span
-					class="icon-bar"></span> <span class="icon-bar"></span> <span
-					class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="/">Myria Web Frontend</a>
-		</div>
+    <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span> <span
+                    class="icon-bar"></span> <span class="icon-bar"></span> <span
+                    class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Myria Web Frontend</a>
+        </div>
 
-		<!-- Collect the nav links, forms, and other content for toggling -->
-		<div class="collapse navbar-collapse navbar-ex1-collapse">
-			<ul class="nav navbar-nav">
-				<li{% block editor_active %}{% endblock %}><a href="/editor">Editor</a></li>
-				<li{% block queries_active %}{% endblock %}><a href="/queries">Queries</a></li>
-				<li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
-			</ul>
-			<ul class="nav navbar-nav navbar-right">
-                                <li class="dropdown">
-                                  <a class="dropdown-toggle"
-                                     data-toggle="dropdown"
-                                     href="#">
-                                    {{nickname}}
-                                    <b class="caret"></b>
-                                    </a>
-                                  <ul class="dropdown-menu">
-                                    {% if login_url %}
-                                    <li> <a href="{{login_url}}">Login</a></li>
-                                    {% endif %}
-                                    {% if logout_url %}
-                                    <li> <a href="{{logout_url}}">Logout</a></li>
-                                    {% endif %}
-                                  </ul>
-                                </li>
-				<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
-				<li><a>{{connection_string}}</a></li>
-			</ul>
-		</div>
-		<!-- /.navbar-collapse -->
-	</nav>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                <li{% block editor_active %}{% endblock %}><a href="/editor">Editor</a></li>
+                <li{% block queries_active %}{% endblock %}><a href="/queries">Queries</a></li>
+                <li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li class="dropdown">
+                <a class="dropdown-toggle"
+                   data-toggle="dropdown"
+                   href="#">
+                  {{nickname}}
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  {% if login_url %}
+                  <li> <a href="{{login_url}}">Login</a></li>
+                  {% endif %}
+                  {% if logout_url %}
+                  <li> <a href="{{logout_url}}">Logout</a></li>
+                  {% endif %}
+                </ul>
+              </li>
+              <li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
+              <li><a>{{connection_string}}</a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </nav>
 
-	<div class="container">
-	  {% block content %}{% endblock %}
-	</div>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
 
-	{% block extra_body %}{% endblock %}
+    {% block extra_body %}{% endblock %}
 </body>
 {% block footer %}{% endblock %}
 </html>
