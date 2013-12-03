@@ -31,6 +31,22 @@
 				<li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
 			</ul>
 			<ul class="nav navbar-nav navbar-right">
+                                <li class="dropdown">
+                                  <a class="dropdown-toggle"
+                                     data-toggle="dropdown"
+                                     href="#">
+                                    {{nickname}}
+                                    <b class="caret"></b>
+                                    </a>
+                                  <ul class="dropdown-menu">
+                                    {% if login_url %}
+                                    <li> <a href="{{login_url}}">Login</a></li>
+                                    {% endif %}
+                                    {% if logout_url %}
+                                    <li> <a href="{{logout_url}}">Logout</a></li>
+                                    {% endif %}
+                                  </ul>
+                                </li>
 				<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
 				<li><a>{{connection_string}}</a></li>
 			</ul>

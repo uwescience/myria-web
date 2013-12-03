@@ -13,6 +13,7 @@ from raco.viz import get_dot
 from raco import scheme
 from examples import examples
 from google.appengine.ext.webapp import template
+from google.appengine.api import users
 
 import myria
 
@@ -24,7 +25,6 @@ port = 1776
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
-
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -141,6 +141,19 @@ class MyriaPage(webapp2.RequestHandler):
             connection_string = "unable to connect to %s:%d" % (hostname, port)
         return connection_string
 
+    def get_template_vars(self):
+        tv = {}
+        tv['connection_string'] = self.get_connection_string()
+
+        user = users.get_current_user()
+        if user:
+            tv['nickname'] = user.nickname()
+            tv['logout_url'] = users.create_logout_url('/')
+        else:
+            tv['nickname'] = 'public'
+            tv['login_url'] = users.create_login_url('/')
+
+        return tv
 
 def nano_to_str(elapsed):
     if elapsed is None:
@@ -179,12 +192,11 @@ class Queries(MyriaPage):
             else:
                 q['bootstrap_status'] = ''
 
-        template_vars = {'queries': queries}
+        template_vars = self.get_template_vars()
+        template_vars['queries'] = queries
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
         self.response.out.write(template.render(path, template_vars))
@@ -205,12 +217,13 @@ class Datasets(MyriaPage):
             except:
                 pass
 
-        template_vars = {'datasets': datasets}
+        template_vars = self.get_template_vars()
+        template_vars['datasets'] = datasets
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
+
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, template_vars))
@@ -240,13 +253,12 @@ class Editor(MyriaPage):
     def get(self, query=defaultquery):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        template_vars = {}
+
+        template_vars = self.get_template_vars()
         # .. pass in the query
         template_vars['query'] = query
         # .. pass in the Datalog examples to start
         template_vars['examples'] = examples['datalog']
-        # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
         self.response.out.write(template.render(path, template_vars))
