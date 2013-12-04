@@ -1,3 +1,6 @@
+import os
+import logging
+
 # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
 datalog_examples = [
   ('Select', '''A(x) :- R(x,3)'''),
@@ -31,44 +34,21 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
     , sp2bench_1m(journal, 'dcterms:issued', yr)''')
 ]
 
+
+path = os.path.join(os.path.dirname(__file__),
+                    'examples/sigma-clipping.myl')
+with open(path) as fh:
+    sigma_clipping = fh.read()
+
+justx = '''T1 = SCAN(Twitter);
+
+T2 = [FROM T1 EMIT $0];
+
+STORE (T2, JustX);'''
+
 myria_examples = [
-  ('JustX', '''T1 = SCAN(Twitter);
-
-T2 = [FROM T1 EMIT x=$0];
-
-STORE (T2, JustX);'''),
-  ('Sigma-Clipping', '''Points = SCAN(sc_points);
-
-aggs = [FROM Points EMIT _sum=SUM(v), sumsq=SUM(v*v), cnt=COUNT(v)];
-newBad = EMPTY(v:float);
-
-bounds = [FROM Points EMIT lower=MIN(v), upper=MAX(v)];
-
-DO
-    -- Incrementally update aggs and stats
-    new_aggs = [FROM newBad EMIT _sum=SUM(v), sumsq=SUM(v*v), cnt=COUNT(v)];
-    aggs = [FROM aggs, new_aggs EMIT _sum=aggs._sum - new_aggs._sum,
-            sumsq=aggs.sumsq - new_aggs.sumsq, cnt=aggs.cnt - new_aggs.cnt];
-
-    stats = [FROM aggs EMIT mean=_sum/cnt,
-             std=SQRT(1.0/(cnt*(cnt-1)) * (cnt * sumsq - _sum * _sum))];
-
-    -- Compute the new bounds
-    newBounds = [FROM stats EMIT lower=mean - 2 * std, upper=mean + 2 * std];
-
-    tooLow = [FROM Points, bounds, newBounds WHERE newBounds.lower > v
-              AND v >= bounds.lower EMIT v=Points.v];
-    tooHigh = [FROM Points, bounds, newBounds WHERE newBounds.upper < v
-               AND v <= bounds.upper EMIT v=Points.v];
-    newBad = UNIONALL(tooLow, tooHigh);
-
-    bounds = newBounds;
-    continue = [FROM newBad EMIT COUNT(v) > 0];
-WHILE continue;
-
-output = [FROM Points, bounds WHERE Points.v > bounds.lower AND
-          Points.v < bounds.upper EMIT v=Points.v];
-DUMP(output);''')
+    ('JustX', justx),
+    ('Sigma-Clipping', sigma_clipping),
 ]
 
 examples = { 'datalog' : datalog_examples,
