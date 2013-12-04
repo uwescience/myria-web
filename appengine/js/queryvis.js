@@ -1,7 +1,7 @@
 var state_colors = {
     "sleep": "#c7c7c7",
     "compute": "#ff7f0e",
-    "wait": "#fdae6b",
+    "wait": "#ffbb78",
     "receive": "#fd8d3c",
     "send": "#2ca02c"
 };
@@ -515,9 +515,9 @@ var ganttChart = function(element) {
                 return y.rangeBand();
             });
 
-        box.on("mouseover", function() {
+        box.on("mousemove", function() {
                 d3.select(this)
-                    .style("fill", function(d) { return d3.rgb(state_colors[d.name]).darker(0.6); });
+                    .style("fill", function(d) { return d3.rgb(state_colors[d.name]).darker(0.5); });
             })
             .on("mouseout", function() {
                 d3.select(this)
