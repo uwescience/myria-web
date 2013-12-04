@@ -1,12 +1,10 @@
 var state_colors = {
     "sleep": "#c7c7c7",
     "compute": "#ff7f0e",
-    "wait": "#6baed6",
+    "wait": "#fdae6b",
     "receive": "#fd8d3c",
     "send": "#2ca02c"
 };
-
-var nestedState = "wait";
 
 var boxTemplate = _.template("Duration: <%- duration %>"),
     titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
@@ -519,18 +517,10 @@ var ganttChart = function(element) {
             .transition()
             .duration(animationDuration)
             .attr("y", function(d) {
-                if (d.name === nestedState) {
-                    return y(d.lane) + y.rangeBand()/3;
-                } else {
-                    return y(d.lane);
-                }
+                return y(d.lane);
             })
             .attr("height", function(d) {
-                if (d.name === nestedState) {
-                    return y.rangeBand()*2/3;
-                } else {
-                    return y.rangeBand();
-                }
+                return y.rangeBand();
             });
 
         box.on("mouseover", function() {
