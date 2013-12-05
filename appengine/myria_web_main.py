@@ -457,24 +457,23 @@ class StatsData(webapp2.RequestHandler):
                 frags = []
                 begin = None
                 end = None
-                for i, fid in enumerate(connection.get_fragment_ids(query_id)):
-                    try:
-                        data = connection.get_profile_logs(
-                            query_id, fid, worker_id)
-                        frag = {}
-                        frag['type'] = "Fragment"
-                        frag['children'] = data['hierarchy']
-                        frag['states'] = []
-                        frag['name'] = "Fragment {}".format(fid)
-                        frags.append(frag)
-                        if not i:
-                            begin = data['begin']
-                            end = data['end']
-                        else:
-                            begin = min(begin, data['begin'])
-                            end = max(end, data['end'])
-                    except:
-                        pass
+                for fid in connection.get_fragment_ids(query_id):
+                    data = connection.get_profile_logs(
+                        query_id, fid, worker_id)
+                    if not 'hierarchy' in data:
+                        continue
+                    frag = {}
+                    frag['type'] = "Fragment"
+                    frag['children'] = data['hierarchy']
+                    frag['states'] = []
+                    frag['name'] = "Fragment {}".format(fid)
+                    frags.append(frag)
+                    if begin is None:
+                        begin = data['begin']
+                        end = data['end']
+                    else:
+                        begin = min(begin, data['begin'])
+                        end = max(end, data['end'])
                 logs = {}
                 logs['begin'] = begin
                 logs['end'] = end
