@@ -6,7 +6,7 @@ var state_colors = {
     "send": "#2ca02c"
 };
 
-var boxTemplate = _.template("Duration: <%- duration %>"),
+var boxTemplate = _.template("Duration: <%- duration %><br/>Begin: <%- begin %><br/>End: <%- end %>"),
     titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     chartTooltipTemplate = _.template("Time: <%- time %> #: <%- number %>"),
@@ -161,7 +161,7 @@ var lineChart = function(element, treeWidth) {
 
     d3.csv(url, function(error, data) {
         data.forEach(function(d) {
-            d.time = parseInt(d.time, 10);
+            d.time = parseFloat(d.time, 10);
         });
 
         wholeDomain = d3.extent(data, function(d) { return d.time; });
@@ -466,7 +466,7 @@ var ganttChart = function(element) {
         getNodes({ children: data.hierarchy }, visibleLanes);
 
         visibleStates = _.filter(stateData, function(d) {
-            return visibleLanes[d.lane];
+            return d.lane in visibleLanes;
         });
 
         visibleNodes = _.values(visibleLanes);
@@ -487,7 +487,7 @@ var ganttChart = function(element) {
                 var duration = d.end - d.begin;
                 return {
                     title: d.name,
-                    content: boxTemplate({duration: customFullTimeFormat(duration)})
+                    content: boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
                 };
             })
             .attr("clip-path", "url(#clip)")
@@ -633,6 +633,8 @@ var ganttChart = function(element) {
         redraw();
     }
 
+    var id = 0;
+
     /* import loaded data into internal data structures */
     function importTree(node, lane, depth) {
         node.lane = lane++;
@@ -640,7 +642,7 @@ var ganttChart = function(element) {
         node.childrenVisible = true;
         node.states.forEach(function(state) {
             stateData.push({
-                "id": node.lane + state.begin,
+                "id": id++,
                 "lane": node.lane,
                 "name": state.name,
                 "begin": state.begin,

@@ -457,7 +457,7 @@ class StatsData(webapp2.RequestHandler):
                 frags = []
                 begin = None
                 end = None
-                for fid in connection.get_fragment_ids(query_id):
+                for fid in connection.get_fragment_ids(query_id, worker_id):
                     data = connection.get_profile_logs(
                         query_id, fid, worker_id)
                     if not 'hierarchy' in data:
