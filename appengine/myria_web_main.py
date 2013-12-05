@@ -251,6 +251,14 @@ class Editor(MyriaPage):
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
         self.response.out.write(template.render(path, template_vars))
 
+class Upload(MyriaPage):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+
+        template_vars = {}
+        template_vars['connection_string'] = self.get_connection_string()
+        path = os.path.join(os.path.dirname(__file__), 'templates/upload.html')
+        self.response.out.write(template.render(path, template_vars))
 
 class Plan(webapp2.RequestHandler):
     def get(self):
@@ -312,7 +320,6 @@ class Compile(webapp2.RequestHandler):
             self.response.write("Error 400 (Bad Request): %s" % str(e))
             self.response.status = 400
             return
-
 
 class Execute(webapp2.RequestHandler):
     def post(self):
@@ -382,7 +389,6 @@ class Execute(webapp2.RequestHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
 
-
 class Dot(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
@@ -404,6 +410,7 @@ app = webapp2.WSGIApplication(
         ('/optimize', Optimize),
         ('/compile', Compile),
         ('/execute', Execute),
+        ('/upload', Upload),
         ('/dot', Dot),
         ('/examples', Examples),
     ],
