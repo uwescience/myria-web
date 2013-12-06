@@ -3,5 +3,30 @@
 {% block upload_active %} class="active"{% endblock %}
 
 {% block content %}
-<h1> Hello World </h1>
+
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Pending Uploads</h3>
+  </div>
+
+  <div class="panel-body">
+    <table class="table table-condensed">
+      <thead>
+	<tr>
+	  <th>Name</th>
+	  <th>Date</th>
+	  <th>Size</th>
+	</tr>
+      </thead>
+      {% for d in uploads  %}
+      <tr>
+	<td>{{d.name}}</td>
+	<td>{{d.date}}</td>
+        <td>{{d.content|length}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
 {% endblock %}

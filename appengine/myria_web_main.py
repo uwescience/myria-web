@@ -13,6 +13,7 @@ from raco.viz import get_dot
 from raco import scheme
 from examples import examples
 from google.appengine.ext.webapp import template
+from google.appengine.ext import ndb
 
 import myria
 
@@ -25,6 +26,11 @@ port = 1776
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
 
+# State associated with pending uploads
+class UploadState(ndb.Model):
+    name = ndb.StringProperty()
+    content = ndb.BlobProperty()
+    date = ndb.DateTimeProperty(auto_now_add=True)
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -120,6 +126,10 @@ def get_queries(connection=None):
     except myria.MyriaError:
         return []
 
+def get_pending_uploads():
+    query = UploadState.query()
+    results = query.fetch(10)
+    return results
 
 class RedirectToEditor(webapp2.RequestHandler):
     def get(self, query=None):
@@ -257,6 +267,7 @@ class Upload(MyriaPage):
 
         template_vars = {}
         template_vars['connection_string'] = self.get_connection_string()
+        template_vars['uploads'] = get_pending_uploads()
         path = os.path.join(os.path.dirname(__file__), 'templates/upload.html')
         self.response.out.write(template.render(path, template_vars))
 
