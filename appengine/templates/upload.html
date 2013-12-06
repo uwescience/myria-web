@@ -6,6 +6,24 @@
 
 <div class="panel panel-primary">
   <div class="panel-heading">
+    <h3 class="panel-title">Choose New File to Upload</h3>
+  </div>
+
+  <form role="form" method="post" action="/ingest" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" class="form-control" id="name" name="name"
+             placeholder="Unique name">
+      <label for="phile">File</label>
+      <input type="file" id="phile" name="content">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+</div>
+
+<div class="panel panel-primary">
+  <div class="panel-heading">
     <h3 class="panel-title">Pending Uploads</h3>
   </div>
 

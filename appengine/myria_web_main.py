@@ -14,6 +14,7 @@ from raco import scheme
 from examples import examples
 from google.appengine.ext.webapp import template
 from google.appengine.ext import ndb
+import logging
 
 import myria
 
@@ -126,8 +127,11 @@ def get_queries(connection=None):
     except myria.MyriaError:
         return []
 
+# Use a dummy key to ensure that all uploads are in the same entity group
+PARENT_KEY = ndb.Key("User", "public")
+
 def get_pending_uploads():
-    query = UploadState.query()
+    query = UploadState.query(ancestor=PARENT_KEY)
     results = query.fetch(10)
     return results
 
@@ -287,6 +291,14 @@ class Plan(webapp2.RequestHandler):
         self.response.write(format_rule(plan))
 
 
+class Ingest(webapp2.RequestHandler):
+    def post(self):
+        name = self.request.get("name")
+        content = self.request.get("content")
+        upload = UploadState(parent=PARENT_KEY, name=name, content=content)
+        upload.put()
+        self.redirect('/upload')
+
 class Optimize(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
@@ -422,6 +434,7 @@ app = webapp2.WSGIApplication(
         ('/compile', Compile),
         ('/execute', Execute),
         ('/upload', Upload),
+        ('/ingest', Ingest),
         ('/dot', Dot),
         ('/examples', Examples),
     ],
