@@ -248,10 +248,12 @@ var lineChart = function(element, treeWidth) {
 };
 
 var ganttChart = function(element) {
+    var fullHeight = element.attr('data-height') || 400;
+
     var margin = {top: 10, right: 10, bottom: 20, left: 10},
         treeWidth = 200,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom,
+        height = fullHeight - margin.top - margin.bottom,
         miniHeight = 30,
         chartMargin = 47,
         chartWidth = width - treeWidth,

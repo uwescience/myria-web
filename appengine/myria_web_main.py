@@ -3,6 +3,7 @@ from threading import Lock
 import urllib
 import webapp2
 import csv
+#import logging
 
 from raco import RACompiler
 from raco.myrial import parser as MyrialParser
@@ -228,7 +229,7 @@ class Stats(MyriaPage):
                 self.response.status = 503
                 self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
                 return
-            frags = connection.get_fragment_ids(template_vars['query_id'])
+            frags = connection.get_fragment_ids(template_vars['query_id'], 1)
             template_vars['fragments'] = frags
 
         # Actually render the page: HTML content
@@ -277,7 +278,6 @@ class Examples(MyriaPage):
             language = language.strip().lower()
         # Is language recognized?
         if language not in examples:
-        # Is the language recognized?
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 404
             self.response.write('Error 404 (Not Found): language %s not found' % language)
@@ -447,21 +447,19 @@ class StatsData(webapp2.RequestHandler):
             self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
             return
 
-        query_id = self.request.get("query_id")
-        fragment_id = self.request.get("fragment_id")
-        worker_id = self.request.get("worker_id")
+        query_id = self.request.get("query_id", None)
+        fragment_id = self.request.get("fragment_id", None)
+        worker_id = self.request.get("worker_id", None)
         aggregated = self.request.get("aggregated").lower() in ["true", "1"]
 
         try:
-            if not fragment_id and worker_id:
+            if fragment_id is None and worker_id is not None:
                 frags = []
                 begin = None
                 end = None
                 for fid in connection.get_fragment_ids(query_id, worker_id):
                     data = connection.get_profile_logs(
                         query_id, fid, worker_id)
-                    if not 'hierarchy' in data:
-                        continue
                     frag = {}
                     frag['type'] = "Fragment"
                     frag['children'] = data['hierarchy']
