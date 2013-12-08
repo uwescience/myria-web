@@ -7,6 +7,6 @@
 {% block charts %}
 	{% for fragment_id in fragments %}
 	    <div class="chart" data-type="line"
-	    	data-query="{{ query_id }}" data-fragment="{{ fragment_id }}"></div>
+	    	data-query="{{ query_id }}" data-fragment="{{ fragment_id }}" data-sync="true"></div>
 	{% endfor %}
 {% endblock %}

@@ -53,29 +53,27 @@ var lineChart = function(element, treeWidth) {
         .attr("height", height + 10)
         .attr("y", -10);
 
-    /* Ruler */
-    var tooltip = svg
-        .append("g")
-        .attr({"class": "rulerInfo"})
-        .attr("transform", "translate(" + [10, height + 10] + ")");
-
-    tooltip.append("svg:rect");
-
-    var tttext = tooltip.append("svg:text")
-        .attr("text-anchor", "left");
-
-    svg.on("mouseleave", function (e) {
-        d3.select(".ruler").style("display", "none");
-        svg
-            .select(".rulerInfo")
-            .style("opacity", 0);
-    });
-
     var wholeDomain;
 
     var url = "/statsdata?aggregated=1";
     url += "&query_id=" + element.attr('data-query');
     url += "&fragment_id=" + element.attr('data-fragment');
+
+    $('body').on('changeRange', function(e, lower, upper) {
+        if (wholeDomain == undefined || lower == undefined || isNaN(lower) || lower == -Infinity) {
+            return;
+        }
+
+        var previousDomain = wholeDomain;
+        wholeDomain = [_.min([lower, wholeDomain[0]]), _.max([upper, wholeDomain[1]])];
+        if (previousDomain[0] != wholeDomain[0] || previousDomain[1] != wholeDomain[1]) {
+            x.domain(wholeDomain);
+            svg.select("g.x.axis").call(xAxis);
+            svg.select("path.area").attr("d", area);
+            svg.select("path.line").attr("d", line);
+            $('body').trigger('changeRange', wholeDomain);
+        }
+    });
 
     d3.csv(url, function(error, data) {
         data.forEach(function(d) {
@@ -86,6 +84,10 @@ var lineChart = function(element, treeWidth) {
 
         x.domain(wholeDomain);
         y.domain(d3.extent(data, function(d) { return d.value; }));
+
+        if ( element.attr('data-sync')) {
+            $('body').trigger('changeRange', wholeDomain);
+        }
 
         yAxis.ticks(y.domain()[1]);
 
@@ -123,6 +125,24 @@ var lineChart = function(element, treeWidth) {
             .text("Number of nodes working");
 
         svg.select("g.x.axis").call(xAxis);
+
+        /* Ruler */
+        var tooltip = svg
+            .append("g")
+            .attr({"class": "rulerInfo"})
+            .attr("transform", "translate(" + [10, height + 10] + ")");
+
+        tooltip.append("svg:rect");
+
+        var tttext = tooltip.append("svg:text")
+            .attr("text-anchor", "left");
+
+        svg.on("mouseleave", function (e) {
+            d3.select(".ruler").style("display", "none");
+            svg
+                .select(".rulerInfo")
+                .style("opacity", 0);
+        });
 
         svg.on("mousemove", function (e) {
             d3.select(".ruler")

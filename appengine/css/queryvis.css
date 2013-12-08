@@ -1,3 +1,8 @@
+html {
+  overflow: -moz-scrollbars-vertical; 
+  overflow-y: scroll;
+}
+
 svg {
   font: 11px sans-serif;
   shape-rendering: crispEdges;
