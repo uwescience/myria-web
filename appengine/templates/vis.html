@@ -3,7 +3,7 @@
 {% block queries_active %} class="active"{% endblock %}
 
 {% block extra_head %}
-	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="js/d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/gantt.js" charset="utf-8" type="text/javascript"></script>
@@ -32,9 +32,5 @@
 {% endblock %}
 
 {% block footer %}
-	<script>
-		var fragment_id = "{{ fragment_id }}";
-		var query_id = "{{ query_id }}";
-	</script>
 	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
 {% endblock %}
