@@ -3,7 +3,7 @@ from threading import Lock
 import urllib
 import webapp2
 import csv
-#import logging
+import logging
 
 from raco import RACompiler
 from raco.myrial import parser as MyrialParser

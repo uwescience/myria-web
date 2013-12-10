@@ -1,9 +1,17 @@
-var state_colors = {
-    "sleep": "#c7c7c7",
-    "compute": "#ff7f0e",
-    "wait": "#ffbb78",
-    "receive": "#fd8d3c",
-    "send": "#2ca02c"
+var stateColors = {
+    0: "#ff7f0e",
+    1: "#c7c7c7",
+    2: "#ffbb78",
+    3: "#2ca02c",
+    4: "#fd8d3c"
+};
+
+var stateNames = {
+    0: "compute",
+    1: "sleep",
+    2: "wait",
+    3: "send",
+    4: "receive"
 };
 
 var boxTemplate = _.template("Duration: <%- duration %><br/>Begin: <%- begin %><br/>End: <%- end %>"),
@@ -33,7 +41,7 @@ function timeFormatNs(formats) {
 }
 
 var customTimeFormat = timeFormatNs([
-  [d3.time.format("%H:%M:%S"), function(d) { return true; }],
+  [d3.time.format("%H:%M"), function(d) { return true; }],
   [d3.time.format("%H:%M:%S"), function(d) { return d.getMinutes(); }],
   [d3.time.format(":%S.%L"), function(d) { return d.getSeconds(); }],
   [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]

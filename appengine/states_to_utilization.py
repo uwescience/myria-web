@@ -8,7 +8,7 @@ def get_utilization(details):
 
     for item in details['hierarchy']:
         for state in item['states']:
-            if state['name'] in ['compute', 'sleep']:
+            if int(state['name']) in [0, 2]:
                 end = state['end']
                 if not end:
                     end = details['end']

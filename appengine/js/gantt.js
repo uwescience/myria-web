@@ -205,7 +205,7 @@ var ganttChart = function(element) {
             .enter().append("path")
             .attr("class", function(d) { return "miniItem " + d.name; })
             .attr("d", function(d) { return d.path; })
-            .style("stroke", function(d) { return state_colors[d.name]; });
+            .style("stroke", function(d) { return stateColors[d.name]; });
 
         mini.select("g.x.axis").call(xAxis2);
 
@@ -239,13 +239,13 @@ var ganttChart = function(element) {
                     d.end = data.end;
                 var duration = d.end - d.begin;
                 return {
-                    title: d.name,
+                    title: stateNames[d.name],
                     content: boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
                 };
             })
             .attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return state_colors[d.name]; })
-            .style("stroke", function(d) { return d3.rgb(state_colors[d.name]).darker(0.5); })
+            .style("fill", function(d) { return stateColors[d.name]; })
+            .style("stroke", function(d) { return d3.rgb(stateColors[d.name]).darker(0.5); })
             .attr("class", "box");
 
         box
@@ -270,13 +270,13 @@ var ganttChart = function(element) {
 
         box.on("mousemove", function() {
                 d3.select(this)
-                    .style("fill", function(d) { return d3.rgb(state_colors[d.name]).darker(0.5); });
+                    .style("fill", function(d) { return d3.rgb(stateColors[d.name]).darker(0.5); });
             })
             .on("mouseout", function() {
                 d3.select(this)
                     .transition()
                     .duration(animationDuration/2)
-                    .style("fill", function(d) { return state_colors[d.name]; });
+                    .style("fill", function(d) { return stateColors[d.name]; });
             });
 
         box.exit()
@@ -348,7 +348,7 @@ var ganttChart = function(element) {
         title.select("g.title-text").popover(function(d) {
             var content = "";
             _.each(d.times, function(time, state) {
-                content += stateTemplate({state: state, color: state_colors[state], time: customFullTimeFormat(time) }) + "<br/>";
+                content += stateTemplate({state: stateNames[state], color: stateColors[state], time: customFullTimeFormat(time) }) + "<br/>";
             });
             return {
                 title: titleTemplate({ name: d.name, type: d.type }),
