@@ -212,25 +212,31 @@ class Stats(MyriaPage):
         defined = [bool(x) for x in
                    [template_vars['fragment_id'], template_vars['worker_id']]]
 
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+        except myria.MyriaError:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
+            return
+
         if defined == [False, False]:
             tmpl = 'queryvis.html'
+
+            frags = connection.get_fragment_ids(template_vars['query_id'], 1)
+            template_vars['fragments'] = frags
         elif defined == [True, False]:
             tmpl = 'fragmentvis.html'
+
+            status = connection.get_query_status(template_vars['query_id'])
+            fragment = [x for x in status['physical_plan']['fragments']
+                        if x['fragment_index']
+                        == int(template_vars['fragment_id'])][0]
+            template_vars['worker_ids'] = sorted(fragment['workers'])
         elif defined == [False, True]:
             tmpl = 'planvis.html'
         elif defined == [True, True]:
             tmpl = 'operatorvis.html'
-
-        if tmpl == 'queryvis.html':
-            try:
-                connection = myria.MyriaConnection(hostname=hostname, port=port)
-            except myria.MyriaError:
-                self.response.headers['Content-Type'] = 'text/plain'
-                self.response.status = 503
-                self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
-                return
-            frags = connection.get_fragment_ids(template_vars['query_id'], 1)
-            template_vars['fragments'] = frags
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'

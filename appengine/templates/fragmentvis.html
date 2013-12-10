@@ -1,7 +1,9 @@
 {% extends "vis.html" %}
 
 {% block lead %}
-	<p class="lead">Details of the execution of query fragment {{ fragment_id }} on all workers.</p>
+	<p class="lead">Details of the execution of query fragment {{ fragment_id }} on workers
+	{% for worker_id in worker_ids %}
+		<a href="stats?query_id={{ query_id }}&fragment_id={{ fragment_id }}&worker_id={{ worker_id }}">{{ worker_id }}</a>{% endfor %}.</p>
 {% endblock %}
 
 {% block charts %}
