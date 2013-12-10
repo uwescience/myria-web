@@ -238,9 +238,13 @@ var ganttChart = function(element) {
                 if (d.end === null)
                     d.end = data.end;
                 var duration = d.end - d.begin;
+                var content = boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
+                if ('tp_num' in d) {
+                    content += numTuplesTemplate({number: d.tp_num});
+                }
                 return {
                     title: stateNames[d.name],
-                    content: boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
+                    content: content
                 };
             })
             .attr("clip-path", "url(#clip)")
@@ -394,13 +398,17 @@ var ganttChart = function(element) {
         node.depth = depth;
         node.childrenVisible = true;
         node.states.forEach(function(state) {
-            stateData.push({
+            var data = {
                 "id": id++,
                 "lane": node.lane,
                 "name": state.name,
                 "begin": state.begin,
                 "end": state.end
-            });
+            }
+            if ('tp_num' in state) {
+                data['tp_num']= state.tp_num;
+            }
+            stateData.push(data);
         });
 
         // aggregate data

@@ -15,6 +15,7 @@ var stateNames = {
 };
 
 var boxTemplate = _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
+    numTuplesTemplate = _.template("<br/><strong># Tuples:</strong> <%- number %>")
     titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     chartTooltipTemplate = _.template("Time: <%- time %> #: <%- number %>"),
