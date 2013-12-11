@@ -14,7 +14,7 @@
 {% block extra_container_class %}my-fluid-container{% endblock %}
 
 {% block content %}
-	<h1>Query execution of query {{ query_id }} </h1>
+	<h1>Query execution of query <a href="stats?query_id={{ query_id }}">{{ query_id }}</a></h1>
 
 	<p class="lead">
 		{% block lead %}
