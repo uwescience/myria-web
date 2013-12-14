@@ -44,7 +44,7 @@ def get_plan(query, language, plan_type):
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
-    elif language == "myria":
+    elif language in ["myrial", "sql"]:
         # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
         # .. and App Engine uses multiple threads.
         with myrial_parser_lock:

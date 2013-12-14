@@ -170,7 +170,7 @@ function updateExamples(language) {
 
 function changeLanguage() {
 	/* First make sure it's a valid language. */
-	var languages = [ 'Datalog', 'Myria' ];
+	var languages = [ 'Datalog', 'MyriaL', 'SQL'];
 	var language = $(this).text();
 	var i = languages.indexOf(language);
 	if (i == -1) {

@@ -1,5 +1,4 @@
 import os
-import logging
 
 # Examples is a dictionary from language -> [pairs]. Each pair is (Label, Code).
 datalog_examples = [
@@ -36,9 +35,14 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
 
 
 path = os.path.join(os.path.dirname(__file__),
-                    'examples/sigma-clipping.myl')
+                    'examples/sigma-clipping-v0.myl')
 with open(path) as fh:
     sigma_clipping = fh.read()
+
+path = os.path.join(os.path.dirname(__file__),
+                    'examples/sigma-clipping.myl')
+with open(path) as fh:
+    sigma_clipping_opt = fh.read()
 
 justx = '''T1 = SCAN(Twitter);
 
@@ -49,7 +53,13 @@ STORE (T2, JustX);'''
 myria_examples = [
     ('JustX', justx),
     ('Sigma-Clipping', sigma_clipping),
+    ('Sigma-Clipping Optimized', sigma_clipping_opt),
+]
+
+sql_examples = [
+    ('JustX', '''JustX = SELECT $0 FROM SCAN(Twitter) AS Twitter;'''),
 ]
 
 examples = { 'datalog' : datalog_examples,
-             'myria' : myria_examples }
+             'myrial' : myria_examples,
+             'sql' : sql_examples }
