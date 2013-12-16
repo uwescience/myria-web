@@ -95,14 +95,14 @@ class MyriaCatalog:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         self.connection = connection
 
-    def get_scheme(self, relation_name):
-        relation_key = {
-            'user_name': 'public',
-            'program_name': 'adhoc',
-            'relation_name': relation_name
+    def get_scheme(self, rel_key):
+        relation_args = {
+            'user_name': rel_key.user,
+            'program_name': rel_key.program,
+            'relation_name': rel_key.relation
         }
         try:
-            dataset_info = self.connection.dataset(relation_key)
+            dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
             return None
         schema = dataset_info['schema']
