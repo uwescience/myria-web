@@ -1,5 +1,20 @@
+.navbar-inverse {
+	background-color: #39275B;
+}
+
+.navbar-inverse li {
+	background-color: #39275B;
+}
+
+.navbar-inverse .navbar-nav > .active > a, 
+.navbar-inverse .navbar-nav > .active > a:hover, 
+.navbar-inverse .navbar-nav > .active > a:focus  {
+	background-color: #39275B;
+}
 .navbar-inverse .navbar-brand {
 	color: #ffffff;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 .example-label {
