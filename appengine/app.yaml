@@ -17,6 +17,9 @@ handlers:
   static_dir: img
 - url: /js
   static_dir: js
+- url: /robots\.txt
+  static_files: robots.txt
+  upload: robots\.txt
 
 # This must be last
 - url: /.*
