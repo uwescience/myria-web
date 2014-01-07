@@ -163,7 +163,9 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
-            queries = connection.queries()
+            limit = self.request.get('limit', None)
+            max_ = self.request.get('max', None)
+            queries = connection.queries(limit, max_)
         except myria.MyriaError:
             connection = None
             queries = []
@@ -180,6 +182,17 @@ class Queries(MyriaPage):
                 q['bootstrap_status'] = ''
 
         template_vars = {'queries': queries}
+
+        min_id = min(q['query_id'] for q in queries)
+        if min_id > 1:
+            args = {arg : self.request.get(arg)
+                    for arg in self.request.arguments()
+                    if arg != 'max'}
+            args['max'] = min_id - 1
+            next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
+            template_vars['next_url'] = next_url
+        else:
+            template_vars['next_url'] = None
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
