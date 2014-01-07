@@ -6,7 +6,11 @@
 	<div class="panel panel-primary">
 		<div class="panel-heading">
 			<h3 class="panel-title">Myria Query Log
-			<a href="{{ next_url|default:'#' }}"><span class="pull-right glyphicon glyphicon-circle-arrow-right"/></a></h3>
+				<span class="pull-right panel-title">
+					<a href="{{ prev_url|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-left"/></a>
+					<a href="{{ next_url|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-right"/></a>&nbsp;
+				</span>
+			</h3>
 		</div>
 		<div class="panel-body">
 			<table class="table table-condensed">

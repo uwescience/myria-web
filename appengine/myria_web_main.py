@@ -181,18 +181,24 @@ class Queries(MyriaPage):
             else:
                 q['bootstrap_status'] = ''
 
-        template_vars = {'queries': queries}
+        template_vars = {'queries': queries,
+                         'prev_url': None,
+                         'next_url': None}
 
-        min_id = min(q['query_id'] for q in queries)
-        if min_id > 1:
+        if queries:
+            max_id = max(q['query_id'] for q in queries)
             args = {arg : self.request.get(arg)
                     for arg in self.request.arguments()
                     if arg != 'max'}
-            args['max'] = min_id - 1
-            next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-            template_vars['next_url'] = next_url
-        else:
-            template_vars['next_url'] = None
+            args['max'] = max_id + len(queries)
+            prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
+            template_vars['prev_url'] = prev_url
+
+            min_id = min(q['query_id'] for q in queries)
+            if min_id > 1:
+                args['max'] = min_id - 1
+                next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
+                template_vars['next_url'] = next_url
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
