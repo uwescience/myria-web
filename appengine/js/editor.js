@@ -2,18 +2,25 @@
 var editorLanguage = 'Datalog';
 
 function handleerrors(request, display) {
-	request.success(function(result) {
+	request.done(function(result) {
 		var formatted = result.split("\n").join("<br>");
 		$(display).html(formatted);
 	});
-
-	request.error(function(jqXHR, textStatus, errorThrown) {
+	
+	request.fail(function(jqXHR, textStatus, errorThrown) {
 		if (textStatus == 'timeout') {
 			$(display).text("Server is not responding");
 			return;
 		}
+		
+    /* If a 4xx error or a 503 error, show it to user directly. */
+		if (jqXHR.status < 500 || jqXHR.status == 503 ) {
+      $(display).text(jqXHR.responseText);
+      return;
+		}
 
-		var msg = '<div class="error"><a href="';
+		/* Hide other errors behind a link. */
+    var msg = '<div class="error"><a href="';
 		msg = msg + this.url;
 		msg = msg + '" target="_blank">Error</a></div>';
 		$(display).html(msg);

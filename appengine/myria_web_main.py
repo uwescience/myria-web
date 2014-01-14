@@ -5,6 +5,7 @@ import urllib
 import webapp2
 
 from raco import RACompiler
+from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra
@@ -277,9 +278,9 @@ class Plan(webapp2.RequestHandler):
         language = self.request.get("language")
         try:
             plan = get_logical_plan(query, language)
-        except MyrialInterpreter.NoSuchRelationException as e:
+        except (MyrialCompileException, MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 400 (Bad Request): Relation %s not found" % str(e))
+            self.response.write(str(e))
             self.response.status = 400
             return
 
