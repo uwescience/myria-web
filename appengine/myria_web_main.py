@@ -3,7 +3,6 @@ from threading import Lock
 import urllib
 import webapp2
 import csv
-import logging
 
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
@@ -21,10 +20,8 @@ from states_to_utilization import get_utilization
 from tests.data import EXAMPLE_DETAILS
 
 defaultquery = """A(x) :- R(x,3)"""
-hostname = "dbserver02.cs.washington.edu"
-port = 9013
-#hostname = "localhost"
-#port = 8753
+hostname = "vega.cs.washington.edu"
+port = 1776
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
