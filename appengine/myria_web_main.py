@@ -6,6 +6,7 @@ import csv
 import logging
 
 from raco import RACompiler
+from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra
@@ -54,7 +55,7 @@ def get_plan(query, language, plan_type):
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
-    elif language == "myria":
+    elif language in ["myrial", "sql"]:
         # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
         # .. and App Engine uses multiple threads.
         with myrial_parser_lock:
@@ -105,14 +106,14 @@ class MyriaCatalog:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         self.connection = connection
 
-    def get_scheme(self, relation_name):
-        relation_key = {
-            'user_name': 'public',
-            'program_name': 'adhoc',
-            'relation_name': relation_name
+    def get_scheme(self, rel_key):
+        relation_args = {
+            'user_name': rel_key.user,
+            'program_name': rel_key.program,
+            'relation_name': rel_key.relation
         }
         try:
-            dataset_info = self.connection.dataset(relation_key)
+            dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
             return None
         schema = dataset_info['schema']
@@ -173,7 +174,9 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
-            queries = connection.queries()
+            limit = self.request.get('limit', None)
+            max_ = self.request.get('max', None)
+            queries = connection.queries(limit, max_)
         except myria.MyriaError:
             connection = None
             queries = []
@@ -189,7 +192,24 @@ class Queries(MyriaPage):
             else:
                 q['bootstrap_status'] = ''
 
-        template_vars = {'queries': queries}
+        template_vars = {'queries': queries,
+                         'prev_url': None,
+                         'next_url': None}
+
+        if queries:
+            max_id = max(q['query_id'] for q in queries)
+            args = {arg : self.request.get(arg)
+                    for arg in self.request.arguments()
+                    if arg != 'max'}
+            args['max'] = max_id + len(queries)
+            prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
+            template_vars['prev_url'] = prev_url
+
+            min_id = min(q['query_id'] for q in queries)
+            if min_id > 1:
+                args['max'] = min_id - 1
+                next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
+                template_vars['next_url'] = next_url
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -315,9 +335,9 @@ class Plan(webapp2.RequestHandler):
         language = self.request.get("language")
         try:
             plan = get_logical_plan(query, language)
-        except MyrialInterpreter.NoSuchRelationException as e:
+        except (MyrialCompileException, MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 400 (Bad Request): Relation %s not found" % str(e))
+            self.response.write(str(e))
             self.response.status = 400
             return
 
@@ -344,31 +364,29 @@ class Optimize(webapp2.RequestHandler):
 class Compile(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
+        language = self.request.get("language")
 
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-        # Cache logical plan
-        cached_logicalplan = str(dlog.logicalplan)
+        cached_logicalplan = str(get_logical_plan(query, language))
 
         # Generate physical plan
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        physicalplan = get_physical_plan(query, language)
 
         # Get the Catalog needed to get schemas for compiling the query
         try:
             catalog = MyriaCatalog()
         except myria.MyriaError:
             catalog = None
-        # .. and compile it
+        # .. and compile
         try:
-            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, catalog)
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps(compiled))
-            return
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
         except ValueError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write("Error 400 (Bad Request): %s" % str(e))
             self.response.status = 400
             return
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(compiled))
 
 
 class Execute(webapp2.RequestHandler):

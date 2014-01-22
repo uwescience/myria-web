@@ -22,7 +22,8 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-xs-5" role="main">
+
+		<div class="col-xs-5 col-lg-6" role="main">
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h3 class="panel-title">
@@ -35,7 +36,8 @@
 					<button type="button" id="parse-btn" class="planner btn btn-info">Parse Datalog</button>
 					<button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
 					<ul id="language-menu" class="dropdown-menu" role="menu">
-					<li><a class="changer">Myria</a></li>
+					<li><a class="changer">MyriaL</a></li>
+					<li><a class="changer">SQL</a></li>
 					</ul>
 				</div>
 			</div>
@@ -67,7 +69,7 @@
 			<div id="sig"></div>
 		</div>
 
-		<div class="col-xs-4">
+		<div class="col-xs-4 col-lg-3">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal"><span class="glyphicon glyphicon-new-window"></span></a>
@@ -113,7 +115,9 @@
 <script>
 	var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
 		mode : 'application/js',
-		lineNumbers : true
+		lineNumbers : true,
+		lineWrapping : true,
+		viewportMargin: Infinity
 	});
 </script>
 <script type="text/javascript" src="js/viz.js">

@@ -22,7 +22,7 @@
 					<td><a href="{{d.uri}}" target="_blank">{{d.relation_key.relation_name}}</a></td>
 					<td><a href="{{d.query_url}}" target=_blank>{{d.query_id}}</a></td>
 					<td>{{d.created}}</td>
-					<td><a href="{{d.uri}}/data?format=json" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" class="label label-default">TSV</a></td>
+					<td><a href="{{d.uri}}/data?format=json" rel="nofollow" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" rel="nofollow" class="label label-default">TSV</a></td>
 				</tr>
 				{% endfor %}
 			</table>
