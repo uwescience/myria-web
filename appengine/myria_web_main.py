@@ -307,31 +307,29 @@ class Optimize(webapp2.RequestHandler):
 class Compile(webapp2.RequestHandler):
     def get(self):
         query = self.request.get("query")
+        language = self.request.get("language")
 
-        dlog = RACompiler()
-        dlog.fromDatalog(query)
-        # Cache logical plan
-        cached_logicalplan = str(dlog.logicalplan)
+        cached_logicalplan = str(get_logical_plan(query, language))
 
         # Generate physical plan
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        physicalplan = get_physical_plan(query, language)
 
         # Get the Catalog needed to get schemas for compiling the query
         try:
             catalog = MyriaCatalog()
         except myria.MyriaError:
             catalog = None
-        # .. and compile it
+        # .. and compile
         try:
-            compiled = compile_to_json(query, cached_logicalplan, dlog.physicalplan, catalog)
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps(compiled))
-            return
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
         except ValueError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write("Error 400 (Bad Request): %s" % str(e))
             self.response.status = 400
             return
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(compiled))
 
 
 class Execute(webapp2.RequestHandler):

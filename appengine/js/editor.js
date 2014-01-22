@@ -72,6 +72,7 @@ function compileplan() {
   var query = editor.getValue();
   var url = "compile?" + $.param({
     query : query,
+    language : editorLanguage,
   });
   window.open(url, '_blank');
 }
