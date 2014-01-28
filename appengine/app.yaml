@@ -24,6 +24,7 @@ handlers:
 # This must be last
 - url: /.*
   script: myria_web_main.app
+  secure: always
 
 libraries:
 - name: webapp2
