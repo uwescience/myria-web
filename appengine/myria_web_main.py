@@ -98,16 +98,16 @@ class MyriaCatalog:
 
     def get_scheme(self, rel_key):
         relation_args = {
-            'user_name': rel_key.user,
-            'program_name': rel_key.program,
-            'relation_name': rel_key.relation
+            'userName': rel_key.user,
+            'programName': rel_key.program,
+            'relationName': rel_key.relation
         }
         try:
             dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
             return None
         schema = dataset_info['schema']
-        return scheme.Scheme(zip(schema['column_names'], schema['column_types']))
+        return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
 
 def get_queries(connection=None):
@@ -187,7 +187,7 @@ class Queries(MyriaPage):
                          'next_url': None}
 
         if queries:
-            max_id = max(q['query_id'] for q in queries)
+            max_id = max(q['queryId'] for q in queries)
             args = {arg : self.request.get(arg)
                     for arg in self.request.arguments()
                     if arg != 'max'}
@@ -195,7 +195,7 @@ class Queries(MyriaPage):
             prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
             template_vars['prev_url'] = prev_url
 
-            min_id = min(q['query_id'] for q in queries)
+            min_id = min(q['queryId'] for q in queries)
             if min_id > 1:
                 args['max'] = min_id - 1
                 next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
@@ -221,7 +221,7 @@ class Datasets(MyriaPage):
 
         for d in datasets:
             try:
-                d['query_url'] = 'http://%s:%d/query/query-%d' % (hostname, port, d['query_id'])
+                d['query_url'] = 'http://%s:%d/query/query-%d' % (hostname, port, d['queryId'])
             except:
                 pass
 
@@ -367,7 +367,7 @@ class Execute(webapp2.RequestHandler):
         # Issue the query
         try:
             query_status = connection.submit_query(compiled)
-            query_url = 'http://%s:%d/execute?query_id=%d' % (hostname, port, query_status['query_id'])
+            query_url = 'http://%s:%d/execute?query_id=%d' % (hostname, port, query_status['queryId'])
             ret = {'query_status': query_status, 'url': query_url}
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
@@ -389,7 +389,7 @@ class Execute(webapp2.RequestHandler):
             self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
             return
 
-        query_id = self.request.get("query_id")
+        query_id = self.request.get("queryId")
 
         try:
             query_status = connection.get_query_status(query_id)
