@@ -78,12 +78,12 @@ function compileplan() {
 }
 
 function displayQueryStatus(data) {
-  var queryStatus = data['query_status'];
-  var start_time = queryStatus['start_time'];
-  var end_time = queryStatus['finish_time'];
-  var elapsed = queryStatus['elapsed_nanos'] / 1e9;
-  var status = queryStatus['status'];
-  var query_id = queryStatus['query_id'];
+  var query_status = data['queryStatus'];
+  var start_time = query_status['startTime'];
+  var end_time = query_status['finishTime'];
+  var elapsed = query_status['elapsedNanos'] / 1e9;
+  var status = query_status['status'];
+  var query_id = query_status['queryId'];
   $("#executed").text(
       "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
   if (!end_time) {
@@ -97,7 +97,7 @@ function checkQueryStatus(query_id) {
   $.ajax("execute", {
     type : 'GET',
     data : {
-      query_id : query_id,
+      queryId : query_id,
       language : editorLanguage
     },
     statusCode : {

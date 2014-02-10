@@ -98,16 +98,16 @@ class MyriaCatalog:
 
     def get_scheme(self, rel_key):
         relation_args = {
-            'user_name': rel_key.user,
-            'program_name': rel_key.program,
-            'relation_name': rel_key.relation
+            'userName': rel_key.user,
+            'programName': rel_key.program,
+            'relationName': rel_key.relation
         }
         try:
             dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
             return None
         schema = dataset_info['schema']
-        return scheme.Scheme(zip(schema['column_names'], schema['column_types']))
+        return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
 
 def get_queries(connection=None):
@@ -172,39 +172,39 @@ class Queries(MyriaPage):
             queries = []
 
         for q in queries:
-            q['elapsed_str'] = nano_to_str(q['elapsed_nanos'])
+            q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
             if q['status'] == 'KILLED':
-                q['bootstrap_status'] = 'danger'
+                q['bootstrapStatus'] = 'danger'
             elif q['status'] == 'SUCCESS':
-                q['bootstrap_status'] = 'success'
+                q['bootstrapStatus'] = 'success'
             elif q['status'] == 'RUNNING':
-                q['bootstrap_status'] = 'warning'
+                q['bootstrapStatus'] = 'warning'
             else:
-                q['bootstrap_status'] = ''
+                q['bootstrapStatus'] = ''
 
         template_vars = {'queries': queries,
-                         'prev_url': None,
-                         'next_url': None}
+                         'prevUrl': None,
+                         'nextUrl': None}
 
         if queries:
-            max_id = max(q['query_id'] for q in queries)
+            max_id = max(q['queryId'] for q in queries)
             args = {arg : self.request.get(arg)
                     for arg in self.request.arguments()
                     if arg != 'max'}
             args['max'] = max_id + len(queries)
             prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-            template_vars['prev_url'] = prev_url
+            template_vars['prevUrl'] = prev_url
 
-            min_id = min(q['query_id'] for q in queries)
+            min_id = min(q['queryId'] for q in queries)
             if min_id > 1:
                 args['max'] = min_id - 1
                 next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-                template_vars['next_url'] = next_url
+                template_vars['nextUrl'] = next_url
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
+        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
         self.response.out.write(template.render(path, template_vars))
@@ -221,7 +221,7 @@ class Datasets(MyriaPage):
 
         for d in datasets:
             try:
-                d['query_url'] = 'http://%s:%d/query/query-%d' % (hostname, port, d['query_id'])
+                d['queryUrl'] = 'http://%s:%d/query/query-%d' % (hostname, port, d['queryId'])
             except:
                 pass
 
@@ -230,7 +230,7 @@ class Datasets(MyriaPage):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
+        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
         self.response.out.write(template.render(path, template_vars))
@@ -266,7 +266,7 @@ class Editor(MyriaPage):
         # .. pass in the Datalog examples to start
         template_vars['examples'] = examples['datalog']
         # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
+        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
         self.response.out.write(template.render(path, template_vars))
@@ -367,8 +367,8 @@ class Execute(webapp2.RequestHandler):
         # Issue the query
         try:
             query_status = connection.submit_query(compiled)
-            query_url = 'http://%s:%d/execute?query_id=%d' % (hostname, port, query_status['query_id'])
-            ret = {'query_status': query_status, 'url': query_url}
+            query_url = 'http://%s:%d/execute?query_id=%d' % (hostname, port, query_status['queryId'])
+            ret = {'queryStatus': query_status, 'url': query_url}
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -389,12 +389,12 @@ class Execute(webapp2.RequestHandler):
             self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
             return
 
-        query_id = self.request.get("query_id")
+        query_id = self.request.get("queryId")
 
         try:
             query_status = connection.get_query_status(query_id)
             self.response.headers['Content-Type'] = 'application/json'
-            ret = {'query_status': query_status, 'url': self.request.url}
+            ret = {'queryStatus': query_status, 'url': self.request.url}
             self.response.write(json.dumps(ret))
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
