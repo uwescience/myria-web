@@ -13,17 +13,7 @@ function handleerrors(request, display) {
       return;
     }
 
-    /* If a 4xx error or a 503 error, show it to user directly. */
-    if (jqXHR.status < 500 || jqXHR.status == 503) {
-      $(display).text(jqXHR.responseText);
-      return;
-    }
-
-    /* Hide other errors behind a link. */
-    var msg = '<div class="error"><a href="';
-    msg = msg + this.url;
-    msg = msg + '" target="_blank">Error</a></div>';
-    $(display).html(msg);
+    $(display).text(jqXHR.responseText);
   });
 }
 
