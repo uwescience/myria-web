@@ -29,12 +29,12 @@ function handleerrors(request, display) {
 
 function getplan() {
   var query = editor.getValue();
-  var request = $.get("plan", {
+  var request = $.post("plan", {
     query : query,
     language : editorLanguage
   });
   handleerrors(request, "#plan");
-  var request = $.get("dot", {
+  var request = $.post("dot", {
     query : query,
     type : 'logical',
     language : editorLanguage
@@ -50,12 +50,12 @@ function getplan() {
 function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
-  var request = $.get("optimize", {
+  var request = $.post("optimize", {
     query : query,
     language : editorLanguage
   });
   handleerrors(request, "#optimized");
-  var request = $.get("dot", {
+  var request = $.post("dot", {
     query : query,
     type : 'physical',
     language : editorLanguage

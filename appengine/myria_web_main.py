@@ -273,6 +273,10 @@ class Editor(MyriaPage):
 
 
 class Plan(webapp2.RequestHandler):
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
+
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
@@ -303,6 +307,9 @@ class Optimize(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(optimized)
 
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
 class Compile(webapp2.RequestHandler):
     def get(self):
@@ -330,6 +337,10 @@ class Compile(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(compiled))
+
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
 
 class Execute(webapp2.RequestHandler):
@@ -411,6 +422,10 @@ class Dot(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
+
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
 app = webapp2.WSGIApplication(
     [
