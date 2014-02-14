@@ -13,28 +13,18 @@ function handleerrors(request, display) {
       return;
     }
 
-    /* If a 4xx error or a 503 error, show it to user directly. */
-    if (jqXHR.status < 500 || jqXHR.status == 503) {
-      $(display).text(jqXHR.responseText);
-      return;
-    }
-
-    /* Hide other errors behind a link. */
-    var msg = '<div class="error"><a href="';
-    msg = msg + this.url;
-    msg = msg + '" target="_blank">Error</a></div>';
-    $(display).html(msg);
+    $(display).text(jqXHR.responseText);
   });
 }
 
 function getplan() {
   var query = editor.getValue();
-  var request = $.get("plan", {
+  var request = $.post("plan", {
     query : query,
     language : editorLanguage
   });
   handleerrors(request, "#plan");
-  var request = $.get("dot", {
+  var request = $.post("dot", {
     query : query,
     type : 'logical',
     language : editorLanguage
@@ -50,12 +40,12 @@ function getplan() {
 function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
-  var request = $.get("optimize", {
+  var request = $.post("optimize", {
     query : query,
     language : editorLanguage
   });
   handleerrors(request, "#optimized");
-  var request = $.get("dot", {
+  var request = $.post("dot", {
     query : query,
     type : 'physical',
     language : editorLanguage

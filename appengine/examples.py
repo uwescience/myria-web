@@ -57,8 +57,8 @@ myria_examples = [
 ]
 
 sql_examples = [
-    ('JustX', '''JustX = SELECT $0 FROM SCAN(TwitterK) AS Twitter;'''),
-    ('InDegree', '''InDegree = SELECT $0 FROM SCAN(TwitterK) AS Twitter;'''),
+    ('JustX', '''JustX = SELECT $0 FROM SCAN(Twitter) AS Twitter;'''),
+    ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(Twitter) AS Twitter;'''),
 ]
 
 examples = { 'datalog' : datalog_examples,

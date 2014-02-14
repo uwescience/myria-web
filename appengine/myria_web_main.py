@@ -37,7 +37,7 @@ def get_plan(query, language, plan_type):
         dlog = RACompiler()
         dlog.fromDatalog(query)
         if not dlog.logicalplan:
-            raise SyntaxError("Unable to parse Datalog from query '''%s'''" % query)
+            raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
         dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
@@ -121,8 +121,23 @@ def get_queries(connection=None):
     except myria.MyriaError:
         return []
 
+class MyriaHandler(webapp2.RequestHandler):
+    def handle_exception(self, exception, debug_mode):
+        self.response.headers['Content-Type'] = 'text/plain'
+        if isinstance(exception, (SyntaxError, MyrialCompileException)):
+            self.response.status = 400
+            msg = str(exception)
+        else:
+            self.response.status = 500
+            self.response.out.write("Error 500 (Internal Server Error)")
+            if debug_mode:
+                self.response.out.write(": \n\n")
+                import traceback
+                msg = traceback.format_exc()
 
-class RedirectToEditor(webapp2.RequestHandler):
+        self.response.out.write(msg)
+
+class RedirectToEditor(MyriaHandler):
     def get(self, query=None):
         if query is not None:
             self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
@@ -130,7 +145,7 @@ class RedirectToEditor(webapp2.RequestHandler):
             self.redirect("/editor", True)
 
 
-class MyriaPage(webapp2.RequestHandler):
+class MyriaPage(MyriaHandler):
     def get_connection_string(self, connection=None):
         try:
             if connection is None:
@@ -272,7 +287,11 @@ class Editor(MyriaPage):
         self.response.out.write(template.render(path, template_vars))
 
 
-class Plan(webapp2.RequestHandler):
+class Plan(MyriaHandler):
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
+
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
@@ -288,7 +307,7 @@ class Plan(webapp2.RequestHandler):
         self.response.write(format_rule(plan))
 
 
-class Optimize(webapp2.RequestHandler):
+class Optimize(MyriaHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
@@ -303,8 +322,11 @@ class Optimize(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(optimized)
 
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
-class Compile(webapp2.RequestHandler):
+class Compile(MyriaHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
@@ -331,8 +353,12 @@ class Compile(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(compiled))
 
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
-class Execute(webapp2.RequestHandler):
+
+class Execute(MyriaHandler):
     def post(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
@@ -401,7 +427,7 @@ class Execute(webapp2.RequestHandler):
             self.response.write(e)
 
 
-class Dot(webapp2.RequestHandler):
+class Dot(MyriaHandler):
     def get(self):
         query = self.request.get("query")
         language = self.request.get("language")
@@ -411,6 +437,10 @@ class Dot(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
+
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
 app = webapp2.WSGIApplication(
     [
