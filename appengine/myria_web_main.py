@@ -129,9 +129,11 @@ class MyriaHandler(webapp2.RequestHandler):
             msg = str(exception)
         else:
             self.response.status = 500
-            self.response.out.write("Error 500 (Internal Server Error): \n\n")
-            import traceback
-            msg = traceback.format_exc()
+            self.response.out.write("Error 500 (Internal Server Error)")
+            if debug_mode:
+                self.response.out.write(": \n\n")
+                import traceback
+                msg = traceback.format_exc()
 
         self.response.out.write(msg)
 
