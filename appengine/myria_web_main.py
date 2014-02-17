@@ -273,7 +273,7 @@ class Stats(MyriaPage):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
-        template_vars['connection_string'] = self.get_connection_string()
+        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template(tmpl)
         self.response.out.write(template.render(template_vars))
