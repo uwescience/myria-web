@@ -261,8 +261,8 @@ class Stats(MyriaPage):
             tmpl = 'fragmentvis.html'
 
             status = connection.get_query_status(template_vars['query_id'])
-            fragment = [x for x in status['physical_plan']['fragments']
-                        if x['fragment_index']
+            fragment = [x for x in status['physicalPlan']['fragments']
+                        if x['fragmentIndex']
                         == int(template_vars['fragment_id'])][0]
             template_vars['worker_ids'] = sorted(fragment['workers'])
         elif defined == [False, True]:
