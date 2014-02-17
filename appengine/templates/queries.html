@@ -7,8 +7,8 @@
 		<div class="panel-heading">
 			<h3 class="panel-title">Myria Query Log
 				<span class="pull-right panel-title">
-					<a href="{{ prevUrl|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-left"/></a>
-					<a href="{{ nextUrl|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-right"/></a>&nbsp;
+					<a href="{{ prevUrl|default('#', True) }}"><span class="glyphicon glyphicon-circle-arrow-left"/></a>
+					<a href="{{ nextUrl|default('#', True) }}"><span class="glyphicon glyphicon-circle-arrow-right"/></a>&nbsp;
 				</span>
 			</h3>
 		</div>
