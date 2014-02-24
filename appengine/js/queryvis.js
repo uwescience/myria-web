@@ -1,27 +1,7 @@
-var stateColors = {
-    0: "#ff7f0e",
-    1: "#c7c7c7",
-    2: "#ffbb78",
-    3: "#2ca02c",
-    4: "#fd8d3c"
-};
+// put all the underscore templates here
+var templates = {
 
-var stateNames = {
-    0: "compute",
-    1: "sleep",
-    2: "wait",
-    3: "send",
-    4: "receive"
-};
-
-var boxTemplate = _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
-    numTuplesTemplate = _.template("<br/><strong># Tuples:</strong> <%- number %>")
-    titleTemplate = _.template("<strong><%- name %></strong> <small><%- type %></small>"),
-    stateTemplate = _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
-    chartTooltipTemplate = _.template("Time: <%- time %> #: <%- number %>"),
-    ganttTooltipTemplate = _.template("Time: <%- time %>");
-
-var animationDuration = 750;
+}
 
 function timeFormat(formats) {
   return function(date) {
@@ -50,6 +30,10 @@ var customTimeFormat = timeFormatNs([
 
 function divmod(a, b) {
     return [Math.floor(a/b), a%b];
+}
+
+function debug(d) {
+    console.log(d);
 }
 
 function customFullTimeFormat(d) {
@@ -89,13 +73,7 @@ var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
 
-// use data bindings to attach charts
-d3.selectAll('.chart').each(function() {
+d3.select('.query-plan').each(function() {
     element = d3.select(this);
-    var type = element.attr('data-type');
-    if (type === 'gantt') {
-        ganttChart(element);
-    } else if (type === 'line') {
-        lineChart(element, 10);
-    }
+    graph(element, queryPlan);
 });

@@ -21,7 +21,7 @@ from tests.data import EXAMPLE_DETAILS
 
 defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
-port = 1776
+port = 8777
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -232,50 +232,29 @@ class Queries(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
-class Stats(MyriaPage):
+class Profile(MyriaPage):
     def get(self):
+        query_id = self.request.get("queryId")
+        query_plan = {}
+        if query_id != '':
+            try:
+                connection = myria.MyriaConnection(hostname=hostname, port=port)
+                query_plan = connection.get_query_status(query_id)
+            except myria.MyriaError:
+                pass
+
         template_vars = {
-            'query_id': self.request.get("query_id"),
-            'fragment_id': self.request.get("fragment_id"),
-            'worker_id': self.request.get("worker_id"),
-            'format': self.request.get("format")
+            'queryId': query_id,
+            'myriaConnection': "%s:%d" % (hostname, port),
+            'queryPlan': json.dumps(query_plan)
         }
-
-        defined = [bool(x) for x in
-                   [template_vars['fragment_id'], template_vars['worker_id']]]
-
-        try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port)
-        except myria.MyriaError:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.status = 503
-            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
-            return
-
-        if defined == [False, False]:
-            tmpl = 'queryvis.html'
-
-            frags = connection.get_fragment_ids(template_vars['query_id'], 1)
-            template_vars['fragments'] = frags
-        elif defined == [True, False]:
-            tmpl = 'fragmentvis.html'
-
-            status = connection.get_query_status(template_vars['query_id'])
-            fragment = [x for x in status['physicalPlan']['fragments']
-                        if x['fragmentIndex']
-                        == int(template_vars['fragment_id'])][0]
-            template_vars['worker_ids'] = sorted(fragment['workers'])
-        elif defined == [False, True]:
-            tmpl = 'planvis.html'
-        elif defined == [True, True]:
-            tmpl = 'operatorvis.html'
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
-        template = JINJA_ENVIRONMENT.get_template(tmpl)
+        template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
 
 
@@ -480,63 +459,6 @@ class Execute(MyriaHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
 
-
-class StatsData(MyriaHandler):
-    def get(self):
-        try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port, timeout=600)
-        except myria.MyriaError:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.status = 503
-            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
-            return
-
-        query_id = self.request.get("query_id", None)
-        fragment_id = self.request.get("fragment_id", None)
-        worker_id = self.request.get("worker_id", None)
-        aggregated = self.request.get("aggregated").lower() in ["true", "1"]
-
-        try:
-            if fragment_id is None and worker_id is not None:
-                frags = []
-                begin = None
-                end = None
-                for fid in connection.get_fragment_ids(query_id, worker_id):
-                    data = connection.get_profile_logs(
-                        query_id, fid, worker_id)
-                    frag = {}
-                    frag['type'] = "Fragment"
-                    frag['children'] = data['hierarchy']
-                    frag['states'] = []
-                    frag['name'] = "Fragment {}".format(fid)
-                    frags.append(frag)
-                    if begin is None:
-                        begin = data['begin']
-                        end = data['end']
-                    else:
-                        begin = min(begin, data['begin'])
-                        end = max(end, data['end'])
-                logs = {}
-                logs['begin'] = begin
-                logs['end'] = end
-                logs['hierarchy'] = frags
-            else:
-                logs = connection.get_profile_logs(
-                    query_id, fragment_id, worker_id)
-
-            if aggregated:
-                ret = get_utilization(logs)
-                self.response.headers['Content-Type'] = 'application/csv'
-                writer = csv.writer(self.response.out)
-                writer.writerow(['time', 'value'])
-                writer.writerows(ret['data'])
-            else:
-                self.response.write(json.dumps(logs))
-        except myria.MyriaError as e:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write(e)
-
-
 class Dot(MyriaHandler):
     def get(self):
         query = self.request.get("query")
@@ -557,8 +479,7 @@ app = webapp2.WSGIApplication(
         ('/', RedirectToEditor),
         ('/editor', Editor),
         ('/queries', Queries),
-        ('/stats', Stats),
-        ('/statsdata', StatsData),
+        ('/profile', Profile),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
