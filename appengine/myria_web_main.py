@@ -303,8 +303,8 @@ class Plan(MyriaHandler):
             self.response.status = 400
             return
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(format_rule(plan))
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(format_rule(plan)))
 
 
 class Optimize(MyriaHandler):
@@ -319,8 +319,8 @@ class Optimize(MyriaHandler):
             self.response.status = 400
             return
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(optimized)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(format_rule(optimized)))
 
     def post(self):
         "The same as get(), here because there may be long programs"
