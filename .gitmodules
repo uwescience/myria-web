@@ -6,3 +6,6 @@
 	path = myria-python
 	url = git@github.com:uwescience/myria-python.git
 	branch = master
+[submodule "requests"]
+	path = requests
+	url = git@github.com/kennethreitz/requests.git

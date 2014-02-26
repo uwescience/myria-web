@@ -2,7 +2,6 @@ import json
 from threading import Lock
 import urllib
 import webapp2
-import csv
 
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
