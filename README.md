@@ -5,7 +5,7 @@ This is a Google App Engine app.
 
 # Dependencies
 
-You must have the [Google App Engine SDK](https://developers.google.com/App Engine/downloads) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
+You must have the [Google App Engine SDK](https://developers.google.com/appengine/downloads) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
 
 # Initial setup
 1. This project uses the [UW eScience Datalogcompiler](https://github.com/uwescience/datalogcompiler) project. We have configured it as a submodule. After cloning this repository, you must run:
