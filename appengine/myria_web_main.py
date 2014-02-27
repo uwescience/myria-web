@@ -13,10 +13,7 @@ from raco.viz import get_dot
 from raco import scheme
 from examples import examples
 import jinja2
-
 import myria
-from states_to_utilization import get_utilization
-from tests.data import EXAMPLE_DETAILS
 
 defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
