@@ -513,7 +513,7 @@ app = webapp2.WSGIApplication(
         ('/editor', Editor),
         ('/queries', Queries),
         ('/profile', Profile),
-        ('/historgram', Histogram),
+        ('/histogram', Histogram),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
