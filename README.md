@@ -55,3 +55,15 @@ To update the submodule to the latest from master, run this code:
 ```sh
 git submodule update --recursive --remote
 ```
+
+(Might also require beforehand:
+
+```sh
+git submodule init
+```
+)
+
+# Issues
+
+The Google App Engine GUI has a Logs button that can be helpful for diagnosing issues with the Myria web app.
+
