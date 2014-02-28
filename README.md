@@ -20,7 +20,7 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
 2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `datalogcompiler` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
   ```sh
-  ./myrial.py examples/reachable.myl
+  ./scripts/myrial examples/reachable.myl
   ```
   
   in the `datalogcompiler` subdirectory.
