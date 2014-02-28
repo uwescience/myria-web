@@ -5,7 +5,7 @@ This is a Google App Engine app.
 
 # Dependencies
 
-You must have the [Google App Engine SDK](https://developers.google.com/appengine/downloads) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
+You must have the [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
 
 # Initial setup
 1. This project uses the [UW eScience Datalogcompiler](https://github.com/uwescience/datalogcompiler) project. We have configured it as a submodule. After cloning this repository, you must run:
@@ -25,12 +25,12 @@ You must have the [Google App Engine SDK](https://developers.google.com/appengin
   
   in the `datalogcompiler` subdirectory.
   
-3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. 
+3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. From the menu select Add Existing Application, and add the `myria-web/appengine` directory.
 
   Alternatively, from the command line, you may launch:
   
   ```sh
-  dev_appserver.py App Engine
+  dev_appserver.py AppEngine
   ```
 
   And then point your browser at `localhost:8080` to view the application.
