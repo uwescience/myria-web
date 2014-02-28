@@ -287,6 +287,22 @@ class Editor(MyriaPage):
         self.response.out.write(template.render(path, template_vars))
 
 
+class Demo1(MyriaPage):
+    def get(self, query=defaultquery):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = {}
+        # .. pass in the query
+        template_vars['query'] = query
+        # .. pass in the Datalog examples to start
+        template_vars['examples'] = examples['datalog']
+        # .. connection string
+        template_vars['connectionString'] = self.get_connection_string()
+        # .. load and render the template
+        path = os.path.join(os.path.dirname(__file__), 'templates/demo1.html')
+        self.response.out.write(template.render(path, template_vars))
+
+
 class Plan(MyriaHandler):
     def post(self):
         "The same as get(), here because there may be long programs"
@@ -460,6 +476,7 @@ app = webapp2.WSGIApplication(
         ('/execute', Execute),
         ('/dot', Dot),
         ('/examples', Examples),
+        ('/demo1', Demo1),
     ],
     debug=True
 )
