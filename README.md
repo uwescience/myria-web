@@ -35,6 +35,11 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
 
   And then point your browser at `localhost:8080` to view the application.
 
+# Changing the Myria Hostname
+
+To change the Myria instance from the default (vega), modify appengine/myria_web_pain.py, changing the hostname and port variables. Changes will reflect automatically in the GAE application at localhost:8080.
+
+
 # Updating the code
 
 To update the submodule to the latest from master, run this code:
