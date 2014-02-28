@@ -20,7 +20,7 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
 2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `datalogcompiler` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
   ```sh
-  ./scripts/myrial examples/reachable.myl
+  scripts/myrial examples/reachable.myl
   ```
   
   in the `datalogcompiler` subdirectory.
@@ -37,7 +37,15 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
 
 # Changing the Myria Hostname
 
-To change the Myria instance from the default (vega), modify appengine/myria_web_pain.py, changing the hostname and port variables. Changes will reflect automatically in the GAE application at localhost:8080.
+To change the Myria instance from the default (vega), modify appengine/myria_web_main.py, changing the hostname and port variables. Changes will reflect automatically in the GAE application at localhost:8080.
+
+# Which branch to be on
+
+There are two notable branches in the myria-web repository: *master* and *production*.
+* `master` is the latest development code
+* `production` is the code currently running the web interface on <https://demo.myria.cs.washington.edu>
+
+Depending on your goals (modifying latest myria-web vs running a stable version of the interface), you may wish to switch to the `production` branch.
 
 
 # Updating the code
