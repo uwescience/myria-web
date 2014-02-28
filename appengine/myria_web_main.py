@@ -293,6 +293,7 @@ class Plan(MyriaHandler):
         self.get()
 
     def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         try:
@@ -303,12 +304,13 @@ class Plan(MyriaHandler):
             self.response.status = 400
             return
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(format_rule(plan))
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(format_rule(plan)))
 
 
 class Optimize(MyriaHandler):
     def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         try:
@@ -319,8 +321,8 @@ class Optimize(MyriaHandler):
             self.response.status = 400
             return
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(optimized)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(format_rule(optimized)))
 
     def post(self):
         "The same as get(), here because there may be long programs"
@@ -328,6 +330,7 @@ class Optimize(MyriaHandler):
 
 class Compile(MyriaHandler):
     def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
 
@@ -360,6 +363,7 @@ class Compile(MyriaHandler):
 
 class Execute(MyriaHandler):
     def post(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         except myria.MyriaError:
@@ -407,6 +411,7 @@ class Execute(MyriaHandler):
             return
 
     def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
         except myria.MyriaError:
@@ -429,6 +434,7 @@ class Execute(MyriaHandler):
 
 class Dot(MyriaHandler):
     def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")

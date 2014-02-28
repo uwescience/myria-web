@@ -44,7 +44,7 @@ path = os.path.join(os.path.dirname(__file__),
 with open(path) as fh:
     sigma_clipping_opt = fh.read()
 
-justx = '''T1 = SCAN(Twitter);
+justx = '''T1 = SCAN(TwitterK);
 
 T2 = [FROM T1 EMIT $0];
 
@@ -57,8 +57,12 @@ myria_examples = [
 ]
 
 sql_examples = [
-    ('JustX', '''JustX = SELECT $0 FROM SCAN(Twitter) AS Twitter;'''),
-    ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(Twitter) AS Twitter;'''),
+    ('JustX', '''JustX = SELECT $0 FROM SCAN(TwitterK) AS Twitter;
+
+STORE(JustX, public:adhoc:JustX);'''),
+    ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(TwitterK) AS Twitter;
+
+STORE(InDegree, public:adhoc:InDegree);'''),
 ]
 
 examples = { 'datalog' : datalog_examples,
