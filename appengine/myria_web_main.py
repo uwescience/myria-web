@@ -267,14 +267,17 @@ class Histogram(MyriaPage):
             TYPE = 2
             workers = set()
             # ignore header
-            print data.next()
+            data.next()
             for trans in data:
+                worker = int(trans[WORKER])
                 if trans[TYPE] == 'call':
-                    workers.add(int(trans[WORKER]))
+                    workers.add(worker)
                 elif trans[TYPE] == 'return':
-                    workers.remove(int(trans[WORKER]))
+                    # This should be a remove but there seems to be
+                    # a missing call
+                    workers.discard(worker)
                 else:
-                    raise Exception("Unexpected value {}".format(trans[1]))
+                    continue
                 yield [trans[TIME], list(workers)]
 
         try:
