@@ -6,11 +6,11 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
 
     // return variables that are needed outside this scope
     return {};
-};
+}
 
 function drawCharts(element, fragmentId, queryPlan) {
     drawArea(element, fragmentId, queryPlan.queryId);
-    //drawLanes(element, []);
+    drawLanes(element, fragmentId, queryPlan.queryId);
 }
 
 // Draw the area graph and the mini-brush for it
@@ -153,8 +153,11 @@ function drawArea(element, fragmentId, queryId) {
         return d;
     }
 
-    
-  
+}
+
+function drawLanes(element, fragmentId, queryId) {
+
+    /* Collect data for states at each worker */ 
     var hostname = "vega.cs.washington.edu";
     var port = "8777";
 
@@ -163,7 +166,7 @@ function drawArea(element, fragmentId, queryId) {
           "&queryId=" + queryId;
 
     d3.csv(url, type2, function(error, data) {
-        get_states_per_worker(data);
+        get_workers_states(data);
  
     });
 
@@ -173,26 +176,77 @@ function drawArea(element, fragmentId, queryId) {
         d.numTuples = +d.numTuples;
         return d;
     }
-
-    function get_states_per_worker(data) {
+    
+    function get_workers_states(data) {
 	// TODO: this parsing function assumes the following about the data
 	// received:
-        //   - beginning times are sorted at each worker
+        //   - events are sorted at each worker
 
         // Create a structure:
         //  workers = [{ workerId : [{opName : [{}]}] }]
         //
-        //
+        // TODO: use queryPlan to put the right lane numbers?
 
-        var worker_states = {};
-
-      
+        var workers_states = {};
+        var tmp_stacks = {}; // a stack per worker keeps unfinished operator calls
 
         data.forEach(function(d) {
-            console.debug(d);
+            stack = tmp_stacks[d.workerId];
+            if (stack == null || stack.length === 0) {
+                tmp_stacks[d.workerId] = [];
+                tmp_stacks[d.workerId].push(get_state(d));
+                return;
+            }
+
+	    // event on top of stack completed (we now know its endTime), add
+	    // to states
+	    states = workers_states[d.workerId];
+            if (states == null) {
+                states = [];
+                workers_states[d.workerId] = states; 
+            }
+
+            top_stack = stack[stack.length - 1];
+            top_stack.end = d.nanoTime; 
+            states.push(top_stack);
+            
+            // check the event type and push unfinished event on the stack
+            if (d.eventType === "call") {
+                stack.push(get_state(d));
+            } else {
+                // it's a return, update the link and replace top of stack
+                // with a new, same opName event that starts from d.nanoTime
+                stack.pop();
+                if (stack.length > 0) {
+                    top_stack = stack[stack.length - 1];
+                    state = get_state(d);
+                    state.name = top_stack.name; // the same call 
+                    top_stack.link = state; // belong together (still in the same call thread)
+                    stack.pop();
+                    stack.push(state);
+               }
+            }
         });
+
+        function get_state(d) {
+            return {
+                      "link" : null,           // if it belongs together with some previous event
+                      "name" : d.opName,
+                      "begin": d.nanoTime,
+                      "end"  : null,           // we don't know this yet ...
+                      "lane" : 0
+                   };
+        }
+
+        return workers_states;
     }
-};
+}
+
+
+function redrawLanes(element, workers_data) {
+
+
+}
 
 /*
 function drawLanes(element, workers) {
