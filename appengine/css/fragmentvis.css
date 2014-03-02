@@ -1,0 +1,32 @@
+.area {
+  fill: #9ecae1;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis .tick line {
+  stroke: lightgrey;
+  opacity: 0.7;
+}
+
+.x.axis .tick text {
+  fill: #555;
+}
+
+.graph path.line {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-width: 1.5px;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
