@@ -75,5 +75,5 @@ var ruler = d3.select("body")
 
 d3.select('.query-plan').each(function() {
     element = d3.select(this);
-    graph(element, queryPlan);
+    graph(element, queryPlan, queryID);
 });
