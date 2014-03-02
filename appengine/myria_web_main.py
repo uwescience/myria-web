@@ -2,6 +2,7 @@ import json
 from threading import Lock
 import urllib
 import webapp2
+import csv
 
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
@@ -29,6 +30,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -254,6 +256,44 @@ class Profile(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
+class Histogram(MyriaPage):
+    def get(self):
+        query_id = self.request.get("queryId")
+        fragment_id = self.request.get("fragmentId")
+
+        def get_historgram(data):
+            WORKER = 0
+            TIME = 1
+            TYPE = 2
+            workers = set()
+            # ignore header
+            data.next()
+            for trans in data:
+                worker = int(trans[WORKER])
+                if trans[TYPE] == 'call':
+                    workers.add(worker)
+                elif trans[TYPE] == 'return':
+                    # This should be a remove but there seems to be
+                    # a missing call
+                    workers.discard(worker)
+                else:
+                    continue
+                yield [trans[TIME], list(workers)]
+
+        try:
+            connection = myria.MyriaConnection(hostname=hostname, port=port)
+            ret = get_historgram(
+                connection.get_profiling_log_roots(query_id, fragment_id))
+            self.response.headers['Content-Type'] = 'text/plain'
+            writer = csv.writer(self.response.out)
+            writer.writerow(['time', 'value'])
+            writer.writerows(ret)
+        except myria.MyriaError as e:
+            raise
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write(e)
+
+
 class Datasets(MyriaPage):
     def get(self):
         try:
@@ -476,6 +516,7 @@ app = webapp2.WSGIApplication(
         ('/editor', Editor),
         ('/queries', Queries),
         ('/profile', Profile),
+        ('/histogram', Histogram),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),
