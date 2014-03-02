@@ -8,6 +8,12 @@ svg {
   shape-rendering: crispEdges;
 }
 
+.chord path {
+  fill-opacity: 0.7;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
 .ruler {
   position: fixed;
   display: none;
