@@ -6,11 +6,11 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
 
     // return variables that are needed outside this scope
     return {};
-};
+}
 
 function drawCharts(element, fragmentId, queryPlan) {
     drawArea(element, fragmentId, queryPlan.queryId);
-    //drawLanes(element, []);
+    drawLanes(element, fragmentId, queryPlan.queryId);
 }
 
 // Draw the area graph and the mini-brush for it
@@ -153,8 +153,11 @@ function drawArea(element, fragmentId, queryId) {
         return d;
     }
 
-    
-  
+}
+
+function drawLanes(element, fragmentId, queryId) {
+
+    /* Collect data for states at each worker */ 
     var hostname = "vega.cs.washington.edu";
     var port = "8777";
 
@@ -163,8 +166,8 @@ function drawArea(element, fragmentId, queryId) {
           "&queryId=" + queryId;
 
     d3.csv(url, type2, function(error, data) {
-        get_states_per_worker(data);
- 
+        var workers_data = get_workers_states(data);
+        redrawLanes(element, workers_data); 
     });
 
     function type2(d) {
@@ -173,38 +176,89 @@ function drawArea(element, fragmentId, queryId) {
         d.numTuples = +d.numTuples;
         return d;
     }
-
-    function get_states_per_worker(data) {
+    
+    function get_workers_states(data) {
 	// TODO: this parsing function assumes the following about the data
 	// received:
-        //   - beginning times are sorted at each worker
+        //   - events are sorted at each worker
 
         // Create a structure:
         //  workers = [{ workerId : [{opName : [{}]}] }]
         //
-        //
+        // TODO: use queryPlan to put the right lane numbers?
 
-        var worker_states = {};
-
-      
+        var workers_states = {};
+        var tmp_stacks = {}; // a stack per worker keeps unfinished operator calls
 
         data.forEach(function(d) {
-            console.debug(d);
+            stack = tmp_stacks[d.workerId];
+            if (stack == null || stack.length === 0) {
+                tmp_stacks[d.workerId] = [];
+                tmp_stacks[d.workerId].push(get_state(d));
+                return;
+            }
+
+	    // event on top of stack completed (we now know its endTime), add
+	    // to states
+	    states = workers_states[d.workerId];
+            if (states == null) {
+                states = [];
+                workers_states[d.workerId] = states; 
+            }
+
+            top_stack = stack[stack.length - 1];
+            top_stack.end = d.nanoTime; 
+            states.push(top_stack);
+            
+            // check the event type and push unfinished event on the stack
+            if (d.eventType === "call") {
+                stack.push(get_state(d));
+            } else if (d.eventType === "return") {
+                // it's a return, update the link and replace top of stack
+                // with a new, same opName event that starts from d.nanoTime
+                stack.pop();
+                if (stack.length > 0) {
+                    top_stack = stack[stack.length - 1];
+                    state = get_state(d);
+                    state.name = top_stack.name; // the same call 
+                    top_stack.link = state; // belong together (still in the same call thread)
+                    stack.pop();
+                    stack.push(state);
+               } //TODO: eos??
+            }
         });
+
+        function get_state(d) {
+            return {
+                      "link" : null,           // if it belongs together with some previous event
+                      "name" : d.opName,
+                      "begin": d.nanoTime,
+                      "end"  : null,           // we don't know this yet ...
+                      "lane" : 0
+                   };
+        }
+
+        return workers_states;
     }
-};
+}
 
-/*
-function drawLanes(element, workers) {
+function redrawLanes(element, workers_data) {
+    // Remove what was previously drawn
+    d3.select("#fragment_workers").remove();   
 
-    var fullHeight = element.attr('data-height') || workers.length*50;
-
-    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    var fullHeight =  Object.keys(workers_data).length * 50;
+ 
+    var margin = {top: 10, right: 10, bottom: 20, left: 20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
 
     var x = d3.scale.linear().range([0, width]),
-        y = d3.scale.ordinal().rangeRoundBounds([height, 0], 0.2, 0.1);
+        y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
+   
+    y.domain(_.keys(workers_data));
+   
+    // TODO: fix this!
+    x.domain([769116, 5615629916]); 
 
     var xAxis = d3.svg.axis()
                   .scale(x)
@@ -216,9 +270,6 @@ function drawLanes(element, workers) {
                   .scale(y)
                   .orient("left");
 
-    // Remove what was previously drawn
-    d3.select("#fragment_workers").remove();   
-
     // Add lanes chart
     var svg = element.append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -228,63 +279,59 @@ function drawLanes(element, workers) {
       //  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Place the lanes graph
-    var lanes_graph = svg.append("g")
+    var lanes = svg.append("g")
            .attr("class", "graph")
            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+   
+    // Place the xAxis 
+    lanes.append("g")
+             .attr("class", "x axis")
+             .attr("transform", "translate(0," + height + ")")
+             .call(xAxis);
 
-    var lanes = chart.append("g")
-        .attr("class", "lanes");
- 
-    
+    for (worker in workers_data) {
+        drawBoxes(lanes, workers_data[worker], worker, x, y);
+        //return;
+    }
+}
 
-    drawBoxes(lanes, []);
-};
+function drawBoxes(lanes, worker_data, lane, x, y) {
+    var color = d3.scale.category20();
 
-
-function drawBoxes(lanes) {
+    //debug(worker_data);
 
     var box = lanes.selectAll("rect")
-            .data(visibleStates, function(d) { return d.id; });
+                   //TODO: is the key map function lane + d.begin  unique??        
+                   .data(worker_data, function(d) {return lane + d.begin;});
 
-        box.enter().append("rect")
-            .popover(function(d) {
-                if (d.end === null)
-                    d.end = data.end;
-                var duration = d.end - d.begin;
-                var content = boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
-                if ('tp_num' in d) {
-                    content += numTuplesTemplate({number: d.tp_num});
-                }
-                return {
-                    title: stateNames[d.name],
-                    content: content
-                };
-            })
-            .attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return stateColors[d.name]; })
-            .style("stroke", function(d) { return d3.rgb(stateColors[d.name]).darker(0.5); })
+    box.enter().append("rect")
+            //.attr("clip-path", "url(#clip)")
+            .style("fill", function(d) { return color(Math.abs(hashCode(d.name)%20)); })
+            .style("stroke", function(d) { return d3.rgb(color(Math.abs(hashCode(d.name)))).darker(0.5); })
             .attr("class", "box");
 
-        box
-            .attr("x", function(d) {
-                return x(d.begin);
-            })
-            .attr("width", function(d, i) {
-                if (d.end) {
-                   return x(d.end) - x(d.begin);
-                } else {
-                    return x(data.end) - x(d.begin);
-                }
-            })
-            .transition()
-            .duration(animationDuration)
-            .attr("y", function(d) {
-                return y(d.lane);
-            })
-            .attr("height", function(d) {
+    box.attr("x", function(d) { return x(d.begin);})
+       .attr("width", function(d, i) {
+               return x(d.end) - x(d.begin);
+           })
+       .transition()
+       //.duration(animationDuration)
+       .attr("y", function(d) { return y(lane);})
+       .attr("height", function(d) {
                 return y.rangeBand();
-            });
+          });
 
+
+    // TODO: replace this function
+    function hashCode(str) {
+        var hash = 0;
+        if (str.length == 0) return hash;
+        for (i = 0; i < str.length; i++) {
+            char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
 }
-*/
 

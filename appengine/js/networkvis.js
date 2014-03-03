@@ -66,10 +66,61 @@ var networkVisualization = function (element, connections, queryPlan) {
 };
 
 function visualize(element) {
-	var chord = d3.layout.chord()
-    .padding(.05)
-    .sortSubgroups(d3.descending)
-    .matrix(matrix);
 
-    debug(element);
+	var transition_time = 1500;
+	
+    var width = 900,
+    height = 600;
+    
+	var color = d3.scale.category10();
+
+	var xScale = d3.scale.linear()
+      .domain([0, matrix.length])
+      .range([0, width]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, matrix.length])
+      .range([0, height]);
+
+    var xPadding = 5;
+    var yPadding = 5;
+
+	// converts a matrix into a sparse-like entries
+  // maybe 'expensive' for large matrices, but helps keeping code clean
+  	var indexify = function(mat){
+    	  var res = [];
+      	for(var i = 0; i < mat.length; i++){
+        	  for(var j = 0; j < mat[0].length; j++){
+            	  res.push({i:i, j:j, val:mat[i][j]});
+          	}
+      	}
+      	return res;
+  	};
+
+  	var corr_data = indexify(matrix);
+
+	var svg = element.append("svg")
+    		  .attr("width", width)
+    		  .attr("height", height);
+  			  //.append("g");
+    		  //.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    var matrixViz = svg.append('g')
+      .attr('class','matrix');
+
+    var pixel = matrixViz.selectAll('rect.pixel').data(corr_data);
+
+    pixel.enter()
+      .append('rect')
+          .attr('class', 'pixel')
+          .attr('width', width/matrix.length - xPadding)
+          .attr('height', height/matrix.length - yPadding)
+          .attr('y', function(d){return yScale(d.i);})
+          .attr('x', function(d){return xScale(d.j);})
+          .style('fill',function(d){ return color(d.val);});
+          //.on('mouseover', function(d){pixel_mouseover(d);})
+          //.on('mouseout', function(d){mouseout(d);});
+          // .on('click', function(d){reorder_matrix(d.i, 'col'); reorder_matrix(d.j, 'row');});
+          //the last thing works only for symmetric matrices, but with asymmetric sorting
+		  
 }
