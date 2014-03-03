@@ -213,7 +213,7 @@ function drawLanes(element, fragmentId, queryId) {
             // check the event type and push unfinished event on the stack
             if (d.eventType === "call") {
                 stack.push(get_state(d));
-            } else {
+            } else if (d.eventType === "return") {
                 // it's a return, update the link and replace top of stack
                 // with a new, same opName event that starts from d.nanoTime
                 stack.pop();
@@ -224,7 +224,7 @@ function drawLanes(element, fragmentId, queryId) {
                     top_stack.link = state; // belong together (still in the same call thread)
                     stack.pop();
                     stack.push(state);
-               }
+               } //TODO: eos??
             }
         });
 
@@ -248,7 +248,7 @@ function redrawLanes(element, workers_data) {
 
     var fullHeight =  Object.keys(workers_data).length * 50;
  
-    var margin = {top: 10, right: 10, bottom: 10, left: 20},
+    var margin = {top: 10, right: 10, bottom: 20, left: 20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
 
@@ -258,7 +258,7 @@ function redrawLanes(element, workers_data) {
     y.domain(_.keys(workers_data));
    
     // TODO: fix this!
-    x.domain([769116, 5475229534]); 
+    x.domain([769116, 5615629916]); 
 
     var xAxis = d3.svg.axis()
                   .scale(x)
@@ -289,21 +289,21 @@ function redrawLanes(element, workers_data) {
              .attr("transform", "translate(0," + height + ")")
              .call(xAxis);
 
-    //TODO: why doesn't this work?? 
     for (worker in workers_data) {
         drawBoxes(lanes, workers_data[worker], worker, x, y);
+        //return;
     }
 }
 
 function drawBoxes(lanes, worker_data, lane, x, y) {
     var color = d3.scale.category20();
 
+    //debug(worker_data);
+
     var box = lanes.selectAll("rect")
                    //TODO: is the key map function lane + d.begin  unique??        
                    .data(worker_data, function(d) {return lane + d.begin;});
 
-    debug(worker_data);
-    debug(y(lane));
     box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return color(Math.abs(hashCode(d.name)%20)); })
