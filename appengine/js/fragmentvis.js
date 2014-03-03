@@ -213,7 +213,7 @@ function drawLanes(element, fragmentId, queryId) {
             // check the event type and push unfinished event on the stack
             if (d.eventType === "call") {
                 stack.push(get_state(d));
-            } else {
+            } else if (d.eventType === "return") {
                 // it's a return, update the link and replace top of stack
                 // with a new, same opName event that starts from d.nanoTime
                 stack.pop();
@@ -224,7 +224,7 @@ function drawLanes(element, fragmentId, queryId) {
                     top_stack.link = state; // belong together (still in the same call thread)
                     stack.pop();
                     stack.push(state);
-               }
+               } //TODO: eos??
             }
         });
 
@@ -291,11 +291,14 @@ function redrawLanes(element, workers_data) {
 
     for (worker in workers_data) {
         drawBoxes(lanes, workers_data[worker], worker, x, y);
+        //return;
     }
 }
 
 function drawBoxes(lanes, worker_data, lane, x, y) {
     var color = d3.scale.category20();
+
+    //debug(worker_data);
 
     var box = lanes.selectAll("rect")
                    //TODO: is the key map function lane + d.begin  unique??        
