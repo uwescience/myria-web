@@ -70,14 +70,20 @@ function visualize(element) {
 	var transition_time = 1500;
 	
     var width = 900,
-    height = 900;
+    height = 600;
     
-
 	var color = d3.scale.category10();
 
-	var scale = d3.scale.linear()
+	var xScale = d3.scale.linear()
       .domain([0, matrix.length])
-      .range([0, 900]);
+      .range([0, width]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, matrix.length])
+      .range([0, height]);
+
+    var xPadding = 5;
+    var yPadding = 5;
 
 	// converts a matrix into a sparse-like entries
   // maybe 'expensive' for large matrices, but helps keeping code clean
@@ -92,9 +98,6 @@ function visualize(element) {
   	};
 
   	var corr_data = indexify(matrix);
-  	var order_col = d3.range(workers.length + 1);
-  	var order_row = d3.range(workers.length + 1);
-
 
 	var svg = element.append("svg")
     		  .attr("width", width)
@@ -110,10 +113,10 @@ function visualize(element) {
     pixel.enter()
       .append('rect')
           .attr('class', 'pixel')
-          .attr('width', 10)
-          .attr('height', 10)
-          .attr('y', function(d){return scale(d.i);})
-          .attr('x', function(d){return scale(d.j);})
+          .attr('width', width/matrix.length - xPadding)
+          .attr('height', height/matrix.length - yPadding)
+          .attr('y', function(d){return yScale(d.i);})
+          .attr('x', function(d){return xScale(d.j);})
           .style('fill',function(d){ return color(d.val);});
           //.on('mouseover', function(d){pixel_mouseover(d);})
           //.on('mouseout', function(d){mouseout(d);});
