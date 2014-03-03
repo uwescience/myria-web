@@ -248,7 +248,7 @@ function redrawLanes(element, workers_data) {
 
     var fullHeight =  Object.keys(workers_data).length * 50;
  
-    var margin = {top: 10, right: 10, bottom: 10, left: 20},
+    var margin = {top: 10, right: 10, bottom: 20, left: 20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
 
