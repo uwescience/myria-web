@@ -8,12 +8,7 @@ svg {
   shape-rendering: crispEdges;
 }
 
-
-.pixel:hover
-{ 
-  stroke: #000;
-  stroke-width: 1px;
-}
+/* General */
 
 div.tooltip {
   position: absolute;
@@ -63,4 +58,51 @@ div.tooltip {
     stroke: #333;
     stroke-width: 1.5px;
     fill: none;
+}
+
+/* Fragment vis */
+.area {
+  fill: #9ecae1;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis .tick line {
+  stroke: lightgrey;
+  opacity: 0.7;
+}
+
+.x.axis .tick text {
+  fill: #555;
+}
+
+.plot path.line {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-width: 1.5px;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+
+/* Query plan */
+
+.plan-graph {
+  shape-rendering: auto;
+}
+
+/* Network */
+
+.pixel:hover {
+  stroke: #000;
+  stroke-width: 1px;
 }

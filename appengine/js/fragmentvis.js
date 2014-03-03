@@ -1,7 +1,7 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
     // do all the chart stuff
     debug("I should build the gantt chart now");
-    
+
     drawCharts(element, fragmentId, queryPlan);
 
     // return variables that are needed outside this scope
@@ -13,7 +13,7 @@ function drawCharts(element, fragmentId, queryPlan) {
     drawLanes(element, fragmentId, queryPlan.queryId);
 }
 
-// Draw the area graph and the mini-brush for it
+// Draw the area plot and the mini-brush for it
 function drawArea(element, fragmentId, queryId) {
 
     var workers_data = [];
@@ -34,7 +34,7 @@ function drawArea(element, fragmentId, queryId) {
         .tickFormat(customTimeFormat)
         .tickSize(-height)
         .orient("bottom");
-    
+
     var xAxis2 = d3.svg.axis()
         .scale(x2)
         .tickFormat(customTimeFormat)
@@ -56,7 +56,7 @@ function drawArea(element, fragmentId, queryId) {
         .x(function(d) { return x(d.time); })
         .y0(height)
         .y1(function(d) { return y(d.value.length); });
-    
+
     // Area 2 generator
     var area2 = d3.svg.area()
         .interpolate("step-after")
@@ -70,21 +70,22 @@ function drawArea(element, fragmentId, queryId) {
         .x(function(d) { return x(d.time); })
         .y(function(d) { return y(d.value.length); });
 
-    // Svg element to draw the fragment utilization graph 
+    // Svg element to draw the fragment utilization plot
     var svg = element.append("svg")
                      .attr("width", width + margin.left + margin.right)
                      .attr("height", height + margin.top + margin.bottom)
-                     .attr("id", "fragment_utilization");   
-    
+                     .attr("class", "line-plot")
+                     .attr("id", "fragment_utilization");
+
     svg.append("defs").append("clipPath")
        .attr("id", "clip")
       .append("rect")
        .attr("width", width)
        .attr("height", height);
 
-    // Place the graph
-    var graph = svg.append("g")
-        .attr("class", "graph")
+    // Place the plot
+    var plot = svg.append("g")
+        .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Place the mini-brush
@@ -100,24 +101,24 @@ function drawArea(element, fragmentId, queryId) {
         x2.domain(x.domain());
         y2.domain(y.domain());
 
-        graph.append("path")
+        plot.append("path")
              .attr("clip-path", "url(#clip)")
              .datum(data)
              .attr("class", "area")
              .attr("d", area);
 
-        graph.append("path")
+        plot.append("path")
              .attr("clip-path", "url(#clip)")
              .datum(data)
              .attr("class", "line")
              .attr("d", line);
 
-        graph.append("g")
+        plot.append("g")
              .attr("class", "x axis")
              .attr("transform", "translate(0," + height + ")")
              .call(xAxis);
 
-        graph.append("g")
+        plot.append("g")
              .attr("class", "y axis")
              .call(yAxis);
 
@@ -142,9 +143,9 @@ function drawArea(element, fragmentId, queryId) {
 
     function brushed() {
         x.domain(brush.empty() ? x2.domain() : brush.extent());
-        graph.select(".area").attr("d", area);
-        graph.select(".graph path.line").attr("d", line);
-        graph.select(".x.axis").call(xAxis);
+        plot.select(".area").attr("d", area);
+        plot.select(".plot path.line").attr("d", line);
+        plot.select(".x.axis").call(xAxis);
     }
 
     function type(d) {
@@ -157,7 +158,7 @@ function drawArea(element, fragmentId, queryId) {
 
 function drawLanes(element, fragmentId, queryId) {
 
-    /* Collect data for states at each worker */ 
+    /* Collect data for states at each worker */
     var hostname = "vega.cs.washington.edu";
     var port = "8777";
 
@@ -167,16 +168,16 @@ function drawLanes(element, fragmentId, queryId) {
 
     d3.csv(url, type2, function(error, data) {
         var workers_data = get_workers_states(data);
-        redrawLanes(element, workers_data); 
+        redrawLanes(element, workers_data);
     });
 
     function type2(d) {
         d.workerId = +d.workerId;
-        d.nanoTime = parseFloat(d.nanoTime); 
+        d.nanoTime = parseFloat(d.nanoTime);
         d.numTuples = +d.numTuples;
         return d;
     }
-    
+
     function get_workers_states(data) {
 	// TODO: this parsing function assumes the following about the data
 	// received:
@@ -203,13 +204,13 @@ function drawLanes(element, fragmentId, queryId) {
 	    states = workers_states[d.workerId];
             if (states == null) {
                 states = [];
-                workers_states[d.workerId] = states; 
+                workers_states[d.workerId] = states;
             }
 
             top_stack = stack[stack.length - 1];
-            top_stack.end = d.nanoTime; 
+            top_stack.end = d.nanoTime;
             states.push(top_stack);
-            
+
             // check the event type and push unfinished event on the stack
             if (d.eventType === "call") {
                 stack.push(get_state(d));
@@ -220,7 +221,7 @@ function drawLanes(element, fragmentId, queryId) {
                 if (stack.length > 0) {
                     top_stack = stack[stack.length - 1];
                     state = get_state(d);
-                    state.name = top_stack.name; // the same call 
+                    state.name = top_stack.name; // the same call
                     top_stack.link = state; // belong together (still in the same call thread)
                     stack.pop();
                     stack.push(state);
@@ -244,21 +245,21 @@ function drawLanes(element, fragmentId, queryId) {
 
 function redrawLanes(element, workers_data) {
     // Remove what was previously drawn
-    d3.select("#fragment_workers").remove();   
+    d3.select("#fragment_workers").remove();
 
     var fullHeight =  Object.keys(workers_data).length * 50;
- 
+
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
 
     var x = d3.scale.linear().range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
-   
+
     y.domain(_.keys(workers_data));
-   
+
     // TODO: fix this!
-    x.domain([769116, 5615629916]); 
+    x.domain([769116, 5615629916]);
 
     var xAxis = d3.svg.axis()
                   .scale(x)
@@ -278,12 +279,12 @@ function redrawLanes(element, workers_data) {
       //.append("g")
       //  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Place the lanes graph
+    // Place the lanes plot
     var lanes = svg.append("g")
-           .attr("class", "graph")
+           .attr("class", "plot")
            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-   
-    // Place the xAxis 
+
+    // Place the xAxis
     lanes.append("g")
              .attr("class", "x axis")
              .attr("transform", "translate(0," + height + ")")
@@ -295,31 +296,41 @@ function redrawLanes(element, workers_data) {
     }
 }
 
+var opColors = d3.scale.category20();
+var opToColor = {};
+
+function colorForOperator(opname) {
+    if (opname in opToColor) {
+        return opToColor[opname];
+    }
+    opToColor[opname] = opColors[Object.keys(opToColor).length];
+    return opToColor[opname];
+}
+
 function drawBoxes(lanes, worker_data, lane, x, y) {
-    var color = d3.scale.category20();
 
     //debug(worker_data);
 
     var box = lanes.selectAll("rect")
-                   //TODO: is the key map function lane + d.begin  unique??        
+                   //TODO: is the key map function lane + d.begin  unique??
                    .data(worker_data, function(d) {return lane + d.begin;});
 
     box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return color(Math.abs(hashCode(d.name)%20)); })
-            .style("stroke", function(d) { return d3.rgb(color(Math.abs(hashCode(d.name)))).darker(0.5); })
+            .style("fill", function(d) { return colorForOperator(d.name); })
+            .style("stroke", function(d) { return d3.rgb(colorForOperator(d.name)).darker(0.5); })
             .attr("class", "box");
 
     box.attr("x", function(d) { return x(d.begin);})
-       .attr("width", function(d, i) {
-               return x(d.end) - x(d.begin);
-           })
-       .transition()
-       //.duration(animationDuration)
-       .attr("y", function(d) { return y(lane);})
-       .attr("height", function(d) {
-                return y.rangeBand();
-          });
+        .attr("width", function(d, i) {
+            return x(d.end) - x(d.begin);
+        })
+        .transition()
+        //.duration(animationDuration)
+        .attr("y", function(d) { return y(lane);})
+        .attr("height", function(d) {
+            return y.rangeBand();
+        });
 
 
     // TODO: replace this function

@@ -3,9 +3,8 @@ var graph = function (element, queryPlan, queryID) {
     var chartElement = d3.select('.chart');
     var graphElement = d3.select('.query-plan')
 
-    var networkVis = networkVisualization(chartElement, [], queryPlan);
-
-    networkVis.update([]);
+    //var networkVis = networkVisualization(chartElement, [], queryPlan);
+    //networkVis.update([]);
 
     var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
 
@@ -109,6 +108,7 @@ var graph = function (element, queryPlan, queryID) {
     var height = fullHeight - margin.top - margin.bottom;
     var svg = graphElement
                 .append("svg")
+                .attr("class", "plan-graph")
                 .attr("width", width)
                 .attr("height", height);
 
