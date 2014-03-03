@@ -51,12 +51,55 @@ var graph = function (element, queryPlan, queryID) {
                 link.u = graphObj.opNames[op.argOperatorId];
                 link.v = node.id;
                 link.value = {};
-                link.value.label = ('link');
+                link.value.u = op.argOperatorId;
+                link.value.v = node.value.operators[j].opName;
+                link.value.label = ('');
                 graphObj.links.push(link);
             }
         }
-
     }
+    // 3: expand a node (placeholder)
+    var node_id = [2];
+    for (var i=0; i<node_id.length; i++) {
+        // Update the links
+        for(var j=0; j<graphObj.links.length; j++){
+            if(graphObj.links[j].u == node_id[i]){
+                graphObj.links[j].u = (node_id[i].toString()).concat("_",graphObj.links[j].value.u);
+            }
+            if(graphObj.links[j].v == node_id[i]){
+                graphObj.links[j].v = (node_id[i].toString()).concat("_",graphObj.links[j].value.v);
+            }
+        }
+        // add new nodes & links
+        for (var j=0; j<graphObj.nodes.length; j++) {
+            if (graphObj.nodes[j].id == node_id[i]) {
+                for (var k=0; k<graphObj.nodes[j].value.operators.length; k++) {
+                    var op = graphObj.nodes[j].value.operators[k];
+                    // create new node(s)
+                    var node = new Object();
+                    node.id = (node_id[i].toString()).concat("_",op.opName);
+                    node.value = {};
+                    node.value.label = op.opName;
+                    graphObj.nodes.push(node);
+                    // look for in-fragment edges
+                    var key;
+                    for (key in op) {
+                        if (key.indexOf("argChild")!=-1) {
+                            var link = new Object();
+                            link.u = (node_id[i].toString()).concat("_",op[key]);
+                            link.v = node.id;
+                            link.value = {};
+                            link.value.u = op[key];
+                            link.value.v = op.opName;
+                            link.value.label = ('');
+                            graphObj.links.push(link);
+                        }
+                    }
+                }
+            }  
+        } 
+    }
+
     debug(graphObj);
 
     //Create SVG element
