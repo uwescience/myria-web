@@ -258,7 +258,7 @@ function redrawLanes(element, workers_data) {
     y.domain(_.keys(workers_data));
    
     // TODO: fix this!
-    x.domain([769116, 5475229534]); 
+    x.domain([769116, 5615629916]); 
 
     var xAxis = d3.svg.axis()
                   .scale(x)
@@ -289,7 +289,6 @@ function redrawLanes(element, workers_data) {
              .attr("transform", "translate(0," + height + ")")
              .call(xAxis);
 
-    //TODO: why doesn't this work?? 
     for (worker in workers_data) {
         drawBoxes(lanes, workers_data[worker], worker, x, y);
     }
@@ -302,8 +301,6 @@ function drawBoxes(lanes, worker_data, lane, x, y) {
                    //TODO: is the key map function lane + d.begin  unique??        
                    .data(worker_data, function(d) {return lane + d.begin;});
 
-    debug(worker_data);
-    debug(y(lane));
     box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return color(Math.abs(hashCode(d.name)%20)); })
