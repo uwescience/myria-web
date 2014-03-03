@@ -23,7 +23,7 @@
 			</div>
 		</div>
 
-		<div class="col-xs-5 col-lg-6" role="main">
+		<div class="col-xs-9 col-lg-9" role="main">
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h3 class="panel-title">
@@ -44,13 +44,16 @@
 
 			<div class="panel panel-warning">
 				<div class="panel-heading">
+					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="relational_svg"><span class="glyphicon glyphicon-new-window"></span></a>
 					<h3 class="panel-title">Code parsed as Relational Algebra</h3>
 				</div>
 				<div class="panel-body">
 					<div id="plan" class="display"></div>
 				</div>
-				<div class="panel-heading"><h3 class="panel-title">Relational algebra converted and
-					optimized into a Myria Physical Plan</h3></div>
+				<div class="panel-heading">
+					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="myria_svg"><span class="glyphicon glyphicon-new-window"></span></a>
+					<h3 class="panel-title">Relational algebra converted and optimized into a Myria Physical Plan</h3>
+				</div>
 				<div class="panel-body">
 					<div id="optimized" class="display"></div>
 				</div>
@@ -67,25 +70,6 @@
 			</div>
 			<div id="#response"></div>
 			<div id="sig"></div>
-		</div>
-
-		<div class="col-xs-4 col-lg-3">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal"><span class="glyphicon glyphicon-new-window"></span></a>
-					<h3 class="panel-title">Logical plan</h3>
-				</div>
-				<div class="panel-body">
-					<output id="relational_svg"></output>
-				</div>
-				<div class="panel-heading">
-					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal"><span class="glyphicon glyphicon-new-window"></span></a>
-					<h3 class="panel-title">Distributed physical plan</h3>
-				</div>
-				<div class="panel-body">
-					<output id="myria_svg"></output>
-				</div>
-			</div>
 		</div>
 	</div>
 {% endblock %}
@@ -109,6 +93,8 @@
 			</div>
 		</div>
 	</div>
+	<output id="relational_svg" hidden="true"></output>
+	<output id="myria_svg" hidden="true"></output>
 {% endblock %}
 
 {% block footer %}
