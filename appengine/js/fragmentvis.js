@@ -166,8 +166,8 @@ function drawLanes(element, fragmentId, queryId) {
           "&queryId=" + queryId;
 
     d3.csv(url, type2, function(error, data) {
-        get_workers_states(data);
- 
+        var workers_data = get_workers_states(data);
+        redrawLanes(element, workers_data); 
     });
 
     function type2(d) {
@@ -242,23 +242,23 @@ function drawLanes(element, fragmentId, queryId) {
     }
 }
 
-
 function redrawLanes(element, workers_data) {
+    // Remove what was previously drawn
+    d3.select("#fragment_workers").remove();   
 
-
-}
-
-/*
-function drawLanes(element, workers) {
-
-    var fullHeight = element.attr('data-height') || workers.length*50;
-
-    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    var fullHeight =  Object.keys(workers_data).length * 50;
+ 
+    var margin = {top: 10, right: 10, bottom: 10, left: 20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
 
     var x = d3.scale.linear().range([0, width]),
-        y = d3.scale.ordinal().rangeRoundBounds([height, 0], 0.2, 0.1);
+        y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
+   
+    y.domain(_.keys(workers_data));
+   
+    // TODO: fix this!
+    x.domain([769116, 5475229534]); 
 
     var xAxis = d3.svg.axis()
                   .scale(x)
@@ -270,9 +270,6 @@ function drawLanes(element, workers) {
                   .scale(y)
                   .orient("left");
 
-    // Remove what was previously drawn
-    d3.select("#fragment_workers").remove();   
-
     // Add lanes chart
     var svg = element.append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -282,63 +279,59 @@ function drawLanes(element, workers) {
       //  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Place the lanes graph
-    var lanes_graph = svg.append("g")
+    var lanes = svg.append("g")
            .attr("class", "graph")
            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+   
+    // Place the xAxis 
+    lanes.append("g")
+             .attr("class", "x axis")
+             .attr("transform", "translate(0," + height + ")")
+             .call(xAxis);
 
-    var lanes = chart.append("g")
-        .attr("class", "lanes");
- 
-    
+    //TODO: why doesn't this work?? 
+    for (worker in workers_data) {
+        drawBoxes(lanes, workers_data[worker], worker, x, y);
+    }
+}
 
-    drawBoxes(lanes, []);
-};
-
-
-function drawBoxes(lanes) {
+function drawBoxes(lanes, worker_data, lane, x, y) {
+    var color = d3.scale.category20();
 
     var box = lanes.selectAll("rect")
-            .data(visibleStates, function(d) { return d.id; });
+                   //TODO: is the key map function lane + d.begin  unique??        
+                   .data(worker_data, function(d) {return lane + d.begin;});
 
-        box.enter().append("rect")
-            .popover(function(d) {
-                if (d.end === null)
-                    d.end = data.end;
-                var duration = d.end - d.begin;
-                var content = boxTemplate({duration: customFullTimeFormat(duration), begin: customFullTimeFormat(d.begin), end: customFullTimeFormat(d.end)})
-                if ('tp_num' in d) {
-                    content += numTuplesTemplate({number: d.tp_num});
-                }
-                return {
-                    title: stateNames[d.name],
-                    content: content
-                };
-            })
-            .attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return stateColors[d.name]; })
-            .style("stroke", function(d) { return d3.rgb(stateColors[d.name]).darker(0.5); })
+    debug(worker_data);
+    debug(y(lane));
+    box.enter().append("rect")
+            //.attr("clip-path", "url(#clip)")
+            .style("fill", function(d) { return color(Math.abs(hashCode(d.name)%20)); })
+            .style("stroke", function(d) { return d3.rgb(color(Math.abs(hashCode(d.name)))).darker(0.5); })
             .attr("class", "box");
 
-        box
-            .attr("x", function(d) {
-                return x(d.begin);
-            })
-            .attr("width", function(d, i) {
-                if (d.end) {
-                   return x(d.end) - x(d.begin);
-                } else {
-                    return x(data.end) - x(d.begin);
-                }
-            })
-            .transition()
-            .duration(animationDuration)
-            .attr("y", function(d) {
-                return y(d.lane);
-            })
-            .attr("height", function(d) {
+    box.attr("x", function(d) { return x(d.begin);})
+       .attr("width", function(d, i) {
+               return x(d.end) - x(d.begin);
+           })
+       .transition()
+       //.duration(animationDuration)
+       .attr("y", function(d) { return y(lane);})
+       .attr("height", function(d) {
                 return y.rangeBand();
-            });
+          });
 
+
+    // TODO: replace this function
+    function hashCode(str) {
+        var hash = 0;
+        if (str.length == 0) return hash;
+        for (i = 0; i < str.length; i++) {
+            char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
 }
-*/
 
