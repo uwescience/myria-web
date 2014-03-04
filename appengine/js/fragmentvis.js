@@ -162,7 +162,7 @@ function drawLanes(element, fragmentId, queryId) {
     var hostname = "vega.cs.washington.edu";
     var port = "8777";
 
-    url = "http://" + hostname + ":" + port +
+    var url = "http://" + hostname + ":" + port +
           "/logs/profiling?fragmentId=" + fragmentId +
           "&queryId=" + queryId;
 

@@ -1,12 +1,12 @@
 var graph = function (element, queryPlan, queryID) {
 
     var chartElement = d3.select('.chart');
-    var graphElement = d3.select('.query-plan')
+    var graphElement = d3.select('.query-plan');
 
-    //var networkVis = networkVisualization(chartElement, [], queryPlan);
-    //networkVis.update([]);
+    var networkVis = networkVisualization(chartElement, [1, 2], queryPlan);
+    networkVis.update([]);
 
-    var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
+    //var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
 
 
     // Process the queryPlan    
