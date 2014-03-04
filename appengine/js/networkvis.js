@@ -55,10 +55,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
     });
 
     function draw(matrix) {
+    	debug(element.style('width'));
         var margin = {top: 10, right: 10, bottom: 60, left:20 },
             side = Math.min(parseInt(element.style('width'), 10) - margin.left - margin.right, 600)
-            width = side,
-            height = side,
+            matrixWidth = side,
+            matrixHeight = side,
             transition_time = 1500;
 
         var xScale = d3.scale.linear()
@@ -88,9 +89,9 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .domain([0, max])
             .range(colorbrewer.PuRd[9]);
 
-      var svg = element.append("svg")
-              .attr("width", width)
-              .attr("height", height);
+      var svgMatrix = element.append("svg")
+              .attr("width", matrixWidth)
+              .attr("height", matrixHeight);
               //.append("g");
               //.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
