@@ -1,7 +1,4 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
-    // do all the chart stuff
-    debug("I should build the gantt chart now");
-
     drawCharts(element, fragmentId, queryPlan);
 
     // return variables that are needed outside this scope
@@ -93,7 +90,10 @@ function drawArea(element, fragmentId, queryId) {
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
-    var url = "/histogram?fragmentId=" + fragmentId + "&queryId=" + queryId;
+    var url = templates.urls.histogram({
+        query: queryId,
+        fragment: fragmentId
+    });
 
     d3.csv(url, type, function(error, data) {
         x.domain(d3.extent(data.map(function(d) { return d.time; })));
@@ -159,12 +159,11 @@ function drawArea(element, fragmentId, queryId) {
 function drawLanes(element, fragmentId, queryId) {
 
     /* Collect data for states at each worker */
-    var hostname = "vega.cs.washington.edu";
-    var port = "8777";
-
-    var url = "http://" + hostname + ":" + port +
-          "/logs/profiling?fragmentId=" + fragmentId +
-          "&queryId=" + queryId;
+    var url = templates.urls.profiling({
+        myria: myriaConnection,
+        query: queryId,
+        fragment: fragmentId
+    });
 
     d3.csv(url, type2, function(error, data) {
         var workers_data = get_workers_states(data);
@@ -303,7 +302,7 @@ function colorForOperator(opname) {
     if (opname in opToColor) {
         return opToColor[opname];
     }
-    opToColor[opname] = opColors[Object.keys(opToColor).length];
+    opToColor[opname] = opColors(Object.keys(opToColor).length);
     return opToColor[opname];
 }
 

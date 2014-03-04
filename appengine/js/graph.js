@@ -6,7 +6,7 @@ var graph = function (element, queryPlan, queryID) {
     var networkVis = networkVisualization(chartElement, [1, 2], queryPlan);
     networkVis.update([]);
 
-    //var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
+    var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
 
 
     // Process the queryPlan    
