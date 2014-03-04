@@ -54,21 +54,19 @@ var networkVisualization = function (element, fragments, queryPlan) {
     function draw(matrix) {
     	debug(element.style('width'));
         var margin = {top: 10, right: 10, bottom: 60, left:20 },
-            side = Math.min(parseInt(element.style('width'), 10) - margin.left - margin.right, 600)
-            matrixWidth = side,
-            matrixHeight = side,
-            transition_time = 1500;
+            matMargin = {top: 10, right: 10, bottom: 60, left:20 },
+        	width = parseInt(element.style('width'), 10),
+        	height = 600,
+            chartWidth = width - margin.left - margin.right,
+            chartHeight = height - margin.top - margin.bottom,
+            summaryWidth = 300,
+            matrixWidth = width - summaryWidth;
 
-        var xScale = d3.scale.linear()
-          .domain([0, matrix.length])
-          .range([0, width]);
+        var matrixScale = d3.scale.ordinal()
+          .domain(_.range(matrix.length))
+          .rangeBands([0, matrixWidth], .1);
 
-        var yScale = d3.scale.linear()
-          .domain([0, matrix.length])
-          .range([0, height]);
-
-        var xPadding = 5;
-        var yPadding = 5;
+       foo = matrixScale;
 
       // converts a matrix into a sparse-like entries
       // maybe 'expensive' for large matrices, but helps keeping code clean
@@ -87,24 +85,30 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .range(["#FFF7F3", "#49006A"])
             .interpolate(d3.interpolateLab);
 
-      var svgMatrix = element.append("svg")
-              .attr("width", matrixWidth)
-              .attr("height", matrixHeight);
-              //.append("g");
-              //.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        var svg = element.append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-        var matrixViz = svg.append('g')
-          .attr('class','matrix');
+        var tp = element.append('div')
+    	    .attr('class', 'tooltip')
+    	    .style("opacity", 0.3);
+        
+        var chart = svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var matrixViz = chart.append('g')
+          .attr('class','matrix')
+          .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
 
         var pixel = matrixViz.selectAll('rect.pixel').data(corr_data);
 
         pixel.enter()
           .append('rect')
               .attr('class', 'pixel')
-              .attr('width', width/matrix.length - xPadding)
-              .attr('height', height/matrix.length - yPadding)
-              .attr('y', function(d){return yScale(d.i);})
-              .attr('x', function(d){return xScale(d.j);})
+              .attr('width', matrixScale.rangeBand())
+              .attr('height', matrixScale.rangeBand())
+              .attr('y', function(d){return matrixScale(d.i);})
+              .attr('x', function(d){return matrixScale(d.j);})
               .style('fill',function(d){ return color(d.val);});
               //.on('mouseover', function(d){pixel_mouseover(d);})
               //.on('mouseout', function(d){mouseout(d);});
