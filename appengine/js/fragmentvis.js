@@ -10,7 +10,7 @@ function drawCharts(element, fragmentId, queryPlan) {
     drawLanes(element, fragmentId, queryPlan.queryId);
 }
 
-// Draw the area plot and the mini-brush for it
+// Draw the area plot and the mini-brush and big-brush for it
 function drawArea(element, fragmentId, queryId) {
 
     var workers_data = [];
@@ -46,6 +46,10 @@ function drawArea(element, fragmentId, queryId) {
     var brush = d3.svg.brush()
                   .x(x2)
                   .on("brush", brushed);
+ 
+    var brush2 = d3.svg.brush()
+                      .x(x)
+                      .on("brushend", brushend_workers);
 
     // Area 1 generator
     var area = d3.svg.area()
@@ -89,6 +93,11 @@ function drawArea(element, fragmentId, queryId) {
     var mini_brush = svg.append("g")
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+    // Place the big-brush
+    var big_brush = svg.append("g")
+        .attr("class", "context")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var url = templates.urls.histogram({
         query: queryId,
@@ -139,13 +148,35 @@ function drawArea(element, fragmentId, queryId) {
                .selectAll("rect")
                .attr("y", -6)
                .attr("height", height2 + 7);
+
+        big_brush.append("path")
+               .attr("clip-path", "url(#clip)")
+               .datum(data)
+               .attr("class", "area")
+               .attr("d", area2);
+
+        big_brush.append("g")
+               .attr("class", "x axis")
+               .attr("transform", "translate(0," + height + ")")
+               .call(xAxis);
+
+        big_brush.append("g")
+               .attr("class", "x brush")
+               .call(brush)
+               .selectAll("rect")
+               .attr("y", -6)
+               .attr("height", height + 7);
     });
 
     function brushed() {
-        x.domain(brush.empty() ? x2.domain() : brush.extent());
+        x.domain(brush.empty() ? x2.domain() : mini_brush.extent());
         plot.select(".area").attr("d", area);
         plot.select(".plot path.line").attr("d", line);
         plot.select(".x.axis").call(xAxis);
+    }
+
+    function brushend_workers() {
+        //cal brush on the other svg...
     }
 
     function type(d) {
@@ -153,7 +184,6 @@ function drawArea(element, fragmentId, queryId) {
         d.value = JSON.parse( d.value);
         return d;
     }
-
 }
 
 function drawLanes(element, fragmentId, queryId) {
@@ -293,6 +323,11 @@ function redrawLanes(element, workers_data) {
         drawBoxes(lanes, workers_data[worker], worker, x, y);
         //return;
     }
+
+    function brushend_workers() {
+        
+    }
+
 }
 
 var opColors = d3.scale.category20();
