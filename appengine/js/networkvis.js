@@ -83,7 +83,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
         var color = d3.scale.linear()
             .domain([0, max])
-            .range(colorbrewer.PuRd[9]);
+            .range(["#FFF7F3", "#49006A"])
+            .interpolate(d3.interpolateLab);
 
       var svg = element.append("svg")
               .attr("width", width)
