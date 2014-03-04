@@ -7,17 +7,13 @@ var networkVisualization = function (element, fragments, queryPlan) {
           "/logs/sent?fragmentId=" + fragmentId +
           "&queryId=" + queryId;
 
-    var workers;
-    var dataset;
-    var matrix;
-    var timeseries;
-    var src2dst2ts;
-    var dst2src2ts;
+    debug(url)
 
     d3.csv(url, function (data) {
-    	matrix = [];
-  		dataset = [];
-  		workers = new Object();
+    	var matrix = [],
+      		dataset = [],
+  		    workers = new Object();
+
   		data.forEach(function(d) {
     		var source = d.workerId;
     		var dest = d.destWorkerId;
@@ -26,17 +22,17 @@ var networkVisualization = function (element, fragments, queryPlan) {
     		dataset.push(d);
   		});
 
-  		src2dst2ts = d3.nest()
+  		var src2dst2ts = d3.nest()
       				.key(function(d) { return d.workerId; })
       				.key(function(d) { return d.destWorkerId; })
       				.entries(dataset);
 
-  		dst2src2ts = d3.nest()
+  		var dst2src2ts = d3.nest()
       				.key(function(d) { return d.destWorkerId; })
       				.key(function(d) { return d.workerId; })
       				.entries(dataset);
 
-      	workers = d3.keys(workers);
+      	var workers = d3.keys(workers);
       	workerID2matrixID = new Object();
   		matrix = new Array(workers.length);
   		for (var i = 0; i < matrix.length; i++) {
@@ -55,10 +51,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
   		});
 
 
-        draw();
+        draw(matrix);
     });
 
-    function draw() {
+    function draw(matrix) {
         var margin = {top: 10, right: 10, bottom: 60, left:20 },
             side = Math.min(parseInt(element.style('width'), 10) - margin.left - margin.right, 600)
             width = side,
@@ -115,7 +111,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
               //.on('mouseout', function(d){mouseout(d);});
               // .on('click', function(d){reorder_matrix(d.i, 'col'); reorder_matrix(d.j, 'row');});
               //the last thing works only for symmetric matrices, but with asymmetric sorting
-      }
+    }
 
     // return variables that are needed outside this scope
     return {
