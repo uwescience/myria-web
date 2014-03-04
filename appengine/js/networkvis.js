@@ -1,13 +1,10 @@
 var networkVisualization = function (element, fragments, queryPlan) {
-    // do all the chart stuff
-
     var fragmentId = fragments[0];
-    var queryId = queryPlan.queryId;
-    var url = 'http://' + myriaConnection +
-          "/logs/sent?fragmentId=" + fragmentId +
-          "&queryId=" + queryId;
-
-    debug(url)
+    var url = templates.urls.sentData({
+        myria: myriaConnection,
+        query: queryPlan.queryId,
+        fragment: fragmentId
+    });
 
     d3.csv(url, function (data) {
     	var matrix = [],

@@ -1,6 +1,10 @@
 // put all the underscore templates here
 var templates = {
-
+    urls: {
+        sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        histogram: _.template("/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
+    }
 }
 
 function timeFormat(formats) {
