@@ -99,8 +99,7 @@ function drawArea(element, fragmentId, queryId) {
         fragment: fragmentId
     });
 
-    //d3.csv(url, type, function(error, data) {
-    d3.csv('js/aggregated.data', type, function(error, data) {
+    d3.csv(url, type, function(error, data) {
         x.domain(d3.extent(data.map(function(d) { return d.time; })));
         y.domain([0, d3.max(data.map(function(d) { return d.value.length; }))]);
         x2.domain(x.domain());
@@ -180,8 +179,7 @@ function drawLanes(element, fragmentId, queryId) {
         fragment: fragmentId
     });
 
-    //d3.csv(url, type2, function(error, data) {
-    d3.csv('js/worker.data', type2, function(error, data) {
+    d3.csv(url, type2, function(error, data) {
         var workers_data = get_workers_states(data);
         redrawLanes(element, workers_data);
     });
