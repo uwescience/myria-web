@@ -196,7 +196,7 @@ class Queries(MyriaPage):
 
         for q in queries:
             q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
-            if q['status'] == 'KILLED':
+            if q['status'] in ['ERROR', 'KILLED']:
                 q['bootstrapStatus'] = 'danger'
             elif q['status'] == 'SUCCESS':
                 q['bootstrapStatus'] = 'success'
