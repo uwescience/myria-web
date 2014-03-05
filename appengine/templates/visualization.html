@@ -52,7 +52,6 @@
 {% endblock %}
 
 {% block footer %}
-	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
 	<script type="text/javascript">
 		{% autoescape false %}
 			var myriaConnection = '{{ myriaConnection }}';
@@ -60,4 +59,5 @@
 			var queryID = {{ queryId }};
 		{% endautoescape %}
 	</script>
+	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
 {% endblock %}
