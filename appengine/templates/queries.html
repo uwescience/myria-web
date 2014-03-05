@@ -15,6 +15,7 @@
 					<th>#</th>
 					<th>Logical plan</th>
 					<th>Status</th>
+					<th>Profiling</th>
 					<th>Time elapsed</th>
 					<th>Finished</th>
 				</tr>
@@ -24,6 +25,9 @@
 				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
 				<td class="query-raw">{{q.rawQuery}}</td>
 				<td class="query-status">{{q.status}}</td>
+				<td>
+					<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-tasks"></a>
+				</td>
 				<td class="query-elapsed">{{q.elapsedStr}}</td>
 				<td class="query-finish">{{q.finishTime}}</td>
 			</tr>
