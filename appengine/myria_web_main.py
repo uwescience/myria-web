@@ -2,6 +2,9 @@ import json
 from threading import Lock
 import urllib
 import webapp2
+import copy
+
+import jinja2
 
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
@@ -12,7 +15,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco import scheme
 from examples import examples
-import jinja2
+from pagination import Pagination
 
 import myria
 
@@ -30,6 +33,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
+QUERIES_PER_PAGE = 10
+
 
 def get_plan(query, language, plan_type):
     # Fix up the language string
@@ -121,7 +127,7 @@ def get_queries(connection=None):
         except myria.MyriaError:
             return []
     try:
-        return connection.queries()
+        return connection.queries()[1]
     except myria.MyriaError:
         return []
 
@@ -183,9 +189,11 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
-            limit = self.request.get('limit', None)
-            max_ = self.request.get('max', None)
-            _, queries = connection.queries(limit, max_)
+            limit = self.request.get('limit', QUERIES_PER_PAGE)
+            page = int(self.request.get('page', 1))
+            max_ = (page - 1) * QUERIES_PER_PAGE
+            count, queries = connection.queries(limit, max_)
+            print queries
         except myria.MyriaError:
             connection = None
             queries = []
@@ -206,19 +214,19 @@ class Queries(MyriaPage):
                          'nextUrl': None}
 
         if queries:
-            max_id = max(q['queryId'] for q in queries)
-            args = {arg : self.request.get(arg)
+            args = {arg: self.request.get(arg)
                     for arg in self.request.arguments()
-                    if arg != 'max'}
-            args['max'] = max_id + len(queries)
-            prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-            template_vars['prevUrl'] = prev_url
+                    if arg != 'page'}
 
-            min_id = min(q['queryId'] for q in queries)
-            if min_id > 1:
-                args['max'] = min_id - 1
-                next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-                template_vars['nextUrl'] = next_url
+            def page_url(page):
+                largs = copy.copy(args)
+                largs['page'] = page
+                return '{}?{}'.format(
+                    self.request.path, urllib.urlencode(largs))
+
+            pagination = Pagination(page, QUERIES_PER_PAGE, count)
+            template_vars['pagination'] = pagination
+            template_vars['page_url'] = page_url
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
