@@ -84,7 +84,7 @@ function drawArea(element, fragmentId, queryId) {
        .attr("width", width)
        .attr("height", height);
 
-    // Place the plot
+    // Place the plot/big_brush
     var plot = svg.append("g")
         .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -94,17 +94,13 @@ function drawArea(element, fragmentId, queryId) {
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
-    // Place the big-brush
-    var big_brush = svg.append("g")
-        .attr("class", "context")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
     var url = templates.urls.histogram({
         query: queryId,
         fragment: fragmentId
     });
 
-    d3.csv(url, type, function(error, data) {
+    //d3.csv(url, type, function(error, data) {
+    d3.csv('js/aggregated.data', type, function(error, data) {
         x.domain(d3.extent(data.map(function(d) { return d.time; })));
         y.domain([0, d3.max(data.map(function(d) { return d.value.length; }))]);
         x2.domain(x.domain());
@@ -130,6 +126,13 @@ function drawArea(element, fragmentId, queryId) {
         plot.append("g")
              .attr("class", "y axis")
              .call(yAxis);
+ 
+        plot.append("g")
+               .attr("class", "x brush")
+               .call(brush2)
+               .selectAll("rect")
+               .attr("y", -6)
+               .attr("height", height + 7);
 
         mini_brush.append("path")
                .attr("clip-path", "url(#clip)")
@@ -148,28 +151,11 @@ function drawArea(element, fragmentId, queryId) {
                .selectAll("rect")
                .attr("y", -6)
                .attr("height", height2 + 7);
-
-        big_brush.append("path")
-               .attr("clip-path", "url(#clip)")
-               .datum(data)
-               .attr("class", "area")
-               .attr("d", area2);
-
-        big_brush.append("g")
-               .attr("class", "x axis")
-               .attr("transform", "translate(0," + height + ")")
-               .call(xAxis);
-
-        big_brush.append("g")
-               .attr("class", "x brush")
-               .call(brush)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height + 7);
     });
 
     function brushed() {
-        x.domain(brush.empty() ? x2.domain() : mini_brush.extent());
+        debug(brush.extent());
+        x.domain(brush.empty() ? x2.domain() : brush.extent());
         plot.select(".area").attr("d", area);
         plot.select(".plot path.line").attr("d", line);
         plot.select(".x.axis").call(xAxis);
@@ -177,6 +163,7 @@ function drawArea(element, fragmentId, queryId) {
 
     function brushend_workers() {
         //cal brush on the other svg...
+        debug(brush2.extent());
     }
 
     function type(d) {
@@ -195,7 +182,8 @@ function drawLanes(element, fragmentId, queryId) {
         fragment: fragmentId
     });
 
-    d3.csv(url, type2, function(error, data) {
+    //d3.csv(url, type2, function(error, data) {
+    d3.csv('js/worker.data', type2, function(error, data) {
         var workers_data = get_workers_states(data);
         redrawLanes(element, workers_data);
     });
