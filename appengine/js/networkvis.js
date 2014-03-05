@@ -80,11 +80,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
      
 		var x = d3.scale.linear()
         				.domain([minTime,maxTime])
-    					.range([0, tsWidth]);
+    					.range([0, tsWidth - tsMargin.left - tsMargin.right]);
 
         var y = d3.scale.linear()
                         .domain([0,maxNumTuples])
-                        .range([tsHeight, 0]);
+                        .range([tsHeight - tsMargin.top - tsMargin.bottom, 0]);
 
         var xAxis = d3.svg.axis()
     				  .scale(x)
@@ -103,7 +103,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             	.attr("height", tsHeight)
             	.attr("id", "timeseries")
         	.append("g")
-            	.attr("transform", "translate(" + tsMargin.left + "," + 0 + ")");
+            	.attr("transform", "translate(" + tsMargin.left + "," + tsMargin.top + ")");
 
         tsChart.append("g")
       		.attr("class", "x axis")
@@ -128,11 +128,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
     //initialize the visualization
     	var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
         	    labelMargin = {top: 20, right: 20, bottom: 20, left:20 },
-        	    tsMargin = {top: 10, right: 10, bottom: 50, left:50 },
+        	    tsMargin = {top: 20, right: 50, bottom: 50, left:50 },
             	axisMargin = {left: 30, bottom: 30, right: 30},
         		totalWidth = parseInt(element.style('width'), 10),
         		totalHeight = 950,
-        		totalMatrixWidth = 600,
+        		totalMatrixWidth = 550,
         		totalTSWidth = totalWidth,
         		totalTSHeight = totalHeight - totalMatrixWidth; 
 
