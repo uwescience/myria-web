@@ -102,10 +102,12 @@ class MyriaCatalog:
             'programName': rel_key.program,
             'relationName': rel_key.relation
         }
+        if not self.connection:
+            raise ValueError("no schema for relation %s because no connection" % rel_key)
         try:
             dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
-            return None
+            raise ValueError(rel_key)
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
@@ -124,7 +126,7 @@ def get_queries(connection=None):
 class MyriaHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
-        if isinstance(exception, (SyntaxError, MyrialCompileException)):
+        if isinstance(exception, (ValueError, SyntaxError, MyrialCompileException)):
             self.response.status = 400
             msg = str(exception)
         else:
@@ -345,13 +347,7 @@ class Compile(MyriaHandler):
         except myria.MyriaError:
             catalog = None
         # .. and compile
-        try:
-            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
-        except ValueError as e:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 400 (Bad Request): %s" % str(e))
-            self.response.status = 400
-            return
+        compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(compiled))
@@ -386,13 +382,7 @@ class Execute(MyriaHandler):
         except myria.MyriaError:
             catalog = None
         # .. and compile
-        try:
-            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
-        except ValueError as e:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 400 (Bad Request): %s" % str(e))
-            self.response.status = 400
-            return
+        compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
 
         # Issue the query
         try:
