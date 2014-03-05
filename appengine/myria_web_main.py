@@ -3,6 +3,7 @@ from threading import Lock
 import urllib
 import webapp2
 import copy
+import math
 
 import jinja2
 
@@ -189,8 +190,9 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
+            limit = int(self.request.get('limit', QUERIES_PER_PAGE))
             max_ = self.request.get('max', None)
-            count, queries = connection.queries(QUERIES_PER_PAGE, max_)
+            count, queries = connection.queries(limit, max_)
             if max_:
                 max_ = int(max_)
             else:
@@ -215,25 +217,29 @@ class Queries(MyriaPage):
                          'nextUrl': None}
 
         if queries:
-            page = (count - max_) / QUERIES_PER_PAGE + 1
+            page = int(math.ceil(count - max_) / limit) + 1
             args = {arg: self.request.get(arg)
                     for arg in self.request.arguments()
                     if arg != 'page'}
 
             def page_url(page, current_max, pagination):
                 largs = copy.copy(args)
-                largs['max'] = (current_max +
-                                (pagination.page - page) * QUERIES_PER_PAGE)
+                if page > 0:
+                    largs['max'] = (current_max +
+                                    (pagination.page - page) * limit)
+                else:
+                    largs.pop("max", None)
                 return '{}?{}'.format(
                     self.request.path, urllib.urlencode(largs))
 
             template_vars['pagination'] = Pagination(
-                page, QUERIES_PER_PAGE, count)
+                page, limit, count)
             template_vars['current_max'] = max_
             template_vars['page_url'] = page_url
         else:
+            template_vars['current_max'] = 0
             template_vars['pagination'] = Pagination(
-                1, QUERIES_PER_PAGE, 0)
+                1, limit, 0)
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'

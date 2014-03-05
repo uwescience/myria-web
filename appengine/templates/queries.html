@@ -31,12 +31,11 @@
 		</table>
 		<div class="text-center">
 			<ul class="pagination">
-				{% if pagination.has_prev %}
 				<li>
+				{% if pagination.has_prev %}
 					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
 				{% else %}
-				<li class="disabled">
-					<span>&laquo;</span>
+					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
 				{% endif %}
 				</li>
 				{%- for page in pagination.iter_pages() %}
