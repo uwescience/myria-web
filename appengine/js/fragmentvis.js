@@ -154,7 +154,6 @@ function drawArea(element, fragmentId, queryId) {
     });
 
     function brushed() {
-        debug(brush.extent());
         x.domain(brush.empty() ? x2.domain() : brush.extent());
         plot.select(".area").attr("d", area);
         plot.select(".plot path.line").attr("d", line);
@@ -163,7 +162,6 @@ function drawArea(element, fragmentId, queryId) {
 
     function brushend_workers() {
         //cal brush on the other svg...
-        debug(brush2.extent());
     }
 
     function type(d) {
