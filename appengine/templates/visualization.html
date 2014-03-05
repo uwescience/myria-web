@@ -18,20 +18,32 @@
 {% block extra_container_class %}my-fluid-container{% endblock %}
 
 {% block content %}
-	<h1>Query execution of query {{ queryId }}</h1>
+    <div class="page-header">
+  		<h1>Query {{ queryId }} <small>visualization of physical query execution</small></h1>
+	</div>
 
 	<p class="lead">
-		Hello Group!
+		This page shows a visualization of how query {{ queryId }} was executed. On the left, you can see the physical query plan which consists of operators that are grouped in fragments. Communication between fragments is over the network.
+
+		You can click on a fragment to explore what happened inside a fragment and on a connection between fragments to explore then network communication.
 	</p>
 
 	<div class="row">
 		<div class="col-md-5 col-lg-4">
-			<h2>Query Plan:</h2>
-			<div class="query-plan" data-type="line" data-query="{{ queryId }}"></div>
+			<div class="panel panel-default ">
+				<div class="panel-heading">
+			   		<h3 class="panel-title">Physical Query Plan:</h3>
+			    </div>
+				<div class="query-plan panel-body" data-type="line" data-query="{{ queryId }}"></div>
+			</div>
 		</div>
 		<div class="col-md-7 col-lg-8">
-			<h2>Visualization:</h2>
-			<div class="chart"></div>
+			<div class="panel panel-default ">
+				<div class="panel-heading">
+			   		<h3 class="panel-title">Visualization:</h3>
+			    </div>
+				<div class="chart panel-body"></div>
+			</div>
 		</div>
 	</div>
 
@@ -41,7 +53,6 @@
 {% endblock %}
 
 {% block footer %}
-	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
 	<script type="text/javascript">
 		{% autoescape false %}
 			var myriaConnection = '{{ myriaConnection }}';
@@ -49,4 +60,5 @@
 			var queryID = {{ queryId }};
 		{% endautoescape %}
 	</script>
+	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
 {% endblock %}
