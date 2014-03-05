@@ -189,11 +189,12 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
-            limit = self.request.get('limit', QUERIES_PER_PAGE)
-            page = int(self.request.get('page', 1))
-            max_ = (page - 1) * QUERIES_PER_PAGE
-            count, queries = connection.queries(limit, max_)
-            print queries
+            max_ = self.request.get('max', None)
+            count, queries = connection.queries(QUERIES_PER_PAGE, max_)
+            if max_:
+                max_ = int(max_)
+            else:
+                max_ = count
         except myria.MyriaError:
             connection = None
             queries = []
@@ -214,19 +215,25 @@ class Queries(MyriaPage):
                          'nextUrl': None}
 
         if queries:
+            page = (count - max_) / QUERIES_PER_PAGE + 1
             args = {arg: self.request.get(arg)
                     for arg in self.request.arguments()
                     if arg != 'page'}
 
-            def page_url(page):
+            def page_url(page, current_max, pagination):
                 largs = copy.copy(args)
-                largs['page'] = page
+                largs['max'] = (current_max +
+                                (pagination.page - page) * QUERIES_PER_PAGE)
                 return '{}?{}'.format(
                     self.request.path, urllib.urlencode(largs))
 
-            pagination = Pagination(page, QUERIES_PER_PAGE, count)
-            template_vars['pagination'] = pagination
+            template_vars['pagination'] = Pagination(
+                page, QUERIES_PER_PAGE, count)
+            template_vars['current_max'] = max_
             template_vars['page_url'] = page_url
+        else:
+            template_vars['pagination'] = Pagination(
+                1, QUERIES_PER_PAGE, 0)
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
