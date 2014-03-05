@@ -13,8 +13,8 @@ function drawCharts(element, fragmentId, queryPlan) {
 // Draw the area plot and the mini-brush and big-brush for it
 function drawArea(element, fragmentId, queryId, lanesChart) {
 
-    var margin = {top: 10, right: 10, bottom: 60, left:20 },
-        margin2 = {top: 160, right:10, bottom: 20, left:20},
+    var margin = {top: 50, right: 10, bottom: 20, left:20 },
+        margin2 = {top: 10, right:10, bottom: 170, left:20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
@@ -83,15 +83,15 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
        .attr("width", width)
        .attr("height", height);
 
-    // Place the plot/big_brush
-    var plot = svg.append("g")
-        .attr("class", "plot")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
     // Place the mini-brush
     var mini_brush = svg.append("g")
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+    // Place the plot/big_brush
+    var plot = svg.append("g")
+        .attr("class", "plot")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var url = templates.urls.histogram({
         query: queryId,
@@ -104,6 +104,24 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         y.domain([0, d3.max(data.map(function(d) { return d.value.length; }))]);
         x2.domain(x.domain());
         y2.domain(y.domain());
+
+        mini_brush.append("path")
+               .attr("clip-path", "url(#clip)")
+               .datum(data)
+               .attr("class", "area")
+               .attr("d", area2);
+
+        mini_brush.append("g")
+               .attr("class", "x axis")
+               .attr("transform", "translate(0," + height2 + ")")
+               .call(xAxis2);
+
+        mini_brush.append("g")
+               .attr("class", "x brush")
+               .call(brush)
+               .selectAll("rect")
+               .attr("y", -6)
+               .attr("height", height2 + 7);
 
         plot.append("path")
              .attr("clip-path", "url(#clip)")
@@ -125,31 +143,13 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         plot.append("g")
              .attr("class", "y axis")
              .call(yAxis);
- 
+
         plot.append("g")
                .attr("class", "x brush")
                .call(brush2)
                .selectAll("rect")
                .attr("y", -6)
                .attr("height", height + 7);
-
-        mini_brush.append("path")
-               .attr("clip-path", "url(#clip)")
-               .datum(data)
-               .attr("class", "area")
-               .attr("d", area2);
-
-        mini_brush.append("g")
-               .attr("class", "x axis")
-               .attr("transform", "translate(0," + height2 + ")")
-               .call(xAxis2);
-
-        mini_brush.append("g")
-               .attr("class", "x brush")
-               .call(brush)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height2 + 7);
     });
 
     function brushed() {
