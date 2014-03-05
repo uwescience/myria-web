@@ -33,7 +33,7 @@
 			<ul class="pagination">
 				{% if pagination.has_prev %}
 				<li>
-					<a href="{{ page_url(pagination.page - 1) }}">&laquo;</a>
+					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
 				{% else %}
 				<li class="disabled">
 					<span>&laquo;</span>
@@ -43,7 +43,7 @@
 					{% if page %}
 						{% if page != pagination.page %}
 							<li>
-								<a href="{{ page_url(page) }}">{{ page }}</a>
+								<a href="{{ page_url(page, current_max, pagination) }}">{{ page }}</a>
 					  		</li>
 						{% else %}
 							<li class="active"><span>{{ page }}</span></li>
@@ -54,7 +54,7 @@
 				{%- endfor %}
 				{% if pagination.has_next %}
 				<li>
-					<a href="{{ page_url(pagination.page + 1) }}">&raquo;</a>
+					<a href="{{ page_url(pagination.page + 1, current_max, pagination) }}">&raquo;</a>
 				{% else %}
 				<li class="disabled">
 					<span>&raquo;</span>
