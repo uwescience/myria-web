@@ -192,10 +192,7 @@ function changeLanguage() {
  */
 function showSvgModal() {
   $('#svg-modal-output').empty();
-  // DOM walking to find the correct SVG for this button press. Sensitive to
-  // webpage changes.
-  var parentHeader = this.parentNode;
-  var svgOutput = parentHeader.nextElementSibling.firstElementChild;
+  var svgOutput = document.getElementById(this.getAttribute('data-output'));
   var svgModalOutput = document.getElementById("svg-modal-output");
   for (var i = 0; i < svgOutput.childElementCount; ++i) {
     svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));
