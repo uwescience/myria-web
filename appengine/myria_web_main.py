@@ -22,10 +22,7 @@ hostname = "vega.cs.washington.edu"
 port = 1776
 
 # Global connection to Myria. Thread-safe
-try:
-    connection = myria.MyriaConnection(hostname=hostname, port=port)
-except:
-    connection = None
+connection = myria.MyriaConnection(hostname=hostname, port=port)
 
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
