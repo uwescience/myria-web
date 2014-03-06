@@ -1,14 +1,5 @@
 var graph = function (element, queryPlan, queryID) {
 
-    var chartElement = d3.select('.chart');
-    var graphElement = d3.select('.query-plan');
-    
-    var networkVis = networkVisualization(chartElement, [], queryPlan);
-
-    networkVis.update([]);
-
-    var fragmentVis = fragmentVisualization(chartElement, 2, queryPlan);
-
     // Process the queryPlan    
     var graphObj = new Object;
     graphObj.name = ("Query Plan ").concat(queryID);
@@ -23,6 +14,7 @@ var graph = function (element, queryPlan, queryID) {
             // Create fragment node object
             var node = new Object();
             var id = "Frag".concat(fragment.fragmentIndex.toString());
+            node.fragmentIndex = fragment.fragmentIndex.toString();
             node.workers = fragment.workers;
             node.operators = fragment.operators;
             node.opNodes = {};      // List of graph operand nodes
@@ -93,27 +85,28 @@ var graph = function (element, queryPlan, queryID) {
         // var layout = dagreD3.layout();
         // renderer.layout(layout).run(dagreD3.json.decode(nodes, links), svg.append('g'));
 
-        var svg = graphElement
-                    .html(renderGraph(graphObj));  
-
-         listen(graphObj, svg);
+        var svg = d3.select('.query-plan')
+            .html(renderGraph(graphObj));  
+        
+        listen(graphObj, svg, d3.select('.chart'));
     //});
     
 };
 
 // Function that listens for user clicks 
-function listen(graph, svg) {
+function listen(graph, svg, chartElement) {
     svg.selectAll(".node")
             .on("click", function () {
                 var nodeID = this.firstChild.innerHTML;
                 if (nodeID in graph.nodes) {
                     expandNode(graph, [nodeID]);
+                    fragmentVisualization(chartElement, graph.nodes[nodeID].fragmentIndex, queryPlan);
                 } else if (nodeID in graph.opName2fID) {
                     reduceNode(graph, [graph.opName2fID[nodeID]]);
                 }
                 svg.selectAll("g").remove();
                 svg.html(renderGraph(graph));
-                listen(graph, svg);
+                listen(graph, svg, chartElement);
             });
     svg.selectAll(".cluster")
             .on("click", function () {
@@ -124,7 +117,7 @@ function listen(graph, svg) {
                 } 
                 svg.selectAll("g").remove();
                 svg.html(renderGraph(graph));
-                listen(graph, svg);
+                listen(graph, svg, chartElement);
             });
 
 }

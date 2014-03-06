@@ -1,4 +1,5 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
+    element.selectAll("svg").remove();
     drawCharts(element, fragmentId, queryPlan);
 
     // return variables that are needed outside this scope
