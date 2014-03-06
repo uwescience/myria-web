@@ -159,7 +159,7 @@ class MyriaPage(MyriaHandler):
                 workers = conn.workers()
                 alive = conn.workers_alive()
                 connection_string = "%s:%d [%d/%d]" % (hostname, port, len(alive), len(workers))
-            except myria.MyriaError:
+            except:
                 connection_string = "error connecting to %s:%d" % (hostname, port)
         return connection_string
 
