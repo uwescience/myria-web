@@ -1,5 +1,4 @@
 var graph = function (element, queryPlan) {
-
     var chartElement = d3.select('.chart');
 
     // Process the queryPlan
@@ -124,7 +123,7 @@ function listen(graph, svg, chartElement) {
                 if (linkID in graph.links) {
                     var src = debug(graph.nodes[graph.links[linkID].u.fID].fragmentIndex);
                     var dst = debug(graph.nodes[graph.links[linkID].v.fID].fragmentIndex);
-                    networkVisualization(chartElement, [src,dst], queryPlan);
+                    networkVisualization(chartElement, [src], queryPlan);
                 } 
             });
 

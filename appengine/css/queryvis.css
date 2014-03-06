@@ -95,12 +95,9 @@ svg {
   stroke-width: 1px;
 }
 
-.tsline {
+.timeseries .tsline {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
-}
-
-.tsarea {
-  fill: steelblue;
+  shape-rendering: auto;
 }

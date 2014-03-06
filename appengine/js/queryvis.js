@@ -21,7 +21,8 @@ var templates = {
     }
 }
 
-var animationDuration = 750;
+var animationDuration = 750
+    shortDuration = 500;
 
 function timeFormat(formats) {
   return function(date) {
