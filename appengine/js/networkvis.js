@@ -127,7 +127,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
     	d3.selectAll("svg").remove();
     //initialize the visualization
     	var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
-        	    labelMargin = {top: 20, right: 20, bottom: 20, left:20 },
+        	    labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
         	    tsMargin = {top: 20, right: 50, bottom: 50, left:50 },
             	axisMargin = {left: 30, bottom: 30, right: 30},
         		totalWidth = parseInt(element.style('width'), 10),
@@ -187,22 +187,26 @@ var networkVisualization = function (element, fragments, queryPlan) {
  
         var tick_col = matrixChart.append('g')
                         .attr('class','ticks')
-                        //.attr('transform', 'translate(' + (label_space + 10) + ',' + (label_space) + ')')
+                        .attr('transform', 'translate(' + (matMargin.left + labelMargin.left) + ',' + labelMargin.top + ')')
       	                .selectAll('text.tick')
                         .data(workers);
+        
+        var matLabelTextScale = d3.scale.linear()
+    	        .domain([0,totalMatrixWidth])
+        	    .range([0, 140]);
 
         tick_col.enter()
       		.append('text')
           	.attr('class','tick')
           	.style('text-anchor', 'start')
           	//.attr('transform', function(d, i){return 'rotate(270 ' + scale(order_col[i] + 0.7) + ',0)';})
-          	//.attr('font-size', scale(0.8))
+          	.attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
           	.text(function(d){ return d; })
           	.attr('x', function(d, i){return matrixScale(i);});
 
         var tick_row = matrixChart.append('g')
                           .attr('class','ticks')
-                        //.attr('transform', 'translate(' + (label_space) + ',' + (label_space + 10) + ')')
+                          .attr('transform', 'translate(' + (labelMargin.left) + ',' + (matMargin.top + labelMargin.top) + ')')
                           .selectAll('text.tick')
                           .data(workers);
 
@@ -210,7 +214,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .append('text')
                 .attr('class','tick')
                 .style('text-anchor', 'end')
-                //.attr('font-size', scale(0.8))
+                .attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
                 .text(function(d){ return d; })
                 .attr('y', function(d, i){return matrixScale(i);});
           
