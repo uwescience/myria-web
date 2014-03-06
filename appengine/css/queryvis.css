@@ -48,6 +48,12 @@ svg {
     fill: none;
 }
 
+/* Graph */
+
+.graph {
+  shape-rendering: auto;
+}
+
 /* Fragment vis */
 .area {
   fill: #9ecae1;

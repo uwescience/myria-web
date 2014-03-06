@@ -88,6 +88,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 		draw(workers, matrix, matrixID2workerID, src2dst2ts);
     	});
 
+        // TODO: this should take fewer arguments
         function draw(workers, matrix, matrixID2workerID, src2dst2ts) {
             var corr_data = [],
                     max = 0;
@@ -162,8 +163,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
     // return variables that are needed outside this scope
     return {
         update: function(fragments) {
-            //debug("I should update the chord chart now");
-            updateViz(fragments);
+            debug("I should update the chord chart now");
+           // TODO: implement
         }
     };
 };

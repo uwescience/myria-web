@@ -86,13 +86,13 @@ var graph = function (element, queryPlan) {
     // renderer.layout(layout).run(dagreD3.json.decode(nodes, links), svg.append('g'));
 
     var svg = d3.select('.query-plan')
-        .html(renderGraph(graphObj));  
-    
+        .html(renderGraph(graphObj));
+
     listen(graphObj, svg, chartElement);
-    
+
 };
 
-// Function that listens for user clicks 
+// Function that listens for user clicks
 function listen(graph, svg, chartElement) {
     svg.selectAll(".node")
             .on("click", function () {
@@ -112,7 +112,7 @@ function listen(graph, svg, chartElement) {
                 var nodeID = this.lastElementChild.innerHTML;
                 if (nodeID in graph.nodes) {
                     reduceNode(graph, [nodeID]);
-                } 
+                }
                 svg.selectAll("g").remove();
                 svg.html(renderGraph(graph));
                 listen(graph, svg, chartElement);
@@ -123,10 +123,10 @@ function listen(graph, svg, chartElement) {
                 if (linkID in graph.links) {
                     var src = debug(graph.nodes[graph.links[linkID].u.fID].fragmentIndex);
                     var dst = debug(graph.nodes[graph.links[linkID].v.fID].fragmentIndex);
+                    chartElement.selectAll("svg").remove();
                     networkVisualization(chartElement, [src], queryPlan);
-                } 
+                }
             });
-
 }
 
 // Returns the svg desciption of the graph object
