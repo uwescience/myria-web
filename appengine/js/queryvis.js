@@ -1,9 +1,14 @@
 // put all the underscore templates here
 var templates = {
-    urls: {
+    /*urls: {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         histogram: _.template("/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
+    },*/
+    urls: {
+        sentData: _.template("/data/sent.csv"),
+        profiling: _.template("/data/profiling.csv"),
+        histogram: _.template("/data/histogram.csv")
     }
 }
 
@@ -79,5 +84,5 @@ var ruler = d3.select("body")
 
 d3.select('.query-plan').each(function() {
     element = d3.select(this);
-    graph(element, queryPlan, queryID);
+    graph(element, queryPlan);
 });

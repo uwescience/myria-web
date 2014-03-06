@@ -1,8 +1,8 @@
-var graph = function (element, queryPlan, queryID) {
+var graph = function (element, queryPlan) {
 
-    // Process the queryPlan    
+    // Process the queryPlan
     var graphObj = new Object;
-    graphObj.name = ("Query Plan ").concat(queryID);
+    graphObj.name = ("Query Plan ").concat(queryPlan.queryId);
     graphObj.nodes = {};        // List of graph nodes
     graphObj.links = {};        // List of graph edges
     graphObj.opName2fID = {};   // Dictionary of opNames - fragment ID
