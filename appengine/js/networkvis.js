@@ -14,7 +14,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
         	fragment: fragmentId
     	});
 
-    	url = "data/data.csv";
+    	url = "data/network.csv";
     	d3.csv(url, function (data) {
     		matrix = [],
   		    workers = new Object();
