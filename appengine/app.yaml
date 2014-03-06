@@ -17,6 +17,8 @@ handlers:
   static_dir: img
 - url: /js
   static_dir: js
+- url: /data
+  static_dir: data
 - url: /robots\.txt
   static_files: robots.txt
   upload: robots\.txt

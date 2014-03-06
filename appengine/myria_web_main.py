@@ -257,14 +257,13 @@ class Profile(MyriaPage):
         query_plan = {}
         if query_id != '':
             try:
-                #pass
-                connection = myria.MyriaConnection(hostname=hostname, port=port)
-                query_plan = connection.get_query_status(query_id)
+                pass
+                #connection = myria.MyriaConnection(hostname=hostname, port=port)
+                #query_plan = connection.get_query_status(query_id)
             except myria.MyriaError:
                 pass
 
         template_vars = {
-            'queryId': query_id,
             'myriaConnection': "%s:%d" % (hostname, port),
             'queryPlan': json.dumps(query_plan)
         }
