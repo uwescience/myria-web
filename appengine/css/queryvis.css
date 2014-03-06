@@ -84,7 +84,7 @@ div.tooltip {
 .plot path.line {
   fill: none;
   stroke: #1f77b4;
-  stroke-width: 1.5px;
+  stroke-width: 0px;
 }
 
 .brush .extent {
