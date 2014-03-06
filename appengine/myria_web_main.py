@@ -187,7 +187,7 @@ class Queries(MyriaPage):
         try:
             limit = self.request.get('limit', None)
             max_ = self.request.get('max', None)
-            queries = conn.queries(limit, max_)
+            _count, queries = conn.queries(limit, max_)
         except myria.MyriaError:
             queries = []
 
