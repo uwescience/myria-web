@@ -128,7 +128,8 @@ def get_queries(connection=None):
         except myria.MyriaError:
             return []
     try:
-        return connection.queries()[1]
+        _, queries = connection.queries()
+        return queries
     except myria.MyriaError:
         return []
 
