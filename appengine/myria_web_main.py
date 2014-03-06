@@ -201,6 +201,7 @@ class Queries(MyriaPage):
         except myria.MyriaError:
             connection = None
             queries = []
+            limit = 1
 
         for q in queries:
             q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
