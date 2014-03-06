@@ -1,6 +1,6 @@
 var graph = function (element, queryPlan) {
 
-    networkVisualization(d3.select('.chart'), [1,2], queryPlan);
+    var chartElement = d3.select('.chart');
 
     // Process the queryPlan
     var graphObj = new Object;
@@ -89,7 +89,7 @@ var graph = function (element, queryPlan) {
     var svg = d3.select('.query-plan')
         .html(renderGraph(graphObj));  
     
-    listen(graphObj, svg, d3.select('.chart'));
+    listen(graphObj, svg, chartElement);
     
 };
 
@@ -111,13 +111,21 @@ function listen(graph, svg, chartElement) {
     svg.selectAll(".cluster")
             .on("click", function () {
                 var nodeID = this.lastElementChild.innerHTML;
-                debug(nodeID);
                 if (nodeID in graph.nodes) {
                     reduceNode(graph, [nodeID]);
                 } 
                 svg.selectAll("g").remove();
                 svg.html(renderGraph(graph));
                 listen(graph, svg, chartElement);
+            });
+    svg.selectAll(".edge")
+            .on("click", function () {
+                var linkID = this.textContent.trim();
+                if (linkID in graph.links) {
+                    var src = debug(graph.nodes[graph.links[linkID].u.fID].fragmentIndex);
+                    var dst = debug(graph.nodes[graph.links[linkID].v.fID].fragmentIndex);
+                    networkVisualization(chartElement, [src,dst], queryPlan);
+                } 
             });
 
 }
