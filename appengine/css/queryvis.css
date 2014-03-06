@@ -106,3 +106,13 @@ div.tooltip {
   stroke: #000;
   stroke-width: 1px;
 }
+
+.tsline {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.tsarea {
+  fill: steelblue;
+}
