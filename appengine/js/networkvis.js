@@ -15,8 +15,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
         	query: queryPlan.queryId,
         	fragment: fragmentId
     	});
-
-    	url = "data/network.csv";
     	d3.csv(url, function (data) {
     		matrix = [],
   		    workers = new Object();
@@ -132,7 +130,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
 
     function reDraw(workers,matrixID2workerID) {
-
     	element.selectAll("svg").remove();
     //initialize the visualization
     	var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
