@@ -1,4 +1,5 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
+
     element.selectAll("svg").remove();
     drawCharts(element, fragmentId, queryPlan);
 
@@ -93,13 +94,50 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     var plot = svg.append("g")
         .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    // Add ruler
+    var tooltip = plot.append("g")
+        .attr({"class": "rulerInfo"})
+        .attr("transform", "translate(" + [0, height] + ")");
+
+    tooltip.append("svg:rect");
+
+    var tttext = tooltip.append("svg:text")
+        .attr("text-anchor", "left");
+
+    plot.on("mousemove", function (e) {
+        ruler
+            .style("display", "block")
+            .style("left", d3.event.pageX - 1 + "px");
+
+        plot
+            .select(".rulerInfo")
+            .style("opacity", 1)
+            .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
+
+        var xValue = Math.round(x.invert(d3.mouse(this)[0]));
+        tttext.text(templates.ruler.ganttTooltipTemplate({ time: customFullTimeFormat(xValue) }));
+
+        var bbox = tttext.node().getBBox();
+        tooltip.select("rect")
+            .attr("width", bbox.width + 10)
+            .attr("height", bbox.height + 6)
+            .attr("x", bbox.x - 5)
+            .attr("y", bbox.y - 3);
+    });
+
+    plot.on("mouseleave", function (e) {
+        ruler.style("display", "none");
+        plot
+            .select(".rulerInfo")
+            .style("opacity", 0);
+    });
 
     var url = templates.urls.histogram({
         query: queryId,
         fragment: fragmentId
     });
 
-    //d3.csv('js/aggregated.data', type, function(error, data) {
     d3.csv(url, type, function(error, data) {
         x.domain(d3.extent(data.map(function(d) { return d.time; })));
         y.domain([0, d3.max(data.map(function(d) { return d.value.length; }))]);
@@ -215,17 +253,22 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("id", "fragment_workers");
-
-    // Place the lanes plot
-    var lanes = svg.append("g")
+    
+    var chart = svg.append("g")
         .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Place the lanes plot
+    var lanes = chart.append("g")
+        .attr("class", "lanes")
+        //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Place the xAxis
     lanes.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
+
 
     /* Collect data for states at each worker */
     var url = templates.urls.profiling({
@@ -236,7 +279,6 @@ function drawLanes(element, fragmentId, queryId) {
 
     var workers_data={};
 
-    //d3.csv('js/worker.data', type2, function(error, data) {
     d3.csv(url, type2, function(error, data) {
         // copy the results into the workers_data
         // don't allocate another object as we return the
@@ -244,8 +286,8 @@ function drawLanes(element, fragmentId, queryId) {
         var t_workers_data = get_workers_states(data);
         for (k in t_workers_data) {
              workers_data[k] = t_workers_data[k];
-         }
-         redrawLanes(element, workers_data, x, y, xAxis, yAxis, [0,0]);
+        }
+        redrawLanes(element, workers_data, x, y, xAxis, yAxis, [0,0]);
     });
 
     function type2(d) {
@@ -326,7 +368,7 @@ function drawLanes(element, fragmentId, queryId) {
         y.domain(_.keys(workers_data));
         x.domain(x_domain);
 
-        var lanes = d3.select("#fragment_workers .plot");
+        var lanes = d3.select("#fragment_workers .plot .lanes");
 
         for (worker in workers_data) {
             drawBoxes(lanes, workers_data[worker], worker, x, y);
@@ -344,7 +386,6 @@ function drawLanes(element, fragmentId, queryId) {
                 "yAxis" : yAxis
            }
 }
-
 
 var opColors = d3.scale.category20();
 var opToColor = {};
@@ -364,10 +405,26 @@ function drawBoxes(lanes, worker_data, lane, x, y) {
                    .data(worker_data, function(d) {return lane + d.begin;});
 
     box.enter().append("rect")
-            //.attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return colorForOperator(d.name); })
-            .style("stroke", function(d) { return d3.rgb(colorForOperator(d.name)).darker(0.5); })
-            .attr("class", "box");
+        .popover(function(d) {
+            //if (d.end === null)
+            //d.end = data.end;
+            var duration = d.end - d.begin;
+            var content = templates.ruler
+                             .boxTemplate({duration: customFullTimeFormat(duration),
+                                           begin: customFullTimeFormat(d.begin),
+                                           end: customFullTimeFormat(d.end)})
+                //if ('tp_num' in d) {
+                //    content += numTuplesTemplate({number: d.tp_num});
+                //}
+                return {
+                    title: d.name,
+                    content: content
+                };
+            })
+        //.attr("clip-path", "url(#clip)")
+        .style("fill", function(d) { return colorForOperator(d.name); })
+        .style("stroke", function(d) { return d3.rgb(colorForOperator(d.name)).darker(0.5); })
+        .attr("class", "box");
 
     box.attr("x", function(d) { return x(d.begin);})
         .attr("width", function(d, i) {

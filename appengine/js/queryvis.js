@@ -9,8 +9,19 @@ var templates = {
         sentData: _.template("/data/sent.csv"),
         profiling: _.template("/data/profiling.csv"),
         histogram: _.template("/data/histogram.csv")
+    },
+
+    ruler: {
+        boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
+        numTuplesTemplate: _.template("<br/><strong># Tuples:</strong> <%- number %>"),
+        titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
+        stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
+        chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
+        ganttTooltipTemplate: _.template("Time: <%- time %>")
     }
 }
+
+var animationDuration = 750;
 
 function timeFormat(formats) {
   return function(date) {
