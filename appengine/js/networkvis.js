@@ -94,9 +94,16 @@ var networkVisualization = function (element, fragments, queryPlan) {
     				  .scale(y)
     				  .orient("left");
 
+        /*
         var line = d3.svg.line()
     		.x(function(d) { return x(+d.nanoTime); })
     		.y(function(d) { return y(+d.numTuples); });
+    	*/
+
+    	var area = d3.svg.area()
+		    .x(function(d) { return x(+d.nanoTime); })
+    		.y0((tsHeight - tsMargin.bottom))
+    		.y1(function(d) { return y(+d.numTuples); });
 
         var tsChart = element.append("svg")
         	    .attr("width", tsWidth)
@@ -116,8 +123,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
         tsChart.append("path")
       		.datum(ts)
-      		.attr("class", "line")
-      		.attr("d", line);
+      		.attr("class", "tsarea")
+      		.attr("d", area);
 
 	}
 
