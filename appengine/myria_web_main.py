@@ -181,7 +181,7 @@ class Queries(MyriaPage):
             connection = myria.MyriaConnection(hostname=hostname, port=port)
             limit = self.request.get('limit', None)
             max_ = self.request.get('max', None)
-            queries = connection.queries(limit, max_)
+            _, queries = connection.queries(limit, max_)
         except myria.MyriaError:
             connection = None
             queries = []
