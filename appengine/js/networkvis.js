@@ -76,6 +76,15 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 destinations.push(dest);
   			});
 
+            _.each(dataset, function(d) {
+                d.maxTuples = d3.max(d.numTuples);
+                d.begin = d3.min(d.nanoTime);
+                d.end = d3.max(d.nanoTime);
+                d.values = _.zip(d.nanoTime, d.numTuples);
+                delete d.nanoTime;
+                delete d.numTuples;
+            })
+
             sources = _.uniq(sources);
             destinations = _.uniq(destinations);
 
@@ -211,37 +220,33 @@ var timeSeriesChart = function (element) {
         .x(function(d) { return x(d[0]); })
         .y(function(d) { return y(d[1]); });
 
-    var data = {};
+    var activeKeys = [];
+    var rawData = {}
 
-    function add(rawData, src, dest) {
-        var newData = rawData[[src, dest]];
-        chartData = _.zip(newData.nanoTime, newData.numTuples);
-        data[[src, dest]] = {
-            src: src,
-            dest: dest,
-            maxTuples: d3.max(newData.numTuples),
-            begin: d3.min(newData.nanoTime),
-            end: d3.max(newData.nanoTime),
-            values: chartData
-        };
+    function add(newRawData, src, dest) {
+        rawData = newRawData;
+        activeKeys.push([src,dest])
         draw();
     }
 
     function remove(src, dest) {
-        delete data[[src, dest]];
+        // remove from array O(n)
+        var i = activeKeys.indexOf([src, dest]);
+        activeKeys.splice(i, 1);
         draw();
     }
 
     function draw() {
-        var chartData = _.values(data);
-        var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
-            yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
+        var chartData = _.values(_.pick(rawData, activeKeys));
 
         // don't update domain when last is removed
-        if (chartData.length > 0) {
+        if (activeKeys.length > 0) {
+            var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
+                yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
+
             x.domain(xDomain);
             y.domain(yDomain);
-        };
+        }
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
