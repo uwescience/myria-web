@@ -1,71 +1,9 @@
 var graph = function (element, queryPlan) {
+    
     var chartElement = d3.select('.chart');
 
-    // Process the queryPlan
-    var graphObj = new Object;
-    graphObj.name = ("Query Plan ").concat(queryPlan.queryId);
-    graphObj.nodes = {};        // List of graph nodes
-    graphObj.links = {};        // List of graph edges
-    graphObj.opName2fID = {};   // Dictionary of opNames - fragment ID
-    graphObj.state = [];        // Describes which nodes are "expanded"
-
-    // Collect graph info
-    queryPlan.physicalPlan.fragments.forEach(function(fragment) {
-        // Create fragment node object
-        var node = new Object();
-        var id = "Frag".concat(fragment.fragmentIndex.toString());
-        node.fragmentIndex = fragment.fragmentIndex.toString();
-        node.workers = fragment.workers;
-        node.operators = fragment.operators;
-        node.opNodes = {};      // List of graph operand nodes
-        node.opLinks = {};      // List of graph operand edges
-        // Process operators
-        node.operators.forEach(function(op) {
-            // Create new op node(s)
-            var opnode = new Object();
-            var opid = op.opName;
-            opnode.operator = op;
-            node.opNodes[opid] = opnode;
-            // Add entry to opName2fID
-            if (op.hasOwnProperty('opName')) {
-                graphObj.opName2fID[op.opName] = id;
-            }
-        });
-        graphObj.nodes[id] = node;
-    });
-
-    // Collect graph links
-    for (var id in graphObj.nodes) {
-        var fragment = graphObj.nodes[id];
-        fragment.operators.forEach(function(op) {
-            // Add cross-fragment links
-            if (op.hasOwnProperty('argOperatorId')) {
-                var link = new Object();
-                link.u = {};
-                link.v = {};
-                link.u.fID = graphObj.opName2fID[op.argOperatorId];
-                link.u.oID = op.argOperatorId;
-                link.v.fID = id;
-                link.v.oID = op.opName;
-                var linkid = link.u.fID.concat("->", link.v.fID);
-                graphObj.links[linkid] = link;
-            }
-            // Add in-fragment links
-            for (var key in op) {
-                if (key.indexOf("argChild")!=-1) {
-                    var link = new Object();
-                    link.u = {};
-                    link.v = {};
-                    link.u.fID = id;
-                    link.u.oID = op[key];
-                    link.v.fID = id;
-                    link.v.oID = op.opName;
-                    var linkid = link.u.oID.concat("->", link.v.oID);
-                    fragment.opLinks[linkid] = link;
-                }
-            }
-        });
-    }
+    var graphObj = new Graph();
+    graphObj.loadQueryPlan(queryPlan);
 
     debug(graphObj);
 
@@ -86,11 +24,182 @@ var graph = function (element, queryPlan) {
     // renderer.layout(layout).run(dagreD3.json.decode(nodes, links), svg.append('g'));
 
     var svg = d3.select('.query-plan')
-        .html(renderGraph(graphObj));
+        .html(graphObj.renderGraph());
 
     listen(graphObj, svg, chartElement);
 
 };
+
+// Graph object
+function Graph () {
+
+    /********************/
+    // Public properties
+    /********************/
+    this.name = "";         // Query ID
+    this.nodes = {};        // List of graph fragment nodes
+    this.links = {};        // List of graph fragment edges
+    this.opName2fID = {};   // Dictionary of opNames - fragment ID
+    this.state = [];        // Describes which nodes are "expanded"
+
+    /********************/
+    // Public methods
+    /********************/
+    Graph.prototype.loadQueryPlan = function(json) {
+        var graph = this;
+
+        // Get the query plan ID
+        graph.name = "Query Plan " + json.queryId;
+
+        // Collect graph nodes 
+        json.physicalPlan.fragments.forEach(function(fragment) {
+            // Create fragment node object
+            var node = new Object();                                    // Node object
+            var id = "Frag" + fragment.fragmentIndex.toString();        // Node ID
+            node.fragmentIndex = fragment.fragmentIndex.toString();     // Fragment ID
+            node.workers = fragment.workers;                            // List of workers
+            node.operators = fragment.operators;                        // List of operators
+            node.opNodes = {};                                          // List of graph operand nodes
+            node.opLinks = {};                                          // List of graph operand edges
+            // Process each operator
+            node.operators.forEach(function(op) {
+                // Create new op node(s)
+                var opnode = new Object();
+                var opid = op.opName;
+                opnode.operator = op;
+                node.opNodes[opid] = opnode;
+                // Add entry to opName2fID
+                if (op.hasOwnProperty('opName')) {
+                    graph.opName2fID[op.opName] = id;
+                }
+            });
+            graph.nodes[id] = node;
+        });
+
+        // Collect graph links
+        for (var id in graph.nodes) {
+            var fragment = graph.nodes[id];
+            fragment.operators.forEach(function(op) {
+                // Add cross-fragment links
+                if (op.hasOwnProperty('argOperatorId')) {
+                    var link = new Object();                            // Link object
+                    link.u = {};
+                    link.v = {};
+                    link.u.fID = graph.opName2fID[op.argOperatorId];     // Src fragment ID
+                    link.u.oID = op.argOperatorId;                      // Src operand ID
+                    link.v.fID = id;                                    // Dst fragment ID
+                    link.v.oID = op.opName;                             // Dst fragment ID
+                    var linkid = link.u.fID + "->" + link.v.fID;        // Link ID
+                    graph.links[linkid] = link;
+                }
+                // Add in-fragment links
+                for (var key in op) {
+                    if (key.indexOf("argChild")!=-1) {
+                        var link = new Object();                        // Link object
+                        link.u = {};
+                        link.v = {};
+                        link.u.fID = id;                                // Src fragment ID
+                        link.u.oID = op[key];                           // Src operand ID
+                        link.v.fID = id;                                // Dst fragment ID
+                        link.v.oID = op.opName;                         // Dst fragment ID
+                        var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
+                        fragment.opLinks[linkid] = link;
+                    }
+                }
+            });
+        }
+    };
+
+    // Function that updates the graph edges when a fragment gets expanded
+    Graph.prototype.expandNode = function(nodes) {
+        var graph = this;
+        nodes.forEach(function(nid){
+            var exists = false;
+            graph.state.forEach(function(id){
+                if(nid==id) { exists = true; }
+            });
+            if(!exists) {
+                graph.state.push(nid);
+            }
+        });
+    };
+
+    // Function that updates the graph edges when a fragment gets reduced
+    Graph.prototype.reduceNode = function (nodes) {
+        var graph = this;
+        nodes.forEach(function(nid){
+            var index = graph.state.indexOf(nid);
+            if (index>-1) {
+                graph.state.splice(index, 1);
+            }
+        });
+    };
+
+    // Returns the svg desciption of the graph object
+    Graph.prototype.renderGraph = function() {
+        var graph = this;
+        // Derive the graph DOT specification from the GraphObj
+        var dotStr = "digraph G { \n";
+        var links = "";
+        // First add the fragment links
+        for (var id in graph.links) {
+            var link = graph.links[id];
+            var u = graph.state.indexOf(link.u.fID)==-1 ? link.u.fID : link.u.oID;
+            var v = graph.state.indexOf(link.v.fID)==-1 ? link.v.fID : link.v.oID;
+            links += templates.graphViz.link({u: u, v: v});
+        }
+        // Then add the operand links in subgraphs
+        graph.state.forEach(function(fragment){
+            dotStr += templates.graphViz.clusterStyle({fragment: fragment});
+            for (var id in graph.nodes[fragment].opNodes) {
+                var node = graph.nodes[fragment].opNodes[id];
+                dotStr = dotStr + "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle();
+            }
+            for (var id in graph.nodes[fragment].opLinks) {
+                var link = graph.nodes[fragment].opLinks[id];
+                links += templates.graphViz.link({u: link.u.oID, v: link.v.oID});
+            }
+            dotStr += "\t}\n";
+        });
+        dotStr += links + "}";
+        debug(dotStr);
+
+        // Generate plain graph description
+        var graphDesc = Viz(dotStr, "plain");
+        debug(graphDesc);
+
+        // Parse the plain description
+        var graphDescRows = graphDesc.split("\n");
+        graphDescRows.forEach(function(line) {
+            var cols = line.split(" ");
+            if(cols[0]=="node") {
+                var id = cols[1].replace(/\"/g, '');
+                if (id in graph.nodes) {
+                    graph.nodes[id].viz = {
+                        x: cols[2],
+                        y: cols[3],
+                        w: cols[4],
+                        h: cols[5]
+                    };
+                } else if (id in graph.opName2fID) {
+                    var node = graph.nodes[graph.opName2fID[id]];
+                    var opnode = node.opNodes[id];
+                    opnode.viz = {
+                        x: cols[2],
+                        y: cols[3],
+                        w: cols[4],
+                        h: cols[5]
+                    };
+                }
+            }
+        });
+
+        // Generate svg graph description
+        var graphSVG = Viz(dotStr, "svg");
+        return(graphSVG);
+    };
+}
+
 
 // Function that listens for user clicks
 function listen(graph, svg, chartElement) {
@@ -98,122 +207,34 @@ function listen(graph, svg, chartElement) {
             .on("click", function () {
                 var nodeID = this.firstChild.innerHTML;
                 if (nodeID in graph.nodes) {
-                    expandNode(graph, [nodeID]);
+                    graph.expandNode([nodeID]);
                     fragmentVisualization(chartElement, graph.nodes[nodeID].fragmentIndex, queryPlan);
                 } else if (nodeID in graph.opName2fID) {
-                    reduceNode(graph, [graph.opName2fID[nodeID]]);
+                    graph.reduceNode([graph.opName2fID[nodeID]]);
                 }
                 svg.selectAll("g").remove();
-                svg.html(renderGraph(graph));
+                svg.html(graph.renderGraph());
                 listen(graph, svg, chartElement);
             });
     svg.selectAll(".cluster")
             .on("click", function () {
                 var nodeID = this.lastElementChild.innerHTML;
                 if (nodeID in graph.nodes) {
-                    reduceNode(graph, [nodeID]);
+                    graph.reduceNode([nodeID]);
                 }
                 svg.selectAll("g").remove();
-                svg.html(renderGraph(graph));
+                svg.html(graph.renderGraph());
                 listen(graph, svg, chartElement);
             });
     svg.selectAll(".edge")
             .on("click", function () {
                 var linkID = this.textContent.trim();
                 if (linkID in graph.links) {
-                    var src = debug(graph.nodes[graph.links[linkID].u.fID].fragmentIndex);
-                    var dst = debug(graph.nodes[graph.links[linkID].v.fID].fragmentIndex);
+                    var src = graph.nodes[graph.links[linkID].u.fID].fragmentIndex;
+                    var dst = graph.nodes[graph.links[linkID].v.fID].fragmentIndex;
                     chartElement.selectAll("svg").remove();
                     networkVisualization(chartElement, [src], queryPlan);
                 }
             });
 }
 
-// Returns the svg desciption of the graph object
-function renderGraph(graph) {
-    // Derive the graph DOT specification from the GraphObj
-    var dotStr = "digraph G { \n";
-    var links = "";
-    // First add the fragment links
-    for (var id in graph.links) {
-        var link = graph.links[id];
-        var u = graph.state.indexOf(link.u.fID)==-1 ? link.u.fID : link.u.oID;
-        var v = graph.state.indexOf(link.v.fID)==-1 ? link.v.fID : link.v.oID;
-        links = links.concat("\t\"", u, "\" -> \"", v, "\";\n");
-    }
-    // Subgraph node style
-    var nodeStyle = "[style=\"rounded, filled\",color=white,shape=box];\n";
-    // Then add the operand links in subgraphs
-    graph.state.forEach(function(fragment){
-        dotStr = dotStr.concat("\n\tsubgraph cluster_", fragment, " {\n");
-        dotStr = dotStr.concat("\t\tstyle=\"rounded, filled\";\n");
-        dotStr = dotStr.concat("\t\tcolor=lightgrey;\n");
-        dotStr = dotStr.concat("\t\tnode [style=filled,color=white];\n");
-        dotStr = dotStr.concat("\t\tlabel = \"", fragment, "\";\n");
-        for (var id in graph.nodes[fragment].opNodes) {
-            var node = graph.nodes[fragment].opNodes[id];
-            dotStr = dotStr.concat("\t\t\"", id, "\"", nodeStyle);
-        }
-        for (var id in graph.nodes[fragment].opLinks) {
-            var link = graph.nodes[fragment].opLinks[id];
-            links = links.concat("\t\"", link.u.oID, "\" -> \"", link.v.oID, "\";\n");
-        }
-        dotStr = dotStr.concat("\t}\n");
-    });
-    dotStr = dotStr.concat(links, "}");
-    debug(dotStr);
-
-    // Generate plain graph description
-    var graphDesc = Viz(dotStr, "plain");
-    debug(graphDesc);
-    // Parse the plain description
-    var graphDescRows = graphDesc.split("\n");
-    graphDescRows.forEach(function(line) {
-        var cols = line.split(" ");
-        if(cols[0]=="node") {
-            var id = cols[1].replace(/\"/g, '');
-            if (id in graph.nodes) {
-                graph.nodes[id].viz = {};
-                graph.nodes[id].viz.x = cols[2];
-                graph.nodes[id].viz.y = cols[3];
-                graph.nodes[id].viz.w = cols[4];
-                graph.nodes[id].viz.h = cols[5];
-            } else if (id in graph.opName2fID) {
-                var node = graph.nodes[graph.opName2fID[id]];
-                var opnode = node.opNodes[id];
-                opnode.viz = {};
-                opnode.viz.x = cols[2];
-                opnode.viz.y = cols[3];
-                opnode.viz.w = cols[4];
-                opnode.viz.h = cols[5];
-            }
-        }
-    });
-
-    // Generate svg graph description
-    var graphSVG = Viz(dotStr, "svg");
-    return(graphSVG);
-}
-
-// Function that updates the graph edges when a fragment gets expanded
-function expandNode(graph, nodes) {
-    nodes.forEach(function(nid){
-        var exists = false;
-        graph.state.forEach(function(id){
-            if(nid==id) { exists = true; }
-        });
-        if(!exists) {
-            graph.state.push(nid);
-        }
-    });
-}
-
-// Function that updates the graph edges when a fragment gets reduced
-function reduceNode(graph, nodes) {
-    nodes.forEach(function(nid){
-        var index = graph.state.indexOf(nid);
-        if (index>-1) {
-            graph.state.splice(index, 1);
-        }
-    });
-}
