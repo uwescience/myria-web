@@ -28,11 +28,8 @@ var templates = {
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>")
 }
 
-// Put all the global objects
-var globals = {
-    // Global graph object
-    opToColor: {}
-}
+// Dictionary of operand name -> color
+var opToColor = {};
 
 // Color pallet
 var opColors = d3.scale.category20();

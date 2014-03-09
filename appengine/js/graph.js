@@ -40,7 +40,7 @@ function Graph () {
     this.qID = 0;           // Query ID
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
-    this.state = [];        // Describes which nodes are "expanded"
+    this.state = {};        // Describes which nodes are "expanded"
     this.opName2color = {}; // Dictionary of opName - color
     this.opName2fID = {};   // Dictionary of opName - fragment ID
 
@@ -50,6 +50,10 @@ function Graph () {
     /********************/
     Graph.prototype.loadQueryPlan = function(json) {
         var graph = this;
+
+        // Initialize the state
+        graph.state.opened = [];
+        graph.state.focus = "";
 
         // Get the query plan ID
         graph.qID = json.queryId
@@ -66,6 +70,7 @@ function Graph () {
             node.opNodes = {};                                          // List of graph operand nodes
             node.opLinks = {};                                          // List of graph operand edges
             // Process each operator
+            var color_index = 0;
             node.operators.forEach(function(op) {
                 // Create new op node(s)
                 var opnode = new Object();
@@ -75,11 +80,15 @@ function Graph () {
                 // Add entry to opName2fID & opName2colorvar 
                 if (op.hasOwnProperty('opName')) {
                     graph.opName2fID[op.opName] = id;
-                    graph.opName2color[op.opName] = opColors(_.keys(graph.opName2color).length);
-                    globals.opToColor[op.opName] = graph.opName2color[op.opName];
+                    graph.opName2color[op.opName] = opColors(color_index);
+                    opToColor[op.opName] = opColors(color_index);
+                    color_index ++;
                 }
             });
             graph.nodes[id] = node;
+            // Comment out if we don't want to expand all fragments
+            // by default...
+            //graph.state.opened.push(id);
         });
 
         // Collect graph links
@@ -121,11 +130,12 @@ function Graph () {
         var graph = this;
         nodes.forEach(function(nid){
             var exists = false;
-            graph.state.forEach(function(id){
+            graph.state.opened.forEach(function(id){
                 if(nid==id) { exists = true; }
             });
             if(!exists) {
-                graph.state.push(nid);
+                graph.state.opened.push(nid);
+                graph.state.focus = nid;
             }
         });
     };
@@ -134,9 +144,9 @@ function Graph () {
     Graph.prototype.reduceNode = function (nodes) {
         var graph = this;
         nodes.forEach(function(nid){
-            var index = graph.state.indexOf(nid);
+            var index = graph.state.opened.indexOf(nid);
             if (index>-1) {
-                graph.state.splice(index, 1);
+                graph.state.opened.splice(index, 1);
             }
         });
     };
@@ -150,21 +160,21 @@ function Graph () {
         // First add the fragment links
         for (var id in graph.links) {
             var link = graph.links[id];
-            var u = graph.state.indexOf(link.u.fID)==-1 ? link.u.fID : link.u.oID;
-            var v = graph.state.indexOf(link.v.fID)==-1 ? link.v.fID : link.v.oID;
+            var u = graph.state.opened.indexOf(link.u.fID)==-1 ? link.u.fID : link.u.oID;
+            var v = graph.state.opened.indexOf(link.v.fID)==-1 ? link.v.fID : link.v.oID;
             links += templates.graphViz.link({u: u, v: v});
         }
         // Then add the operand links in subgraphs
-        graph.state.forEach(function(fragment){
+        graph.state.opened.forEach(function(fragment){
             dotStr += templates.graphViz.clusterStyle(
                 {
                     fragment: fragment
                 });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
-                dotStr = dotStr + "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle(
+                dotStr += "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle(
                 {
-                    color: graph.opName2color[id]
+                    color: (graph.state.focus == fragment) ? graph.opName2color[id] : "white"
                 });
             }
             for (var id in graph.nodes[fragment].opLinks) {

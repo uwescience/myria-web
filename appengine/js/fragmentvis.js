@@ -388,7 +388,7 @@ function drawLanes(element, fragmentId, queryId) {
 }
 
 function colorForOperator(opname) {
-    return globals.opToColor[opname];
+    return opToColor[opname];
 }
 
 function drawBoxes(lanes, worker_data, lane, x, y) {
