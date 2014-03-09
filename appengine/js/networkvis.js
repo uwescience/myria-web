@@ -168,7 +168,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 };
 
 var timeSeriesChart = function (element) {
-    var margin = {top: 20, right: 50, bottom: 50, left:50 },
+    var margin = {top: 20, right: 70, bottom: 50, left:50 },
         width = parseInt(element.style('width'), 10),
         height = 400,
         chartWidth = width - margin.left - margin.right,
@@ -206,9 +206,6 @@ var timeSeriesChart = function (element) {
          .attr("class", "y axis")
          .call(yAxis);
 
-    chart.append("path")
-        .attr("class", "tsline");
-
     var line = d3.svg.line()
         //.interpolate('cardinal')
         .x(function(d) { return x(d[0]); })
@@ -239,8 +236,12 @@ var timeSeriesChart = function (element) {
         var chartData = _.values(data);
         var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
             yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
-        x.domain(xDomain);
-        y.domain(yDomain);
+
+        // don't update domain when last is removed
+        if (chartData.length > 0) {
+            x.domain(xDomain);
+            y.domain(yDomain);
+        };
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
@@ -251,16 +252,29 @@ var timeSeriesChart = function (element) {
             .call(xAxis);
 
         var pair = chart.selectAll(".pair")
-            .data(chartData, function(d) {return [d.src, d.dest]});
+            .data(chartData, function(d) { return [d.src, d.dest]; });
 
         var pairGroups = pair.enter().append("g")
             .attr("class","pair");
 
         pairGroups.append("path")
+            .style("stroke-width", 2)
             .attr("class", "tsline");
 
+        pairGroups.append("text")
+            .attr("class", "line-label")
+            .attr("dy", ".35em")
+            .attr("dx", "5px")
+            .text(function(d) {
+                return templates.nwLineTooltip(d);
+            });
+
         pair.transition(animationDuration).selectAll(".tsline")
-            .attr("d", function(d) {return line(d.values); });
+            .attr("d", function(d) { return line(d.values); });
+
+        pair.transition(animationDuration).selectAll(".line-label")
+            .attr("x", function(d) { return x(_.last(d.values)[0]); })
+            .attr("y", function(d) { return y(_.last(d.values)[1]); });
 
         pair.exit().remove();
     }

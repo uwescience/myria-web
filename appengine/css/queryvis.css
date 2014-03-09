@@ -97,8 +97,8 @@ svg {
 /* Network */
 
 .pixel.active {
-  stroke: #000;
-  stroke-width: 2px;
+  stroke: orange;
+  stroke-width: 3px;
 }
 
 .timeseries .tsline {
@@ -106,4 +106,8 @@ svg {
   stroke: steelblue;
   stroke-width: 1.5px;
   shape-rendering: auto;
+}
+
+.timeseries .x.axis path {
+  display: none;
 }

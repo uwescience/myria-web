@@ -24,7 +24,8 @@ var templates = {
         clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
-    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>")
+    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwLineTooltip: _.template("from <%- src %> to <%- dest %>")
 }
 
 var animationDuration = 750
