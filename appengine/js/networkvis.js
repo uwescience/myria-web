@@ -65,7 +65,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         numTuples: [],
                         sumTuples: 0,
                         src: source,
-                        dest: dest
+                        dest: dest,
+                        active: false
                     }
                 }
                 dataset[key].nanoTime.push(+d.nanoTime);
@@ -86,7 +87,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             rowScale.domain(sources);
             columnScale.domain(destinations);
 
-            var maxValue = _.max(data, function(d) { return d.sumTuples; }).sumTuples;
+            var maxValue = d3.max(data, function(d) { return d.sumTuples; });
             color.domain([0, maxValue]);
 
             var pixel = rawMatrix
@@ -110,7 +111,14 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     return templates.nwTooltip(d);
                 })
                 .on('click', function(d) {
-                    chart.update(rawData, d.src, d.dest);
+                    if (!d.active) {
+                        chart.add(rawData, d.src, d.dest);
+                        d3.select(this).attr("class", "pixel active");
+                    } else {
+                        chart.remove(d.src, d.dest);
+                        d3.select(this).attr("class", "pixel");
+                    }
+                    d.active = !d.active;
                 });
 
             function addTick(selection) {
@@ -135,7 +143,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 //.attr('transform', function(d, i){return 'rotate(270 ' + scale(order_col[i] + 0.7) + ',0)';})
                 .attr('font-size', matLabelTextScale(columnScale.rangeBand()))
                 .text(function(d){ return d; })
-                .attr('x', function(d){return columnScale(d);});
+                .attr('x', function(d){ return columnScale(d); });
 
             var tickRowEl = tickRow.selectAll('text.tick')
                 .data(sources);
@@ -206,11 +214,33 @@ var timeSeriesChart = function (element) {
         .x(function(d) { return x(d[0]); })
         .y(function(d) { return y(d[1]); });
 
-    function draw(rawData, src, dest) {
-        var data = rawData[[src, dest]];
+    var data = {};
 
-        x.domain(d3.extent(data.nanoTime));
-        y.domain([0, d3.max(data.numTuples)]);
+    function add(rawData, src, dest) {
+        var newData = rawData[[src, dest]];
+        chartData = _.zip(newData.nanoTime, newData.numTuples);
+        data[[src, dest]] = {
+            src: src,
+            dest: dest,
+            maxTuples: d3.max(newData.numTuples),
+            begin: d3.min(newData.nanoTime),
+            end: d3.max(newData.nanoTime),
+            values: chartData
+        };
+        draw();
+    }
+
+    function remove(src, dest) {
+        delete data[[src, dest]];
+        draw();
+    }
+
+    function draw() {
+        var chartData = _.values(data);
+        var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
+            yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
+        x.domain(xDomain);
+        y.domain(yDomain);
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
@@ -220,17 +250,24 @@ var timeSeriesChart = function (element) {
             .transition(animationDuration)
             .call(xAxis);
 
-        // TODO: multi line: http://bl.ocks.org/mbostock/3884955
+        var pair = chart.selectAll(".pair")
+            .data(chartData, function(d) {return [d.src, d.dest]});
 
-        chartData = _.zip(data.nanoTime, data.numTuples);
+        var pairGroups = pair.enter().append("g")
+            .attr("class","pair");
 
-        chart.selectAll("path.tsline")
-           .datum(chartData)
-           .transition(animationDuration)
-           .attr("d", function(d) { return line(d); });
+        pairGroups.append("path")
+            .attr("class", "tsline");
+
+        pair.transition(animationDuration).selectAll(".tsline")
+            .attr("d", function(d) {return line(d.values); });
+
+        pair.exit().remove();
     }
 
     return {
-        update: draw
+        update: draw,
+        add: add,
+        remove: remove
     }
 };
