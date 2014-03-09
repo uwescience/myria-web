@@ -18,6 +18,12 @@ var templates = {
         stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
         chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
         ganttTooltipTemplate: _.template("Time: <%- time %>")
+    },
+
+    graphViz: {
+        nodeStyle: _.template("[style=\"rounded, filled\",color=white,shape=box];\n"),
+        clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
+        link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     }
 }
 
