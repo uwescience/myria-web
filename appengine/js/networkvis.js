@@ -9,7 +9,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 550;
 
-        var matrixScale = d3.scale.ordinal()
+        var columnScale = d3.scale.ordinal()
+            .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
+
+        var rowScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 
         var color = d3.scale.linear()
@@ -36,7 +39,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .attr('transform', 'translate(' + (labelMargin.left) + ',' + (matMargin.top + labelMargin.top) + ')');
 
         // create time series graph
-
         var chart = timeSeriesChart(element);
 
         // download data
@@ -48,80 +50,68 @@ var networkVisualization = function (element, fragments, queryPlan) {
     	});
 
     	d3.csv(url, function (data) {
-		var matrix = [],
-		        workers = new Object(),
-			    dataset = [];
+		    var dataset = {},
+                sources = [],
+                destinations = [];
 
+            // column representation to safe space
   			data.forEach(function(d) {
     			var source = d.workerId;
     			var dest = d.destWorkerId;
-    			workers[source] = true;
-    			workers[dest] = true;
-    			dataset.push(d);
+                var key = [source,dest];
+                if (!(key in dataset)) {
+                    dataset[key] = {
+                        nanoTime: [],
+                        numTuples: [],
+                        sumTuples: 0,
+                        src: source,
+                        dest: dest
+                    }
+                }
+                dataset[key].nanoTime.push(+d.nanoTime);
+                dataset[key].numTuples.push(+d.numTuples);
+                dataset[key].sumTuples += +d.numTuples;
+                sources.push(source);
+                destinations.push(dest);
   			});
 
-			var src2dst2ts = d3.nest()
-      				.key(function(d) { return d.workerId; })
-      				.key(function(d) { return d.destWorkerId; })
-      				.entries(dataset);
+            sources = _.uniq(sources);
+            destinations = _.uniq(destinations);
 
-      		var workers = d3.keys(workers);
-      		workerID2matrixID = new Object();
-      		matrixID2workerID = new Object();
-  			matrix = new Array(workers.length);
-  			for (var i = 0; i < matrix.length; i++) {
-  				workerID2matrixID[workers[i]] = i;
-  				matrixID2workerID[i] = workers[i];
-    			matrix[i] = new Array(workers.length);
-    			for (var j = 0; j < matrix[i].length; j++) {
-      				matrix[i][j] = 0;
-    			}
-  			}
-
-  			dataset.forEach(function(d) {
-    			var src = d.workerId;
-    			var dst = d.destWorkerId;
-
-    			matrix[workerID2matrixID[src]][workerID2matrixID[dst]] += (+d.numTuples);
-  			});
-
-		draw(workers, matrix, matrixID2workerID, src2dst2ts);
+    		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(sources, function(d) {return d;}));
     	});
 
-        // TODO: this should take fewer arguments
-        function draw(workers, matrix, matrixID2workerID, src2dst2ts) {
-            var corr_data = [],
-                    max = 0;
-            for(var i = 0; i < matrix.length; i++){
-                    for(var j = 0; j < matrix[0].length; j++){
-                    var val = matrix[i][j];
-                    corr_data.push({i:i, j:j, val:val});
-                    max = Math.max(max, val);
-                }
-            }
+        function draw(rawData, sources, destinations) {
+            var data = _.values(rawData);
+            rowScale.domain(sources);
+            columnScale.domain(destinations);
 
-            matrixScale.domain(_.range(matrix.length));
-            color.domain([0,max]);
+            var maxValue = _.max(data, function(d) { return d.sumTuples; }).sumTuples;
+            color.domain([0, maxValue]);
 
-
-            var pixel = rawMatrix.selectAll('rect.pixel').data(corr_data);
+            var pixel = rawMatrix
+                .selectAll('rect.pixel')
+                .data(data);
 
             pixel.enter()
                 .append('rect')
                 .attr('class', 'pixel');
 
-            pixel.attr('width', matrixScale.rangeBand())
-                .attr('height', matrixScale.rangeBand())
-                .attr('y', function(d){return matrixScale(d.i);})
-                .attr('x', function(d){return matrixScale(d.j);})
-                .style('fill',function(d){ return color(d.val);})
+            pixel.attr('width', columnScale.rangeBand())
+                .attr('height', rowScale.rangeBand())
+                .attr('y', function(d){
+                    return rowScale(d.src);})
+                .attr('x', function(d){
+                    return columnScale(d.dest);})
+                .style('fill',function(d){
+                    // access value
+                    return color(d.sumTuples);})
                 .tooltip(function(d) {
-                        //var content = boxTemplate({numTuples: d.val});
-                    var src = matrixID2workerID[d.i];
-                    var dst = matrixID2workerID[d.j];
-                    return "total # of tuples: " + d.val;
+                    return templates.nwTooltip(d);
                 })
-                .on('click', function(d){ chart.update(src2dst2ts, matrixID2workerID[d.i], matrixID2workerID[d.j]); });
+                .on('click', function(d) {
+                    chart.update(rawData, d.src, d.dest);
+                });
 
             function addTick(selection) {
                 selection
@@ -135,7 +125,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .range([0, 140]);
 
             var tickColEl = tickCol.selectAll('text.tick')
-                .data(workers);
+                .data(destinations);
 
             tickColEl.enter().call(addTick);
 
@@ -143,18 +133,18 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             tickColEl.style('text-anchor', 'start')
                 //.attr('transform', function(d, i){return 'rotate(270 ' + scale(order_col[i] + 0.7) + ',0)';})
-                .attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
+                .attr('font-size', matLabelTextScale(columnScale.rangeBand()))
                 .text(function(d){ return d; })
-                .attr('x', function(d, i){return matrixScale(i);});
+                .attr('x', function(d){return columnScale(d);});
 
             var tickRowEl = tickRow.selectAll('text.tick')
-                .data(workers);
+                .data(sources);
 
             tickRowEl.enter().call(addTick);
 
-            tickRowEl.attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
+            tickRowEl.attr('font-size', matLabelTextScale(rowScale.rangeBand()))
                 .text(function(d){ return d; })
-                .attr('y', function(d, i){return matrixScale(i);});
+                .attr('y', function(d){return rowScale(d);});
 
             tickRowEl.exit().remove();
         }
@@ -192,11 +182,6 @@ var timeSeriesChart = function (element) {
         .scale(y)
         .orient("left");
 
-    var area = d3.svg.area()
-        .x(function(d) { return x(+d.nanoTime); })
-        .y0(height - margin.bottom)
-        .y1(function(d) { return y(+d.numTuples); });
-
     var chart = element.append("svg")
             .attr("width", width)
             .attr("height", height)
@@ -218,31 +203,14 @@ var timeSeriesChart = function (element) {
 
     var line = d3.svg.line()
         //.interpolate('cardinal')
-        .x(function(d) { return x(+d.nanoTime); })
-        .y(function(d) { return y(+d.numTuples); });
+        .x(function(d) { return x(d[0]); })
+        .y(function(d) { return y(d[1]); });
 
-    var data = [];
+    function draw(rawData, src, dest) {
+        var data = rawData[[src, dest]];
 
-    function draw(src2dst2ts, src, dst) {
-        var data;
-
-        for(var i = 0; i < src2dst2ts.length; i++) {
-            if (src2dst2ts[i].key != src)
-                continue;
-            var dst2ts = src2dst2ts[i].values;
-            for(var j = 0; j < dst2ts.length; j++) {
-                if (dst2ts[j].key != dst)
-                    continue;
-                data = dst2ts[j].values;
-            }
-        }
-
-        var maxTime = d3.max(data, function(d){ return +d.nanoTime; });
-        var minTime = d3.min(data, function(d){ return +d.nanoTime; });
-        var maxNumTuples = d3.max(data, function(d){ return +d.numTuples; });
-
-        x.domain([minTime, maxTime]);
-        y.domain([0, maxNumTuples]);
+        x.domain(d3.extent(data.nanoTime));
+        y.domain([0, d3.max(data.numTuples)]);
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
@@ -254,8 +222,10 @@ var timeSeriesChart = function (element) {
 
         // TODO: multi line: http://bl.ocks.org/mbostock/3884955
 
+        chartData = _.zip(data.nanoTime, data.numTuples);
+
         chart.selectAll("path.tsline")
-           .datum(data)
+           .datum(chartData)
            .transition(animationDuration)
            .attr("d", function(d) { return line(d); });
     }
