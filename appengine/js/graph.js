@@ -1,5 +1,5 @@
 var graph = function (element, queryPlan) {
-    
+
     var chartElement = d3.select('.chart');
 
     var graphObj = new Graph();
@@ -36,11 +36,14 @@ function Graph () {
     /********************/
     // Public properties
     /********************/
-    this.name = "";         // Query ID
+    this.name = "";         // Query Name
+    this.qID = 0;           // Query ID
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
-    this.opName2fID = {};   // Dictionary of opNames - fragment ID
     this.state = [];        // Describes which nodes are "expanded"
+    this.opName2color = {}; // Dictionary of opName - color
+    this.opName2fID = {};   // Dictionary of opName - fragment ID
+
 
     /********************/
     // Public methods
@@ -49,7 +52,8 @@ function Graph () {
         var graph = this;
 
         // Get the query plan ID
-        graph.name = "Query Plan " + json.queryId;
+        graph.qID = json.queryId
+        graph.name = "Query Plan " + graph.qID;
 
         // Collect graph nodes 
         json.physicalPlan.fragments.forEach(function(fragment) {
@@ -68,9 +72,11 @@ function Graph () {
                 var opid = op.opName;
                 opnode.operator = op;
                 node.opNodes[opid] = opnode;
-                // Add entry to opName2fID
+                // Add entry to opName2fID & opName2colorvar 
                 if (op.hasOwnProperty('opName')) {
                     graph.opName2fID[op.opName] = id;
+                    graph.opName2color[op.opName] = opColors(_.keys(graph.opName2color).length);
+                    globals.opToColor[op.opName] = opColors(_.keys(graph.opName2color).length);
                 }
             });
             graph.nodes[id] = node;
@@ -85,7 +91,7 @@ function Graph () {
                     var link = new Object();                            // Link object
                     link.u = {};
                     link.v = {};
-                    link.u.fID = graph.opName2fID[op.argOperatorId];     // Src fragment ID
+                    link.u.fID = graph.opName2fID[op.argOperatorId];    // Src fragment ID
                     link.u.oID = op.argOperatorId;                      // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
                     link.v.oID = op.opName;                             // Dst fragment ID
@@ -150,10 +156,16 @@ function Graph () {
         }
         // Then add the operand links in subgraphs
         graph.state.forEach(function(fragment){
-            dotStr += templates.graphViz.clusterStyle({fragment: fragment});
+            dotStr += templates.graphViz.clusterStyle(
+                {
+                    fragment: fragment
+                });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
-                dotStr = dotStr + "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle();
+                dotStr = dotStr + "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle(
+                {
+                    color: graph.opName2color[id]
+                });
             }
             for (var id in graph.nodes[fragment].opLinks) {
                 var link = graph.nodes[fragment].opLinks[id];

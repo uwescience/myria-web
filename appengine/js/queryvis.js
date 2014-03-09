@@ -21,11 +21,20 @@ var templates = {
     },
 
     graphViz: {
-        nodeStyle: _.template("[style=\"rounded, filled\",color=white,shape=box];\n"),
+        nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
         clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     }
 }
+
+// Put all the global objects
+var globals = {
+    // Global graph object
+    opToColor: {}
+}
+
+// Color pallet
+var opColors = d3.scale.category20();
 
 var animationDuration = 750
     shortDuration = 500;
