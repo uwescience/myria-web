@@ -9,7 +9,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 550;
 
-        var matrixScale = d3.scale.ordinal()
+        var columnScale = d3.scale.ordinal()
+            .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
+
+        var rowScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 
         var color = d3.scale.linear()
@@ -36,7 +39,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .attr('transform', 'translate(' + (labelMargin.left) + ',' + (matMargin.top + labelMargin.top) + ')');
 
         // create time series graph
-
         var chart = timeSeriesChart(element);
 
         // download data
@@ -48,80 +50,85 @@ var networkVisualization = function (element, fragments, queryPlan) {
     	});
 
     	d3.csv(url, function (data) {
-		var matrix = [],
-		        workers = new Object(),
-			    dataset = [];
+		    var dataset = {},
+                sources = [],
+                destinations = [];
 
+            // column representation to safe space
   			data.forEach(function(d) {
     			var source = d.workerId;
     			var dest = d.destWorkerId;
-    			workers[source] = true;
-    			workers[dest] = true;
-    			dataset.push(d);
+                var key = [source,dest];
+                if (!(key in dataset)) {
+                    dataset[key] = {
+                        nanoTime: [],
+                        numTuples: [],
+                        sumTuples: 0,
+                        src: source,
+                        dest: dest,
+                        active: false
+                    }
+                }
+                dataset[key].nanoTime.push(+d.nanoTime);
+                dataset[key].numTuples.push(+d.numTuples);
+                dataset[key].sumTuples += +d.numTuples;
+                sources.push(source);
+                destinations.push(dest);
   			});
 
-			var src2dst2ts = d3.nest()
-      				.key(function(d) { return d.workerId; })
-      				.key(function(d) { return d.destWorkerId; })
-      				.entries(dataset);
+            _.each(dataset, function(d) {
+                d.maxTuples = d3.max(d.numTuples);
+                d.begin = d3.min(d.nanoTime);
+                d.end = d3.max(d.nanoTime);
+                d.values = _.zip(d.nanoTime, d.numTuples);
+                delete d.nanoTime;
+                delete d.numTuples;
+            })
 
-      		var workers = d3.keys(workers);
-      		workerID2matrixID = new Object();
-      		matrixID2workerID = new Object();
-  			matrix = new Array(workers.length);
-  			for (var i = 0; i < matrix.length; i++) {
-  				workerID2matrixID[workers[i]] = i;
-  				matrixID2workerID[i] = workers[i];
-    			matrix[i] = new Array(workers.length);
-    			for (var j = 0; j < matrix[i].length; j++) {
-      				matrix[i][j] = 0;
-    			}
-  			}
+            sources = _.uniq(sources);
+            destinations = _.uniq(destinations);
 
-  			dataset.forEach(function(d) {
-    			var src = d.workerId;
-    			var dst = d.destWorkerId;
-
-    			matrix[workerID2matrixID[src]][workerID2matrixID[dst]] += (+d.numTuples);
-  			});
-
-		draw(workers, matrix, matrixID2workerID, src2dst2ts);
+    		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(sources, function(d) {return d;}));
     	});
 
-        // TODO: this should take fewer arguments
-        function draw(workers, matrix, matrixID2workerID, src2dst2ts) {
-            var corr_data = [],
-                    max = 0;
-            for(var i = 0; i < matrix.length; i++){
-                    for(var j = 0; j < matrix[0].length; j++){
-                    var val = matrix[i][j];
-                    corr_data.push({i:i, j:j, val:val});
-                    max = Math.max(max, val);
-                }
-            }
+        function draw(rawData, sources, destinations) {
+            var data = _.values(rawData);
+            rowScale.domain(sources);
+            columnScale.domain(destinations);
 
-            matrixScale.domain(_.range(matrix.length));
-            color.domain([0,max]);
+            var maxValue = d3.max(data, function(d) { return d.sumTuples; });
+            color.domain([0, maxValue]);
 
-
-            var pixel = rawMatrix.selectAll('rect.pixel').data(corr_data);
+            var pixel = rawMatrix
+                .selectAll('rect.pixel')
+                .data(data);
 
             pixel.enter()
                 .append('rect')
                 .attr('class', 'pixel');
 
-            pixel.attr('width', matrixScale.rangeBand())
-                .attr('height', matrixScale.rangeBand())
-                .attr('y', function(d){return matrixScale(d.i);})
-                .attr('x', function(d){return matrixScale(d.j);})
-                .style('fill',function(d){ return color(d.val);})
+            pixel.attr('width', columnScale.rangeBand())
+                .attr('height', rowScale.rangeBand())
+                .attr('y', function(d){
+                    return rowScale(d.src);})
+                .attr('x', function(d){
+                    return columnScale(d.dest);})
+                .style('fill',function(d){
+                    // access value
+                    return color(d.sumTuples);})
                 .tooltip(function(d) {
-                        //var content = boxTemplate({numTuples: d.val});
-                    var src = matrixID2workerID[d.i];
-                    var dst = matrixID2workerID[d.j];
-                    return "total # of tuples: " + d.val;
+                    return templates.nwTooltip(d);
                 })
-                .on('click', function(d){ chart.update(src2dst2ts, matrixID2workerID[d.i], matrixID2workerID[d.j]); });
+                .on('click', function(d) {
+                    if (!d.active) {
+                        chart.add(rawData, d.src, d.dest);
+                        d3.select(this).attr("class", "pixel active");
+                    } else {
+                        chart.remove(d.src, d.dest);
+                        d3.select(this).attr("class", "pixel");
+                    }
+                    d.active = !d.active;
+                });
 
             function addTick(selection) {
                 selection
@@ -135,7 +142,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .range([0, 140]);
 
             var tickColEl = tickCol.selectAll('text.tick')
-                .data(workers);
+                .data(destinations);
 
             tickColEl.enter().call(addTick);
 
@@ -143,18 +150,18 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             tickColEl.style('text-anchor', 'start')
                 //.attr('transform', function(d, i){return 'rotate(270 ' + scale(order_col[i] + 0.7) + ',0)';})
-                .attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
+                .attr('font-size', matLabelTextScale(columnScale.rangeBand()))
                 .text(function(d){ return d; })
-                .attr('x', function(d, i){return matrixScale(i);});
+                .attr('x', function(d){ return columnScale(d); });
 
             var tickRowEl = tickRow.selectAll('text.tick')
-                .data(workers);
+                .data(sources);
 
             tickRowEl.enter().call(addTick);
 
-            tickRowEl.attr('font-size', matLabelTextScale(matrixScale.rangeBand()))
+            tickRowEl.attr('font-size', matLabelTextScale(rowScale.rangeBand()))
                 .text(function(d){ return d; })
-                .attr('y', function(d, i){return matrixScale(i);});
+                .attr('y', function(d){return rowScale(d);});
 
             tickRowEl.exit().remove();
         }
@@ -170,7 +177,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 };
 
 var timeSeriesChart = function (element) {
-    var margin = {top: 20, right: 50, bottom: 50, left:50 },
+    var margin = {top: 20, right: 70, bottom: 50, left:50 },
         width = parseInt(element.style('width'), 10),
         height = 400,
         chartWidth = width - margin.left - margin.right,
@@ -192,11 +199,6 @@ var timeSeriesChart = function (element) {
         .scale(y)
         .orient("left");
 
-    var area = d3.svg.area()
-        .x(function(d) { return x(+d.nanoTime); })
-        .y0(height - margin.bottom)
-        .y1(function(d) { return y(+d.numTuples); });
-
     var chart = element.append("svg")
             .attr("width", width)
             .attr("height", height)
@@ -213,36 +215,38 @@ var timeSeriesChart = function (element) {
          .attr("class", "y axis")
          .call(yAxis);
 
-    chart.append("path")
-        .attr("class", "tsline");
-
     var line = d3.svg.line()
         //.interpolate('cardinal')
-        .x(function(d) { return x(+d.nanoTime); })
-        .y(function(d) { return y(+d.numTuples); });
+        .x(function(d) { return x(d[0]); })
+        .y(function(d) { return y(d[1]); });
 
-    var data = [];
+    var activeKeys = [];
+    var rawData = {}
 
-    function draw(src2dst2ts, src, dst) {
-        var data;
+    function add(newRawData, src, dest) {
+        rawData = newRawData;
+        activeKeys.push([src,dest])
+        draw();
+    }
 
-        for(var i = 0; i < src2dst2ts.length; i++) {
-            if (src2dst2ts[i].key != src)
-                continue;
-            var dst2ts = src2dst2ts[i].values;
-            for(var j = 0; j < dst2ts.length; j++) {
-                if (dst2ts[j].key != dst)
-                    continue;
-                data = dst2ts[j].values;
-            }
+    function remove(src, dest) {
+        // remove from array O(n)
+        var i = activeKeys.indexOf([src, dest]);
+        activeKeys.splice(i, 1);
+        draw();
+    }
+
+    function draw() {
+        var chartData = _.values(_.pick(rawData, activeKeys));
+
+        // don't update domain when last is removed
+        if (activeKeys.length > 0) {
+            var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
+                yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
+
+            x.domain(xDomain);
+            y.domain(yDomain);
         }
-
-        var maxTime = d3.max(data, function(d){ return +d.nanoTime; });
-        var minTime = d3.min(data, function(d){ return +d.nanoTime; });
-        var maxNumTuples = d3.max(data, function(d){ return +d.numTuples; });
-
-        x.domain([minTime, maxTime]);
-        y.domain([0, maxNumTuples]);
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
@@ -252,15 +256,37 @@ var timeSeriesChart = function (element) {
             .transition(animationDuration)
             .call(xAxis);
 
-        // TODO: multi line: http://bl.ocks.org/mbostock/3884955
+        var pair = chart.selectAll(".pair")
+            .data(chartData, function(d) { return [d.src, d.dest]; });
 
-        chart.selectAll("path.tsline")
-           .datum(data)
-           .transition(animationDuration)
-           .attr("d", function(d) { return line(d); });
+        var pairGroups = pair.enter().append("g")
+            .attr("class","pair");
+
+        pairGroups.append("path")
+            .style("stroke-width", 2)
+            .attr("class", "tsline");
+
+        pairGroups.append("text")
+            .attr("class", "line-label")
+            .attr("dy", ".35em")
+            .attr("dx", "5px")
+            .text(function(d) {
+                return templates.nwLineTooltip(d);
+            });
+
+        pair.transition(animationDuration).selectAll(".tsline")
+            .attr("d", function(d) { return line(d.values); });
+
+        pair.transition(animationDuration).selectAll(".line-label")
+            .attr("x", function(d) { return x(_.last(d.values)[0]); })
+            .attr("y", function(d) { return y(_.last(d.values)[1]); });
+
+        pair.exit().remove();
     }
 
     return {
-        update: draw
+        update: draw,
+        add: add,
+        remove: remove
     }
 };

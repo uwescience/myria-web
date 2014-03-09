@@ -19,12 +19,13 @@ var templates = {
         chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
         ganttTooltipTemplate: _.template("Time: <%- time %>")
     },
-
     graphViz: {
         nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
         clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
-    }
+    },
+    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwLineTooltip: _.template("from <%- src %> to <%- dest %>")
 }
 
 // Put all the global objects

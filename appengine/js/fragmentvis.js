@@ -287,7 +287,7 @@ function drawLanes(element, fragmentId, queryId) {
         for (k in t_workers_data) {
              workers_data[k] = t_workers_data[k];
         }
-        redrawLanes(element, workers_data, x, y, xAxis, yAxis, [0,0]);
+        //redrawLanes(element, workers_data, x, y, xAxis, yAxis, [0,0]);
     });
 
     function type2(d) {
