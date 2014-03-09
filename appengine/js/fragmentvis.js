@@ -387,15 +387,8 @@ function drawLanes(element, fragmentId, queryId) {
            }
 }
 
-var opColors = d3.scale.category20();
-var opToColor = {};
-
 function colorForOperator(opname) {
-    if (opname in opToColor) {
-        return opToColor[opname];
-    }
-    opToColor[opname] = opColors(_.keys(opToColor).length);
-    return opToColor[opname];
+    return globals.opToColor[opname];
 }
 
 function drawBoxes(lanes, worker_data, lane, x, y) {

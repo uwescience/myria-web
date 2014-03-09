@@ -76,7 +76,7 @@ function Graph () {
                 if (op.hasOwnProperty('opName')) {
                     graph.opName2fID[op.opName] = id;
                     graph.opName2color[op.opName] = opColors(_.keys(graph.opName2color).length);
-                    globals.opToColor[op.opName] = opColors(_.keys(graph.opName2color).length);
+                    globals.opToColor[op.opName] = graph.opName2color[op.opName];
                 }
             });
             graph.nodes[id] = node;
