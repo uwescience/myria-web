@@ -1,4 +1,5 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
+    $('#title-right-vis').html(templates.titleFragmentsVis({fragment: fragmentId}))
 
     element.selectAll("svg").remove();
     drawCharts(element, fragmentId, queryPlan);

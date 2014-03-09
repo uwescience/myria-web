@@ -1,6 +1,8 @@
 var networkVisualization = function (element, fragments, queryPlan) {
 	createViz(fragments);
 
+    $('#title-right-vis').html(templates.titleNetworkVis({fragments: fragments}));
+
     function createViz(fragments) {
         //initialize the visualization
         var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },

@@ -10,7 +10,6 @@ var templates = {
         profiling: _.template("/data/profiling.csv"),
         histogram: _.template("/data/histogram.csv")
     },
-
     ruler: {
         boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
         numTuplesTemplate: _.template("<br/><strong># Tuples:</strong> <%- number %>"),
@@ -25,7 +24,9 @@ var templates = {
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
-    nwLineTooltip: _.template("from <%- src %> to <%- dest %>")
+    nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
+    titleNetworkVis: _.template("Communication between workers after fragments: <%- fragments %>"),
+    titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>")
 }
 
 // Dictionary of operand name -> color
