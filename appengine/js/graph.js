@@ -5,8 +5,6 @@ var graph = function (element, queryPlan) {
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
 
-    debug(graphObj);
-
     //Create SVG element
     // var fullHeight = element.attr('data-height') || 800,
     //     margin = {top: 10, right: 10, bottom: 20, left: 10},
@@ -184,11 +182,9 @@ function Graph () {
             dotStr += "\t}\n";
         });
         dotStr += links + "}";
-        debug(dotStr);
 
         // Generate plain graph description
         var graphDesc = Viz(dotStr, "plain");
-        debug(graphDesc);
 
         // Parse the plain description
         var graphDescRows = graphDesc.split("\n");

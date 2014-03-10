@@ -246,7 +246,7 @@ function drawLanes(element, fragmentId, queryId) {
         //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Place the xAxis
-    lanes.append("g")
+    chart.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
@@ -297,14 +297,17 @@ function drawLanes(element, fragmentId, queryId) {
                 return;
             }
 
-	    // event on top of stack completed (we now know its endTime), add
-	    // to states
-	    states = workersStates[d.workerId];
+    	    // event on top of stack completed (we now know its endTime), add
+    	    // to states
 
-            if (states == null) {
-                states = [];
-                workersStates[d.workerId] = states;
+            if (!_.has(workersStates, d.workerId)) {
+                workersStates[d.workerId] = {
+                    workerId: d.workerId,
+                    states: []
+                }
             }
+
+    	    states = workersStates[d.workerId].states;
 
             top_stack = stack[stack.length - 1];
             top_stack.end = d.nanoTime;
@@ -343,17 +346,55 @@ function drawLanes(element, fragmentId, queryId) {
     }
 
     function redrawLanes(element, xDomain) {
+        var data = _.values(workersData);
 
         // Remove what was previously drawn
-        // d3.select("#fragment_workers").remove();
-        y.domain(_.keys(workersData));
+        y.domain(_.pluck(data, 'workerId'));
         x.domain(xDomain);
 
-        var lanes = d3.select("#fragment_workers .plot .lanes");
+        var lane = lanes.selectAll(".worker").data(data, function(d) {return d.workerId});
+        lane.enter().append("g").attr("class", "worker");
+        lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+        lane.exit().remove();
 
-        for (worker in workersData) {
-            drawBoxes(lanes, workersData[worker], worker, x, y);
-        }
+        debug(data)
+
+        var box = lane.selectAll("rect")
+            .data(function(d) {
+                return _.filter(d.states, function(s) {
+                    // overlap
+                    return xDomain[0] < s.end && xDomain[1] > s.begin;
+                });
+            }, function(d) {return d.begin;});
+
+        box.enter().append("rect")
+            .popover(function(d) {
+                var content = '';
+                if (d.numTuples >= 0) {
+                    content += templates.numTuplesTemplate({numTuples: d.numTuples});
+                }
+                var duration = d.end - d.begin;
+                content += templates.boxTemplate({
+                    duration: customFullTimeFormat(duration),
+                    begin: customFullTimeFormat(d.begin),
+                    end: customFullTimeFormat(d.end)
+                });
+                return {
+                    title: d.name,
+                    content: content
+                };
+            })
+            //.attr("clip-path", "url(#clip)")
+            .style("fill", function(d) { return opToColor[d.name]; })
+            .attr("class", "box");
+
+        box.attr("x", function(d) { return x(d.begin); })
+            .attr("width", function(d) {
+                return x(d.end) - x(d.begin);
+            })
+            .attr("height", function(d) { return y.rangeBand(); });
+
+        box.exit().remove();
 
         lanes.select("g.x.axis").call(xAxis);
     }
@@ -361,56 +402,5 @@ function drawLanes(element, fragmentId, queryId) {
     return {
         redrawLanes: redrawLanes
     };
-}
-
-function drawBoxes(lanes, worker_data, lane, x, y) {
-
-    var box = lanes.selectAll("rect")
-                   //TODO: is the key map function lane + d.begin  unique??
-                   .data(worker_data, function(d) {return lane + d.begin;});
-
-    box.enter().append("rect")
-        .popover(function(d) {
-            var content = '';
-            if (d.numTuples >= 0) {
-                content += templates.numTuplesTemplate({numTuples: d.numTuples});
-            }
-            var duration = d.end - d.begin;
-            content += templates.boxTemplate({
-                duration: customFullTimeFormat(duration),
-                begin: customFullTimeFormat(d.begin),
-                end: customFullTimeFormat(d.end)
-            });
-            return {
-                title: d.name,
-                content: content
-            };
-        })
-        .attr("clip-path", "url(#clip)")
-        .style("fill", function(d) { return opToColor[d.name]; })
-        .attr("class", "box");
-
-    box.attr("x", function(d) { return x(d.begin);})
-        .attr("width", function(d, i) {
-            return x(d.end) - x(d.begin);
-        })
-        .transition()
-        //.duration(animationDuration)
-        .attr("y", function(d) { return y(lane);})
-        .attr("height", function(d) {
-            return y.rangeBand();
-        });
-
-    // TODO: replace this function
-    function hashCode(str) {
-        var hash = 0;
-        if (str.length == 0) return hash;
-        for (i = 0; i < str.length; i++) {
-            char = str.charCodeAt(i);
-            hash = ((hash<<5)-hash)+char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash;
-    }
 }
 
