@@ -6,9 +6,9 @@ var templates = {
         histogram: _.template("/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
     },*/
     urls: {
-        sentData: _.template("/data/sent.csv"),
-        profiling: _.template("/data/profiling.csv"),
-        histogram: _.template("/data/histogram.csv")
+        sentData: _.template("/data/sent_<%- query %>_<%- fragment %>.csv"),
+        profiling: _.template("/data/profiling_<%- query %>_<%- fragment %>.csv"),
+        histogram: _.template("/data/histogram_<%- query %>_<%- fragment %>.csv")
     },
     titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
