@@ -119,7 +119,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     // access value
                     return color(d.sumTuples);})
                 .tooltip(function(d) {
-                    return templates.nwTooltip(d);
+                    return templates.nwTooltip({
+                        sumTuples: largeNumberFormat(d.sumTuples),
+                        src: d.src,
+                        dest: d.dest
+                    });
                 })
                 .on('click', function(d) {
                     if (!d.active) {

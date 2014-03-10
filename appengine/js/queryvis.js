@@ -103,6 +103,8 @@ function customFullTimeFormat(d) {
     return str;
 }
 
+var largeNumberFormat = d3.format(",")
+
 var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
