@@ -284,23 +284,20 @@ class Histogram(MyriaPage):
         fragment_id = self.request.get("fragmentId")
 
         def get_historgram(data):
-            WORKER = 0
+            #WORKER = 0
             TIME = 1
             TYPE = 2
-            workers = set()
+            count = 0
             # ignore header
             data.next()
             for trans in data:
-                worker = int(trans[WORKER])
                 if trans[TYPE] == 'call':
-                    workers.add(worker)
+                    count += 1
                 elif trans[TYPE] == 'return':
-                    # This should be a remove but there seems to be
-                    # a missing call
-                    workers.discard(worker)
+                    count -= 1
                 else:
                     continue
-                yield [trans[TIME], list(workers)]
+                yield [trans[TIME], count]
 
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
