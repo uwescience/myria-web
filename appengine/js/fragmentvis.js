@@ -203,8 +203,8 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     }
 
     function type(d) {
-        d.time = parseFloat(d.time, 10);
-        d.value = JSON.parse( d.value);
+        d.time = +d.time;
+        d.value = +d.value;
         return d;
     }
 }
