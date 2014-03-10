@@ -17,6 +17,7 @@ function drawCharts(element, fragmentId, queryPlan) {
 function drawArea(element, fragmentId, queryId, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
+        labels_width = 100,
         margin2 = {top: 10, right:10, bottom: 170, left:20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
@@ -87,6 +88,15 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
     mini_brush.append("g")
+        .attr("class", "x axis")
+	.attr("transform", "translate(0," + height2 + ")")
+	.call(xAxis2);
+
+    mini_brush.append("path")
+        .attr("clip-path", "url(#clip)")
+	.attr("class", "area")
+ 
+    mini_brush.append("g")
 	.attr("class", "x brush")
 	.call(brush)
 	.selectAll("rect")
@@ -97,6 +107,19 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     var plot = svg.append("g")
 	    .attr("class", "plot")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    plot.append("g")
+        .attr("class", "x axis")
+	.attr("transform", "translate(0," + height + ")")
+	.call(xAxis);
+
+    plot.append("g")
+        .attr("class", "y axis")
+	.call(yAxis);
+
+    plot.append("path")
+	.attr("clip-path", "url(#clip)")
+	.attr("class", "area")
 
     plot.append("g")
 	.attr("class", "x brush")
@@ -155,31 +178,16 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         y2.domain(y.domain());
 
         // TODO: do before we have the data
-        mini_brush.append("g")
-            .attr("class", "x axis")
-	    .attr("transform", "translate(0," + height2 + ")")
-	    .call(xAxis2);
-
-        mini_brush.append("path")
-            .attr("clip-path", "url(#clip)")
+        mini_brush.select(".x.axis").call(xAxis2);
+        mini_brush.select(".area")
             .datum(data)
-	    .attr("class", "area")
-	    .attr("d", area2);
+            .attr("d", area2);
 
-        plot.append("g")
-	    .attr("class", "x axis")
-	    .attr("transform", "translate(0," + height + ")")
-	    .call(xAxis);
-
-        plot.append("g")
-	    .attr("class", "y axis")
-	    .call(yAxis);
-
-        plot.append("path")
-	    .attr("clip-path", "url(#clip)")
-             .datum(data)
-	    .attr("class", "area")
-	    .attr("d", area);
+        plot.select(".x.axis").call(xAxis);
+        plot.select(".y.axis").call(yAxis);
+        plot.select(".area")
+            .datum(data)
+            .attr("d", area);
     });
 
     function brushed() {
