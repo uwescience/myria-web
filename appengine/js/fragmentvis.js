@@ -195,10 +195,11 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     function brushendWorkers() {
         //called brush; modify the lanes Chart ...
         //compute the visible workers
+        var brush_extent = brush2.extent();
 
         lanesChart.redrawLanes(brush2.extent());
 
-        x.domain(brush2.empty() ? x2.domain() : brush2.extent());
+        x.domain(brush2.empty() ? x2.domain() : brush_extent);
         plot.select(".area")
             .transition()
             .duration(animationDuration)
@@ -208,7 +209,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
             .duration(animationDuration)
             .call(xAxis);
 
-        brush.extent(brush2.extent());
+        brush.extent(brush_extent);
         d3.select(".context .x.brush")
             .transition()
             .duration(animationDuration)
