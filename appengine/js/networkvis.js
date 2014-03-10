@@ -262,7 +262,7 @@ var timeSeriesChart = function (element) {
             .data(chartData, function(d) { return [d.src, d.dest]; });
 
         var pairGroups = pair.enter().append("g")
-            .attr("class","pair");
+            .attr("class", "pair");
 
         pairGroups.append("path")
             .style("stroke-width", 2)
