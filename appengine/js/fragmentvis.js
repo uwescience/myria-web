@@ -23,6 +23,8 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
 
+    width = width - labels_width;
+
     var x = d3.scale.linear().range([0, width]),
         x2 = d3.scale.linear().range([0, width]),
         y = d3.scale.linear().range([height, 0]),
@@ -71,7 +73,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Svg element to draw the fragment utilization plot
     //var svg = element.append("svg")
     var svg = element.insert("svg", ":first-child")
-                     .attr("width", width + margin.left + margin.right)
+                     .attr("width", width + labels_width + margin.left + margin.right)
                      .attr("height", height + margin.top + margin.bottom)
                      .attr("class", "line-plot")
                      .attr("id", "fragment_utilization");
@@ -85,7 +87,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Place the mini-brush
     var mini_brush = svg.append("g")
         .attr("class", "context")
-        .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+        .attr("transform", "translate(" + (labels_width + margin2.left) + "," + margin2.top + ")");
 
     mini_brush.append("g")
         .attr("class", "x axis")
@@ -106,7 +108,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Place the plot/big_brush
     var plot = svg.append("g")
 	    .attr("class", "plot")
-	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	    .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
 
     plot.append("g")
         .attr("class", "x axis")
@@ -239,10 +241,15 @@ function drawLanes(element, fragmentId, queryId) {
     var fullHeight = 400;
 
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
+        labels_width = 100,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
+ 
+    width = width - labels_width;
+
     var x = d3.scale.linear().clamp(true).range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
+
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -256,13 +263,13 @@ function drawLanes(element, fragmentId, queryId) {
 
     // Add lanes chart
     var svg = element.append("svg")
-        .attr("width", width + margin.left + margin.right)
+        .attr("width", width + labels_width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("id", "fragment_workers");
 
     var chart = svg.append("g")
         .attr("class", "plot")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
 
     // Place the xAxis
     chart.append("g")
