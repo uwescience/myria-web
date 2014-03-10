@@ -65,7 +65,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         .interpolate("step-after")
         .x(function(d) { return x2(d.time); })
         .y0(height2)
-        .y1(function(d) { return y2(d.value); });
+	.y1(function(d) { return y2(d.value); });
 
     // Svg element to draw the fragment utilization plot
     //var svg = element.append("svg")
@@ -86,10 +86,24 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
+    mini_brush.append("g")
+	.attr("class", "x brush")
+	.call(brush)
+	.selectAll("rect")
+	.attr("y", -6)
+	.attr("height", height2 + 7);
+
     // Place the plot/big_brush
     var plot = svg.append("g")
-        .attr("class", "plot")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	    .attr("class", "plot")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    plot.append("g")
+	.attr("class", "x brush")
+	.call(brush2)
+	.selectAll("rect")
+	.attr("y", -6)
+	.attr("height", height + 7);
 
     // Add ruler
     var tooltip = plot.append("g")
@@ -141,45 +155,31 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         y2.domain(y.domain());
 
         // TODO: do before we have the data
+        mini_brush.append("g")
+            .attr("class", "x axis")
+	    .attr("transform", "translate(0," + height2 + ")")
+	    .call(xAxis2);
+
         mini_brush.append("path")
-               .attr("clip-path", "url(#clip)")
-               .datum(data)
-               .attr("class", "area")
-               .attr("d", area2);
+            .attr("clip-path", "url(#clip)")
+            .datum(data)
+	    .attr("class", "area")
+	    .attr("d", area2);
 
-        mini_brush.append("g")
-               .attr("class", "x axis")
-               .attr("transform", "translate(0," + height2 + ")")
-               .call(xAxis2);
+        plot.append("g")
+	    .attr("class", "x axis")
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(xAxis);
 
-        mini_brush.append("g")
-               .attr("class", "x brush")
-               .call(brush)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height2 + 7);
+        plot.append("g")
+	    .attr("class", "y axis")
+	    .call(yAxis);
 
         plot.append("path")
-             .attr("clip-path", "url(#clip)")
+	    .attr("clip-path", "url(#clip)")
              .datum(data)
-             .attr("class", "area")
-             .attr("d", area);
-
-        plot.append("g")
-             .attr("class", "x axis")
-             .attr("transform", "translate(0," + height + ")")
-             .call(xAxis);
-
-        plot.append("g")
-             .attr("class", "y axis")
-             .call(yAxis);
-
-        plot.append("g")
-               .attr("class", "x brush")
-               .call(brush2)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height + 7);
+	    .attr("class", "area")
+	    .attr("d", area);
     });
 
     function brushed() {
