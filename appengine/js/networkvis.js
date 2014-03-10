@@ -9,7 +9,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
-                totalMatrixWidth = 550;
+                totalMatrixWidth = 500;
 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
@@ -181,7 +181,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 var timeSeriesChart = function (element) {
     var margin = {top: 20, right: 70, bottom: 50, left:50 },
         width = parseInt(element.style('width'), 10),
-        height = 400,
+        height = 300,
         chartWidth = width - margin.left - margin.right,
         chartHeight = height - margin.top - margin.bottom;
 
