@@ -10,14 +10,12 @@ var templates = {
         profiling: _.template("/data/profiling.csv"),
         histogram: _.template("/data/histogram.csv")
     },
-    ruler: {
-        boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
-        numTuplesTemplate: _.template("<br/><strong># Tuples:</strong> <%- number %>"),
-        titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
-        stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
-        chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
-        ganttTooltipTemplate: _.template("Time: <%- time %>")
-    },
+    titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
+    stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
+    boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
+    numTuplesTemplate: _.template("<strong># Tuples:</strong> <%- numTuples %><br/>"),
+    chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
+    ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
         nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
         clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
