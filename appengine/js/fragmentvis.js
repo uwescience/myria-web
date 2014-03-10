@@ -363,10 +363,6 @@ function drawLanes(element, fragmentId, queryId) {
     };
 }
 
-function colorForOperator(opname) {
-    return opToColor[opname];
-}
-
 function drawBoxes(lanes, worker_data, lane, x, y) {
 
     var box = lanes.selectAll("rect")
@@ -390,9 +386,8 @@ function drawBoxes(lanes, worker_data, lane, x, y) {
                 content: content
             };
         })
-        //.attr("clip-path", "url(#clip)")
-        .style("fill", function(d) { return colorForOperator(d.name); })
-        .style("stroke", function(d) { return d3.rgb(colorForOperator(d.name)).darker(0.5); })
+        .attr("clip-path", "url(#clip)")
+        .style("fill", function(d) { return opToColor[d.name]; })
         .attr("class", "box");
 
     box.attr("x", function(d) { return x(d.begin);})
