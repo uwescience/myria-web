@@ -357,8 +357,6 @@ function drawLanes(element, fragmentId, queryId) {
         lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
         lane.exit().remove();
 
-        debug(data)
-
         var box = lane.selectAll("rect")
             .data(function(d) {
                 return _.filter(d.states, function(s) {
