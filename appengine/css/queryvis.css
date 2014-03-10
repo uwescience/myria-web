@@ -64,7 +64,7 @@ svg {
 
 /* Fragment vis */
 .area {
-  fill: #9ecae1;
+  fill: steelblue;
 }
 
 .x.axis .tick line {
@@ -83,9 +83,22 @@ svg {
 }
 
 .brush .extent {
-  stroke: #fff;
-  fill-opacity: .125;
+  fill: black;
+  fill-opacity: .1;
+  stroke: #333;
+  stroke-opacity: 0.7;
+  stroke-width: 1;
   shape-rendering: crispEdges;
+}
+
+.chart .context .brush .resize rect {
+  fill: #333;
+  fill-opacity: .8;
+  visibility: visible !important;
+}
+
+.brush .resize rect {
+  fill: #333;
 }
 
 .chart .x.axis path {

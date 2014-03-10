@@ -45,12 +45,13 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         .orient("left");
 
     var brush = d3.svg.brush()
-                  .x(x2)
-                  .on("brush", brushed);
+        .x(x2)
+        .on("brush", brushed)
+        .on("brushend", brushEnd);
 
     var brush2 = d3.svg.brush()
-                      .x(x)
-                      .on("brushend", brushendWorkers);
+        .x(x)
+        .on("brushend", brushendWorkers);
 
     // Area 1 generator
     var area = d3.svg.area()
@@ -187,19 +188,33 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         plot.select(".x.axis").call(xAxis);
     }
 
+    function brushEnd() {
+        lanesChart.redrawLanes(brush.extent());
+    }
+
     function brushendWorkers() {
         //called brush; modify the lanes Chart ...
         //compute the visible workers
 
-        lanesChart.redrawLanes(element, brush2.extent());
+        lanesChart.redrawLanes(brush2.extent());
 
         x.domain(brush2.empty() ? x2.domain() : brush2.extent());
-        plot.select(".area").attr("d", area);
-        plot.select(".x.axis").call(xAxis);
+        plot.select(".area")
+            .transition()
+            .duration(animationDuration)
+            .attr("d", area);
+        plot.select(".x.axis")
+            .transition()
+            .duration(animationDuration)
+            .call(xAxis);
 
         brush.extent(brush2.extent());
-        d3.select(".context .x.brush").call(brush);
-        d3.select(".plot .x.brush").call(brush2.clear());
+        d3.select(".context .x.brush")
+            .transition()
+            .duration(animationDuration)
+            .call(brush);
+        d3.select(".plot .x.brush")
+            .call(brush2.clear());
     }
 
     function type(d) {
@@ -240,16 +255,16 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Place the lanes plot
-    var lanes = chart.append("g")
-        .attr("class", "lanes")
-        //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
     // Place the xAxis
     chart.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
+
+    // Place the lanes plot
+    var lanes = chart.append("g")
+        .attr("class", "lanes")
+        //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
     /* Collect data for states at each worker */
@@ -337,7 +352,6 @@ function drawLanes(element, fragmentId, queryId) {
                 name: d.opName,
                 begin: d.nanoTime,
                 end: null,           // we don't know this yet ...
-                lane: 0,
                 numTuples: d.numTuples
             };
         }
@@ -345,7 +359,7 @@ function drawLanes(element, fragmentId, queryId) {
         return workersStates;
     }
 
-    function redrawLanes(element, xDomain) {
+    function redrawLanes(xDomain) {
         var data = _.values(workersData);
 
         // Remove what was previously drawn
@@ -361,7 +375,7 @@ function drawLanes(element, fragmentId, queryId) {
             .data(function(d) {
                 return _.filter(d.states, function(s) {
                     // overlap
-                    return xDomain[0] < s.end && xDomain[1] > s.begin;
+                    return overlap = xDomain[0] < s.end && xDomain[1] > s.begin;
                 });
             }, function(d) {return d.begin;});
 
@@ -370,6 +384,8 @@ function drawLanes(element, fragmentId, queryId) {
                 var content = '';
                 if (d.numTuples >= 0) {
                     content += templates.numTuplesTemplate({numTuples: d.numTuples});
+                } else {
+                    content += templates.nullReturned();
                 }
                 var duration = d.end - d.begin;
                 content += templates.boxTemplate({
@@ -386,7 +402,11 @@ function drawLanes(element, fragmentId, queryId) {
             .style("fill", function(d) { return opToColor[d.name]; })
             .attr("class", "box");
 
-        box.attr("x", function(d) { return x(d.begin); })
+        box
+            .transition()
+            .duration(animationDuration)
+            .attr("x", function(d) { return x(d.begin); })
+            .style("opacity", 1)
             .attr("width", function(d) {
                 return x(d.end) - x(d.begin);
             })
@@ -394,7 +414,10 @@ function drawLanes(element, fragmentId, queryId) {
 
         box.exit().remove();
 
-        lanes.select("g.x.axis").call(xAxis);
+        chart.select(".x.axis")
+            .transition()
+            .duration(animationDuration)
+            .call(xAxis);
     }
 
     return {

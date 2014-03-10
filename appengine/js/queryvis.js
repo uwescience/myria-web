@@ -14,6 +14,7 @@ var templates = {
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
     numTuplesTemplate: _.template("<strong># Tuples:</strong> <%- numTuples %><br/>"),
+    nullReturned: _.template("<strong>Null returned</strong><br/>"),
     chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
