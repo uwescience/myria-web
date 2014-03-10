@@ -266,6 +266,10 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("width", width + labels_width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("id", "fragment_workers");
+ 
+    var lanes_titles = svg.append("g")
+        .attr("class", "titles")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var chart = svg.append("g")
         .attr("class", "plot")
@@ -378,7 +382,6 @@ function drawLanes(element, fragmentId, queryId) {
     function redrawLanes(xDomain) {
         var data = _.values(workersData);
 
-        // Remove what was previously drawn
         y.domain(_.pluck(data, 'workerId'));
         x.domain(xDomain);
 
@@ -434,8 +437,68 @@ function drawLanes(element, fragmentId, queryId) {
             .transition()
             .duration(animationDuration)
             .call(xAxis);
-    }
 
+        // Add lanes titles
+        var title = lanes_titles.selectAll("g.title")
+            .data(data, function(d) { return d.workerId; })
+
+        var titleEnter = title.enter()
+            .append("g")
+            .style("opacity", 0)
+            .attr("transform", function(d) {
+                return "translate(" + 20 + ","
+                                    + (y(d.workerId)
+                                    + y.rangeBand()/2) + ")";
+            })
+            .style("text-anchor", "begin")
+            .attr("class", "title");
+
+        titleEnter.append("text")
+            .attr("dx", -18)
+            .attr("font-family", "Glyphicons Halflings")
+            .attr("font-size", "16px")
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("dy", 8)
+            .attr("class", "icon")
+            .style("cursor", "pointer");
+
+        var titleTextEnter = title.append("g")
+            .attr("class", "title-text");
+
+        titleTextEnter.append("text")
+            .attr("class", "title");
+
+        //titleTextEnter.append("text")
+        //    .attr("dy", "1.2em")
+        //    .attr("class", "subtitle");
+
+        title
+            .transition()
+            .duration(animationDuration)
+            .style("opacity", 1)
+            .attr("transform", function(d) {
+                 return "translate(" + 20 + ","
+                                     + (y(d.workerId)
+                                     + y.rangeBand()/2) + ")";
+            });
+
+
+        title.select("text.title")
+            .text(function(d) {
+                return "Worker " + d.workerId;
+            })
+            .attr("class", "title");
+
+        //title.select("text.subtitle")
+        //    .text(function(d) { return  d.states[0].name; })
+        //    .attr("class", "subtitle");
+
+        title.exit()
+            .transition()
+            .duration(animationDuration).style("opacity", 0)
+            .remove();
+    }
     return {
         redrawLanes: redrawLanes
     };
