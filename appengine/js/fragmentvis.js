@@ -17,7 +17,7 @@ function drawCharts(element, fragmentId, queryPlan) {
 function drawArea(element, fragmentId, queryId, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
-        labels_width = 100,
+        labels_width = 40,
         margin2 = {top: 10, right:10, bottom: 170, left:20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
@@ -122,7 +122,6 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 
     // put Time label on xAxis
     plot.append("g") 
-        //.attr("class", "axis-label")
 	.attr("transform", "translate(" + [width, height] + ")")
         .append("text")
         .call(xAxisLabel, width);
@@ -245,7 +244,7 @@ function drawLanes(element, fragmentId, queryId) {
     var fullHeight = 400;
 
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
-        labels_width = 100,
+        labels_width = 40,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
  
@@ -275,10 +274,12 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("class", "titles")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
     var chart = svg.append("g")
         .attr("class", "plot")
         .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
- 
+
+
     // Place the xAxis
     chart.append("g")
         .attr("class", "x axis")
@@ -492,10 +493,9 @@ function drawLanes(element, fragmentId, queryId) {
                                      + y.rangeBand()/2) + ")";
             });
 
-
         title.select("text.title")
             .text(function(d) {
-                return "Worker " + d.workerId;
+                return d.workerId;
             })
             .attr("class", "title");
 
@@ -507,15 +507,24 @@ function drawLanes(element, fragmentId, queryId) {
             .transition()
             .duration(animationDuration).style("opacity", 0)
             .remove();
+    
+        //Add the Workers y axis
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("dy", ".71em")
+            .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
+            .style("text-anchor", "end")
+            .text("Workers");
     }
+
     return {
         redrawLanes: redrawLanes
     };
 }
-    
+ 
 function xAxisLabel(selection) {
     selection.attr("class", "axis-label")
-        .attr({"id": "xLabel", "x": - 6, "y": -12, "text-anchor": "middle"})
+        .attr({"x": - 6, "y": -12, "text-anchor": "middle"})
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Time");
