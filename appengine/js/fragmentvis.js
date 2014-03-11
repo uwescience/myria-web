@@ -91,8 +91,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 
     mini_brush.append("g")
         .attr("class", "x axis")
-	.attr("transform", "translate(0," + height2 + ")")
-	.call(xAxis2);
+	.attr("transform", "translate(0," + height2 + ")");
 
     mini_brush.append("path")
         .attr("clip-path", "url(#clip)")
@@ -113,11 +112,9 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     plot.append("g")
         .attr("class", "x axis")
 	.attr("transform", "translate(0," + height + ")")
-	.call(xAxis);
 
     plot.append("g")
-        .attr("class", "y axis")
-	.call(yAxis);
+        .attr("class", "y axis");
 
     plot.append("path")
 	.attr("clip-path", "url(#clip)")
@@ -133,7 +130,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Add ruler
     var tooltip = plot.append("g")
         .attr({"class": "rulerInfo"})
-        .attr("transform", "translate(" + [0, height] + ")");
+        .attr("transform", "translate(" + [10, height] + ")");
 
     tooltip.append("svg:rect");
 
@@ -274,7 +271,7 @@ function drawLanes(element, fragmentId, queryId) {
     var chart = svg.append("g")
         .attr("class", "plot")
         .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
-
+ 
     // Place the xAxis
     chart.append("g")
         .attr("class", "x axis")
@@ -503,4 +500,6 @@ function drawLanes(element, fragmentId, queryId) {
         redrawLanes: redrawLanes
     };
 }
+    
+
 
