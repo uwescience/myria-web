@@ -11,6 +11,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 500;
 
+
+
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 
@@ -27,6 +29,23 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("height", totalMatrixWidth)
             .append("g")
                 .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
+
+        var colLabel = matrixChart.append('text')
+                        .text('destination worker ID')
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "15px")
+                        .style("text-anchor", "end")
+                        .attr('x', totalMatrixWidth - matMargin.right)
+                        .attr('y', matMargin.top/2);
+
+        var rowLabel = matrixChart.append('text')
+                        .text('source worker ID')
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "15px")
+                        //.style("text-anchor", "end")
+                        .style("text-anchor", "start")
+                        //.attr('transform', 'rotate(-90)')
+                        .attr('y', totalMatrixWidth - matMargin.bottom);
 
         var rawMatrix = matrixChart.append('g')
               .attr('class','matrix')
