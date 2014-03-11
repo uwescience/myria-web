@@ -23,10 +23,13 @@ var graph = function (element, queryPlan) {
     // var layout = dagreD3.layout();
     // renderer.layout(layout).run(dagreD3.json.decode(nodes, links), svg.append('g'));
 
-    var svg = d3.select('.query-plan')
-        .html(graphObj.renderGraph());
+    var graphElement = d3.select('.query-plan');
 
-    listen(graphObj, svg, chartElement);
+    //graphObj.renderGraph();
+
+    graphObj.render(graphElement);
+
+    //listen(graphObj, svg, chartElement);
 
 };
 
@@ -151,11 +154,11 @@ function Graph () {
         });
     };
 
-    // Returns the svg desciption of the graph object
-    Graph.prototype.renderGraph = function() {
+    // Function that spits out graph description in dot
+    Graph.prototype.generateDot = function() {
         var graph = this;
         // Derive the graph DOT specification from the GraphObj
-        var dotStr = "digraph G { \n";
+        var dotStr = "digraph G { \n\trankdir = \"BT\";\n\n";
         var links = "";
         // First add the fragment links
         for (var id in graph.links) {
@@ -185,6 +188,27 @@ function Graph () {
         });
         dotStr += links + "}";
         debug(dotStr);
+        return (dotStr);
+    }
+
+    // Returns the svg desciption of the graph object
+    Graph.prototype.generateSVG = function() {
+        var graph = this;
+        
+        // Get dot description of the graph
+        var dotStr = graph.generateDot();
+
+        // Generate svg graph description
+        var graphSVG = Viz(dotStr, "svg");
+        return(graphSVG);
+    };
+
+    // D3 data generator
+    Graph.prototype.generateD3data = function(padding) {
+        var graph = this;
+
+        // Get dot description of the graph
+        var dotStr = graph.generateDot();
 
         // Generate plain graph description
         var graphDesc = Viz(dotStr, "plain");
@@ -198,27 +222,181 @@ function Graph () {
                 var id = cols[1].replace(/\"/g, '');
                 if (id in graph.nodes) {
                     graph.nodes[id].viz = {
-                        x: cols[2],
-                        y: cols[3],
-                        w: cols[4],
-                        h: cols[5]
+                        name: id,
+                        type: "fragment",
+                        x: +cols[2]-cols[4]/2,
+                        y: +cols[3]-cols[5]/2,
+                        w: +cols[4],
+                        h: +cols[5]
                     };
                 } else if (id in graph.opName2fID) {
                     var node = graph.nodes[graph.opName2fID[id]];
                     var opnode = node.opNodes[id];
                     opnode.viz = {
-                        x: cols[2],
-                        y: cols[3],
-                        w: cols[4],
-                        h: cols[5]
+                        name: id,
+                        type: "operator",
+                        x: +cols[2]-cols[4]/2,
+                        y: +cols[3]-cols[5]/2,
+                        w: +cols[4],
+                        h: +cols[5]
                     };
                 }
             }
         });
 
-        // Generate svg graph description
-        var graphSVG = Viz(dotStr, "svg");
-        return(graphSVG);
+        var data = [];
+        var height = 0;
+
+        // Exploded fragments
+        graph.state.opened.forEach(function (fID) {
+            var fragment = graph.nodes[fID];
+            var minX = 1000; //FIXME
+            var maxX = 0; //FIXME
+            var minY = 1000; //FIXME
+            var maxY = 0; //FIXME
+            for (oID in fragment.opNodes) {
+                var op = fragment.opNodes[oID].viz;
+                minX = (op.x<minX) ? op.x : minX;
+                maxX = ((op.x+op.w)>maxX) ? (op.x+op.w) : maxX;
+                minY = (op.y<minY) ? op.y : minY;
+                maxY = ((op.y+op.h)>maxY) ? (op.y+op.h) : maxY;
+            }
+            height = maxY > height ? maxY : height;
+            var node = {
+                name: fID,
+                type: "cluster",
+                x: minX-padding/4,
+                y: minY-padding/4,
+                w: maxX-minX+padding/2,
+                h: maxY-minY+padding
+            };
+            // Add cluster
+            data.push(node);
+            // Add op nodes
+            for (opID in fragment.opNodes) {
+                var opNode = fragment.opNodes[opID];
+                data.push(opNode.viz);
+            }
+        });
+        // Non-exploded fragments
+        for (fragID in graph.nodes) {
+            if (graph.state.opened.indexOf(fragID) == -1) {
+                data.push(graph.nodes[fragID].viz);
+            }
+        }
+
+        return {
+            data: data,
+            height: height
+        }
+    };
+
+    // D3 rendering prototype
+    Graph.prototype.render = function(element) {
+        var graph = this;
+
+        // D3 stuff...
+        var margin = {top: 0, right: 0, bottom: 0, left:0 },
+            width = parseInt(element.style('width'), 10) - margin.left - margin.right,
+            padding = 0.5,
+            yOffset = 0;
+
+        var svg = element
+                    .append("svg")
+                    .attr("class", "graph")
+                    .attr("width", width);
+
+        var D3data = graph.generateD3data(padding);
+
+        // Initial rendering
+        draw(D3data.data, true);
+
+        // On click, update with new data
+        svg.selectAll("rect")
+            .on("click", function() {
+                var node = d3.select(this).data()[0];
+
+                // Handle open fragments
+                if (node.type == "cluster") {
+                    graph.reduceNode([node.name]);
+                } else if (node.type == "fragment") {
+                    graph.expandNode([node.name]);
+                } 
+                //d3.select(this).style("fill", "red");
+
+                var newD3data = graph.generateD3data(padding);
+
+                draw(newD3data.data, false);
+            });
+
+        function draw (data, initial) {
+            svg.attr("height", (height+padding)+"in"); //FIXME
+
+            var node = svg.selectAll("rect")
+                    .data(data, function(d) { return d.name; })
+            
+            node.enter().append("rect")
+                .attr("rx", 10)
+                .attr("ry", 10)
+                .attr("r", 10)
+                .attr("opacity", function() {
+                    return initial ? 1 : 0;
+                })
+                .attr("fill", function(d) { 
+                    if(d.type == "cluster" || d.type == "fragment") {
+                        return "lightgrey";
+                    } else {
+                        return "white";
+                    }
+                });
+
+            node.transition().duration(1000)
+                .attr("opacity", 1)
+                .attr("x", function(d) { return d.x+"in"; })
+                .attr("y", function(d) { return (d.y+yOffset)+"in"; })
+                .attr("width", function(d) { return d.w+"in"; })
+                .attr("height", function(d) { return d.h+"in"; });
+                 
+            node.exit().transition().duration(500)
+                .attr("opacity", 0).remove();
+
+            var label = svg.selectAll("text")
+                .data(data, function(d) { return d.name; })
+            
+            label.enter().append("text")
+                .attr("opacity", function() {
+                    return initial ? 1 : 0;
+                })
+                .text(function(d) {return d.name;})
+                .attr("text-anchor", "middle")
+                .attr("dy", function(d) {return"0.35em";})
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "13px")
+                .attr("fill", "black");
+
+            label.transition().duration(1000)
+                .attr("opacity", 1)
+                .attr("x", function(d) { return (d.x+d.w/2)+"in"; })
+                .attr("y", function(d) { 
+                    if(d.type == "cluster") {
+                        return (d.y+d.h+yOffset-padding*3/8)+"in"
+                    } else {
+                        return (d.y+d.h/2+yOffset)+"in"
+                    }
+                });
+
+            label.exit().transition().duration(500)
+                .attr("opacity", 0).remove();
+
+            }
+
+        // var xScale = d3.scale.linear()
+        //         .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x+d.w; })])
+        //         .range([padding, width-padding]),
+        //     yScale = d3.scale.linear()
+        //         .domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y+d.h; })])
+        //         .range([padding, height-padding]);
+
     };
 }
 

@@ -54,6 +54,11 @@ svg {
   shape-rendering: auto;
 }
 
+.graph rect {
+    stroke: black;
+    stroke-width: 2;
+}
+
 /* Fragment vis */
 .area {
   fill: #9ecae1;
