@@ -23,7 +23,7 @@ import myria
 
 defaultquery = """A(x) :- R(x,3)"""
 hostname = "vega.cs.washington.edu"
-port = 1776
+port = 8777
 
 # Global connection to Myria. Thread-safe
 connection = myria.MyriaConnection(hostname=hostname, port=port)
@@ -248,7 +248,7 @@ class Queries(MyriaPage):
 
 
 class Profile(MyriaPage):
-    def get(self, connection_):
+    def get(self, connection_=None):
         conn = connection_ or connection
         query_id = self.request.get("queryId")
         query_plan = {}
