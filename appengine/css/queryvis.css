@@ -3,12 +3,19 @@ html {
   overflow-y: scroll;
 }
 
+/* General */
+
 svg {
   font: 11px sans-serif;
-  shape-rendering: crispEdges;
+  shape-rendering: auto;
 }
 
-/* General */
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
 
 .ruler {
   position: fixed;
@@ -60,14 +67,7 @@ svg {
 
 /* Fragment vis */
 .area {
-  fill: #9ecae1;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+  fill: steelblue;
 }
 
 .x.axis .tick line {
@@ -86,9 +86,30 @@ svg {
 }
 
 .brush .extent {
-  stroke: #fff;
-  fill-opacity: .125;
+  fill: black;
+  fill-opacity: .1;
+  stroke: #333;
+  stroke-opacity: 0.7;
+  stroke-width: 1;
   shape-rendering: crispEdges;
+}
+
+.chart .context .brush .resize rect {
+  fill: #333;
+  fill-opacity: .8;
+  visibility: visible !important;
+}
+
+.brush .resize rect {
+  fill: #333;
+}
+
+.chart .x.axis path {
+  display: none;
+}
+
+.axis-label {
+ fill: #383838; 
 }
 
 
@@ -97,6 +118,7 @@ svg {
 .plan-graph {
   shape-rendering: auto;
 }
+
 
 /* Network */
 

@@ -1,4 +1,5 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
+    $('#title-right-vis').html(templates.titleFragmentsVis({fragment: fragmentId}))
 
     element.selectAll("svg").remove();
     drawCharts(element, fragmentId, queryPlan);
@@ -16,10 +17,13 @@ function drawCharts(element, fragmentId, queryPlan) {
 function drawArea(element, fragmentId, queryId, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
+        labels_width = 20,
         margin2 = {top: 10, right:10, bottom: 170, left:20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
+
+    width = width - labels_width;
 
     var x = d3.scale.linear().range([0, width]),
         x2 = d3.scale.linear().range([0, width]),
@@ -44,37 +48,32 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         .orient("left");
 
     var brush = d3.svg.brush()
-                  .x(x2)
-                  .on("brush", brushed);
- 
+        .x(x2)
+        .on("brush", brushed)
+        .on("brushend", brushEnd);
+
     var brush2 = d3.svg.brush()
-                      .x(x)
-                      .on("brushend", brushend_workers);
+        .x(x)
+        .on("brushend", brushendWorkers);
 
     // Area 1 generator
     var area = d3.svg.area()
         .interpolate("step-after")
         .x(function(d) { return x(d.time); })
         .y0(height)
-        .y1(function(d) { return y(d.value.length); });
+        .y1(function(d) { return y(d.value); });
 
     // Area 2 generator
     var area2 = d3.svg.area()
         .interpolate("step-after")
         .x(function(d) { return x2(d.time); })
         .y0(height2)
-        .y1(function(d) { return y2(d.value.length); });
-
-    // Contour line generator
-    var line = d3.svg.line()
-        .interpolate("step-after")
-        .x(function(d) { return x(d.time); })
-        .y(function(d) { return y(d.value.length); });
+	.y1(function(d) { return y2(d.value); });
 
     // Svg element to draw the fragment utilization plot
     //var svg = element.append("svg")
     var svg = element.insert("svg", ":first-child")
-                     .attr("width", width + margin.left + margin.right)
+                     .attr("width", width + labels_width + margin.left + margin.right)
                      .attr("height", height + margin.top + margin.bottom)
                      .attr("class", "line-plot")
                      .attr("id", "fragment_utilization");
@@ -88,17 +87,56 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Place the mini-brush
     var mini_brush = svg.append("g")
         .attr("class", "context")
-        .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+        .attr("transform", "translate(" + (labels_width + margin2.left) + "," + margin2.top + ")");
+
+    mini_brush.append("g")
+        .attr("class", "x axis")
+	.attr("transform", "translate(0," + height2 + ")");
+
+    mini_brush.append("path")
+        .attr("clip-path", "url(#clip)")
+	.attr("class", "area")
+ 
+    mini_brush.append("g")
+	.attr("class", "x brush")
+	.call(brush)
+	.selectAll("rect")
+	.attr("y", -6)
+	.attr("height", height2 + 7);
 
     // Place the plot/big_brush
     var plot = svg.append("g")
-        .attr("class", "plot")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	    .attr("class", "plot")
+	    .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
     
+    plot.append("g")
+        .attr("class", "x axis")
+	.attr("transform", "translate(0," + height + ")")
+
+    plot.append("g")
+        .attr("class", "y axis");
+
+    plot.append("path")
+	.attr("clip-path", "url(#clip)")
+	.attr("class", "area")
+
+    // put Time label on xAxis
+    plot.append("g") 
+	.attr("transform", "translate(" + [width, height] + ")")
+        .append("text")
+        .call(xAxisLabel, width);
+ 
+    plot.append("g")
+	.attr("class", "x brush")
+	.call(brush2)
+	.selectAll("rect")
+	.attr("y", -6)
+	.attr("height", height + 7);
+
     // Add ruler
     var tooltip = plot.append("g")
         .attr({"class": "rulerInfo"})
-        .attr("transform", "translate(" + [0, height] + ")");
+        .attr("transform", "translate(0,"+ height + ")");
 
     tooltip.append("svg:rect");
 
@@ -116,7 +154,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
             .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
 
         var xValue = Math.round(x.invert(d3.mouse(this)[0]));
-        tttext.text(templates.ruler.ganttTooltipTemplate({ time: customFullTimeFormat(xValue) }));
+        tttext.text(templates.ganttTooltipTemplate({ time: customFullTimeFormat(xValue) }));
 
         var bbox = tttext.node().getBBox();
         tooltip.select("rect")
@@ -139,102 +177,79 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     });
 
     d3.csv(url, type, function(error, data) {
-        x.domain(d3.extent(data.map(function(d) { return d.time; })));
-        y.domain([0, d3.max(data.map(function(d) { return d.value.length; }))]);
+        x.domain(d3.extent(data, function(d) { return d.time; }));
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
         x2.domain(x.domain());
         y2.domain(y.domain());
 
-        mini_brush.append("path")
-               .attr("clip-path", "url(#clip)")
-               .datum(data)
-               .attr("class", "area")
-               .attr("d", area2);
+        // TODO: do before we have the data
+        mini_brush.select(".x.axis").call(xAxis2);
+        mini_brush.select(".area")
+            .datum(data)
+            .attr("d", area2);
 
-        mini_brush.append("g")
-               .attr("class", "x axis")
-               .attr("transform", "translate(0," + height2 + ")")
-               .call(xAxis2);
-
-        mini_brush.append("g")
-               .attr("class", "x brush")
-               .call(brush)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height2 + 7);
-
-        plot.append("path")
-             .attr("clip-path", "url(#clip)")
-             .datum(data)
-             .attr("class", "area")
-             .attr("d", area);
-
-        plot.append("path")
-             .attr("clip-path", "url(#clip)")
-             .datum(data)
-             .attr("class", "line")
-             .attr("d", line);
-
-        plot.append("g")
-             .attr("class", "x axis")
-             .attr("transform", "translate(0," + height + ")")
-             .call(xAxis);
-
-        plot.append("g")
-             .attr("class", "y axis")
-             .call(yAxis);
-
-        plot.append("g")
-               .attr("class", "x brush")
-               .call(brush2)
-               .selectAll("rect")
-               .attr("y", -6)
-               .attr("height", height + 7);
+        plot.select(".x.axis").call(xAxis);
+        plot.select(".y.axis").call(yAxis);
+        plot.select(".area")
+            .datum(data)
+            .attr("d", area);
     });
 
     function brushed() {
         x.domain(brush.empty() ? x2.domain() : brush.extent());
         plot.select(".area").attr("d", area);
-        plot.select(".plot path.line").attr("d", line);
         plot.select(".x.axis").call(xAxis);
     }
 
-    function brushend_workers() {
+    function brushEnd() {
+        lanesChart.redrawLanes(brush.extent());
+    }
+
+    function brushendWorkers() {
         //called brush; modify the lanes Chart ...
         //compute the visible workers
+        var brush_extent = brush2.extent();
 
-        lanesChart.redrawLanes(element,
-                               lanesChart.workers_data,
-                               lanesChart.x,
-                               lanesChart.y,
-                               lanesChart.xAxis,
-                               lanesChart.yAxis,
-                               brush2.extent());
+        lanesChart.redrawLanes(brush2.extent());
 
-        x.domain(brush2.empty() ? x2.domain() : brush2.extent());
-        plot.select(".area").attr("d", area);
-        plot.select(".plot path.line").attr("d", line);
-        plot.select(".x.axis").call(xAxis);
+        x.domain(brush2.empty() ? x2.domain() : brush_extent);
+        plot.select(".area")
+            .transition()
+            .duration(animationDuration)
+            .attr("d", area);
+        plot.select(".x.axis")
+            .transition()
+            .duration(animationDuration)
+            .call(xAxis);
 
-        brush.extent(brush2.extent());
-        d3.select(".context .x.brush").call(brush);
-        d3.select(".plot .x.brush").call(brush2.clear());
+        brush.extent(brush_extent);
+        d3.select(".context .x.brush")
+            .transition()
+            .duration(animationDuration)
+            .call(brush);
+        d3.select(".plot .x.brush")
+            .call(brush2.clear());
     }
 
     function type(d) {
-        d.time = parseFloat(d.time, 10);
-        d.value = JSON.parse( d.value);
+        d.time = +d.time;
+        d.value = +d.value;
         return d;
     }
 }
 
 function drawLanes(element, fragmentId, queryId) {
 
-    //var fullHeight =  _.keys(workers_data).length * 50;
+    //var fullHeight =  _.keys(workersData).length * 50;
     var fullHeight = 400;
 
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
+        labels_width = 20,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
+ 
+    width = width - labels_width;
+
     var x = d3.scale.linear().clamp(true).range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
 
@@ -250,25 +265,35 @@ function drawLanes(element, fragmentId, queryId) {
 
     // Add lanes chart
     var svg = element.append("svg")
-        .attr("width", width + margin.left + margin.right)
+        .attr("width", width + labels_width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("id", "fragment_workers");
-    
+
+    var lanes_titles = svg.append("g")
+        .attr("class", "titles")
+        .attr("transform", "translate(" + labels_width + "," + margin.top + ")");
+
     var chart = svg.append("g")
         .attr("class", "plot")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
+
+
+    // Place the xAxis
+    chart.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
 
     // Place the lanes plot
     var lanes = chart.append("g")
         .attr("class", "lanes")
         //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // Place the xAxis
-    lanes.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-
+    // Place the Time label
+    chart.append("g")
+	.attr("transform", "translate(" + [width, height] + ")")
+        .append("text")
+        .call(xAxisLabel);
 
     /* Collect data for states at each worker */
     var url = templates.urls.profiling({
@@ -277,17 +302,14 @@ function drawLanes(element, fragmentId, queryId) {
         fragment: fragmentId
     });
 
-    var workers_data={};
+    var workersData = {};
 
     d3.csv(url, type2, function(error, data) {
-        // copy the results into the workers_data
+        // copy the results into the workersData
         // don't allocate another object as we return the
         // reference to this one
-        var t_workers_data = get_workers_states(data);
-        for (k in t_workers_data) {
-             workers_data[k] = t_workers_data[k];
-        }
-        //redrawLanes(element, workers_data, x, y, xAxis, yAxis, [0,0]);
+        workersData = getWorkersStates(data);
+        //redrawLanes(element, workersData, x, y, xAxis, yAxis, [0,0]);
     });
 
     function type2(d) {
@@ -297,7 +319,7 @@ function drawLanes(element, fragmentId, queryId) {
         return d;
     }
 
-    function get_workers_states(data) {
+    function getWorkersStates(data) {
 	// TODO: this parsing function assumes the following about the data
 	// received:
         //   - events are sorted at each worker
@@ -307,24 +329,28 @@ function drawLanes(element, fragmentId, queryId) {
         //
         // TODO: use queryPlan to put the right lane numbers?
 
-        var workers_states = {};
-        var tmp_stacks = {}; // a stack per worker keeps unfinished operator calls
+        var workersStates = {};
+        var tmpStacks = {}; // a stack per worker keeps unfinished operator calls
 
         data.forEach(function(d) {
-            stack = tmp_stacks[d.workerId];
+            stack = tmpStacks[d.workerId];
             if (stack == null || stack.length === 0) {
-                tmp_stacks[d.workerId] = [];
-                tmp_stacks[d.workerId].push(get_state(d));
+                tmpStacks[d.workerId] = [];
+                tmpStacks[d.workerId].push(get_state(d));
                 return;
             }
 
-	    // event on top of stack completed (we now know its endTime), add
-	    // to states
-	    states = workers_states[d.workerId];
-            if (states == null) {
-                states = [];
-                workers_states[d.workerId] = states;
+    	    // event on top of stack completed (we now know its endTime), add
+    	    // to states
+
+            if (!_.has(workersStates, d.workerId)) {
+                workersStates[d.workerId] = {
+                    workerId: d.workerId,
+                    states: []
+                }
             }
+
+    	    states = workersStates[d.workerId].states;
 
             top_stack = stack[stack.length - 1];
             top_stack.end = d.nanoTime;
@@ -350,96 +376,154 @@ function drawLanes(element, fragmentId, queryId) {
 
         function get_state(d) {
             return {
-                      "link" : null,           // if it belongs together with some previous event
-                      "name" : d.opName,
-                      "begin": d.nanoTime,
-                      "end"  : null,           // we don't know this yet ...
-                      "lane" : 0
-                   };
+                link: null,           // if it belongs together with some previous event
+                name: d.opName,
+                begin: d.nanoTime,
+                end: null,           // we don't know this yet ...
+                numTuples: d.numTuples
+            };
         }
 
-        return workers_states;
+        return workersStates;
     }
 
-    var redrawLanes = function (element, workers_data, x, y, xAxis, yAxis, x_domain) {
+    function redrawLanes(xDomain) {
+        var data = _.values(workersData);
 
-        // Remove what was previously drawn
-        // d3.select("#fragment_workers").remove();
-        y.domain(_.keys(workers_data));
-        x.domain(x_domain);
+        y.domain(_.pluck(data, 'workerId'));
+        x.domain(xDomain);
 
-        var lanes = d3.select("#fragment_workers .plot .lanes");
+        var lane = lanes.selectAll(".worker").data(data, function(d) {return d.workerId});
+        lane.enter().append("g").attr("class", "worker");
+        lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+        lane.exit().remove();
 
-        for (worker in workers_data) {
-            drawBoxes(lanes, workers_data[worker], worker, x, y);
-        }
+        var box = lane.selectAll("rect")
+            .data(function(d) {
+                return _.filter(d.states, function(s) {
+                    // overlap
+                    return overlap = xDomain[0] < s.end && xDomain[1] > s.begin;
+                });
+            }, function(d) {return d.begin;});
 
-        lanes.select("g.x.axis").call(xAxis);
-    }
-
-    return {
-                "workers_data" : workers_data,
-                "redrawLanes" : redrawLanes,
-                "x" : x,
-                "y" : y,
-                "xAxis" : xAxis,
-                "yAxis" : yAxis
-           }
-}
-
-function colorForOperator(opname) {
-    return opToColor[opname];
-}
-
-function drawBoxes(lanes, worker_data, lane, x, y) {
-
-    var box = lanes.selectAll("rect")
-                   //TODO: is the key map function lane + d.begin  unique??
-                   .data(worker_data, function(d) {return lane + d.begin;});
-
-    box.enter().append("rect")
-        .popover(function(d) {
-            //if (d.end === null)
-            //d.end = data.end;
-            var duration = d.end - d.begin;
-            var content = templates.ruler
-                             .boxTemplate({duration: customFullTimeFormat(duration),
-                                           begin: customFullTimeFormat(d.begin),
-                                           end: customFullTimeFormat(d.end)})
-                //if ('tp_num' in d) {
-                //    content += numTuplesTemplate({number: d.tp_num});
-                //}
+        box.enter().append("rect")
+            .popover(function(d) {
+                var content = '';
+                if (d.numTuples >= 0) {
+                    content += templates.numTuplesTemplate({numTuples: d.numTuples});
+                } else {
+                    content += templates.nullReturned();
+                }
+                var duration = d.end - d.begin;
+                content += templates.boxTemplate({
+                    duration: customFullTimeFormat(duration),
+                    begin: customFullTimeFormat(d.begin),
+                    end: customFullTimeFormat(d.end)
+                });
                 return {
                     title: d.name,
                     content: content
                 };
             })
-        //.attr("clip-path", "url(#clip)")
-        .style("fill", function(d) { return colorForOperator(d.name); })
-        .style("stroke", function(d) { return d3.rgb(colorForOperator(d.name)).darker(0.5); })
-        .attr("class", "box");
+            //.attr("clip-path", "url(#clip)")
+            .style("fill", function(d) { return opToColor[d.name]; })
+            .attr("class", "box");
 
-    box.attr("x", function(d) { return x(d.begin);})
-        .attr("width", function(d, i) {
-            return x(d.end) - x(d.begin);
-        })
-        .transition()
-        //.duration(animationDuration)
-        .attr("y", function(d) { return y(lane);})
-        .attr("height", function(d) {
-            return y.rangeBand();
-        });
+        box
+            .transition()
+            .duration(animationDuration)
+            .attr("x", function(d) { return x(d.begin); })
+            .style("opacity", 1)
+            .attr("width", function(d) {
+                return x(d.end) - x(d.begin);
+            })
+            .attr("height", function(d) { return y.rangeBand(); });
 
-    // TODO: replace this function
-    function hashCode(str) {
-        var hash = 0;
-        if (str.length == 0) return hash;
-        for (i = 0; i < str.length; i++) {
-            char = str.charCodeAt(i);
-            hash = ((hash<<5)-hash)+char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash;
+        box.exit().remove();
+
+        chart.select(".x.axis")
+            .transition()
+            .duration(animationDuration)
+            .call(xAxis);
+
+        // Add lanes titles
+        var title = lanes_titles.selectAll("g.title")
+            .data(data, function(d) { return d.workerId; })
+
+        var titleEnter = title.enter()
+            .append("g")
+            .style("opacity", 0)
+            .attr("transform", function(d) {
+                return "translate(0,"
+                                    + (y(d.workerId)
+                                    + y.rangeBand()/2) + ")";
+            })
+            .style("text-anchor", "begin")
+            .attr("class", "title");
+
+        titleEnter.append("text")
+            .attr("dx", -18)
+            .attr("font-family", "Glyphicons Halflings")
+            .attr("font-size", "16px")
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("dy", 8)
+            .attr("class", "icon")
+            .style("cursor", "pointer");
+
+        var titleTextEnter = title.append("g")
+            .attr("class", "title-text");
+
+        titleTextEnter.append("text")
+            .attr("class", "title");
+
+        //titleTextEnter.append("text")
+        //    .attr("dy", "1.2em")
+        //    .attr("class", "subtitle");
+
+        title
+            .transition()
+            .duration(animationDuration)
+            .style("opacity", 1)
+            .attr("transform", function(d) {
+                 return "translate(0,"
+                                     + (y(d.workerId)
+                                     + y.rangeBand()/2) + ")";
+            });
+
+        title.select("text.title")
+            .text(function(d) {
+                return d.workerId;
+            })
+            .attr("class", "title");
+
+        //title.select("text.subtitle")
+        //    .text(function(d) { return  d.states[0].name; })
+        //    .attr("class", "subtitle");
+
+        title.exit()
+            .transition()
+            .duration(animationDuration).style("opacity", 0)
+            .remove();
+ 
+        //Add the Workers y axis
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("dy", ".71em")
+            .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
+            .style("text-anchor", "end")
+            .text("Workers");
     }
+
+    return {
+        redrawLanes: redrawLanes
+    };
 }
 
+function xAxisLabel(selection) {
+    selection.attr("class", "axis-label")
+        .attr({"x": - 6, "y": -12, "text-anchor": "middle"})
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Time");
+}

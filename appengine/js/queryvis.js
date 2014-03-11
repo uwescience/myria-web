@@ -6,26 +6,26 @@ var templates = {
         histogram: _.template("/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
     },*/
     urls: {
-        sentData: _.template("/data/sent.csv"),
-        profiling: _.template("/data/profiling.csv"),
-        histogram: _.template("/data/histogram.csv")
+        sentData: _.template("/data/sent_<%- query %>_<%- fragment %>.csv"),
+        profiling: _.template("/data/profiling_<%- query %>_<%- fragment %>.csv"),
+        histogram: _.template("/data/histogram_<%- query %>_<%- fragment %>.csv")
     },
-
-    ruler: {
-        boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
-        numTuplesTemplate: _.template("<br/><strong># Tuples:</strong> <%- number %>"),
-        titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
-        stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
-        chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
-        ganttTooltipTemplate: _.template("Time: <%- time %>")
-    },
+    titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
+    stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
+    boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
+    numTuplesTemplate: _.template("<strong># Tuples:</strong> <%- numTuples %><br/>"),
+    nullReturned: _.template("<strong>Null returned</strong><br/>"),
+    chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
+    ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
         nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
         clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
-    nwLineTooltip: _.template("from <%- src %> to <%- dest %>")
+    nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
+    titleNetworkVis: _.template("Communication between workers after fragments: <%- fragments %>"),
+    titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>")
 }
 
 // Dictionary of operand name -> color
@@ -102,6 +102,8 @@ function customFullTimeFormat(d) {
     str += d3.format("06d")(ns) + " ns ";
     return str;
 }
+
+var largeNumberFormat = d3.format(",")
 
 var ruler = d3.select("body")
     .append("div")

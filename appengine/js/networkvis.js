@@ -1,13 +1,15 @@
 var networkVisualization = function (element, fragments, queryPlan) {
 	createViz(fragments);
 
+    $('#title-right-vis').html(templates.titleNetworkVis({fragments: fragments}));
+
     function createViz(fragments) {
         //initialize the visualization
         var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
                 labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
-                totalMatrixWidth = 550;
+                totalMatrixWidth = 500;
 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
@@ -117,7 +119,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     // access value
                     return color(d.sumTuples);})
                 .tooltip(function(d) {
-                    return templates.nwTooltip(d);
+                    return templates.nwTooltip({
+                        sumTuples: largeNumberFormat(d.sumTuples),
+                        src: d.src,
+                        dest: d.dest
+                    });
                 })
                 .on('click', function(d) {
                     if (!d.active) {
@@ -179,7 +185,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 var timeSeriesChart = function (element) {
     var margin = {top: 20, right: 70, bottom: 50, left:50 },
         width = parseInt(element.style('width'), 10),
-        height = 400,
+        height = 300,
         chartWidth = width - margin.left - margin.right,
         chartHeight = height - margin.top - margin.bottom;
 
@@ -260,7 +266,7 @@ var timeSeriesChart = function (element) {
             .data(chartData, function(d) { return [d.src, d.dest]; });
 
         var pairGroups = pair.enter().append("g")
-            .attr("class","pair");
+            .attr("class", "pair");
 
         pairGroups.append("path")
             .style("stroke-width", 2)

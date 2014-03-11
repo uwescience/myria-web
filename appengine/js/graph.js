@@ -187,7 +187,6 @@ function Graph () {
 
         // Generate plain graph description
         var graphDesc = Viz(dotStr, "plain");
-        debug(graphDesc);
 
         // Parse the plain description
         var graphDescRows = graphDesc.split("\n");
