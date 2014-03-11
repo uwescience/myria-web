@@ -5,34 +5,61 @@
 {% block content %}
 	<div class="panel panel-primary">
 		<div class="panel-heading">
-			<h3 class="panel-title">Myria Query Log
-				<span class="pull-right panel-title">
-					<a href="{{ prevUrl|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-left"/></a>
-					<a href="{{ nextUrl|default:'#' }}"><span class="glyphicon glyphicon-circle-arrow-right"/></a>&nbsp;
-				</span>
+			<h3 class="panel-title">
+				Myria Query Log
 			</h3>
 		</div>
-		<div class="panel-body">
-			<table class="table table-condensed">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Logical plan</th>
-						<th>Status</th>
-						<th>Time elapsed</th>
-						<th>Finished</th>
-					</tr>
-				</thead>
-				{% for q in queries %}
-				<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
-					<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
-					<td class="query-raw">{{q.rawQuery}}</td>
-					<td class="query-status">{{q.status}}</td>
-					<td class="query-elapsed">{{q.elapsedStr}}</td>
-					<td class="query-finish">{{q.finishTime}}</td>
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Logical plan</th>
+					<th>Status</th>
+					<th>Time elapsed</th>
+					<th>Finished</th>
 				</tr>
-				{% endfor %}
-			</table>
+			</thead>
+			{% for q in queries %}
+			<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
+				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
+				<td class="query-raw">{{q.rawQuery}}</td>
+				<td class="query-status">{{q.status}}</td>
+				<td class="query-elapsed">{{q.elapsedStr}}</td>
+				<td class="query-finish">{{q.finishTime}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<div class="text-center">
+			<ul class="pagination">
+				<li>
+				{% if pagination.has_prev %}
+					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
+				{% else %}
+					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
+				{% endif %}
+				</li>
+				{%- for page in pagination.iter_pages() %}
+					{% if page %}
+						{% if page != pagination.page %}
+							<li>
+								<a href="{{ page_url(page, current_max, pagination) }}">{{ page }}</a>
+					  		</li>
+						{% else %}
+							<li class="active"><span>{{ page }}</span></li>
+						{% endif %}
+					{% else %}
+						<li class="disabled"><span>...</span></li>
+					{% endif %}
+				{%- endfor %}
+				{% if pagination.has_next %}
+				<li>
+					<a href="{{ page_url(pagination.page + 1, current_max, pagination) }}">&raquo;</a>
+				{% else %}
+				<li class="disabled">
+					<span>&raquo;</span>
+				{% endif %}
+				</li>
+			</ul>
 		</div>
 	</div>
 {% endblock %}

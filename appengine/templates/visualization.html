@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block queries_active %} class="active"{% endblock %}
+
+{% block extra_head %}
+	<script src="js/d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+{% endblock %}
+
+{% block extra_container_class %}my-fluid-container{% endblock %}
+
+{% block content %}
+	<h1>Query execution of query {{ queryId }}</h1>
+
+	<p class="lead">
+		Hello Group!
+	</p>
+
+	<div class="row">
+		<div class="col-md-5 col-lg-4">
+			<h2>Query Plan:</h2>
+			<div class="query-plan" data-type="line" data-query="{{ queryId }}"></div>
+		</div>
+		<div class="col-md-7 col-lg-8">
+			<h2>Visualization:</h2>
+		</div>
+	</div>
+
+    <p>
+		Use <a href="http://nytimes.github.io/svg-crowbar/">Crowbar</a> to download the images.
+    </p>
+{% endblock %}
+
+{% block footer %}
+	<script type="text/javascript" src="js/queryvis.js" charset="utf-8" async defer></script>
+	<script type="text/javascript">
+		{% autoescape false %}
+			var myriaConnection = '{{ myriaConnection }}';
+			var queryPlan = {{ queryPlan }};
+		{% endautoescape %}
+	</script>
+{% endblock %}

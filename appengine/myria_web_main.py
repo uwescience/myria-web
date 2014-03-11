@@ -1,8 +1,11 @@
 import json
-import os.path
 from threading import Lock
 import urllib
 import webapp2
+import copy
+import math
+
+import jinja2
 
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
@@ -13,7 +16,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco import scheme
 from examples import examples
-from google.appengine.ext.webapp import template
+from pagination import Pagination
 
 import myria
 
@@ -25,6 +28,14 @@ port = 1776
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
+
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader('templates'),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
+QUERIES_PER_PAGE = 10
 
 
 def get_plan(query, language, plan_type):
@@ -117,7 +128,8 @@ def get_queries(connection=None):
         except myria.MyriaError:
             return []
     try:
-        return connection.queries()
+        _, queries = connection.queries()
+        return queries
     except myria.MyriaError:
         return []
 
@@ -179,9 +191,13 @@ class Queries(MyriaPage):
     def get(self):
         try:
             connection = myria.MyriaConnection(hostname=hostname, port=port)
-            limit = self.request.get('limit', None)
+            limit = int(self.request.get('limit', QUERIES_PER_PAGE))
             max_ = self.request.get('max', None)
-            _, queries = connection.queries(limit, max_)
+            count, queries = connection.queries(limit, max_)
+            if max_:
+                max_ = int(max_)
+            else:
+                max_ = count
         except myria.MyriaError:
             connection = None
             queries = []
@@ -202,27 +218,63 @@ class Queries(MyriaPage):
                          'nextUrl': None}
 
         if queries:
-            max_id = max(q['queryId'] for q in queries)
-            args = {arg : self.request.get(arg)
+            page = int(math.ceil(count - max_) / limit) + 1
+            args = {arg: self.request.get(arg)
                     for arg in self.request.arguments()
-                    if arg != 'max'}
-            args['max'] = max_id + len(queries)
-            prev_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-            template_vars['prevUrl'] = prev_url
+                    if arg != 'page'}
 
-            min_id = min(q['queryId'] for q in queries)
-            if min_id > 1:
-                args['max'] = min_id - 1
-                next_url = '{}?{}'.format(self.request.path, urllib.urlencode(args))
-                template_vars['nextUrl'] = next_url
+            def page_url(page, current_max, pagination):
+                largs = copy.copy(args)
+                if page > 0:
+                    largs['max'] = (current_max +
+                                    (pagination.page - page) * limit)
+                else:
+                    largs.pop("max", None)
+                return '{}?{}'.format(
+                    self.request.path, urllib.urlencode(largs))
+
+            template_vars['pagination'] = Pagination(
+                page, limit, count)
+            template_vars['current_max'] = max_
+            template_vars['page_url'] = page_url
+        else:
+            template_vars['current_max'] = 0
+            template_vars['pagination'] = Pagination(
+                1, limit, 0)
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/queries.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('queries.html')
+        self.response.out.write(template.render(template_vars))
+
+
+class Profile(MyriaPage):
+    def get(self):
+        query_id = self.request.get("queryId")
+        query_plan = {}
+        if query_id != '':
+            try:
+                connection = myria.MyriaConnection(hostname=hostname, port=port)
+                query_plan = connection.get_query_status(query_id)
+            except myria.MyriaError:
+                pass
+
+        template_vars = {
+            'queryId': query_id,
+            'myriaConnection': "%s:%d" % (hostname, port),
+            'queryPlan': json.dumps(query_plan)
+        }
+
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. connection string
+        template_vars['connectionString'] = self.get_connection_string()
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('visualization.html')
+        self.response.out.write(template.render(template_vars))
 
 
 class Datasets(MyriaPage):
@@ -247,8 +299,9 @@ class Datasets(MyriaPage):
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/datasets.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('datasets.html')
+        self.response.out.write(template.render(template_vars))
+
 
 class Examples(MyriaPage):
     def get(self):
@@ -261,7 +314,6 @@ class Examples(MyriaPage):
             language = language.strip().lower()
         # Is language recognized?
         if language not in examples:
-        # Is the language recognized?
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 404
             self.response.write('Error 404 (Not Found): language %s not found' % language)
@@ -283,8 +335,8 @@ class Editor(MyriaPage):
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/editor.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('editor.html')
+        self.response.out.write(template.render(template_vars))
 
 
 class Plan(MyriaHandler):
@@ -431,7 +483,6 @@ class Execute(MyriaHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(e)
 
-
 class Dot(MyriaHandler):
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
@@ -453,6 +504,7 @@ app = webapp2.WSGIApplication(
         ('/', RedirectToEditor),
         ('/editor', Editor),
         ('/queries', Queries),
+        ('/profile', Profile),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),

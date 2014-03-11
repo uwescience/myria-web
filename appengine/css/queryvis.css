@@ -1,0 +1,99 @@
+html {
+  overflow: -moz-scrollbars-vertical; 
+  overflow-y: scroll;
+}
+
+svg {
+  font: 11px sans-serif;
+  shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #ccc;
+}
+
+.axis .label {
+  font-size: 11px;
+  font-weight: normal;
+  fill: #555;
+}
+
+.tick text {
+  fill: #555;
+}
+
+rect.box {
+}
+
+rect.background {
+  fill: lightgray;
+  fill-opacity: 0.15;
+}
+
+.nowLine {
+  stroke: red;
+  stroke-width: 1.5;
+}
+
+text.title {
+	font-size: 13px;
+	font-weight: bold;
+}
+
+text.subtitle {
+	font-size: 11px;
+	fill: #999;
+}
+
+text.icon {
+  font-size: 12px;
+  fill: #666;
+}
+
+.brush .extent {
+  stroke: gray;
+  fill: steelblue;
+  fill-opacity: .3;
+  shape-rendering: crispEdges;
+}
+
+.miniItem {
+  stroke-opacity: .5;
+  stroke-width: 3;
+}
+
+.line {
+  shape-rendering: auto;
+  fill: transparent;
+  stroke: #1f77b4;
+  stroke-width: 1.5px;
+}
+
+.area {
+  fill: #9ecae1;
+  shape-rendering: auto;
+  stroke-width: 0;
+}
+
+.ruler {
+  position: fixed;
+  display: none;
+  top: 0px;
+  bottom: 0px;
+  background: #000;
+  opacity: 0.5;
+  z-index: 2;
+  width: 1px;
+  pointer-events: none;
+}
+
+.rulerInfo rect {
+  fill: black;
+  fill-opacity: .8;
+}
+
+.rulerInfo text {
+  font-size: 12px;
+  fill: white;
+}
