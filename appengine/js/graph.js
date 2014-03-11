@@ -1,36 +1,11 @@
 var graph = function (element, queryPlan) {
 
     var chartElement = d3.select('.chart');
+    var graphElement = d3.select('.query-plan');
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-
-    debug(graphObj);
-
-    //Create SVG element
-    // var fullHeight = element.attr('data-height') || 800,
-    //     margin = {top: 10, right: 10, bottom: 20, left: 10},
-    //     width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-    //     height = fullHeight - margin.top - margin.bottom;
-    // var svg = graphElement
-    //             .append("svg")
-    //             .attr("width", width)
-    //             .attr("height", height);
-    // Render graph using D3-dagre
-    // var nodes = graphObj.nodes;
-    // var links = graphObj.links;
-    // var renderer = new dagreD3.Renderer();
-    // var layout = dagreD3.layout();
-    // renderer.layout(layout).run(dagreD3.json.decode(nodes, links), svg.append('g'));
-
-    var graphElement = d3.select('.query-plan');
-
-    //graphObj.renderGraph();
-
-    graphObj.render(graphElement);
-
-    //listen(graphObj, svg, chartElement);
-
+    graphObj.render(graphElement, chartElement);
 };
 
 // Graph object
@@ -177,7 +152,7 @@ function Graph () {
                 var node = graph.nodes[fragment].opNodes[id];
                 dotStr += "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle(
                 {
-                    color: (graph.state.focus == fragment) ? graph.opName2color[id] : "white"
+                    color: "white"
                 });
             }
             for (var id in graph.nodes[fragment].opLinks) {
@@ -227,7 +202,10 @@ function Graph () {
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
-                        h: +cols[5]
+                        h: +cols[5],
+                        color: "lightgrey",
+                        stroke: "black"
+
                     };
                 } else if (id in graph.opName2fID) {
                     var node = graph.nodes[graph.opName2fID[id]];
@@ -238,12 +216,15 @@ function Graph () {
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
-                        h: +cols[5]
+                        h: +cols[5],
+                        color: (graph.state.focus == graph.opName2fID[id]) ? graph.opName2color[id] : "white",
+                        stroke: "black"
                     };
                 }
             }
         });
 
+        // return values
         var data = [];
         var height = 0;
 
@@ -268,7 +249,9 @@ function Graph () {
                 x: minX-padding/4,
                 y: minY-padding/4,
                 w: maxX-minX+padding/2,
-                h: maxY-minY+padding
+                h: maxY-minY+padding,
+                color: "lightgrey",
+                stroke: (graph.state.focus == fID) ? "red" : "black"
             };
             // Add cluster
             data.push(node);
@@ -292,19 +275,21 @@ function Graph () {
     };
 
     // D3 rendering prototype
-    Graph.prototype.render = function(element) {
+    Graph.prototype.render = function(graphElement, chartElement) {
         var graph = this;
 
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
-            width = parseInt(element.style('width'), 10) - margin.left - margin.right,
+            width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
+            height = 800 - margin.top - margin.bottom,  
             padding = 0.5,
             yOffset = 0;
 
-        var svg = element
+        var svg = graphElement
                     .append("svg")
                     .attr("class", "graph")
-                    .attr("width", width);
+                    .attr("width", width)
+                    .attr("height", height);
 
         var D3data = graph.generateD3data(padding);
 
@@ -316,21 +301,26 @@ function Graph () {
             .on("click", function() {
                 var node = d3.select(this).data()[0];
 
-                // Handle open fragments
+                // Handle fragment state
                 if (node.type == "cluster") {
                     graph.reduceNode([node.name]);
+                    chartElement.selectAll("svg").remove();
+                    networkVisualization(chartElement, [graph.nodes[node.name].fragmentIndex], queryPlan);
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
+                    chartElement.selectAll("svg").remove();
+                    fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
                 } 
-                //d3.select(this).style("fill", "red");
 
                 var newD3data = graph.generateD3data(padding);
 
-                draw(newD3data.data, false);
+                debug(newD3data);
+
+                draw(newD3data.data, newD3data.height, false);
             });
 
-        function draw (data, initial) {
-            svg.attr("height", (height+padding)+"in"); //FIXME
+        function draw (data, height, initial) {
+            //svg.attr("height", (height+2)+"in"); //FIXME
 
             var node = svg.selectAll("rect")
                     .data(data, function(d) { return d.name; })
@@ -341,13 +331,6 @@ function Graph () {
                 .attr("r", 10)
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
-                })
-                .attr("fill", function(d) { 
-                    if(d.type == "cluster" || d.type == "fragment") {
-                        return "lightgrey";
-                    } else {
-                        return "white";
-                    }
                 });
 
             node.transition().duration(1000)
@@ -355,7 +338,9 @@ function Graph () {
                 .attr("x", function(d) { return d.x+"in"; })
                 .attr("y", function(d) { return (d.y+yOffset)+"in"; })
                 .attr("width", function(d) { return d.w+"in"; })
-                .attr("height", function(d) { return d.h+"in"; });
+                .attr("height", function(d) { return d.h+"in"; })
+                .attr("fill", function(d) { return d.color; })
+                .attr("stroke", function(d) { return d.stroke; });
                  
             node.exit().transition().duration(500)
                 .attr("opacity", 0).remove();
