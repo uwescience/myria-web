@@ -105,6 +105,10 @@ svg {
   display: none;
 }
 
+.axis-label {
+ fill: #383838; 
+}
+
 
 /* Query plan */
 

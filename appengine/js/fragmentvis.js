@@ -108,7 +108,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     var plot = svg.append("g")
 	    .attr("class", "plot")
 	    .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
-
+    
     plot.append("g")
         .attr("class", "x axis")
 	.attr("transform", "translate(0," + height + ")")
@@ -120,6 +120,13 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 	.attr("clip-path", "url(#clip)")
 	.attr("class", "area")
 
+    // put Time label on xAxis
+    plot.append("g") 
+        //.attr("class", "axis-label")
+	.attr("transform", "translate(" + [width, height] + ")")
+        .append("text")
+        .call(xAxisLabel, width);
+ 
     plot.append("g")
 	.attr("class", "x brush")
 	.call(brush2)
@@ -130,7 +137,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     // Add ruler
     var tooltip = plot.append("g")
         .attr({"class": "rulerInfo"})
-        .attr("transform", "translate(" + [10, height] + ")");
+        .attr("transform", "translate(0,"+ height + ")");
 
     tooltip.append("svg:rect");
 
@@ -283,6 +290,11 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("class", "lanes")
         //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    // Place the Time label
+    chart.append("g")
+	.attr("transform", "translate(" + [width, height] + ")")
+        .append("text")
+        .call(xAxisLabel);
 
     /* Collect data for states at each worker */
     var url = templates.urls.profiling({
@@ -499,6 +511,14 @@ function drawLanes(element, fragmentId, queryId) {
     return {
         redrawLanes: redrawLanes
     };
+}
+    
+function xAxisLabel(selection) {
+    selection.attr("class", "axis-label")
+        .attr({"id": "xLabel", "x": - 6, "y": -12, "text-anchor": "middle"})
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Time");
 }
     
 
