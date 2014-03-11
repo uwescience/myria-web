@@ -17,7 +17,7 @@ function drawCharts(element, fragmentId, queryPlan) {
 function drawArea(element, fragmentId, queryId, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
-        labels_width = 40,
+        labels_width = 20,
         margin2 = {top: 10, right:10, bottom: 170, left:20},
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
@@ -244,7 +244,7 @@ function drawLanes(element, fragmentId, queryId) {
     var fullHeight = 400;
 
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
-        labels_width = 40,
+        labels_width = 20,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
  
@@ -252,7 +252,6 @@ function drawLanes(element, fragmentId, queryId) {
 
     var x = d3.scale.linear().clamp(true).range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
-
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -269,11 +268,10 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("width", width + labels_width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("id", "fragment_workers");
- 
+
     var lanes_titles = svg.append("g")
         .attr("class", "titles")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+        .attr("transform", "translate(" + labels_width + "," + margin.top + ")");
 
     var chart = svg.append("g")
         .attr("class", "plot")
@@ -456,7 +454,7 @@ function drawLanes(element, fragmentId, queryId) {
             .append("g")
             .style("opacity", 0)
             .attr("transform", function(d) {
-                return "translate(" + 20 + ","
+                return "translate(0,"
                                     + (y(d.workerId)
                                     + y.rangeBand()/2) + ")";
             })
@@ -488,7 +486,7 @@ function drawLanes(element, fragmentId, queryId) {
             .duration(animationDuration)
             .style("opacity", 1)
             .attr("transform", function(d) {
-                 return "translate(" + 20 + ","
+                 return "translate(0,"
                                      + (y(d.workerId)
                                      + y.rangeBand()/2) + ")";
             });
@@ -507,7 +505,7 @@ function drawLanes(element, fragmentId, queryId) {
             .transition()
             .duration(animationDuration).style("opacity", 0)
             .remove();
-    
+ 
         //Add the Workers y axis
         svg.append("text")
             .attr("class", "axis-label")
@@ -521,7 +519,7 @@ function drawLanes(element, fragmentId, queryId) {
         redrawLanes: redrawLanes
     };
 }
- 
+
 function xAxisLabel(selection) {
     selection.attr("class", "axis-label")
         .attr({"x": - 6, "y": -12, "text-anchor": "middle"})
@@ -529,6 +527,3 @@ function xAxisLabel(selection) {
         .style("text-anchor", "end")
         .text("Time");
 }
-    
-
-
