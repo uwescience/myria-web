@@ -5,14 +5,13 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
     function createViz(fragments) {
         //initialize the visualization
-        var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
+        var     matMargin = {top: 20, right: 15, bottom: 10, left:35 },
                 labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 500;
 
-
-
+ 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 
@@ -31,21 +30,21 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
 
         var colLabel = matrixChart.append('text')
-                        .text('destination worker ID')
+                        .text('destination worker')
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "15px")
+                        .attr("font-size", "10px")
                         .style("text-anchor", "end")
-                        .attr('x', totalMatrixWidth - matMargin.right)
-                        .attr('y', matMargin.top/2);
+                        .attr('x', totalMatrixWidth - matMargin.right - labelMargin.right)
+                        .attr('y', matMargin.top/3);
 
         var rowLabel = matrixChart.append('text')
-                        .text('source worker ID')
+                        .text('source worker')
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "15px")
-                        //.style("text-anchor", "end")
+                        .attr("font-size", "10px")
                         .style("text-anchor", "start")
-                        //.attr('transform', 'rotate(-90)')
-                        .attr('y', totalMatrixWidth - matMargin.bottom);
+                        .attr('y', totalMatrixWidth - matMargin.bottom - labelMargin.bottom - 15)
+                        .attr('x', -labelMargin.left - 5);
+                       // .attr('transform', 'rotate(270)');
 
         var rawMatrix = matrixChart.append('g')
               .attr('class','matrix')
@@ -230,6 +229,14 @@ var timeSeriesChart = function (element) {
             .attr("class", "timeseries")
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    chart.append("text")
+      .attr("x", 5)
+      .attr("y", height - margin.bottom - 20)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "10px")
+      .style("text-anchor", "start")
+      .text("number of tuples");
 
     chart.append("g")
         .attr("class", "x axis")
