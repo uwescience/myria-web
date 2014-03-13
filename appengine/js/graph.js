@@ -205,7 +205,7 @@ function Graph () {
                         w: +cols[4],
                         h: +cols[5],
                         color: "lightgrey",
-                        stroke: "black"
+                        stroke: (graph.state.focus == id) ? "red" : "black"
                     };
                 } else if (id in graph.opName2fID) {
                     var node = graph.nodes[graph.opName2fID[id]];
@@ -262,7 +262,9 @@ function Graph () {
                         type: type,
                         src: src,
                         dst: dst,
-                        points: points
+                        points: points,
+                        stroke: (graph.state.focus == linkID) ? "red" : "black",
+                        markerend: (graph.state.focus == linkID) ? "url(#arrowheadRed)" : "url(#arrowhead)"
                     }
                 } else if (type == "frag") {
                     var link = graph.links[linkID];
@@ -271,7 +273,9 @@ function Graph () {
                         type: type,
                         src: src,
                         dst: dst,
-                        points: points
+                        points: points,
+                        stroke: (graph.state.focus == linkID) ? "red" : "black",
+                        markerend: (graph.state.focus == linkID) ? "url(#arrowheadRed)" : "url(#arrowhead)"
                     }
                 }
             }
@@ -372,12 +376,11 @@ function Graph () {
                     graph.expandNode([node.name]);
                     chartElement.selectAll("svg").remove();
                     fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                    // d3.selectAll("line").attr("stroke", "black");
+                    // d3.selectAll("line").attr("marker-end", "url(#arrowhead)");
                 } 
 
                 var newD3data = graph.generateD3data(padding);
-
-                debug(newD3data);
-
                 draw(newD3data, false);
             });
 
@@ -386,24 +389,48 @@ function Graph () {
                 var line = d3.select(this).data()[0];
 
                 if (line.type == "frag") {
+                    var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
+                    var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
                     chartElement.selectAll("svg").remove();
-                    networkVisualization(chartElement, [graph.nodes[line.src].fragmentIndex], queryPlan);
+                    networkVisualization(chartElement, [src, dst], queryPlan);
+
+                    graph.state.focus = line.name;
+                    // d3.selectAll("line").attr("stroke", "black");
+                    // d3.selectAll("line").attr("marker-end", "url(#arrowhead)");
+                    // d3.select(this).attr("stroke", "red");
+                    // d3.select(this).attr("marker-end", "url(#arrowheadRed)");
+                    var newD3data = graph.generateD3data(padding);
+                    draw(newD3data, false);
                 } 
             });
 
         function draw (data, initial) {
             //svg.attr("height", (height+2)+"in"); //FIXME
 
+            debug(graph);
+
             // Marker def (arrowhead)
-            svg.append("defs").append("marker")
+            var defs = svg.append('defs');
+            defs.append("marker")
                 .attr("id", "arrowhead")
-                .attr("refX", 0) /*must be smarter way to calculate shift*/
+                .attr("refX", 2) 
                 .attr("refY", 2)
                 .attr("markerWidth", 6)
                 .attr("markerHeight", 4)
                 .attr("orient", "auto")
+                .attr("fill", "black")
                 .append("path")
-                    .attr("d", "M 0,0 V 4 L6,2 Z"); //this is actual shape for arrowhead
+                    .attr("d", "M 0,0 V 4 L6,2 Z"); 
+            defs.append("marker")
+                .attr("id", "arrowheadRed")
+                .attr("refX", 2) 
+                .attr("refY", 2)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .attr("fill", "red")
+                .append("path")
+                    .attr("d", "M 0,0 V 4 L6,2 Z");
 
             var node = svg.selectAll("rect")
                     .data(data.nodes, function(d) { return d.name; })
@@ -461,15 +488,13 @@ function Graph () {
                     .data(data.links, function(d) { return d.name; });
 
             link.enter().append("line")
-                .attr("stroke", "black")
-                .attr("stroke-width", 2)
+                .attr("stroke-width", 3)
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
                 })
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
-                })
-                .attr("marker-end", "url(#arrowhead)");
+                });
 
             link.transition().duration(1000)
                 .attr("opacity", 1)
@@ -477,7 +502,9 @@ function Graph () {
                 .attr("x1", function(d) { return d.points[0][0]+"in"; })
                 .attr("y1", function(d) { return (d.points[0][1]+yOffset)+"in"; })
                 .attr("x2", function(d) { return d.points[d.points.length-1][0]+"in"; })
-                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+yOffset)+"in"; });
+                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+yOffset)+"in"; })
+                .attr("stroke", function(d) { return d.stroke; })
+                .attr("marker-end", function(d) { return d.markerend; });
                  
             link.exit().transition().duration(500)
                 .attr("opacity", 0).remove();

@@ -1,7 +1,7 @@
 var networkVisualization = function (element, fragments, queryPlan) {
 	createViz(fragments);
 
-    $('#title-right-vis').html(templates.titleNetworkVis({fragments: fragments}));
+    $('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     function createViz(fragments) {
         //initialize the visualization

@@ -24,7 +24,7 @@ var templates = {
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
-    titleNetworkVis: _.template("Communication between workers after fragments: <%- fragments %>"),
+    titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>")
 }
 
