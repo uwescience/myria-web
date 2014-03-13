@@ -71,6 +71,7 @@ svg {
 
 .graph line.frag:hover {
     stroke: orange;
+    marker-end.fill: orange;
 }
 
 /* Fragment vis */

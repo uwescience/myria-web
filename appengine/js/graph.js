@@ -285,6 +285,7 @@ function Graph () {
         var nodes = [];
         var links = [];
         var height = 0;
+        var width = 0;
 
         // Exploded fragments
         graph.state.opened.forEach(function (fID) {
@@ -337,12 +338,14 @@ function Graph () {
         // Determine svg height
         nodes.forEach(function(d) {
             height = (d.h+d.y) > height ? (d.h+d.y) : height;
+            width = (d.w+d.x) > width ? (d.w+d.x) : width;
         });
 
         return {
             nodes: nodes,
             links: links,
-            height: height
+            height: height,
+            width: width
         }
     };
 
@@ -373,13 +376,16 @@ function Graph () {
 
                 // Handle fragment state
                 if (node.type == "cluster") {
-                    graph.reduceNode([node.name]);
+                    if (node.name == graph.state.focus) {
+                        graph.reduceNode([node.name]);
+                    } else {
+                        graph.state.focus = node.name;
+                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                    }
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
                     chartElement.selectAll("svg").remove();
                     fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
-                    // d3.selectAll("line").attr("stroke", "black");
-                    // d3.selectAll("line").attr("marker-end", "url(#arrowhead)");
                 } 
 
                 var newD3data = graph.generateD3data(padding);
@@ -397,10 +403,6 @@ function Graph () {
                     networkVisualization(chartElement, [src, dst], queryPlan);
 
                     graph.state.focus = line.name;
-                    // d3.selectAll("line").attr("stroke", "black");
-                    // d3.selectAll("line").attr("marker-end", "url(#arrowhead)");
-                    // d3.select(this).attr("stroke", "red");
-                    // d3.select(this).attr("marker-end", "url(#arrowheadRed)");
                     var newD3data = graph.generateD3data(padding);
                     draw(newD3data, offset, false);
                 } 
@@ -507,6 +509,7 @@ function Graph () {
                 .attr("x2", function(d) { return (d.points[d.points.length-1][0]+offset.x)+"in"; })
                 .attr("y2", function(d) { return (d.points[d.points.length-1][1]+offset.y)+"in"; })
                 .attr("stroke", function(d) { return d.stroke; })
+                .attr("fill", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return d.markerend; });
                  
             link.exit().transition().duration(500)
