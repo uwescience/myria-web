@@ -5,12 +5,13 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
     function createViz(fragments) {
         //initialize the visualization
-        var     matMargin = {top: 10, right: 10, bottom: 10, left:10 },
+        var     matMargin = {top: 20, right: 10, bottom: 10, left:20},
                 labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 500;
 
+ 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 
@@ -27,6 +28,24 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("height", totalMatrixWidth)
             .append("g")
                 .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
+
+        var colLabel = matrixChart.append('text')
+                        .text('destination worker')
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                        .style("text-anchor", "end")
+                        .attr('x', totalMatrixWidth - matMargin.right - labelMargin.right)
+                        .attr('y', matMargin.top/3);
+
+        var rowLabel = matrixChart.append('text')
+                        .text('source worker')
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                        .style("text-anchor", "start")
+                        .attr("dy", ".71em")
+                        //.attr('y', totalMatrixWidth - matMargin.bottom - labelMargin.bottom - 15)
+                        //.attr('x', -labelMargin.left - 5);
+                        .attr('transform', 'translate(' + [0,totalMatrixWidth - matMargin.bottom - labelMargin.bottom] + ") rotate(-90)");
 
         var rawMatrix = matrixChart.append('g')
               .attr('class','matrix')
@@ -125,6 +144,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         dest: d.dest
                     });
                 })
+                .on('mouseover', function(d,i){
+                    debug(d);
+                    debug(i);
+                })
                 .on('click', function(d) {
                     if (!d.active) {
                         chart.add(rawData, d.src, d.dest);
@@ -211,6 +234,26 @@ var timeSeriesChart = function (element) {
             .attr("class", "timeseries")
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    chart.append("text")
+      //.attr("x", 5)
+      //.attr("y", height - margin.bottom - 20)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "10px")
+      .style("text-anchor", "start")
+      .attr('transform', 'translate(' + [-margin.left/(1.5),height - margin.bottom - 20] + ") rotate(-90)")
+      .text("number of tuples");
+
+    var focus = chart.append("g")
+      .attr("class", "focus")
+      .style("display", "none");
+
+    focus.append("circle")
+      .attr("r", 4.5);
+
+    focus.append("text")
+       .attr("x", 9)
+       .attr("dy", ".35em");
 
     chart.append("g")
         .attr("class", "x axis")

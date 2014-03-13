@@ -122,6 +122,11 @@ svg {
 
 /* Network */
 
+.focus circle {
+  fill: none;
+  stroke: steelblue;
+}
+
 .pixel.active {
   stroke: orange;
   stroke-width: 3px;
