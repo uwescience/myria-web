@@ -128,17 +128,22 @@ svg {
 }
 
 .pixel.active {
-  stroke: orange;
+  /*stroke: orange;*/
   stroke-width: 3px;
 }
 
 .timeseries .tsline {
   fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
+  /*stroke: steelblue;
+  stroke-width: 1.5px;*/
   shape-rendering: auto;
 }
 
 .timeseries .x.axis path {
   display: none;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
 }
