@@ -228,7 +228,7 @@ function Graph () {
                 var points = [];
                 var type = "frag";
                 for (var i=0; i<cols[3]; i++) {
-                    points.push([cols[4+2*i], cols[4+2*i+1]]);
+                    points.push([+cols[4+2*i], +cols[4+2*i+1]]);
                 }
 
                 if(src in graph.nodes) {
@@ -300,7 +300,6 @@ function Graph () {
                 minY = (op.y<minY) ? op.y : minY;
                 maxY = ((op.y+op.h)>maxY) ? (op.y+op.h) : maxY;
             }
-            height = maxY > height ? maxY : height;
             var node = {
                 name: fID,
                 type: "cluster",
@@ -335,6 +334,11 @@ function Graph () {
             links.push(graph.links[fragID].viz);
         }
 
+        // Determine svg height
+        nodes.forEach(function(d) {
+            height = (d.h+d.y) > height ? (d.h+d.y) : height;
+        });
+
         return {
             nodes: nodes,
             links: links,
@@ -349,20 +353,18 @@ function Graph () {
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
-            height = 800 - margin.top - margin.bottom,  
             padding = 0.5,
-            yOffset = 0;
+            offset = {x: 0.5, y: 0.25};
 
         var svg = graphElement
                     .append("svg")
                     .attr("class", "graph")
-                    .attr("width", width)
-                    .attr("height", height);
+                    .attr("width", width);
 
         var D3data = graph.generateD3data(padding);
 
         // Initial rendering
-        draw(D3data, true);
+        draw(D3data, offset, true);
 
         // On click, update with new data
         svg.selectAll("rect")
@@ -381,7 +383,7 @@ function Graph () {
                 } 
 
                 var newD3data = graph.generateD3data(padding);
-                draw(newD3data, false);
+                draw(newD3data, offset, false);
             });
 
         svg.selectAll("line")
@@ -400,14 +402,15 @@ function Graph () {
                     // d3.select(this).attr("stroke", "red");
                     // d3.select(this).attr("marker-end", "url(#arrowheadRed)");
                     var newD3data = graph.generateD3data(padding);
-                    draw(newD3data, false);
+                    draw(newD3data, offset, false);
                 } 
             });
 
-        function draw (data, initial) {
-            //svg.attr("height", (height+2)+"in"); //FIXME
+        function draw (data, offset, initial) {
 
-            debug(graph);
+            debug(data);
+            svg.transition().duration(1000)
+                .attr("height", (data.height+2*offset.y)+"in");
 
             // Marker def (arrowhead)
             var defs = svg.append('defs');
@@ -446,8 +449,8 @@ function Graph () {
             node.transition().duration(1000)
                 .attr("opacity", 1)
                 .attr("class", function(d) { return d.type; })
-                .attr("x", function(d) { return d.x+"in"; })
-                .attr("y", function(d) { return (d.y+yOffset)+"in"; })
+                .attr("x", function(d) { return (d.x+offset.x)+"in"; })
+                .attr("y", function(d) { return (d.y+offset.y)+"in"; })
                 .attr("width", function(d) { return d.w+"in"; })
                 .attr("height", function(d) { return d.h+"in"; })
                 .attr("fill", function(d) { return d.color; })
@@ -472,12 +475,12 @@ function Graph () {
 
             label.transition().duration(1000)
                 .attr("opacity", 1)
-                .attr("x", function(d) { return (d.x+d.w/2)+"in"; })
+                .attr("x", function(d) { return (d.x+d.w/2+offset.x)+"in"; })
                 .attr("y", function(d) { 
                     if(d.type == "cluster") {
-                        return (d.y+yOffset+padding*3/8)+"in"
+                        return (d.y+offset.y+padding*3/8)+"in"
                     } else {
-                        return (d.y+d.h/2+yOffset)+"in"
+                        return (d.y+d.h/2+offset.y)+"in"
                     }
                 });
 
@@ -499,10 +502,10 @@ function Graph () {
             link.transition().duration(1000)
                 .attr("opacity", 1)
                 .attr("class", function(d) { return d.type; })
-                .attr("x1", function(d) { return d.points[0][0]+"in"; })
-                .attr("y1", function(d) { return (d.points[0][1]+yOffset)+"in"; })
-                .attr("x2", function(d) { return d.points[d.points.length-1][0]+"in"; })
-                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+yOffset)+"in"; })
+                .attr("x1", function(d) { return (d.points[0][0]+offset.x)+"in"; })
+                .attr("y1", function(d) { return (d.points[0][1]+offset.y)+"in"; })
+                .attr("x2", function(d) { return (d.points[d.points.length-1][0]+offset.x)+"in"; })
+                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+offset.y)+"in"; })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return d.markerend; });
                  
