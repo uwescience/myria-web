@@ -66,11 +66,11 @@ svg {
 }
 
 .graph rect.cluster:hover, rect.fragment:hover {
-    fill: yellow;
+    fill: orange;
 }
 
 .graph line.frag:hover {
-    stroke: red;
+    stroke: orange;
 }
 
 /* Fragment vis */
