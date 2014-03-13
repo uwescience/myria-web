@@ -284,8 +284,15 @@ var timeSeriesChart = function (element) {
 
     function remove(src, dest) {
         // remove from array O(n)
-        var i = activeKeys.indexOf([src, dest]);
-        activeKeys.splice(i, 1);
+        var indexToRemove = -1;
+        for (var i = 0; i < activeKeys.length; i++) {
+            if (activeKeys[i][0]==src && activeKeys[i][1]==dest) {
+                indexToRemove = i;
+                break;
+            } 
+        }
+        debug(indexToRemove);
+        activeKeys.splice(indexToRemove, 1);
         draw();
     }
 
@@ -369,7 +376,7 @@ var timeSeriesChart = function (element) {
                 var num = d.values[nearestPoint][1];
                 focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
                 focus.select("circle")
-                    .tooltip(function(x) {
+                    .tooltip(function() {
                       return templates.nwPointTooltip({
                          numTuples: num,
                          time: customFullTimeFormat(t)
