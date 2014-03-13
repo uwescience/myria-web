@@ -23,6 +23,7 @@ var templates = {
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>")

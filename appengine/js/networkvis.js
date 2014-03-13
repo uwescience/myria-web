@@ -250,11 +250,13 @@ var timeSeriesChart = function (element) {
       .style("display", "none");
 
     focus.append("circle")
-      .attr("r", 5);
+      .style("stroke", "black")
+      .attr("r", 8);
 
     focus.append("text")
-       .attr("x", 9)
-       .attr("dy", ".35em");
+       .attr("x", 10)
+       //.attr("dy", ".70em");
+       .attr("y", 10);
 
     chart.append("g")
         .attr("class", "x axis")
@@ -358,7 +360,7 @@ var timeSeriesChart = function (element) {
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width", "3px");
               })
-            .on("mousemove", function(d) {
+            .on("mousemove", function(d,i) {
                 var x0 = x.invert(d3.mouse(this)[0]);
                 var y0 = y.invert(d3.mouse(this)[1]);
 
@@ -366,7 +368,18 @@ var timeSeriesChart = function (element) {
                 var t = d.values[nearestPoint][0];
                 var num = d.values[nearestPoint][1];
                 focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
-                focus.select("text").text("" + num);
+                focus.select("circle")
+                    .tooltip(function(x) {
+                      return templates.nwPointTooltip({
+                         numTuples: num,
+                         time: customFullTimeFormat(t)
+                     });
+                    })
+                    .style("stroke-width", "2px");
+                    //.style("stroke", opColors(i));
+                 
+                //focus.select("text").text("" + num);
+                
             })
             .style("stroke-width", 3)
             .style("stroke", function(d,i) {
