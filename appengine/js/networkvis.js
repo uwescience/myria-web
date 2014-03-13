@@ -250,7 +250,7 @@ var timeSeriesChart = function (element) {
       .style("display", "none");
 
     focus.append("circle")
-      .attr("r", 4.5);
+      .attr("r", 5);
 
     focus.append("text")
        .attr("x", 9)
@@ -272,22 +272,6 @@ var timeSeriesChart = function (element) {
 
     var activeKeys = [];
     var rawData = {}
-    
-    /*
-    chart.append("rect")
-      .attr("class", "overlay")
-      .attr("width", width)
-      .attr("height", height)
-      .on("mousemove", mousemove)
-      .on("mouseover", function() { focus.style("display", null); })
-      .on("mouseout", function() { focus.style("display", "none"); });
-    */
-
-    function mousemove() {
-        //debug(d3.mouse(this));
-        var x0 = x.invert(d3.mouse(this)[0]);
-        //debug(x0);
-    }
 
     function add(newRawData, src, dest) {
         //pixel is a selection
@@ -301,6 +285,33 @@ var timeSeriesChart = function (element) {
         var i = activeKeys.indexOf([src, dest]);
         activeKeys.splice(i, 1);
         draw();
+    }
+
+    function getDist(x1,x2,y1,y2) {
+
+        var xs = x1 - x2;
+        xs = xs * xs;
+ 
+        var ys = y1 - y2;
+        ys = ys * ys;
+ 
+        return Math.sqrt( xs + ys );
+
+    }
+
+    function getNearestPointOnLine(points, x, y) {
+
+        var minDist = Number.MAX_VALUE;
+        var minPoint, d;
+        for (var i = 0; i < points.length; i++) {
+
+            d = getDist(points[i][0], x, points[i][1], y);
+            if (d < minDist) {
+                minDist = d;
+                minPoint = i;
+            }
+        }
+        return minPoint;
     }
 
     function draw() {
@@ -336,6 +347,9 @@ var timeSeriesChart = function (element) {
 
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width",'5px');
+
+                focus.style("display", null);
+
               })
             .on("mouseout", function(d) { 
                 d3.select(this)                   
@@ -344,6 +358,16 @@ var timeSeriesChart = function (element) {
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width", "3px");
               })
+            .on("mousemove", function(d) {
+                var x0 = x.invert(d3.mouse(this)[0]);
+                var y0 = y.invert(d3.mouse(this)[1]);
+
+                var nearestPoint = getNearestPointOnLine(d.values, x0, y0);
+                var t = d.values[nearestPoint][0];
+                var num = d.values[nearestPoint][1];
+                focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
+                focus.select("text").text("" + num);
+            })
             .style("stroke-width", 3)
             .style("stroke", function(d,i) {
                 d3.select("#pixel_" + d.pixelID)
@@ -352,7 +376,6 @@ var timeSeriesChart = function (element) {
                 return opColors(i);
             })
             .attr("class", "tsline");
-
 
 
         pairGroups.append("text")
