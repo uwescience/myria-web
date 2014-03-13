@@ -188,6 +188,8 @@ function Graph () {
         // Generate plain graph description
         var graphDesc = Viz(dotStr, "plain");
 
+        debug(graphDesc);
+
         // Parse the plain description
         var graphDescRows = graphDesc.split("\n");
         graphDescRows.forEach(function(line) {
@@ -204,7 +206,6 @@ function Graph () {
                         h: +cols[5],
                         color: "lightgrey",
                         stroke: "black"
-
                     };
                 } else if (id in graph.opName2fID) {
                     var node = graph.nodes[graph.opName2fID[id]];
@@ -220,11 +221,65 @@ function Graph () {
                         stroke: "black"
                     };
                 }
+            } else if (cols[0]=="edge") {
+                var linkID = "";
+                var src = cols[1].replace(/\"/g, '');
+                var dst = cols[2].replace(/\"/g, '');
+                var points = [];
+                var type = "frag";
+                for (var i=0; i<cols[3]; i++) {
+                    points.push([cols[4+2*i], cols[4+2*i+1]]);
+                }
+
+                if(src in graph.nodes) {
+                    if(dst in graph.nodes) {
+                        // frag to frag link
+                        linkID = src+"->"+dst;
+                    } else if (dst in graph.opName2fID) {
+                        // frag to op link
+                        linkID = src+"->"+graph.opName2fID[dst];
+                    }
+                } else if (src in graph.opName2fID) {
+                    if(dst in graph.nodes) {
+                        // op to frag link
+                        linkID = graph.opName2fID[src]+"->"+dst;
+                    } else if (dst in graph.opName2fID) {
+                        // op to op link
+                        if (graph.opName2fID[src] == graph.opName2fID[dst]) {
+                            // inner-fragment link
+                            linkID = src+"->"+dst;
+                            type = "op";
+                        } else {
+                            // inter-fragment link
+                            linkID = graph.opName2fID[src]+"->"+graph.opName2fID[dst];
+                        }
+                    }
+                }
+                if (type == "op") {
+                    var link = graph.nodes[graph.opName2fID[src]].opLinks[linkID];
+                    link.viz = {
+                        name: linkID,
+                        type: type,
+                        src: src,
+                        dst: dst,
+                        points: points
+                    }
+                } else if (type == "frag") {
+                    var link = graph.links[linkID];
+                    link.viz = {
+                        name: linkID,
+                        type: type,
+                        src: src,
+                        dst: dst,
+                        points: points
+                    }
+                }
             }
         });
 
         // return values
-        var data = [];
+        var nodes = [];
+        var links = [];
         var height = 0;
 
         // Exploded fragments
@@ -253,22 +308,32 @@ function Graph () {
                 stroke: (graph.state.focus == fID) ? "red" : "black"
             };
             // Add cluster
-            data.push(node);
+            nodes.push(node);
             // Add op nodes
             for (opID in fragment.opNodes) {
                 var opNode = fragment.opNodes[opID];
-                data.push(opNode.viz);
+                nodes.push(opNode.viz);
+            }
+            // Add links
+            for (opID in fragment.opLinks) {
+                var opLink = fragment.opLinks[opID]
+                links.push(opLink.viz);
             }
         });
-        // Non-exploded fragments
+        // Add non-exploded fragments
         for (fragID in graph.nodes) {
             if (graph.state.opened.indexOf(fragID) == -1) {
-                data.push(graph.nodes[fragID].viz);
+                nodes.push(graph.nodes[fragID].viz);
             }
+        }
+        // Add frag-to-frag links
+        for (fragID in graph.links) {
+            links.push(graph.links[fragID].viz);
         }
 
         return {
-            data: data,
+            nodes: nodes,
+            links: links,
             height: height
         }
     };
@@ -293,7 +358,7 @@ function Graph () {
         var D3data = graph.generateD3data(padding);
 
         // Initial rendering
-        draw(D3data.data, true);
+        draw(D3data, true);
 
         // On click, update with new data
         svg.selectAll("rect")
@@ -303,8 +368,6 @@ function Graph () {
                 // Handle fragment state
                 if (node.type == "cluster") {
                     graph.reduceNode([node.name]);
-                    chartElement.selectAll("svg").remove();
-                    networkVisualization(chartElement, [graph.nodes[node.name].fragmentIndex], queryPlan);
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
                     chartElement.selectAll("svg").remove();
@@ -315,14 +378,35 @@ function Graph () {
 
                 debug(newD3data);
 
-                draw(newD3data.data, newD3data.height, false);
+                draw(newD3data, false);
             });
 
-        function draw (data, height, initial) {
+        svg.selectAll("line")
+            .on("click", function() {
+                var line = d3.select(this).data()[0];
+
+                if (line.type == "frag") {
+                    chartElement.selectAll("svg").remove();
+                    networkVisualization(chartElement, [graph.nodes[line.src].fragmentIndex], queryPlan);
+                } 
+            });
+
+        function draw (data, initial) {
             //svg.attr("height", (height+2)+"in"); //FIXME
 
+            // Marker def (arrowhead)
+            svg.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("refX", 0) /*must be smarter way to calculate shift*/
+                .attr("refY", 2)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .append("path")
+                    .attr("d", "M 0,0 V 4 L6,2 Z"); //this is actual shape for arrowhead
+
             var node = svg.selectAll("rect")
-                    .data(data, function(d) { return d.name; })
+                    .data(data.nodes, function(d) { return d.name; })
             
             node.enter().append("rect")
                 .attr("rx", 10)
@@ -334,6 +418,7 @@ function Graph () {
 
             node.transition().duration(1000)
                 .attr("opacity", 1)
+                .attr("class", function(d) { return d.type; })
                 .attr("x", function(d) { return d.x+"in"; })
                 .attr("y", function(d) { return (d.y+yOffset)+"in"; })
                 .attr("width", function(d) { return d.w+"in"; })
@@ -345,7 +430,7 @@ function Graph () {
                 .attr("opacity", 0).remove();
 
             var label = svg.selectAll("text")
-                .data(data, function(d) { return d.name; })
+                .data(data.nodes, function(d) { return d.name; })
             
             label.enter().append("text")
                 .attr("opacity", function() {
@@ -372,7 +457,31 @@ function Graph () {
             label.exit().transition().duration(500)
                 .attr("opacity", 0).remove();
 
-            }
+            var link = svg.selectAll("line")
+                    .data(data.links, function(d) { return d.name; });
+
+            link.enter().append("line")
+                .attr("stroke", "black")
+                .attr("stroke-width", 2)
+                .attr("stroke-dasharray", function(d) {
+                    return (d.type=="frag") ? ("0, 0") : ("3, 3");
+                })
+                .attr("opacity", function() {
+                    return initial ? 1 : 0;
+                })
+                .attr("marker-end", "url(#arrowhead)");
+
+            link.transition().duration(1000)
+                .attr("opacity", 1)
+                .attr("class", function(d) { return d.type; })
+                .attr("x1", function(d) { return d.points[0][0]+"in"; })
+                .attr("y1", function(d) { return (d.points[0][1]+yOffset)+"in"; })
+                .attr("x2", function(d) { return d.points[d.points.length-1][0]+"in"; })
+                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+yOffset)+"in"; });
+                 
+            link.exit().transition().duration(500)
+                .attr("opacity", 0).remove();
+        }
 
         // var xScale = d3.scale.linear()
         //         .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x+d.w; })])
