@@ -236,12 +236,24 @@ var timeSeriesChart = function (element) {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     chart.append("text")
-      .attr("x", 5)
-      .attr("y", height - margin.bottom - 20)
+      //.attr("x", 5)
+      //.attr("y", height - margin.bottom - 20)
       .attr("font-family", "sans-serif")
       .attr("font-size", "10px")
       .style("text-anchor", "start")
+      .attr('transform', 'translate(' + [-margin.left/(1.5),height - margin.bottom - 20] + ") rotate(-90)")
       .text("number of tuples");
+
+    var focus = chart.append("g")
+      .attr("class", "focus")
+      .style("display", "none");
+
+    focus.append("circle")
+      .attr("r", 4.5);
+
+    focus.append("text")
+       .attr("x", 9)
+       .attr("dy", ".35em");
 
     chart.append("g")
         .attr("class", "x axis")
