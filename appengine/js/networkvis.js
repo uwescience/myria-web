@@ -76,9 +76,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 destinations = [];
 
             // column representation to safe space
-  			data.forEach(function(d) {
+  			data.forEach(function(d,i) {
     			var source = d.workerId;
     			var dest = d.destWorkerId;
+                var pixelID = i;
                 var key = [source,dest];
                 if (!(key in dataset)) {
                     dataset[key] = {
@@ -87,6 +88,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         sumTuples: 0,
                         src: source,
                         dest: dest,
+                        pixelID: pixelID, 
                         active: false
                     }
                 }
@@ -134,6 +136,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     return rowScale(d.src);})
                 .attr('x', function(d){
                     return columnScale(d.dest);})
+                .attr('id', function(d){
+                    return "pixel_" + d.pixelID;})
                 .style('fill',function(d){
                     // access value
                     return color(d.sumTuples);})
@@ -144,17 +148,14 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         dest: d.dest
                     });
                 })
-                .on('mouseover', function(d,i){
-                    debug(d);
-                    debug(i);
-                })
                 .on('click', function(d) {
                     if (!d.active) {
                         chart.add(rawData, d.src, d.dest);
                         d3.select(this).attr("class", "pixel active");
                     } else {
                         chart.remove(d.src, d.dest);
-                        d3.select(this).attr("class", "pixel");
+                        d3.select(this)
+                          .style("stroke", "none");
                     }
                     d.active = !d.active;
                 });
@@ -206,7 +207,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 };
 
 var timeSeriesChart = function (element) {
-    var margin = {top: 20, right: 70, bottom: 50, left:50 },
+    var margin = {top: 20, right: 70, bottom: 50, left:60 },
         width = parseInt(element.style('width'), 10),
         height = 300,
         chartWidth = width - margin.left - margin.right,
@@ -241,7 +242,7 @@ var timeSeriesChart = function (element) {
       .attr("font-family", "sans-serif")
       .attr("font-size", "10px")
       .style("text-anchor", "start")
-      .attr('transform', 'translate(' + [-margin.left/(1.5),height - margin.bottom - 20] + ") rotate(-90)")
+      .attr('transform', 'translate(' + [-margin.left/(1.3),height - margin.bottom - 20] + ") rotate(-90)")
       .text("number of tuples");
 
     var focus = chart.append("g")
@@ -249,7 +250,7 @@ var timeSeriesChart = function (element) {
       .style("display", "none");
 
     focus.append("circle")
-      .attr("r", 4.5);
+      .attr("r", 5);
 
     focus.append("text")
        .attr("x", 9)
@@ -273,6 +274,7 @@ var timeSeriesChart = function (element) {
     var rawData = {}
 
     function add(newRawData, src, dest) {
+        //pixel is a selection
         rawData = newRawData;
         activeKeys.push([src,dest])
         draw();
@@ -283,6 +285,33 @@ var timeSeriesChart = function (element) {
         var i = activeKeys.indexOf([src, dest]);
         activeKeys.splice(i, 1);
         draw();
+    }
+
+    function getDist(x1,x2,y1,y2) {
+
+        var xs = x1 - x2;
+        xs = xs * xs;
+ 
+        var ys = y1 - y2;
+        ys = ys * ys;
+ 
+        return Math.sqrt( xs + ys );
+
+    }
+
+    function getNearestPointOnLine(points, x, y) {
+
+        var minDist = Number.MAX_VALUE;
+        var minPoint, d;
+        for (var i = 0; i < points.length; i++) {
+
+            d = getDist(points[i][0], x, points[i][1], y);
+            if (d < minDist) {
+                minDist = d;
+                minPoint = i;
+            }
+        }
+        return minPoint;
     }
 
     function draw() {
@@ -312,8 +341,42 @@ var timeSeriesChart = function (element) {
             .attr("class", "pair");
 
         pairGroups.append("path")
-            .style("stroke-width", 2)
+            .on("mouseover", function(d) { 
+                d3.select(this)                          //on mouseover of each line, give it a nice thick stroke
+                  .style("stroke-width",'5px');
+
+                d3.select("#pixel_" + d.pixelID)
+                  .style("stroke-width",'5px');
+
+                focus.style("display", null);
+
+              })
+            .on("mouseout", function(d) { 
+                d3.select(this)                   
+                  .style("stroke-width",'3px');
+
+                d3.select("#pixel_" + d.pixelID)
+                  .style("stroke-width", "3px");
+              })
+            .on("mousemove", function(d) {
+                var x0 = x.invert(d3.mouse(this)[0]);
+                var y0 = y.invert(d3.mouse(this)[1]);
+
+                var nearestPoint = getNearestPointOnLine(d.values, x0, y0);
+                var t = d.values[nearestPoint][0];
+                var num = d.values[nearestPoint][1];
+                focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
+                focus.select("text").text("" + num);
+            })
+            .style("stroke-width", 3)
+            .style("stroke", function(d,i) {
+                d3.select("#pixel_" + d.pixelID)
+                  .style("stroke", opColors(i)); 
+
+                return opColors(i);
+            })
             .attr("class", "tsline");
+
 
         pairGroups.append("text")
             .attr("class", "line-label")
