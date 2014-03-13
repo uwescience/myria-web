@@ -5,7 +5,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
     function createViz(fragments) {
         //initialize the visualization
-        var     matMargin = {top: 20, right: 15, bottom: 10, left:35 },
+        var     matMargin = {top: 20, right: 10, bottom: 10, left:20},
                 labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
@@ -42,9 +42,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "10px")
                         .style("text-anchor", "start")
-                        .attr('y', totalMatrixWidth - matMargin.bottom - labelMargin.bottom - 15)
-                        .attr('x', -labelMargin.left - 5);
-                       // .attr('transform', 'rotate(270)');
+                        .attr("dy", ".71em")
+                        //.attr('y', totalMatrixWidth - matMargin.bottom - labelMargin.bottom - 15)
+                        //.attr('x', -labelMargin.left - 5);
+                        .attr('transform', 'translate(' + [0,totalMatrixWidth - matMargin.bottom - labelMargin.bottom] + ") rotate(-90)");
 
         var rawMatrix = matrixChart.append('g')
               .attr('class','matrix')
@@ -142,6 +143,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         src: d.src,
                         dest: d.dest
                     });
+                })
+                .on('mouseover', function(d,i){
+                    debug(d);
+                    debug(i);
                 })
                 .on('click', function(d) {
                     if (!d.active) {
