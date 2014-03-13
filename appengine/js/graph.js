@@ -305,7 +305,7 @@ function Graph () {
                 name: fID,
                 type: "cluster",
                 x: minX-padding/4,
-                y: minY-padding/4,
+                y: minY-3/4*padding,
                 w: maxX-minX+padding/2,
                 h: maxY-minY+padding,
                 color: "lightgrey",
@@ -475,7 +475,7 @@ function Graph () {
                 .attr("x", function(d) { return (d.x+d.w/2)+"in"; })
                 .attr("y", function(d) { 
                     if(d.type == "cluster") {
-                        return (d.y+d.h+yOffset-padding*3/8)+"in"
+                        return (d.y+yOffset+padding*3/8)+"in"
                     } else {
                         return (d.y+d.h/2+yOffset)+"in"
                     }
