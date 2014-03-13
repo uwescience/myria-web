@@ -65,6 +65,14 @@ svg {
     stroke-width: 2;
 }
 
+.graph rect.cluster:hover, rect.fragment:hover {
+    fill: yellow;
+}
+
+.graph line.frag:hover {
+    stroke: red;
+}
+
 /* Fragment vis */
 .area {
   fill: steelblue;
@@ -111,14 +119,6 @@ svg {
 .axis-label {
  fill: #383838; 
 }
-
-
-/* Query plan */
-
-.plan-graph {
-  shape-rendering: auto;
-}
-
 
 /* Network */
 
