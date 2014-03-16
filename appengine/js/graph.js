@@ -5,6 +5,9 @@ var graph = function (element, queryPlan) {
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
+
+    debug(graphObj);
+
     graphObj.render(graphElement, chartElement);
 };
 
@@ -52,8 +55,9 @@ function Graph () {
             node.operators.forEach(function(op) {
                 // Create new op node(s)
                 var opnode = new Object();
-                var opid = op.opName;
-                opnode.operator = op;
+                var opid = op.opName;                                   // Operand ID
+                opnode.operator = op;                                   // Operand data
+                opnode.opType = op.opType;                              // Operand type
                 node.opNodes[opid] = opnode;
                 // Add entry to opName2fID & opName2colorvar 
                 if (op.hasOwnProperty('opName')) {
@@ -213,6 +217,7 @@ function Graph () {
                     opnode.viz = {
                         name: id,
                         type: "operator",
+                        optype: opnode.opType,
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
@@ -468,7 +473,14 @@ function Graph () {
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
                 })
-                .text(function(d) {return d.name;})
+                .text(function(d) {
+                    // TODO: (op labels) comment out for now...
+                    //if (d.type == "operator") {
+                    //    return d.optype;
+                    //} else {
+                        return d.name;
+                    //}
+                })
                 .attr("text-anchor", "middle")
                 .attr("dy", function(d) {return"0.35em";})
                 .attr("font-family", "sans-serif")
@@ -489,10 +501,10 @@ function Graph () {
             label.exit().transition().duration(500)
                 .attr("opacity", 0).remove();
 
-            var link = svg.selectAll("line")
+            var link = svg.selectAll("polyline")
                     .data(data.links, function(d) { return d.name; });
 
-            link.enter().append("line")
+            link.enter().append("polyline")
                 .attr("stroke-width", 3)
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
@@ -504,10 +516,14 @@ function Graph () {
             link.transition().duration(1000)
                 .attr("opacity", 1)
                 .attr("class", function(d) { return d.type; })
-                .attr("x1", function(d) { return (d.points[0][0]+offset.x)+"in"; })
-                .attr("y1", function(d) { return (d.points[0][1]+offset.y)+"in"; })
-                .attr("x2", function(d) { return (d.points[d.points.length-1][0]+offset.x)+"in"; })
-                .attr("y2", function(d) { return (d.points[d.points.length-1][1]+offset.y)+"in"; })
+                .attr("points", function(d) { 
+                    path = ""
+                    d.points.forEach(function (point) {
+                        path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
+                    });
+                    debug(path);
+                    return path; 
+                })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("fill", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return d.markerend; });

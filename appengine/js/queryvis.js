@@ -38,6 +38,8 @@ var opColors = d3.scale.category20();
 var animationDuration = 750
     shortDuration = 500;
 
+var dpi = 96;
+
 function timeFormat(formats) {
   return function(date) {
     var i = formats.length - 1, f = formats[i];

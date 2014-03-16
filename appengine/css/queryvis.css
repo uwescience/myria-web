@@ -69,7 +69,7 @@ svg {
     fill: orange;
 }
 
-.graph line.frag:hover {
+.graph polyline.frag:hover {
     stroke: orange;
     marker-end.fill: orange;
 }
