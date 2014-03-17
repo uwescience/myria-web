@@ -280,6 +280,16 @@ function drawLanes(element, fragmentId, queryId) {
     var lanes_titles = svg.append("g")
         .attr("class", "titles")
         .attr("transform", "translate(" + labels_width + "," + margin.top + ")");
+    
+     //Add the Workers y axis label
+     svg.append("text")
+         .attr("class", "axis-label")
+         .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
+         .attr("class", "axis-label")
+         .attr("dy", ".71em")
+         .style("text-anchor", "end")
+         .style("visibility", "hidden")
+         .text("Worker");
 
     var chart = svg.append("g")
         .attr("class", "plot")
@@ -479,11 +489,11 @@ function drawLanes(element, fragmentId, queryId) {
             .attr("class", "icon")
             .style("cursor", "pointer");
 
-        var titleTextEnter = title.append("g")
-            .attr("class", "title-text");
+        //var titleTextEnter = title.append("g")
+        //   .attr("class", "title-text");
 
-        titleTextEnter.append("text")
-            .attr("class", "title");
+        //titleTextEnter.append("text")
+        //    .attr("class", "title");
 
         //titleTextEnter.append("text")
         //    .attr("dy", "1.2em")
@@ -513,14 +523,9 @@ function drawLanes(element, fragmentId, queryId) {
             .transition()
             .duration(animationDuration).style("opacity", 0)
             .remove();
+
+        svg.select(".axis-label").style("visibility", "visible");
  
-        //Add the Workers y axis label
-        svg.append("text")
-            .attr("class", "axis-label")
-            .attr("dy", ".71em")
-            .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
-            .style("text-anchor", "end")
-            .text("Worker");
     }
 
     return {
