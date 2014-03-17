@@ -79,7 +79,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
   			data.forEach(function(d,i) {
     			var source = d.workerId;
     			var dest = d.destWorkerId;
-                var pixelID = i;
+                var pixelID = '' + source + '_' + dest;
                 var key = [source,dest];
                 if (!(key in dataset)) {
                     dataset[key] = {
@@ -160,10 +160,43 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     d.active = !d.active;
                 });
 
-            function addTick(selection) {
+            function addColTick(selection) {
                 selection
                     .append('text')
                     .attr('class','tick')
+                    .on('click', function(d) {
+                        pairs = [];
+                        for (var i = 0; i < sources.length; i++) {
+                            pairs.push([sources[i],d]);
+                            var id = '#pixel_' + sources[i] + '_' + d;
+                            d3.select(id).attr("class", "pixel active");
+                            d3.select(id).datum().active = true;
+                        }
+                        chart.batchAdd(rawData, pairs);
+                    })
+                    .on('mouseover', function(d) {
+                        d3.select(this).style('cursor','pointer');
+                    })
+                    .style('text-anchor', 'end');
+            }
+
+            function addRowTick(selection) {
+                selection
+                    .append('text')
+                    .attr('class','tick')
+                    .on('click', function(d) {
+                        pairs = [];
+                        for (var i = 0; i < destinations.length; i++) {
+                            pairs.push([d,destinations[i]]);
+                            var id = '#pixel_' + d + '_' + destinations[i];
+                            d3.select(id).attr("class", "pixel active");
+                            d3.select(id).datum().active = true;
+                        }
+                        chart.batchAdd(rawData, pairs);
+                    })
+                    .on('mouseover', function(d) {
+                        d3.select(this).style('cursor','pointer');
+                    })
                     .style('text-anchor', 'end');
             }
 
@@ -174,7 +207,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             var tickColEl = tickCol.selectAll('text.tick')
                 .data(destinations);
 
-            tickColEl.enter().call(addTick);
+            tickColEl.enter().call(addColTick);
 
             tickColEl.exit().remove();
 
@@ -187,7 +220,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             var tickRowEl = tickRow.selectAll('text.tick')
                 .data(sources);
 
-            tickRowEl.enter().call(addTick);
+            tickRowEl.enter().call(addRowTick);
 
             tickRowEl.attr('font-size', matLabelTextScale(rowScale.rangeBand()))
                 .text(function(d){ return d; })
@@ -282,6 +315,23 @@ var timeSeriesChart = function (element) {
         draw();
     }
 
+    function batchAdd(newRawData, pairs) {
+
+        rawData = newRawData;
+        for (var i = 0; i < pairs.length; i++) {
+            var exists = false;
+            for (var j = 0; j < activeKeys.length; j++) {
+              if (activeKeys[j][0]==pairs[i][0] && activeKeys[j][1]==pairs[i][1]) {
+                  exists = true;
+                  break;
+              }
+            }
+            if (!exists)
+                activeKeys.push(pairs[i]);
+        }
+        draw();
+    }
+
     function remove(src, dest) {
         // remove from array O(n)
         var indexToRemove = -1;
@@ -291,7 +341,6 @@ var timeSeriesChart = function (element) {
                 break;
             } 
         }
-        debug(indexToRemove);
         activeKeys.splice(indexToRemove, 1);
         draw();
     }
@@ -419,6 +468,7 @@ var timeSeriesChart = function (element) {
     return {
         update: draw,
         add: add,
+        batchAdd: batchAdd,
         remove: remove
     }
 };
