@@ -1,7 +1,7 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
     $('#title-right-vis').html(templates.titleFragmentsVis({fragment: fragmentId}))
 
-    element.selectAll("svg").remove();
+    $(element.node()).empty();
     drawCharts(element, fragmentId, queryPlan);
 
     // return variables that are needed outside this scope
