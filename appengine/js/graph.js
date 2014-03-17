@@ -525,7 +525,6 @@ function Graph () {
                     return path; 
                 })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("fill", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return d.markerend; });
                  
             link.exit().transition().duration(500)

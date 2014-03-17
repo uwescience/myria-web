@@ -74,6 +74,10 @@ svg {
     marker-end.fill: orange;
 }
 
+.graph polyline {
+    fill: transparent;
+}
+
 /* Fragment vis */
 .area {
   fill: steelblue;
