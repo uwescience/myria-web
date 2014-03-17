@@ -489,15 +489,15 @@ function drawLanes(element, fragmentId, queryId) {
             .attr("class", "icon")
             .style("cursor", "pointer");
 
-        //var titleTextEnter = title.append("g")
-        //   .attr("class", "title-text");
+        var titleTextEnter = title.append("g")
+           .attr("class", "title-text");
 
-        //titleTextEnter.append("text")
-        //    .attr("class", "title");
+        titleTextEnter.append("text")
+            .attr("class", "title");
 
-        //titleTextEnter.append("text")
-        //    .attr("dy", "1.2em")
-        //    .attr("class", "subtitle");
+        titleTextEnter.append("text")
+            .attr("dy", "1.2em")
+            .attr("class", "subtitle");
 
         title
             .transition()
