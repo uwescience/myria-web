@@ -2,7 +2,6 @@ import json
 from threading import Lock
 import urllib
 import webapp2
-import csv
 import copy
 import math
 
@@ -272,41 +271,6 @@ class Profile(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
-class Histogram(MyriaPage):
-    def get(self):
-        query_id = self.request.get("queryId")
-        fragment_id = self.request.get("fragmentId")
-
-        def get_historgram(data):
-            #WORKER = 0
-            TIME = 1
-            TYPE = 2
-            count = 0
-            # ignore header
-            data.next()
-            for trans in data:
-                if trans[TYPE] == 'call':
-                    count += 1
-                elif trans[TYPE] == 'return':
-                    count -= 1
-                else:
-                    continue
-                yield [trans[TIME], count]
-
-        try:
-            connection = myria.MyriaConnection(hostname=hostname, port=port)
-            ret = get_historgram(
-                connection.get_profiling_log_roots(query_id, fragment_id))
-            self.response.headers['Content-Type'] = 'text/plain'
-            writer = csv.writer(self.response.out)
-            writer.writerow(['time', 'value'])
-            writer.writerows(ret)
-        except myria.MyriaError as e:
-            raise
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write(e)
-
-
 class Datasets(MyriaPage):
     def get(self, connection_=None):
         conn = connection_ or connection
@@ -522,7 +486,6 @@ app = webapp2.WSGIApplication(
         ('/editor', Editor),
         ('/queries', Queries),
         ('/profile', Profile),
-        ('/histogram', Histogram),
         ('/datasets', Datasets),
         ('/plan', Plan),
         ('/optimize', Optimize),

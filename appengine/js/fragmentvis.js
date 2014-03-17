@@ -180,13 +180,14 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     });
 
     var url = templates.urls.histogram({
+        myria: myriaConnection,
         query: queryId,
         fragment: fragmentId
     });
 
     d3.csv(url, type, function(error, data) {
         x.domain(d3.extent(data, function(d) { return d.time; }));
-        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+        y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
         x2.domain(x.domain());
         y2.domain(y.domain());
 
@@ -241,7 +242,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 
     function type(d) {
         d.time = +d.time;
-        d.value = +d.value;
+        d.value = +d.numWorkers;
         return d;
     }
 }
