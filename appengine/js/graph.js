@@ -397,7 +397,7 @@ function Graph () {
                 draw(newD3data, offset, false);
             });
 
-        svg.selectAll("line")
+        svg.selectAll("polyline")
             .on("click", function() {
                 var line = d3.select(this).data()[0];
 
@@ -521,7 +521,6 @@ function Graph () {
                     d.points.forEach(function (point) {
                         path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
                     });
-                    debug(path);
                     return path; 
                 })
                 .attr("stroke", function(d) { return d.stroke; })
