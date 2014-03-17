@@ -40,7 +40,7 @@ function Graph () {
         graph.qID = json.queryId
         graph.name = "Query Plan " + graph.qID;
 
-        // Collect graph nodes 
+        // Collect graph nodes
         json.physicalPlan.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = new Object();                                    // Node object
@@ -59,7 +59,7 @@ function Graph () {
                 opnode.operator = op;                                   // Operand data
                 opnode.opType = op.opType;                              // Operand type
                 node.opNodes[opid] = opnode;
-                // Add entry to opName2fID & opName2colorvar 
+                // Add entry to opName2fID & opName2colorvar
                 if (op.hasOwnProperty('opName')) {
                     graph.opName2fID[op.opName] = id;
                     graph.opName2color[op.opName] = opColors(color_index);
@@ -173,7 +173,7 @@ function Graph () {
     // Returns the svg desciption of the graph object
     Graph.prototype.generateSVG = function() {
         var graph = this;
-        
+
         // Get dot description of the graph
         var dotStr = graph.generateDot();
 
@@ -391,7 +391,7 @@ function Graph () {
                     graph.expandNode([node.name]);
                     chartElement.selectAll("svg").remove();
                     fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
-                } 
+                }
 
                 var newD3data = graph.generateD3data(padding);
                 draw(newD3data, offset, false);
@@ -410,7 +410,7 @@ function Graph () {
                     graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
                     draw(newD3data, offset, false);
-                } 
+                }
             });
 
         function draw (data, offset, initial) {
@@ -423,17 +423,17 @@ function Graph () {
             var defs = svg.append('defs');
             defs.append("marker")
                 .attr("id", "arrowhead")
-                .attr("refX", 2) 
+                .attr("refX", 2)
                 .attr("refY", 2)
                 .attr("markerWidth", 6)
                 .attr("markerHeight", 4)
                 .attr("orient", "auto")
                 .attr("fill", "black")
                 .append("path")
-                    .attr("d", "M 0,0 V 4 L6,2 Z"); 
+                    .attr("d", "M 0,0 V 4 L6,2 Z");
             defs.append("marker")
                 .attr("id", "arrowheadRed")
-                .attr("refX", 2) 
+                .attr("refX", 2)
                 .attr("refY", 2)
                 .attr("markerWidth", 6)
                 .attr("markerHeight", 4)
@@ -444,7 +444,7 @@ function Graph () {
 
             var node = svg.selectAll("rect")
                     .data(data.nodes, function(d) { return d.name; })
-            
+
             node.enter().append("rect")
                 .attr("rx", 10)
                 .attr("ry", 10)
@@ -462,13 +462,13 @@ function Graph () {
                 .attr("height", function(d) { return d.h+"in"; })
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
-                 
+
             node.exit().transition().duration(500)
                 .attr("opacity", 0).remove();
 
             var label = svg.selectAll("text")
                 .data(data.nodes, function(d) { return d.name; })
-            
+
             label.enter().append("text")
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
@@ -490,7 +490,7 @@ function Graph () {
             label.transition().duration(1000)
                 .attr("opacity", 1)
                 .attr("x", function(d) { return (d.x+d.w/2+offset.x)+"in"; })
-                .attr("y", function(d) { 
+                .attr("y", function(d) {
                     if(d.type == "cluster") {
                         return (d.y+offset.y+padding*3/8)+"in"
                     } else {
@@ -516,16 +516,16 @@ function Graph () {
             link.transition().duration(1000)
                 .attr("opacity", 1)
                 .attr("class", function(d) { return d.type; })
-                .attr("points", function(d) { 
+                .attr("points", function(d) {
                     path = ""
                     d.points.forEach(function (point) {
                         path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
                     });
-                    return path; 
+                    return path.substr(0, path.length-2).trim();
                 })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return d.markerend; });
-                 
+
             link.exit().transition().duration(500)
                 .attr("opacity", 0).remove();
         }
