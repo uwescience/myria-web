@@ -77,12 +77,20 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
                      .attr("height", height + margin.top + margin.bottom)
                      .attr("class", "line-plot")
                      .attr("id", "fragment_utilization");
+        
+    //Add the Workers y axis label
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("dy", ".71em")
+        .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
+        .style("text-anchor", "end")
+        .text("Number of workers");
 
     svg.append("defs").append("clipPath")
-       .attr("id", "clip")
-      .append("rect")
-       .attr("width", width)
-       .attr("height", height);
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height);
 
     // Place the mini-brush
     var mini_brush = svg.append("g")
@@ -506,13 +514,13 @@ function drawLanes(element, fragmentId, queryId) {
             .duration(animationDuration).style("opacity", 0)
             .remove();
  
-        //Add the Workers y axis
+        //Add the Workers y axis label
         svg.append("text")
             .attr("class", "axis-label")
             .attr("dy", ".71em")
             .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
             .style("text-anchor", "end")
-            .text("Workers");
+            .text("Worker");
     }
 
     return {
