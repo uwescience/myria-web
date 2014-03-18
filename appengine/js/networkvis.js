@@ -1,7 +1,9 @@
 var networkVisualization = function (element, fragments, queryPlan) {
-	createViz(fragments);
+	$('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
-    $('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
+    $(element.node()).empty();
+
+    createViz(fragments);
 
     function createViz(fragments) {
         //initialize the visualization
@@ -11,7 +13,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 totalWidth = parseInt(element.style('width'), 10),
                 totalMatrixWidth = 500;
 
- 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
 

@@ -568,7 +568,6 @@ function listen(graph, svg, chartElement) {
                 if (linkID in graph.links) {
                     var src = graph.nodes[graph.links[linkID].u.fID].fragmentIndex;
                     var dst = graph.nodes[graph.links[linkID].v.fID].fragmentIndex;
-                    chartElement.selectAll("svg").remove();
                     networkVisualization(chartElement, [src], queryPlan);
                 }
             });
