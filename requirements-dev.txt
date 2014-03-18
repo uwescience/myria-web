@@ -1,3 +1,4 @@
 nosegae
 nose-exclude
 appengine
+WebTest
