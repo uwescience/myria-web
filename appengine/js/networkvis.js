@@ -59,8 +59,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .attr('class','ticks')
             .attr('transform', 'translate(' + (labelMargin.left) + ',' + (matMargin.top + labelMargin.top) + ')');
 
-        // create time series graph
-        var chart = timeSeriesChart(element);
 
         // download data
     	var fragmentId = fragments[0];
@@ -70,10 +68,12 @@ var networkVisualization = function (element, fragments, queryPlan) {
         	fragment: fragmentId
     	});
 
+        var sources = [], destinations = [];
+
     	d3.csv(url, function (data) {
-		    var dataset = {},
-                sources = [],
-                destinations = [];
+		    var dataset = {};
+            //sources = [];
+            //destinations = [];
 
             // column representation to safe space
   			data.forEach(function(d,i) {
@@ -113,6 +113,28 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
     		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(sources, function(d) {return d;}));
     	});
+
+        var chart = timeSeriesChart(element);
+
+        var buttonDiv = element
+                .append("div");
+
+        var button = buttonDiv.append("button")
+            .text('clear selection')
+            .on("click", function() {
+                chart.emptyActiveKeys();
+                chart.update();
+                
+                for (var i = 0; i < sources.length; i++) {
+                    for (var j = 0; j < destinations.length; j++) {
+
+                        var id = '#pixel_' + sources[i] + '_' + destinations[j];
+                        d3.select(id).style("stroke", "none");
+                        d3.select(id).datum().active = false;
+                    
+                   }
+                }
+            });
 
         function draw(rawData, sources, destinations) {
             var data = _.values(rawData);
@@ -315,6 +337,10 @@ var timeSeriesChart = function (element) {
         draw();
     }
 
+    function emptyActiveKeys() {
+        activeKeys = [];
+    }
+
     function batchAdd(newRawData, pairs) {
 
         rawData = newRawData;
@@ -446,7 +472,6 @@ var timeSeriesChart = function (element) {
             })
             .attr("class", "tsline");
 
-
         pairGroups.append("text")
             .attr("class", "line-label")
             .attr("dy", ".35em")
@@ -469,6 +494,7 @@ var timeSeriesChart = function (element) {
         update: draw,
         add: add,
         batchAdd: batchAdd,
-        remove: remove
+        remove: remove,
+        emptyActiveKeys: emptyActiveKeys
     }
 };

@@ -147,8 +147,3 @@ svg {
 .timeseries .x.axis path {
   display: none;
 }
-
-.overlay {
-  fill: none;
-  pointer-events: all;
-}
