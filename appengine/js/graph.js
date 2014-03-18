@@ -3,10 +3,11 @@ var graph = function (element, queryPlan) {
     var chartElement = d3.select('.chart');
     var graphElement = d3.select('.query-plan');
 
+    var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+    manyLineCharts(chartElement, allFragments, queryPlan);
+
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-
-    //networkVisualization(chartElement, [1], queryPlan)
 
     graphObj.render(graphElement, chartElement);
 };
@@ -166,7 +167,6 @@ function Graph () {
             dotStr += "\t}\n";
         });
         dotStr += links + "}";
-        debug(dotStr);
         return (dotStr);
     }
 
@@ -191,8 +191,6 @@ function Graph () {
 
         // Generate plain graph description
         var graphDesc = Viz(dotStr, "plain");
-
-        debug(graphDesc);
 
         // Parse the plain description
         var graphDescRows = graphDesc.split("\n");
@@ -414,8 +412,6 @@ function Graph () {
             });
 
         function draw (data, offset, initial) {
-
-            debug(data);
             svg.transition().duration(1000)
                 .attr("height", (data.height+2*offset.y)+"in");
 

@@ -1,7 +1,7 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
     $('#title-right-vis').html(templates.titleFragmentsVis({fragment: fragmentId}))
 
-    element.selectAll("svg").remove();
+    $(element.node()).empty();
     drawCharts(element, fragmentId, queryPlan);
 
     // return variables that are needed outside this scope
@@ -77,7 +77,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
                      .attr("height", height + margin.top + margin.bottom)
                      .attr("class", "line-plot")
                      .attr("id", "fragment_utilization");
-        
+
     //Add the Workers y axis label
     svg.append("text")
         .attr("class", "axis-label")
@@ -104,7 +104,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     mini_brush.append("path")
         .attr("clip-path", "url(#clip)")
 	.attr("class", "area")
- 
+
     mini_brush.append("g")
 	.attr("class", "x brush")
 	.call(brush)
@@ -116,7 +116,7 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
     var plot = svg.append("g")
 	    .attr("class", "plot")
 	    .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
-    
+
     plot.append("g")
         .attr("class", "x axis")
 	.attr("transform", "translate(0," + height + ")")
@@ -129,11 +129,11 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 	.attr("class", "area")
 
     // put Time label on xAxis
-    plot.append("g") 
+    plot.append("g")
 	.attr("transform", "translate(" + [width, height] + ")")
         .append("text")
         .call(xAxisLabel, width);
- 
+
     plot.append("g")
 	.attr("class", "x brush")
 	.call(brush2)
@@ -256,7 +256,7 @@ function drawLanes(element, fragmentId, queryId) {
         labels_width = 20,
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = fullHeight - margin.top - margin.bottom;
- 
+
     width = width - labels_width;
 
     var x = d3.scale.linear().clamp(true).range([0, width]),
@@ -281,7 +281,7 @@ function drawLanes(element, fragmentId, queryId) {
     var lanes_titles = svg.append("g")
         .attr("class", "titles")
         .attr("transform", "translate(" + labels_width + "," + margin.top + ")");
-    
+
      //Add the Workers y axis label
      svg.append("text")
          .attr("class", "axis-label")
@@ -526,7 +526,7 @@ function drawLanes(element, fragmentId, queryId) {
             .remove();
 
         svg.select(".axis-label").style("visibility", "visible");
- 
+
     }
 
     return {
