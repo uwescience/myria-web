@@ -7,17 +7,20 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
     function createViz(fragments) {
         //initialize the visualization
-        var     matMargin = {top: 20, right: 10, bottom: 10, left:20},
-                labelMargin = {top: 30, right: 20, bottom: 20, left:30 },
+        var     matMargin = {top: 50, right: 10, bottom: 10, left: 60},
+                labelMargin = {top: 40, left: 40},
                 axisMargin = {left: 30, bottom: 30, right: 30},
                 totalWidth = parseInt(element.style('width'), 10),
-                totalMatrixWidth = 500;
+                matrixWidth = 500,
+                matrixHeight = matrixWidth,
+                width = matrixWidth + matMargin.left + matMargin.right,
+                height = matrixWidth + matMargin.top + matMargin.bottom;
 
         var columnScale = d3.scale.ordinal()
-            .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
+            .rangeBands([0, matrixWidth], .1, 0);
 
         var rowScale = d3.scale.ordinal()
-            .rangeBands([0, totalMatrixWidth - matMargin.right - matMargin.left - labelMargin.right], .1);
+            .rangeBands([0, matrixHeight], .1, 0);
 
         var color = d3.scale.linear()
                 .range(["#FFF7F3", "#49006A"])
@@ -25,41 +28,40 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
         //append the svg for matrix
         var matrixChart = element.append("svg")
-                .attr("width", totalMatrixWidth)
-                .attr("height", totalMatrixWidth)
+                .attr("width", width)
+                .attr("height", height)
+                .attr("class", "matrix-chart")
             .append("g")
                 .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
 
         var colLabel = matrixChart.append('text')
                         .text('destination worker')
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
+                        .attr("font-size", "11px")
                         .style("text-anchor", "end")
-                        .attr('x', totalMatrixWidth - matMargin.right - labelMargin.right)
-                        .attr('y', matMargin.top/3);
+                        .attr('x', matrixWidth)
+                        .attr('y', -matMargin.top + labelMargin.top/3);
 
         var rowLabel = matrixChart.append('text')
                         .text('source worker')
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
+                        .attr("font-size", "11px")
                         .style("text-anchor", "start")
                         .attr("dy", ".71em")
-                        //.attr('y', totalMatrixWidth - matMargin.bottom - labelMargin.bottom - 15)
+                        //.attr('y', width - matMargin.bottom - labelMargin.bottom - 15)
                         //.attr('x', -labelMargin.left - 5);
-                        .attr('transform', 'translate(' + [0,totalMatrixWidth - matMargin.bottom - labelMargin.bottom] + ") rotate(-90)");
+                        .attr('transform', 'translate(' + [-matMargin.left + labelMargin.left/3, matrixHeight] + ") rotate(-90)");
 
         var rawMatrix = matrixChart.append('g')
-              .attr('class','matrix')
-            .attr("transform", "translate(" + labelMargin.left + "," + labelMargin.top + ")");
+              .attr('class','matrix');
 
         var tickCol = matrixChart.append('g')
             .attr('class','ticks')
-            .attr('transform', 'translate(' + (matMargin.left + labelMargin.left) + ',' + labelMargin.top + ')');
+            .attr('transform', 'translate(0 ,' + (labelMargin.top - matMargin.top) + ')');
 
         var tickRow = matrixChart.append('g')
             .attr('class','ticks')
-            .attr('transform', 'translate(' + (labelMargin.left) + ',' + (matMargin.top + labelMargin.top) + ')');
-
+            .attr('transform', 'translate(' + (labelMargin.top - matMargin.top) + ', 0)');
 
         // download data
     	var fragmentId = fragments[0];
@@ -78,10 +80,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             // column representation to safe space
   			data.forEach(function(d,i) {
-    			var source = d.workerId;
-    			var dest = d.destWorkerId;
+    			var source = +d.workerId;
+    			var dest = +d.destWorkerId + 1;  // TODO: fix this
                 var pixelID = '' + source + '_' + dest;
-                var key = [source,dest];
+                var key = [source, dest];
                 if (!(key in dataset)) {
                     dataset[key] = {
                         nanoTime: [],
@@ -89,7 +91,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         sumTuples: 0,
                         src: source,
                         dest: dest,
-                        pixelID: pixelID, 
+                        pixelID: pixelID,
                         active: false
                     }
                 }
@@ -112,10 +114,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
             sources = _.uniq(sources);
             destinations = _.uniq(destinations);
 
-    		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(sources, function(d) {return d;}));
+    		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(destinations, function(d) {return d;}));
     	});
-
-        var chart = timeSeriesChart(element);
 
         var buttonDiv = element
                 .append("div");
@@ -125,17 +125,17 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .on("click", function() {
                 chart.emptyActiveKeys();
                 chart.update();
-                
                 for (var i = 0; i < sources.length; i++) {
                     for (var j = 0; j < destinations.length; j++) {
 
                         var id = '#pixel_' + sources[i] + '_' + destinations[j];
                         d3.select(id).style("stroke", "none");
                         d3.select(id).datum().active = false;
-                    
                    }
                 }
             });
+
+        var chart = timeSeriesChart(element);
 
         function draw(rawData, sources, destinations) {
             var data = _.values(rawData);
@@ -186,6 +186,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             function addColTick(selection) {
                 selection
                     .append('text')
+                    .style('text-anchor', 'middle')
                     .attr('class','tick')
                     .on('click', function(d) {
                         pairs = [];
@@ -196,17 +197,15 @@ var networkVisualization = function (element, fragments, queryPlan) {
                             d3.select(id).datum().active = true;
                         }
                         chart.batchAdd(rawData, pairs);
-                    })
-                    .on('mouseover', function(d) {
-                        d3.select(this).style('cursor','pointer');
-                    })
-                    .style('text-anchor', 'end');
+                    });
             }
 
             function addRowTick(selection) {
                 selection
                     .append('text')
                     .attr('class','tick')
+                    .style("alignment-baseline", "middle")
+                    .style('text-anchor', 'end')
                     .on('click', function(d) {
                         pairs = [];
                         for (var i = 0; i < destinations.length; i++) {
@@ -219,14 +218,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     })
                     .on('mouseover', function(d) {
                         d3.select(this).style('cursor','pointer');
-                    })
-                    .style('text-anchor', 'end');
+                    });
             }
-
-            var matLabelTextScale = d3.scale.linear()
-                .domain([0, totalMatrixWidth])
-                .range([0, 140]);
-
             var tickColEl = tickCol.selectAll('text.tick')
                 .data(destinations);
 
@@ -234,20 +227,18 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             tickColEl.exit().remove();
 
-            tickColEl.style('text-anchor', 'start')
-                //.attr('transform', function(d, i){return 'rotate(270 ' + scale(order_col[i] + 0.7) + ',0)';})
-                .attr('font-size', matLabelTextScale(columnScale.rangeBand()))
+            tickColEl
                 .text(function(d){ return d; })
-                .attr('x', function(d){ return columnScale(d); });
+                .attr('x', function(d){ return columnScale(d) + columnScale.rangeBand()/2; });
 
             var tickRowEl = tickRow.selectAll('text.tick')
                 .data(sources);
 
             tickRowEl.enter().call(addRowTick);
 
-            tickRowEl.attr('font-size', matLabelTextScale(rowScale.rangeBand()))
+            tickRowEl
                 .text(function(d){ return d; })
-                .attr('y', function(d){return rowScale(d);});
+                .attr('y', function(d){return rowScale(d)  + rowScale.rangeBand()/2;});
 
             tickRowEl.exit().remove();
         }
@@ -366,7 +357,7 @@ var timeSeriesChart = function (element) {
             if (activeKeys[i][0]==src && activeKeys[i][1]==dest) {
                 indexToRemove = i;
                 break;
-            } 
+            }
         }
         activeKeys.splice(indexToRemove, 1);
         draw();
@@ -376,10 +367,10 @@ var timeSeriesChart = function (element) {
 
         var xs = x1 - x2;
         xs = xs * xs;
- 
+
         var ys = y1 - y2;
         ys = ys * ys;
- 
+
         return Math.sqrt( xs + ys );
 
     }
@@ -426,18 +417,14 @@ var timeSeriesChart = function (element) {
             .attr("class", "pair");
 
         pairGroups.append("path")
-            .on("mouseover", function(d) { 
-                d3.select(this)                          //on mouseover of each line, give it a nice thick stroke
-                  .style("stroke-width",'5px');
-
+            .on("mouseover", function(d) {
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width",'5px');
 
                 focus.style("display", null);
-
               })
-            .on("mouseout", function(d) { 
-                d3.select(this)                   
+            .on("mouseout", function(d) {
+                d3.select(this)
                   .style("stroke-width",'3px');
 
                 d3.select("#pixel_" + d.pixelID)
@@ -452,22 +439,15 @@ var timeSeriesChart = function (element) {
                 var num = d.values[nearestPoint][1];
                 focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
                 focus.select("circle")
-                    .tooltip(function() {
-                      return templates.nwPointTooltip({
-                         numTuples: num,
-                         time: customFullTimeFormat(t)
-                     });
-                    })
-                    .style("stroke-width", "2px");
-                    //.style("stroke", opColors(i));
-                 
+                    .style("fill", "gray");
+
                 //focus.select("text").text("" + num);
-                
+
             })
             .style("stroke-width", 3)
             .style("stroke", function(d,i) {
                 d3.select("#pixel_" + d.pixelID)
-                  .style("stroke", opColors(i)); 
+                  .style("stroke", opColors(i));
 
                 return opColors(i);
             })

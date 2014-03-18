@@ -155,3 +155,8 @@ rect.background {
 .timeseries .x.axis path {
   display: none;
 }
+
+.matrix-chart .tick {
+  cursor: pointer;
+  font-size: 11px;
+}
