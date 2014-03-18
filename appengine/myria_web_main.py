@@ -271,7 +271,7 @@ class Datasets(MyriaPage):
         conn = self.app.connection
         try:
             datasets = conn.datasets()
-        except myria.MyriaError:
+        except:
             datasets = []
 
         for d in datasets:
