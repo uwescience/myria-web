@@ -376,7 +376,7 @@ class Compile(MyriaHandler):
         cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language)
+        physicalplan = get_physical_plan(query, language, self.app.connection)
 
         # Get the Catalog needed to get schemas for compiling the query
         try:
