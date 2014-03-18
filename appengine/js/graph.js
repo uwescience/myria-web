@@ -6,7 +6,7 @@ var graph = function (element, queryPlan) {
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
 
-    debug(graphObj);
+    //networkVisualization(chartElement, [1], queryPlan)
 
     graphObj.render(graphElement, chartElement);
 };
