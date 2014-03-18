@@ -1,4 +1,3 @@
-import json
 from myria_web_main import Application
 from webtest import TestApp
 
