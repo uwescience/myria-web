@@ -1,4 +1,5 @@
+appengine
+httmock
 nosegae
 nose-exclude
-appengine
 WebTest
