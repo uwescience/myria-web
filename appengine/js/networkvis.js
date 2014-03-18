@@ -469,6 +469,29 @@ var timeSeriesChart = function (element) {
             .attr("y", function(d) { return y(_.last(d.values)[1]); });
 
         pair.exit().remove();
+
+        var dot = pair.selectAll("circle")
+            .data(function(d) {
+                return d.values;
+            });
+
+        dot.enter()
+            .append("circle")
+            .attr("r", 5);
+
+        dot.attr("cx", function(d) {
+                debug(x(d[0]))
+                return x(d[0]);
+            }).attr("cy", function(d) {
+                return y(d[1]);
+            }).tooltip(function(d) {
+                return templates.nwPointTooltip({
+                    numTuples: d[1],
+                    time: customFullTimeFormat(d[0])
+                });
+            }).on("mousemove", function(d, i) {
+                focus.attr("transform", "translate(" + x(d[0]) + "," + y(d[1]) + ")");
+            });
     }
 
     return {
