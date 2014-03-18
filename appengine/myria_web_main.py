@@ -1,6 +1,7 @@
 import copy
 import json
 import math
+import requests
 from threading import Lock
 import urllib
 import webapp2
@@ -379,12 +380,14 @@ class Compile(MyriaHandler):
         physicalplan = get_physical_plan(query, language, self.app.connection)
 
         # Get the Catalog needed to get schemas for compiling the query
+        catalog = MyriaCatalog(conn)
         try:
-            catalog = MyriaCatalog(conn)
-        except myria.MyriaError:
-            catalog = None
-        # .. and compile
-        compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+        except requests.ConnectionError:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write('Error 503 (Unavailable): Unable to connect to REST server')
+            return
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(compiled))
@@ -398,27 +401,22 @@ class Execute(MyriaHandler):
     def post(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
-        if not conn:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
-            self.response.status = 503
-            return
 
         query = self.request.get("query")
         language = self.request.get("language")
 
         cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
 
-        # Generate physical plan
-        physicalplan = get_physical_plan(query, language, self.app.connection)
-
-        # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalog(conn)
-        # .. and compile
-        compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
-
-        # Issue the query
         try:
+            # Generate physical plan
+            physicalplan = get_physical_plan(query, language, self.app.connection)
+
+            # Get the Catalog needed to get schemas for compiling the query
+            catalog = MyriaCatalog(conn)
+            # .. and compile
+            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+
+            # Issue the query
             query_status = conn.submit_query(compiled)
             query_url = 'http://%s:%d/execute?query_id=%d' % (self.app.hostname, self.app.port, query_status['queryId'])
             ret = {'queryStatus': query_status, 'url': query_url}
@@ -432,17 +430,23 @@ class Execute(MyriaHandler):
             self.response.status = 400
             self.response.write("Error 400 (Bad Request): %s" % str(e))
             return
+        except requests.ConnectionError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write('Error 503 (Unavailable): Unable to connect to REST server to issue query')
+            return
 
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
-        if not conn:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.status = 503
-            self.response.write("Error 503 (Service Unavailable): Unable to connect to REST server to issue query")
-            return
 
         query_id = self.request.get("queryId")
+
+        if not query_id:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): missing query_id")
+            return
 
         try:
             query_status = conn.get_query_status(query_id)
