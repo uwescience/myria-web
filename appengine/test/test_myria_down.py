@@ -41,7 +41,8 @@ def test_datalog_logical():
     assert 'MyriaApply' in str(response)
 
     # Cannot test Datalog physical without live server--Catalog required
-
+    response = app.get('/compile', params, expect_errors=True)
+    assert response.status_code == 503
 
 def test_myrial():
     params = {'language': 'myrial',
@@ -120,3 +121,10 @@ def test_dot_sql():
     params['type'] = 'physical'
     response = app.get('/dot', params)
     assert response.status_code == 200
+
+
+def test_datalog_execute():
+    params = {'language': 'datalog',
+              'query': 'A(x) :- R(x,3)'}
+    response = app.post('/execute', params, expect_errors=True)
+    assert response.status_code == 503
