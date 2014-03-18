@@ -20,8 +20,6 @@ from pagination import Pagination
 
 import myria
 
-# defaultquery = """A(x) :- R(x,3)"""
-
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -122,7 +120,7 @@ class MyriaHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         if isinstance(exception, (ValueError, SyntaxError, MyrialCompileException)):
             self.response.status = 400
-            msg = str(exception)
+            msg = '{}: {}'.format(exception.__class__.__name__, exception)
         else:
             self.response.status = 500
             self.response.out.write("Error 500 (Internal Server Error)")
