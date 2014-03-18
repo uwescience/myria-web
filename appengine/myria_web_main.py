@@ -229,6 +229,7 @@ class Queries(MyriaPage):
             template_vars['current_max'] = 0
             template_vars['pagination'] = Pagination(
                 1, limit, 0)
+            template_vars['page_url'] = lambda *args: self.request.path
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
