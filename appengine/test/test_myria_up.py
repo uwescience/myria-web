@@ -9,9 +9,7 @@ from webtest import TestApp
 app = TestApp(Application(hostname='fake.fake', port=12345))
 
 
-@all_requests
-def mock_myria(url, request):
-    assert url.netloc == 'fake.fake:12345'
+def mock_myria_get(url, request):
     query_params = urlparse.parse_qs(url.query)
 
     # The below JSON responses are taken directly from production Myria instance
@@ -30,12 +28,40 @@ def mock_myria(url, request):
     elif url.path == '/query':
         limit = int((query_params.get('limit') or [10])[0])
         return jstr(queries[:limit])
+    elif url.path == '/query/query-140':
+        return {'status_code': 201,
+                'headers': {'Location': 'http://fake.fake:12345/query/query-140'},
+                'content': queries[0]}
+    print >> sys.stderr, "Did not handle URL {}".format(url)
+
+
+def mock_myria_post(url, request):
+    if url.path == '/query':
+        return {'status_code': 201,
+                'headers': {'Location': 'http://fake.fake:12345/query/query-140'}}
 
     print >> sys.stderr, "Did not handle URL {}".format(url)
+
+
+@all_requests
+def mock_myria(url, request):
+    assert url.netloc == 'fake.fake:12345'
+
+    if request.method == 'GET':
+        return mock_myria_get(url, request)
+    elif request.method == 'POST':
+        return mock_myria_post(url, request)
+
+    print >> sys.stderr, "Did not handle URL {}".format(url)
+
 
 def mock_get(url, params=None):
     with HTTMock(mock_myria):
         return app.get(url, params)
+
+def mock_post(url, params=None):
+    with HTTMock(mock_myria):
+        return app.post(url, params)
 
 
 def test_redirect():
@@ -88,6 +114,8 @@ def test_datalog():
     assert response.json
     assert response.json['rawDatalog'] == params['query']
 
+    response = mock_post('/execute', params)
+    assert response.status_code == 201
 
 def test_myrial():
     params = {'language': 'myrial',
@@ -107,6 +135,8 @@ def test_myrial():
     assert response.json
     assert response.json['rawDatalog'] == params['query']
 
+    response = mock_post('/execute', params)
+    assert response.status_code == 201
 
 def test_sql():
     params = {'language': 'sql',
@@ -125,6 +155,9 @@ def test_sql():
     assert response.status_code == 200
     assert response.json
     assert response.json['rawDatalog'] == params['query']
+
+    response = mock_post('/execute', params)
+    assert response.status_code == 201
 
 
 # TODO - delete this? It doesn't actually use the network
