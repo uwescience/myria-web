@@ -67,6 +67,24 @@ function compileplan() {
   window.open(url, '_blank');
 }
 
+/* Based on: http://stackoverflow.com/a/6455874/1715495 */
+function multiline(elt, text) {
+  var htmls = [];
+  var lines = text.split(/\n/);
+  // The temporary <div/> is to perform HTML entity encoding reliably.
+  //
+  // document.createElement() is *much* faster than jQuery('<div/>')
+  // http://stackoverflow.com/questions/268490/
+  //
+  // You don't need jQuery but then you need to struggle with browser
+  // differences in innerText/textContent yourself
+  var tmpDiv = jQuery(document.createElement('div'));
+  for (var i = 0 ; i < lines.length ; i++) {
+      htmls.push(tmpDiv.text(lines[i]).html());
+  }
+  elt.html(htmls.join("<br>"));
+}
+
 function displayQueryStatus(data) {
   var query_status = data['queryStatus'];
   var start_time = query_status['startTime'];
@@ -83,6 +101,10 @@ function displayQueryStatus(data) {
   }
 }
 
+function displayQueryError(error) {
+  multiline($("#executed"), error.responseText);
+}
+
 function checkQueryStatus(query_id) {
   $.ajax("execute", {
     type : 'GET',
@@ -90,12 +112,8 @@ function checkQueryStatus(query_id) {
       queryId : query_id,
       language : editorLanguage
     },
-    statusCode : {
-      200 : displayQueryStatus,
-      201 : displayQueryStatus,
-      202 : displayQueryStatus,
-      400 : displayQueryStatus
-    }
+    success : displayQueryStatus,
+    error : displayQueryError
   });
 }
 
