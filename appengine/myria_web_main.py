@@ -419,11 +419,10 @@ class Execute(MyriaHandler):
             # Issue the query
             query_status = conn.submit_query(compiled)
             query_url = 'http://%s:%d/execute?query_id=%d' % (self.app.hostname, self.app.port, query_status['queryId'])
-            ret = {'queryStatus': query_status, 'url': query_url}
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
-            self.response.write(json.dumps(ret))
+            self.response.write(json.dumps(query_status))
             return
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -450,8 +449,7 @@ class Execute(MyriaHandler):
 
         query_status = conn.get_query_status(query_id)
         self.response.headers['Content-Type'] = 'application/json'
-        ret = {'queryStatus': query_status, 'url': self.request.url}
-        self.response.write(json.dumps(ret))
+        self.response.write(json.dumps(query_status))
 
 class Dot(MyriaHandler):
     def get(self):
