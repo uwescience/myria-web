@@ -448,14 +448,10 @@ class Execute(MyriaHandler):
             self.response.write("Error 400 (Bad Request): missing query_id")
             return
 
-        try:
-            query_status = conn.get_query_status(query_id)
-            self.response.headers['Content-Type'] = 'application/json'
-            ret = {'queryStatus': query_status, 'url': self.request.url}
-            self.response.write(json.dumps(ret))
-        except myria.MyriaError as e:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write(e)
+        query_status = conn.get_query_status(query_id)
+        self.response.headers['Content-Type'] = 'application/json'
+        ret = {'queryStatus': query_status, 'url': self.request.url}
+        self.response.write(json.dumps(ret))
 
 class Dot(MyriaHandler):
     def get(self):
