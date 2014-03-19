@@ -79,14 +79,13 @@ function multiline(elt, text) {
   // You don't need jQuery but then you need to struggle with browser
   // differences in innerText/textContent yourself
   var tmpDiv = jQuery(document.createElement('div'));
-  for (var i = 0 ; i < lines.length ; i++) {
-      htmls.push(tmpDiv.text(lines[i]).html());
+  for (var i = 0; i < lines.length; i++) {
+    htmls.push(tmpDiv.text(lines[i]).html());
   }
   elt.html(htmls.join("<br>"));
 }
 
-function displayQueryStatus(data) {
-  var query_status = data['queryStatus'];
+function displayQueryStatus(query_status) {
   var start_time = query_status['startTime'];
   var end_time = query_status['finishTime'];
   var elapsed = query_status['elapsedNanos'] / 1e9;
@@ -94,18 +93,24 @@ function displayQueryStatus(data) {
   var query_id = query_status['queryId'];
   $("#executed").text(
       "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
-  if (!end_time) {
+  if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
     setTimeout(function() {
       checkQueryStatus(query_id);
     }, 1000);
   }
 }
 
-function displayQueryError(error) {
-  multiline($("#executed"), error.responseText);
+function displayQueryError(error, query_id) {
+  multiline($("#executed"), "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
+  setTimeout(function() {
+    checkQueryStatus(query_id);
+  }, 1000);
 }
 
 function checkQueryStatus(query_id) {
+  var errFunc = function(error) {
+    displayQueryError(error, query_id);
+  };
   $.ajax("execute", {
     type : 'GET',
     data : {
@@ -113,7 +118,7 @@ function checkQueryStatus(query_id) {
       language : editorLanguage
     },
     success : displayQueryStatus,
-    error : displayQueryError
+    error : errFunc
   });
 }
 
