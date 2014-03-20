@@ -20,6 +20,7 @@ function Graph () {
     /********************/
     this.name = "";         // Query Name
     this.qID = 0;           // Query ID
+    this.fragCount = 0;     // Total number of fragments
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
     this.state = {};        // Describes which nodes are "expanded"
@@ -69,10 +70,15 @@ function Graph () {
                 }
             });
             graph.nodes[id] = node;
-            // Comment out if we don't want to expand all fragments
-            // by default...
-            //graph.state.opened.push(id);
+            graph.fragCount ++;
         });
+
+        // If there are more than 10 fragments, do not expand
+        if (graph.fragCount < 10) {
+            for (var id in graph.nodes) {
+                graph.state.opened.push(id);
+            }
+        }
 
         // Collect graph links
         for (var id in graph.nodes) {
@@ -502,6 +508,7 @@ function Graph () {
 
             link.enter().append("polyline")
                 .attr("stroke-width", 3)
+                .attr("fill", "transparent")
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
                 })
