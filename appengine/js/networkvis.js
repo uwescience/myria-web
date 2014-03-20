@@ -22,10 +22,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
         var rowScale = d3.scale.ordinal()
             .rangeBands([0, matrixHeight], .1, 0);
 
-        var color = d3.scale.linear()
-                .range(["#FFF7F3", "#49006A"])
-                .interpolate(d3.interpolateLab);
-
         //append the svg for matrix
         var matrixChart = element.append("svg")
                 .attr("width", width)
@@ -143,7 +139,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
             columnScale.domain(destinations);
 
             var maxValue = d3.max(data, function(d) { return d.sumTuples; });
-            color.domain([0, maxValue]);
+
+            var color = chroma.scale('BuPu').domain([0, maxValue]).correctLightness(true).mode('lab');
 
             var pixel = rawMatrix
                 .selectAll('rect.pixel')
