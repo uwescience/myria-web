@@ -34,7 +34,7 @@
 				<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
 				<div class="btn-group dropup">
 					<button type="button" id="parse-btn" class="planner btn btn-info">Parse Datalog</button>
-					<button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+					<button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" title="Switch language"><span class="caret"></span></button>
 					<ul id="language-menu" class="dropdown-menu" role="menu">
 					<li><a class="changer">MyriaL</a></li>
 					<li><a class="changer">SQL</a></li>
@@ -44,14 +44,14 @@
 
 			<div class="panel panel-warning">
 				<div class="panel-heading">
-					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="relational_svg"><span class="glyphicon glyphicon-new-window"></span></a>
+					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="relational_svg"><span class="glyphicon glyphicon-new-window" title="See logical plan"></span></a>
 					<h3 class="panel-title">Code parsed as Relational Algebra</h3>
 				</div>
 				<div class="panel-body">
 					<div id="plan" class="display"></div>
 				</div>
 				<div class="panel-heading">
-					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="myria_svg"><span class="glyphicon glyphicon-new-window"></span></a>
+					<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="myria_svg"><span class="glyphicon glyphicon-new-window"  title="See physical plan"></span></a>
 					<h3 class="panel-title">Relational algebra converted and optimized into a Myria Physical Plan</h3>
 				</div>
 				<div class="panel-body">

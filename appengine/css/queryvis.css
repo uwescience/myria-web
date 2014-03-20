@@ -10,6 +10,11 @@ svg {
   shape-rendering: auto;
 }
 
+rect.background {
+  fill: lightgray;
+  fill-opacity: 0.15;
+}
+
 .axis path,
 .axis line {
   fill: none;
@@ -67,6 +72,7 @@ svg {
 
 .graph rect.cluster:hover, rect.fragment:hover {
     fill: orange;
+    cursor: pointer;
 }
 
 .graph polyline.frag:hover {
@@ -79,8 +85,9 @@ svg {
 }
 
 /* Fragment vis */
+
 .area {
-  fill: steelblue;
+  fill: #444;
 }
 
 .x.axis .tick line {
@@ -122,7 +129,8 @@ svg {
 }
 
 .axis-label {
- fill: #383838; 
+ fill: black;
+ text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
 /* Network */
@@ -148,7 +156,7 @@ svg {
   display: none;
 }
 
-.overlay {
-  fill: none;
-  pointer-events: all;
+.matrix-chart .tick {
+  cursor: pointer;
+  font-size: 11px;
 }

@@ -1,21 +1,23 @@
 // put all the underscore templates here
 var templates = {
-    /*urls: {
+    /*/
+    urls: {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        histogram: _.template("/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
-    },*/
+        histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
+    },
+    /*/
     urls: {
         sentData: _.template("/data/sent_<%- query %>_<%- fragment %>.csv"),
         profiling: _.template("/data/profiling_<%- query %>_<%- fragment %>.csv"),
         histogram: _.template("/data/histogram_<%- query %>_<%- fragment %>.csv")
-    },
+    },/**/
     titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
     numTuplesTemplate: _.template("<strong># Tuples:</strong> <%- numTuples %><br/>"),
     nullReturned: _.template("<strong>Null returned</strong><br/>"),
-    chartTooltipTemplate: _.template("Time: <%- time %> #: <%- number %>"),
+    chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
         nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
@@ -26,7 +28,9 @@ var templates = {
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
-    titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>")
+    titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
+    titleFragmentsOverview: _.template("Overview over all fragments"),
+    fragmentTitle: _.template("Fragment <%- fragment %>:")
 }
 
 // Dictionary of operand name -> color
