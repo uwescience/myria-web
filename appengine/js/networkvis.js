@@ -81,7 +81,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             // column representation to safe space
   			data.forEach(function(d,i) {
     			var source = +d.workerId;
-    			var dest = +d.destWorkerId + 1;  // TODO: fix this
+    			var dest = +d.destWorkerId;
                 var pixelID = '' + source + '_' + dest;
                 var key = [source, dest];
                 if (!(key in dataset)) {
