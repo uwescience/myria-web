@@ -87,7 +87,7 @@ rect.background {
 /* Fragment vis */
 
 .area {
-  fill: steelblue;
+  fill: #444;
 }
 
 .x.axis .tick line {
