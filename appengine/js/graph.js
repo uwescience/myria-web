@@ -506,6 +506,7 @@ function Graph () {
 
             link.enter().append("polyline")
                 .attr("stroke-width", 3)
+                .attr("fill", "transparent")
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
                 })
