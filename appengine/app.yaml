@@ -9,7 +9,7 @@ handlers:
   expiration: "7d"
   static_files: static/favicon.ico
   upload: static/favicon\.ico
-- url: /(apple-touch.*\.png)$
+- url: /(apple-touch.*\.png)
   expiration: "7d"
   static_files: static/\1
   upload: static/apple.*\.png
@@ -24,8 +24,7 @@ handlers:
 - url: /robots\.txt
   static_files: robots.txt
   upload: robots\.txt
-
-# This must be last
+# This handler must be last
 - url: /.*
   script: myria_web_main.app
   secure: always
