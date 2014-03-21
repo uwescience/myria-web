@@ -90,11 +90,12 @@ rect.background {
   stroke-width: 3;
 }
 
-.graph .frag > polyline {
-  stroke-width: 4;
+.graph polyline.clickme {
+  stroke-width: 25;
+  opacity: 0;
 }
 
-.graph .frag:hover>polyline, .graph .frag:hover marker {
+.graph .frag:hover>polyline:not(.clickme), .graph .frag:hover marker {
     stroke: orange;
     fill: orange;
 }

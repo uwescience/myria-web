@@ -494,7 +494,11 @@ function Graph () {
                 })
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
-                });
+                })
+                .attr("class", "line");
+
+            linkEnter.append("polyline")
+                .attr("class", "clickme");
 
             linkEnter.append("defs").append("marker")
                 .attr("id", function(d) {
@@ -514,7 +518,7 @@ function Graph () {
                     return d.stroke;
                 })
 
-            link.select("polyline").transition().duration(longDuration)
+            link.select("polyline.line").transition().duration(longDuration)
                 .attr("opacity", 1)
                 .attr("points", function(d) {
                     // TODO: use d3 line
@@ -526,6 +530,16 @@ function Graph () {
                 })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id }) });
+
+            link.select("polyline.clickme").attr("points", function(d) {
+                    // TODO: use d3 line
+                    path = ""
+                    d.points.forEach(function (point) {
+                        path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
+                    });
+                    return path.substr(0, path.length-2).trim();
+                })
+                .attr("stroke", "black");
 
             link.exit().select("polyline").transition().duration(shortDuration)
                 .attr("opacity", 0);
