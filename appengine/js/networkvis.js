@@ -465,7 +465,6 @@ var timeSeriesChart = function (element) {
             .attr("r", 5);
 
         dot.attr("cx", function(d) {
-                debug(x(d[0]))
                 return x(d[0]);
             }).attr("cy", function(d) {
                 return y(d[1]);

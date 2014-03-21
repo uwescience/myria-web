@@ -27,7 +27,6 @@ function Graph () {
     this.opName2color = {}; // Dictionary of opName - color
     this.opName2fID = {};   // Dictionary of opName - fragment ID
 
-
     /********************/
     // Public methods
     /********************/
@@ -46,8 +45,9 @@ function Graph () {
         json.physicalPlan.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = new Object();                                    // Node object
-            var id = "Frag" + fragment.fragmentIndex.toString();        // Node ID
+            var id = "Fragment" + fragment.fragmentIndex.toString();    // Node ID
             node.fragmentIndex = fragment.fragmentIndex.toString();     // Fragment ID
+            node.rawData = fragment;                                    // RAW JSON data
             node.workers = fragment.workers;                            // List of workers
             node.operators = fragment.operators;                        // List of operators
             node.opNodes = {};                                          // List of graph operand nodes
@@ -58,7 +58,7 @@ function Graph () {
                 // Create new op node(s)
                 var opnode = new Object();
                 var opid = op.opName;                                   // Operand ID
-                opnode.operator = op;                                   // Operand data
+                opnode.rawData = op;                                    // Raw JSON data
                 opnode.opType = op.opType;                              // Operand type
                 node.opNodes[opid] = opnode;
                 // Add entry to opName2fID & opName2colorvar
@@ -208,6 +208,7 @@ function Graph () {
                     graph.nodes[id].viz = {
                         name: id,
                         type: "fragment",
+                        rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
@@ -222,6 +223,7 @@ function Graph () {
                         name: id,
                         type: "operator",
                         optype: opnode.opType,
+                        rawData: opnode.rawData,
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
@@ -296,13 +298,13 @@ function Graph () {
         var height = 0;
         var width = 0;
 
-        // Exploded fragments
+        // Exploded fragments (cluster)
         graph.state.opened.forEach(function (fID) {
             var fragment = graph.nodes[fID];
-            var minX = 1000; //FIXME
-            var maxX = 0; //FIXME
-            var minY = 1000; //FIXME
-            var maxY = 0; //FIXME
+            var minX = 1000; //FIXME (min/max computation)
+            var maxX = 0;
+            var minY = 1000;
+            var maxY = 0;
             for (oID in fragment.opNodes) {
                 var op = fragment.opNodes[oID].viz;
                 minX = (op.x<minX) ? op.x : minX;
@@ -313,6 +315,7 @@ function Graph () {
             var node = {
                 name: fID,
                 type: "cluster",
+                rawData: graph.nodes[fID].rawData,
                 x: minX-padding/4,
                 y: minY-3/4*padding,
                 w: maxX-minX+padding/2,
@@ -426,14 +429,35 @@ function Graph () {
                 .attr("height", (data.height+2*offset.y)+"in");
 
             /* Nodes */
-
             var node = svg.selectAll("g.node")
                 .data(data.nodes, function(d) { return d.name; })
 
             var nodeEnter = node.enter()
                 .append("g");
 
-            node.attr("class", function(d) { return "node " + d.type; });
+            node
+                .attr("class", function(d) { return "node " + d.type; })
+                .popover(function(d) {
+                    var body = '';
+
+                    //var filtered = _.pick(d.rawData, 'opName', 'opType', 'argOperatorId', 'relationKey', 'argPf');
+                    _.each(d.rawData, function(value, key){
+                        if (key == 'operators') {
+                            return;
+                        }
+                        if (value === null) {
+                            value = 'null'
+                        };
+                        if (value != null && typeof value === 'object') {
+                          value = JSON.stringify(value);
+                        }
+                        body += templates.row({key: key, value: value});
+                    });
+                    return {
+                        title: d.name,
+                        content: templates.table({body: body})
+                    };
+                });
 
             nodeEnter.append("rect")
                 .attr("rx", 10)

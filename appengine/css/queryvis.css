@@ -3,6 +3,20 @@ html {
   overflow-y: scroll;
 }
 
+.popover {
+  max-width: 700px;
+}
+
+.table-responsive table tr td:nth-child(1) {
+  max-width: 150px;
+  word-wrap: break-word;
+}
+
+.table-responsive table tr td:nth-child(2) {
+  max-width: 500px;
+  word-wrap: break-word;
+}
+
 /* General */
 
 svg {
