@@ -15,7 +15,7 @@ def test_redirect():
 
 def test_editor_loads():
     response = app.get('/editor')
-    assert_equals(response.status_code, 201)
+    assert_equals(response.status_code, 200)
     assert 'error connecting to fake.fake:12345' in str(response)
 
 
