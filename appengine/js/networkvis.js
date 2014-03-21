@@ -397,6 +397,22 @@ var timeSeriesChart = function (element) {
 
             x.domain(xDomain);
             y.domain(yDomain);
+
+            /*
+            var legend = chart.selectAll(".legend")
+            .data(activeKeys)
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(0" + "," + (100 + i*10) + ")"; });
+
+            legend.append("rect")
+            .attr("x", 100)
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", opColors);
+            */
+ 
+
         }
 
         chart.selectAll(".y.axis")
