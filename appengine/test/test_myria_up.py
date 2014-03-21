@@ -62,6 +62,7 @@ def mock_get(url, params=None):
     with HTTMock(mock_myria):
         return app.get(url, params)
 
+
 def mock_post(url, params=None):
     with HTTMock(mock_myria):
         return app.post(url, params)
@@ -69,20 +70,20 @@ def mock_post(url, params=None):
 
 def test_redirect():
     response = mock_get('/')
-    assert response.status_code == 301
+    assert_equals(response.status_code, 301)
     assert response.headers['Location']
     assert response.headers['Location'].endswith('/editor')
 
 
 def test_editor_connects():
     response = mock_get('/editor')
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'fake.fake:12345 [2/2]' in str(response)
 
 
 def test_queries_connects():
     response = mock_get('/queries')
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'fake.fake:12345 [2/2]' in str(response)
     # Check some subset of things are in the right place
     assert 'JustX(x) :- TwitterK(x,y)' in str(response)
@@ -92,7 +93,7 @@ def test_queries_connects():
 
 def test_datasets_connects():
     response = mock_get('/datasets')
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'fake.fake:12345 [2/2]' in str(response)
     # Ensure it includes the Twitter dataset, creation time, and download URL
     assert 'Twitter' in str(response)
@@ -104,21 +105,22 @@ def test_datalog():
     params = {'language': 'datalog',
               'query': 'A(x) :- Twitter(x,3)'}
     response = mock_get('/plan', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'Project' in str(response)
 
     response = mock_get('/optimize', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'MyriaApply' in str(response)
 
     # Note that Datalog compile exercises the Catalog
     response = mock_get('/compile', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert response.json
     assert response.json['rawDatalog'] == params['query']
 
     response = mock_post('/execute', params)
-    assert response.status_code == 201
+    assert_equals(response.status_code, 201)
+
 
 def test_myrial():
     params = {'language': 'myrial',
@@ -126,20 +128,21 @@ def test_myrial():
                           Ans = [FROM R WHERE $1=3 EMIT $0];
                           STORE(Ans, justx);'''}
     response = mock_get('/plan', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'Apply' in str(response)
 
     response = mock_get('/optimize', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'MyriaApply' in str(response)
 
     response = mock_get('/compile', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert response.json
     assert response.json['rawDatalog'] == params['query']
 
     response = mock_post('/execute', params)
-    assert response.status_code == 201
+    assert_equals(response.status_code, 201)
+
 
 def test_sql():
     params = {'language': 'sql',
@@ -147,20 +150,20 @@ def test_sql():
                           Ans = SELECT $0 FROM R WHERE $1=3;
                           STORE(Ans, justx);'''}
     response = mock_get('/plan', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'Apply' in str(response)
 
     response = mock_get('/optimize', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert 'MyriaApply' in str(response)
 
     response = mock_get('/compile', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     assert response.json
     assert response.json['rawDatalog'] == params['query']
 
     response = mock_post('/execute', params)
-    assert response.status_code == 201
+    assert_equals(response.status_code, 201)
 
 
 # TODO - delete this? It doesn't actually use the network
@@ -170,11 +173,11 @@ def test_dot_datalog():
               'type': 'logical',
               'query': 'A(x) :- R(x,3)'}
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     # .. physical
     params['type'] = 'physical'
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
 
 
 def test_dot_myrial():
@@ -185,11 +188,11 @@ def test_dot_myrial():
                           Ans = [FROM R WHERE $1=3 EMIT $0];
                           STORE(Ans, justx);'''}
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     # .. physical
     params['type'] = 'physical'
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
 
 
 def test_dot_sql():
@@ -200,8 +203,8 @@ def test_dot_sql():
                           Ans = SELECT $0 FROM R WHERE $1=3;
                           STORE(Ans, justx);'''}
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
     # .. physical
     params['type'] = 'physical'
     response = mock_get('/dot', params)
-    assert response.status_code == 200
+    assert_equals(response.status_code, 200)
