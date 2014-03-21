@@ -74,6 +74,10 @@ rect.background {
 
 /* Graph */
 
+.query-plan {
+  overflow-x: scroll;
+}
+
 .graph {
   shape-rendering: auto;
 }
