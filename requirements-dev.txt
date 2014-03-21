@@ -3,3 +3,5 @@ httmock
 nosegae
 nose-exclude
 WebTest
+webapp2
+jinja2
