@@ -386,7 +386,11 @@ function Graph () {
                 // Handle fragment state
                 if (node.type == "cluster") {
                     if (node.name == graph.state.focus) {
+                        graph.state.focus = "";
                         graph.reduceNode([node.name]);
+
+                        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+                        manyLineCharts(chartElement, allFragments, queryPlan);
                     } else {
                         graph.state.focus = node.name;
                         fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
