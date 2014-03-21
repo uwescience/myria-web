@@ -45,9 +45,7 @@ rect.background {
 }
 
 .node rect {
-    stroke: #333;
     stroke-width: 1.5px;
-    fill: #fff;
 }
 
 .edgeLabel rect {
@@ -70,14 +68,35 @@ rect.background {
     stroke-width: 2;
 }
 
-.graph rect.cluster:hover, rect.fragment:hover {
-    fill: orange;
+.cluster:hover, .fragment:hover {
     cursor: pointer;
 }
 
-.graph polyline.frag:hover {
+.graph .cluster:hover rect, .fragment:hover rect {
+    transition: fill .3s;
+    fill: #999;
+}
+
+.graph .node {
+    transition: fill .3s;
+}
+
+.graph .node text {
+    fill: black;
+    text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.graph .link > polyline {
+  stroke-width: 3;
+}
+
+.graph .frag > polyline {
+  stroke-width: 4;
+}
+
+.graph .frag:hover>polyline, .graph .frag:hover marker {
     stroke: orange;
-    marker-end.fill: orange;
+    fill: orange;
 }
 
 .graph polyline {

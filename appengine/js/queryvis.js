@@ -30,7 +30,8 @@ var templates = {
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
     titleFragmentsOverview: _.template("Overview over all fragments"),
-    fragmentTitle: _.template("Fragment <%- fragment %>:")
+    fragmentTitle: _.template("Fragment <%- fragment %>:"),
+    markerUrl: _.template("url(#<%- name %>)")
 }
 
 // Dictionary of operand name -> color
@@ -40,7 +41,8 @@ var opToColor = {};
 var opColors = d3.scale.category20();
 
 var animationDuration = 750
-    shortDuration = 500;
+    shortDuration = 500,
+    longDuration = 1000;
 
 var dpi = 96;
 
@@ -68,6 +70,17 @@ var customTimeFormat = timeFormatNs([
   [d3.time.format(":%S.%L"), function(d) { return d.getSeconds(); }],
   [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
 ]);
+
+String.prototype.hashCode = function(){
+    var hash = 0, i, char;
+    if (this.length == 0) return hash;
+    for (i = 0, l = this.length; i < l; i++) {
+        char  = this.charCodeAt(i);
+        hash  = ((hash<<5)-hash)+char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+};
 
 function divmod(a, b) {
     return [Math.floor(a/b), a%b];

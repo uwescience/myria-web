@@ -170,7 +170,7 @@ function Graph () {
         return (dotStr);
     }
 
-    // Returns the svg desciption of the graph object
+    // Returns the svg description of the graph object
     Graph.prototype.generateSVG = function() {
         var graph = this;
 
@@ -267,7 +267,7 @@ function Graph () {
                         dst: dst,
                         points: points,
                         stroke: (graph.state.focus == linkID) ? "red" : "black",
-                        markerend: (graph.state.focus == linkID) ? "url(#arrowheadRed)" : "url(#arrowhead)"
+                        id: "link-" + linkID.hashCode()
                     }
                 } else if (type == "frag") {
                     var link = graph.links[linkID];
@@ -278,7 +278,7 @@ function Graph () {
                         dst: dst,
                         points: points,
                         stroke: (graph.state.focus == linkID) ? "red" : "black",
-                        markerend: (graph.state.focus == linkID) ? "url(#arrowheadRed)" : "url(#arrowhead)"
+                        id: "link-" + linkID.hashCode()
                     }
                 }
             }
@@ -373,7 +373,7 @@ function Graph () {
         draw(D3data, offset, true);
 
         // On click, update with new data
-        svg.selectAll("rect")
+        svg.selectAll(".node")
             .on("click", function() {
                 var node = d3.select(this).data()[0];
 
@@ -395,7 +395,7 @@ function Graph () {
                 draw(newD3data, offset, false);
             });
 
-        svg.selectAll("polyline")
+        svg.selectAll(".link")
             .on("click", function() {
                 var line = d3.select(this).data()[0];
 
@@ -412,36 +412,20 @@ function Graph () {
             });
 
         function draw (data, offset, initial) {
-            svg.transition().duration(1000)
+            svg.transition().duration(longDuration)
                 .attr("height", (data.height+2*offset.y)+"in");
 
-            // Marker def (arrowhead)
-            var defs = svg.append('defs');
-            defs.append("marker")
-                .attr("id", "arrowhead")
-                .attr("refX", 2)
-                .attr("refY", 2)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 4)
-                .attr("orient", "auto")
-                .attr("fill", "black")
-                .append("path")
-                    .attr("d", "M 0,0 V 4 L6,2 Z");
-            defs.append("marker")
-                .attr("id", "arrowheadRed")
-                .attr("refX", 2)
-                .attr("refY", 2)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 4)
-                .attr("orient", "auto")
-                .attr("fill", "red")
-                .append("path")
-                    .attr("d", "M 0,0 V 4 L6,2 Z");
+            /* Nodes */
 
-            var node = svg.selectAll("rect")
-                    .data(data.nodes, function(d) { return d.name; })
+            var node = svg.selectAll("g.node")
+                .data(data.nodes, function(d) { return d.name; })
 
-            node.enter().append("rect")
+            var nodeEnter = node.enter()
+                .append("g");
+
+            node.attr("class", function(d) { return "node " + d.type; });
+
+            nodeEnter.append("rect")
                 .attr("rx", 10)
                 .attr("ry", 10)
                 .attr("r", 10)
@@ -449,9 +433,8 @@ function Graph () {
                     return initial ? 1 : 0;
                 });
 
-            node.transition().duration(1000)
+            node.select("rect").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("class", function(d) { return d.type; })
                 .attr("x", function(d) { return (d.x+offset.x)+"in"; })
                 .attr("y", function(d) { return (d.y+offset.y)+"in"; })
                 .attr("width", function(d) { return d.w+"in"; })
@@ -459,13 +442,7 @@ function Graph () {
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
 
-            node.exit().transition().duration(500)
-                .attr("opacity", 0).remove();
-
-            var label = svg.selectAll("text")
-                .data(data.nodes, function(d) { return d.name; })
-
-            label.enter().append("text")
+            nodeEnter.append("text")
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
                 })
@@ -483,7 +460,7 @@ function Graph () {
                 .attr("font-size", "13px")
                 .attr("fill", "black");
 
-            label.transition().duration(1000)
+            node.select("text").transition().duration(longDuration)
                 .attr("opacity", 1)
                 .attr("x", function(d) { return (d.x+d.w/2+offset.x)+"in"; })
                 .attr("y", function(d) {
@@ -494,14 +471,24 @@ function Graph () {
                     }
                 });
 
-            label.exit().transition().duration(500)
-                .attr("opacity", 0).remove();
+            node.exit().select("rect").transition().duration(shortDuration)
+                .attr("opacity", 0);
 
-            var link = svg.selectAll("polyline")
-                    .data(data.links, function(d) { return d.name; });
+            node.exit().select("text").transition().duration(shortDuration)
+                .attr("opacity", 0)
 
-            link.enter().append("polyline")
-                .attr("stroke-width", 3)
+            node.exit().transition().duration(shortDuration).remove();
+
+            /* Links */
+
+            var link = svg.selectAll("g.link")
+                .data(data.links, function(d) { return d.name; });
+
+            var linkEnter = link.enter().append("g");
+
+            link.attr("class", function(d) { return "link " + d.type; });
+
+            linkEnter.append("polyline")
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
                 })
@@ -509,10 +496,28 @@ function Graph () {
                     return initial ? 1 : 0;
                 });
 
-            link.transition().duration(1000)
+            linkEnter.append("defs").append("marker")
+                .attr("id", function(d) {
+                    return d.id;
+                })
+                .attr("refX", 2)
+                .attr("refY", 2)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .attr("fill-opacity", 1)
+                .append("path")
+                    .attr("d", "M 0,0 V 4 L6,2 Z");
+
+            link.select("marker").transition().duration(longDuration)
+                .attr("fill", function(d) {
+                    return d.stroke;
+                })
+
+            link.select("polyline").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("class", function(d) { return d.type; })
                 .attr("points", function(d) {
+                    // TODO: use d3 line
                     path = ""
                     d.points.forEach(function (point) {
                         path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
@@ -520,10 +525,15 @@ function Graph () {
                     return path.substr(0, path.length-2).trim();
                 })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("marker-end", function(d) { return d.markerend; });
+                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id }) });
 
-            link.exit().transition().duration(500)
-                .attr("opacity", 0).remove();
+            link.exit().select("polyline").transition().duration(shortDuration)
+                .attr("opacity", 0);
+
+            link.exit().select("marker").transition().duration(shortDuration)
+                .attr("fill-opacity", 0)
+
+            link.exit().transition().duration(shortDuration).remove();
         }
 
         // var xScale = d3.scale.linear()
@@ -532,44 +542,5 @@ function Graph () {
         //     yScale = d3.scale.linear()
         //         .domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y+d.h; })])
         //         .range([padding, height-padding]);
-
     };
-}
-
-
-// Function that listens for user clicks
-function listen(graph, svg, chartElement) {
-    svg.selectAll(".node")
-            .on("click", function () {
-                var nodeID = this.firstChild.innerHTML;
-                if (nodeID in graph.nodes) {
-                    graph.expandNode([nodeID]);
-                    fragmentVisualization(chartElement, graph.nodes[nodeID].fragmentIndex, queryPlan);
-                } else if (nodeID in graph.opName2fID) {
-                    graph.reduceNode([graph.opName2fID[nodeID]]);
-                }
-                svg.selectAll("g").remove();
-                svg.html(graph.renderGraph());
-                listen(graph, svg, chartElement);
-            });
-    svg.selectAll(".cluster")
-            .on("click", function () {
-                var nodeID = this.lastElementChild.innerHTML;
-                if (nodeID in graph.nodes) {
-                    graph.reduceNode([nodeID]);
-                }
-                svg.selectAll("g").remove();
-                svg.html(graph.renderGraph());
-                listen(graph, svg, chartElement);
-            });
-    svg.selectAll(".edge")
-            .on("click", function () {
-                var linkID = this.textContent.trim();
-                if (linkID in graph.links) {
-                    var src = graph.nodes[graph.links[linkID].u.fID].fragmentIndex;
-                    var dst = graph.nodes[graph.links[linkID].v.fID].fragmentIndex;
-                    networkVisualization(chartElement, [src], queryPlan);
-                }
-            });
-}
-
+};
