@@ -289,19 +289,6 @@ var timeSeriesChart = function (element) {
       .attr('transform', 'translate(' + [-margin.left/(1.3),height - margin.bottom - 20] + ") rotate(-90)")
       .text("number of tuples");
 
-    var focus = chart.append("g")
-      .attr("class", "focus")
-      .style("display", "none");
-
-    focus.append("circle")
-      .style("stroke", "black")
-      .attr("r", 8);
-
-    focus.append("text")
-       .attr("x", 10)
-       //.attr("dy", ".70em");
-       .attr("y", 10);
-
     chart.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," +  (height - margin.bottom) + ")")
@@ -431,8 +418,6 @@ var timeSeriesChart = function (element) {
             .on("mouseover", function(d) {
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width",'5px');
-
-                focus.style("display", null);
               })
             .on("mouseout", function(d) {
                 d3.select(this)
@@ -440,20 +425,6 @@ var timeSeriesChart = function (element) {
 
                 d3.select("#pixel_" + d.pixelID)
                   .style("stroke-width", "3px");
-              })
-            .on("mousemove", function(d,i) {
-                var x0 = x.invert(d3.mouse(this)[0]);
-                var y0 = y.invert(d3.mouse(this)[1]);
-
-                var nearestPoint = getNearestPointOnLine(d.values, x0, y0);
-                var t = d.values[nearestPoint][0];
-                var num = d.values[nearestPoint][1];
-                focus.attr("transform", "translate(" + x(t) + "," + y(num) + ")");
-                focus.select("circle")
-                    .style("fill", "gray");
-
-                //focus.select("text").text("" + num);
-
             })
             .style("stroke-width", 3)
             .style("stroke", function(d,i) {
@@ -503,9 +474,7 @@ var timeSeriesChart = function (element) {
                     numTuples: d[1],
                     time: customFullTimeFormat(d[0])
                 });
-            }).on("mousemove", function(d, i) {
-                focus.attr("transform", "translate(" + x(d[0]) + "," + y(d[1]) + ")");
-            });
+            })
     }
 
     return {
