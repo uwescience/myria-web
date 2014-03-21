@@ -441,7 +441,7 @@ var timeSeriesChart = function (element) {
         pairGroups.append("text")
             .attr("class", "line-label")
             .attr("dy", ".35em")
-            .attr("dx", "5px")
+            .attr("dx", "8px")
             .text(function(d) {
                 return templates.nwLineTooltip(d);
             });
