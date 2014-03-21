@@ -1,9 +1,12 @@
-from httmock import all_requests, HTTMock
 from json import dumps as jstr
-from myria_web_main import Application
 import sys
 import urlparse
+
+from httmock import all_requests, HTTMock
+from nose.tools import assert_equals
 from webtest import TestApp
+
+from myria_web_main import Application
 
 
 app = TestApp(Application(hostname='fake.fake', port=12345))

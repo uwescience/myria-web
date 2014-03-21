@@ -1,5 +1,7 @@
-from myria_web_main import Application
+from nose.tools import assert_equals
 from webtest import TestApp
+
+from myria_web_main import Application
 
 app = TestApp(Application(hostname='fake.fake', port=12345))
 
