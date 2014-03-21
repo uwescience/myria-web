@@ -411,8 +411,6 @@ var timeSeriesChart = function (element) {
             .attr("height", 10)
             .style("fill", opColors);
             */
- 
-
         }
 
         chart.selectAll(".y.axis")
@@ -463,6 +461,9 @@ var timeSeriesChart = function (element) {
                   .style("stroke", opColors(i));
 
                 return opColors(i);
+            })
+            .attr("stroke-dasharray", function(d) {
+                return (d.src != d.dest) ? ("0, 0") : ("3, 3");
             })
             .attr("class", "tsline");
 
