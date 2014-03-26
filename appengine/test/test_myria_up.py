@@ -29,8 +29,10 @@ def mock_myria_get(url, request):
     elif url.path == '/dataset/user-public/program-adhoc/relation-Twitter':
         return jstr(twitter_dataset)
     elif url.path == '/query':
+        headers = {
+            'X-Count': len(queries)}
         limit = int((query_params.get('limit') or [10])[0])
-        return jstr(queries[:limit])
+        return {'status_code': 200, 'content': jstr(queries[:limit]), 'headers': headers}
     elif url.path == '/query/query-140':
         return {'status_code': 201,
                 'headers': {'Location': 'http://fake.fake:12345/query/query-140'},
