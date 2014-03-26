@@ -426,23 +426,18 @@ function drawLanes(element, fragmentId, queryId) {
             }, function(d) {return d.begin;});
 
         box.enter().append("rect")
-            .popover(function(d) {
-                var content = '';
-                if (d.numTuples >= 0) {
-                    content += templates.numTuplesTemplate({numTuples: d.numTuples});
-                } else {
-                    content += templates.nullReturned();
-                }
-                var duration = d.end - d.begin;
-                content += templates.boxTemplate({
-                    duration: customFullTimeFormat(duration),
-                    begin: customFullTimeFormat(d.begin),
-                    end: customFullTimeFormat(d.end)
-                });
-                return {
-                    title: d.name,
-                    content: content
+            .tooltip(function(d) {
+                var content = templates.opname({ name: d.name });
+                if (d.link === null) {
+                    if (d.numTuples >= 0) {
+                        content += templates.numTuplesTemplate({ numTuples: d.numTuples });
+                    } else {
+                        content += templates.nullReturned();
+                    }
+                    content += ', '
                 };
+                content += templates.duration({ duration: customTimeFormat(d.end - d.begin) })
+                return content;
             })
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return opToColor[d.name]; })
