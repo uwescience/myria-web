@@ -3,6 +3,8 @@ A web front-end for Myria
 
 This is a Google App Engine app.
 
+[![Build Status](https://magnum.travis-ci.com/uwescience/myria-web.svg?token=BLHWag1nbAUpjrkqdzEA&branch=master)](https://magnum.travis-ci.com/uwescience/myria-web)
+
 # Dependencies
 
 You must have the [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
