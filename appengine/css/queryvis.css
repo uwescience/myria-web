@@ -122,6 +122,17 @@ rect.background {
     fill: transparent;
 }
 
+.popover-content {
+    padding: 0 12px;
+    font-size: .9em;
+}
+
+.rect-info {
+    fill: white;
+    stroke: #333;
+    stroke-width: 2;
+}
+
 /* Fragment vis */
 
 .area {

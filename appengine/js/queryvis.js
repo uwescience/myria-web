@@ -14,9 +14,9 @@ var templates = {
     },/**/
     titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
-    boxTemplate: _.template("<strong>Duration:</strong> <%- duration %><br/><strong>Begin:</strong> <%- begin %><br/><strong>End:</strong> <%- end %>"),
-    numTuplesTemplate: _.template("<strong># Tuples:</strong> <%- numTuples %><br/>"),
-    nullReturned: _.template("<strong>Null returned</strong><br/>"),
+    duration: _.template("took <%- duration %>"),
+    numTuplesTemplate: _.template("<%- numTuples %> returned"),
+    nullReturned: _.template("null returned"),
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
@@ -33,7 +33,8 @@ var templates = {
     fragmentTitle: _.template("Fragment <%- fragment %>:"),
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
-    row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>')
+    row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
+    opname: _.template('<strong><%- name %>: </strong>')
 }
 
 // Dictionary of operand name -> color

@@ -436,7 +436,19 @@ function Graph () {
                 .append("g");
 
             node
-                .attr("class", function(d) { return "node " + d.type; })
+                .attr("class", function(d) { return "node " + d.type; });
+
+            nodeEnter.append("rect")
+                .attr("rx", 10)
+                .attr("ry", 10)
+                .attr("r", 10)
+                .attr("opacity", function() {
+                    return initial ? 1 : 0;
+                })
+
+            nodeEnter.append("circle")
+                .attr("r", 8)
+                .attr("class", "rect-info")
                 .popover(function(d) {
                     var body = '';
 
@@ -459,13 +471,10 @@ function Graph () {
                     };
                 });
 
-            nodeEnter.append("rect")
-                .attr("rx", 10)
-                .attr("ry", 10)
-                .attr("r", 10)
-                .attr("opacity", function() {
-                    return initial ? 1 : 0;
-                });
+            node.select("circle").transition().duration(longDuration)
+                .attr("opacity", 1)
+                .attr("cx", function(d) { return (d.x+offset.x+d.w)+"in"; })
+                .attr("cy", function(d) { return (d.y+offset.y)+"in"; })
 
             node.select("rect").transition().duration(longDuration)
                 .attr("opacity", 1)
@@ -508,8 +517,9 @@ function Graph () {
             node.exit().select("rect").transition().duration(shortDuration)
                 .attr("opacity", 0);
 
-            node.exit().select("text").transition().duration(shortDuration)
-                .attr("opacity", 0)
+            node.exit().select("text").remove();
+
+            node.exit().select("circle").remove();
 
             node.exit().transition().duration(shortDuration).remove();
 
