@@ -10,11 +10,11 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
 
 function drawCharts(element, fragmentId, queryPlan) {
     var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId);
-    drawArea(element, fragmentId, queryPlan.queryId, lanesChart);
+    drawLineChart(element, fragmentId, queryPlan.queryId, lanesChart);
 }
 
 // Draw the area plot and the mini-brush and big-brush for it
-function drawArea(element, fragmentId, queryId, lanesChart) {
+function drawLineChart(element, fragmentId, queryId, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
         labels_width = 20,
@@ -22,6 +22,8 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
+
+    var bisectTime = d3.bisector(function(d) { return d.time; }).right;
 
     width = width - labels_width;
 
@@ -106,11 +108,11 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 	.attr("class", "area")
 
     mini_brush.append("g")
-	.attr("class", "x brush")
-	.call(brush)
-	.selectAll("rect")
-	.attr("y", -6)
-	.attr("height", height2 + 7);
+    	.attr("class", "x brush")
+    	.call(brush)
+    	.selectAll("rect")
+    	.attr("y", -6)
+    	.attr("height", height2 + 7);
 
     // Place the plot/big_brush
     var plot = svg.append("g")
@@ -119,27 +121,27 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 
     plot.append("g")
         .attr("class", "x axis")
-	.attr("transform", "translate(0," + height + ")")
+	    .attr("transform", "translate(0," + height + ")")
 
     plot.append("g")
         .attr("class", "y axis");
 
     plot.append("path")
-	.attr("clip-path", "url(#clip)")
-	.attr("class", "area")
+    	.attr("clip-path", "url(#clip)")
+    	.attr("class", "area")
 
     // put Time label on xAxis
     plot.append("g")
-	.attr("transform", "translate(" + [width, height] + ")")
+	    .attr("transform", "translate(" + [width, height] + ")")
         .append("text")
         .call(xAxisLabel, width);
 
     plot.append("g")
-	.attr("class", "x brush")
-	.call(brush2)
-	.selectAll("rect")
-	.attr("y", -6)
-	.attr("height", height + 7);
+    	.attr("class", "x brush")
+    	.call(brush2)
+    	.selectAll("rect")
+    	.attr("y", -6)
+    	.attr("height", height + 7);
 
     // Add ruler
     var tooltip = plot.append("g")
@@ -150,27 +152,6 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
 
     var tttext = tooltip.append("svg:text")
         .attr("text-anchor", "left");
-
-    plot.on("mousemove", function (e) {
-        ruler
-            .style("display", "block")
-            .style("left", d3.event.pageX - 1 + "px");
-
-        plot
-            .select(".rulerInfo")
-            .style("opacity", 1)
-            .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
-
-        var xValue = Math.round(x.invert(d3.mouse(this)[0]));
-        tttext.text(templates.ganttTooltipTemplate({ time: customFullTimeFormat(xValue) }));
-
-        var bbox = tttext.node().getBBox();
-        tooltip.select("rect")
-            .attr("width", bbox.width + 10)
-            .attr("height", bbox.height + 6)
-            .attr("x", bbox.x - 5)
-            .attr("y", bbox.y - 3);
-    });
 
     plot.on("mouseleave", function (e) {
         ruler.style("display", "none");
@@ -190,6 +171,37 @@ function drawArea(element, fragmentId, queryId, lanesChart) {
         y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
         x2.domain(x.domain());
         y2.domain(y.domain());
+
+        plot.on("mousemove", function (e) {
+            ruler
+                .style("display", "block")
+                .style("left", d3.event.pageX - 1 + "px");
+
+            var xPixels = d3.mouse(this)[0],
+                xValue = Math.round(x.invert(xPixels));
+
+            var i = bisectTime(data, xValue),
+                d0 = data[i - 1];
+
+            if (d0 === undefined) {
+                return;
+            }
+
+            plot
+                .select(".rulerInfo")
+                .style("opacity", 1)
+                .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
+
+            var xValue = Math.round(x.invert(d3.mouse(this)[0]));
+            tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+            var bbox = tttext.node().getBBox();
+            tooltip.select("rect")
+                .attr("width", bbox.width + 10)
+                .attr("height", bbox.height + 6)
+                .attr("x", bbox.x - 5)
+                .attr("y", bbox.y - 3);
+        });
 
         // TODO: do before we have the data
         mini_brush.select(".x.axis").call(xAxis2);
@@ -296,6 +308,11 @@ function drawLanes(element, fragmentId, queryId) {
         .attr("class", "plot")
         .attr("transform", "translate(" + (labels_width + margin.left) + "," + margin.top + ")");
 
+    chart.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("class", "background");
+
 
     // Place the xAxis
     chart.append("g")
@@ -310,7 +327,7 @@ function drawLanes(element, fragmentId, queryId) {
 
     // Place the Time label
     chart.append("g")
-	.attr("transform", "translate(" + [width, height] + ")")
+	    .attr("transform", "translate(" + [width, height] + ")")
         .append("text")
         .call(xAxisLabel);
 
@@ -337,6 +354,44 @@ function drawLanes(element, fragmentId, queryId) {
         d.numTuples = +d.numTuples;
         return d;
     }
+
+    // Add ruler
+    var tooltip = chart.append("g")
+        .attr({"class": "rulerInfo"})
+        .attr("transform", "translate(0,"+ height + ")");
+
+    tooltip.append("svg:rect");
+
+    var tttext = tooltip.append("svg:text")
+        .attr("text-anchor", "left");
+
+    chart.on("mouseleave", function (e) {
+        ruler.style("display", "none");
+        chart
+            .select(".rulerInfo")
+            .style("opacity", 0);
+    });
+
+    chart.on("mousemove", function (e) {
+        ruler
+            .style("display", "block")
+            .style("left", d3.event.pageX - 1 + "px");
+
+        chart
+            .select(".rulerInfo")
+            .style("opacity", 1)
+            .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
+
+        var xValue = Math.round(x.invert(d3.mouse(this)[0]));
+        tttext.text(templates.ganttTooltipTemplate({time: customFullTimeFormat(xValue)}));
+
+        var bbox = tttext.node().getBBox();
+        tooltip.select("rect")
+            .attr("width", bbox.width + 10)
+            .attr("height", bbox.height + 6)
+            .attr("x", bbox.x - 5)
+            .attr("y", bbox.y - 3);
+    });
 
     function getWorkersStates(data) {
 	// TODO: this parsing function assumes the following about the data

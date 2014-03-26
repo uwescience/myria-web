@@ -59,17 +59,17 @@ rect.background {
 }
 
 .node rect {
-    stroke-width: 1.5px;
+  stroke-width: 1.5px;
 }
 
 .edgeLabel rect {
-    fill: #fff;
+  fill: #fff;
 }
 
 .edgePath {
-    stroke: #333;
-    stroke-width: 1.5px;
-    fill: none;
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: none;
 }
 
 /* Graph */
@@ -83,25 +83,25 @@ rect.background {
 }
 
 .graph rect {
-    stroke-width: 2;
+  stroke-width: 2;
 }
 
 .cluster:hover, .fragment:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .graph .cluster:hover rect, .fragment:hover rect {
-    transition: fill .3s;
-    fill: #999;
+  transition: fill .3s;
+  fill: #999;
 }
 
 .graph .node {
-    transition: fill .3s;
+  transition: fill .3s;
 }
 
 .graph .node text {
-    fill: black;
-    text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  fill: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
 .graph .link > polyline {
@@ -114,23 +114,23 @@ rect.background {
 }
 
 .graph .frag:hover>polyline:not(.clickme), .graph .frag:hover marker {
-    stroke: orange;
-    fill: orange;
+  stroke: orange;
+  fill: orange;
 }
 
 .graph polyline {
-    fill: transparent;
+  fill: transparent;
 }
 
 .popover-content {
-    padding: 0 12px;
-    font-size: .9em;
+  padding: 0 12px;
+  font-size: .9em;
 }
 
 .rect-info {
-    fill: white;
-    stroke: #333;
-    stroke-width: 2;
+  fill: white;
+  stroke: #333;
+  stroke-width: 2;
 }
 
 /* Fragment vis */
@@ -178,8 +178,8 @@ rect.background {
 }
 
 .axis-label {
- fill: black;
- text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  fill: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
 /* Network */
