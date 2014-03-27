@@ -1,7 +1,53 @@
 // put all the underscore templates here
 var templates = {
-
+    /*/
+    urls: {
+        sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
+    },
+    /*/
+    urls: {
+        sentData: _.template("/data/sent_<%- query %>_<%- fragment %>.csv"),
+        profiling: _.template("/data/profiling_<%- query %>_<%- fragment %>.csv"),
+        histogram: _.template("/data/histogram_<%- query %>_<%- fragment %>.csv")
+    },/**/
+    titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
+    stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
+    duration: _.template("<br/>took <%- duration %>"),
+    numTuplesTemplate: _.template("<%- numTuples %> returned"),
+    nullReturned: _.template("null returned"),
+    chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
+    ganttTooltipTemplate: _.template("Time: <%- time %>"),
+    graphViz: {
+        nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
+        clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
+        link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
+    },
+    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
+    nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
+    titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
+    titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
+    titleFragmentsOverview: _.template("Overview over all fragments"),
+    fragmentTitle: _.template("Fragment <%- fragment %>:"),
+    markerUrl: _.template("url(#<%- name %>)"),
+    table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
+    row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
+    opname: _.template('<strong><%- name %>: </strong>')
 }
+
+// Dictionary of operand name -> color
+var opToColor = {};
+
+// Color pallet
+var opColors = d3.scale.category20();
+
+var animationDuration = 750
+    shortDuration = 500,
+    longDuration = 1000;
+
+var dpi = 96;
 
 function timeFormat(formats) {
   return function(date) {
@@ -27,6 +73,17 @@ var customTimeFormat = timeFormatNs([
   [d3.time.format(":%S.%L"), function(d) { return d.getSeconds(); }],
   [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
 ]);
+
+String.prototype.hashCode = function(){
+    var hash = 0, i, char;
+    if (this.length == 0) return hash;
+    for (i = 0, l = this.length; i < l; i++) {
+        char  = this.charCodeAt(i);
+        hash  = ((hash<<5)-hash)+char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+};
 
 function divmod(a, b) {
     return [Math.floor(a/b), a%b];
@@ -68,6 +125,8 @@ function customFullTimeFormat(d) {
     str += d3.format("06d")(ns) + " ns ";
     return str;
 }
+
+var largeNumberFormat = d3.format(",")
 
 var ruler = d3.select("body")
     .append("div")

@@ -14,13 +14,15 @@ handlers:
   static_files: static/\1
   upload: static/apple.*\.png
 - url: /css
-  static_dir: css 
+  static_dir: css
 - url: /fonts
-  static_dir: fonts 
+  static_dir: fonts
 - url: /img
   static_dir: img
 - url: /js
   static_dir: js
+- url: /data
+  static_dir: data
 - url: /robots\.txt
   static_files: robots.txt
   upload: robots\.txt

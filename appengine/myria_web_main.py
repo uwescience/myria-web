@@ -188,6 +188,7 @@ class Queries(MyriaPage):
                 max_ = count
         except myria.MyriaError:
             queries = []
+            limit = 1
 
         for q in queries:
             q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
@@ -251,7 +252,6 @@ class Profile(MyriaPage):
                 pass
 
         template_vars = {
-            'queryId': query_id,
             'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
             'queryPlan': json.dumps(query_plan)
         }
