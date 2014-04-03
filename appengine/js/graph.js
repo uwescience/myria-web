@@ -4,7 +4,10 @@ var graph = function (element, queryPlan) {
     var graphElement = d3.select('.query-plan');
 
     var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-    manyLineCharts(chartElement, allFragments, queryPlan);
+    if(!chartElement[0][0]) chartElement=null;
+    if(chartElement){ 
+        manyLineCharts(chartElement, allFragments, queryPlan);
+    }
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
@@ -400,8 +403,10 @@ function Graph () {
                     }
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
-                    chartElement.selectAll("svg").remove();
-                    fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                    if(chartElement){
+                        chartElement.selectAll("svg").remove();
+                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                    }
                 }
 
                 var newD3data = graph.generateD3data(padding);
@@ -415,9 +420,10 @@ function Graph () {
                 if (line.type == "frag") {
                     var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
                     var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
-                    chartElement.selectAll("svg").remove();
-                    networkVisualization(chartElement, [src, dst], queryPlan);
-
+                    if(chartElement){
+                        chartElement.selectAll("svg").remove();
+                        networkVisualization(chartElement, [src, dst], queryPlan);
+                    }
                     graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
                     draw(newD3data, offset, false);
