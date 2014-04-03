@@ -7,25 +7,32 @@ threadsafe: true
 handlers:
 - url: /favicon\.ico
   expiration: "7d"
-  static_files: favicon.ico
-  upload: favicon\.ico
+  static_files: static/favicon.ico
+  upload: static/favicon\.ico
+- url: /(apple-touch.*\.png)
+  expiration: "7d"
+  static_files: static/\1
+  upload: static/apple.*\.png
 - url: /css
-  static_dir: css 
+  static_dir: css
 - url: /fonts
-  static_dir: fonts 
+  static_dir: fonts
 - url: /img
   static_dir: img
 - url: /js
   static_dir: js
+- url: /data
+  static_dir: data
 - url: /robots\.txt
   static_files: robots.txt
   upload: robots\.txt
-
-# This must be last
+# This handler must be last
 - url: /.*
   script: myria_web_main.app
   secure: always
 
 libraries:
 - name: webapp2
+  version: latest
+- name: jinja2
   version: latest

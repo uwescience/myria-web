@@ -67,8 +67,25 @@ function compileplan() {
   window.open(url, '_blank');
 }
 
-function displayQueryStatus(data) {
-  var query_status = data['queryStatus'];
+/* Based on: http://stackoverflow.com/a/6455874/1715495 */
+function multiline(elt, text) {
+  var htmls = [];
+  var lines = text.split(/\n/);
+  // The temporary <div/> is to perform HTML entity encoding reliably.
+  //
+  // document.createElement() is *much* faster than jQuery('<div/>')
+  // http://stackoverflow.com/questions/268490/
+  //
+  // You don't need jQuery but then you need to struggle with browser
+  // differences in innerText/textContent yourself
+  var tmpDiv = jQuery(document.createElement('div'));
+  for (var i = 0; i < lines.length; i++) {
+    htmls.push(tmpDiv.text(lines[i]).html());
+  }
+  elt.html(htmls.join("<br>"));
+}
+
+function displayQueryStatus(query_status) {
   var start_time = query_status['startTime'];
   var end_time = query_status['finishTime'];
   var elapsed = query_status['elapsedNanos'] / 1e9;
@@ -76,26 +93,32 @@ function displayQueryStatus(data) {
   var query_id = query_status['queryId'];
   $("#executed").text(
       "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
-  if (!end_time) {
+  if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
     setTimeout(function() {
       checkQueryStatus(query_id);
     }, 1000);
   }
 }
 
+function displayQueryError(error, query_id) {
+  multiline($("#executed"), "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
+  setTimeout(function() {
+    checkQueryStatus(query_id);
+  }, 1000);
+}
+
 function checkQueryStatus(query_id) {
+  var errFunc = function(error) {
+    displayQueryError(error, query_id);
+  };
   $.ajax("execute", {
     type : 'GET',
     data : {
       queryId : query_id,
       language : editorLanguage
     },
-    statusCode : {
-      200 : displayQueryStatus,
-      201 : displayQueryStatus,
-      202 : displayQueryStatus,
-      400 : displayQueryStatus
-    }
+    success : displayQueryStatus,
+    error : errFunc
   });
 }
 

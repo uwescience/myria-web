@@ -1,0 +1,211 @@
+html {
+  overflow: -moz-scrollbars-vertical;
+  overflow-y: scroll;
+}
+
+.popover {
+  max-width: 700px;
+}
+
+.table-responsive table tr td:nth-child(1) {
+  max-width: 150px;
+  word-wrap: break-word;
+}
+
+.table-responsive table tr td:nth-child(2) {
+  max-width: 500px;
+  word-wrap: break-word;
+}
+
+/* General */
+
+svg {
+  font: 11px sans-serif;
+  shape-rendering: auto;
+}
+
+rect.background {
+  fill: lightgray;
+  fill-opacity: 0.15;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.ruler {
+  position: fixed;
+  display: none;
+  top: 0px;
+  bottom: 0px;
+  background: #000;
+  opacity: 0.5;
+  z-index: 2;
+  width: 1px;
+  pointer-events: none;
+}
+
+.rulerInfo rect {
+  fill: black;
+  fill-opacity: .8;
+}
+
+.rulerInfo text {
+  font-size: 12px;
+  fill: white;
+}
+
+.node rect {
+  stroke-width: 1.5px;
+}
+
+.edgeLabel rect {
+  fill: #fff;
+}
+
+.edgePath {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: none;
+}
+
+/* Graph */
+
+.query-plan {
+  overflow-x: scroll;
+}
+
+.graph {
+  shape-rendering: auto;
+}
+
+.graph rect {
+  stroke-width: 2;
+}
+
+.cluster:hover, .fragment:hover {
+  cursor: pointer;
+}
+
+.graph .cluster:hover rect, .fragment:hover rect {
+  transition: fill .3s;
+  fill: #999;
+}
+
+.graph .node {
+  transition: fill .3s;
+}
+
+.graph .node text {
+  fill: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.graph .link > polyline {
+  stroke-width: 3;
+}
+
+.graph polyline.clickme {
+  stroke-width: 25;
+  opacity: 0;
+}
+
+.graph .frag:hover>polyline:not(.clickme), .graph .frag:hover marker {
+  stroke: orange;
+  fill: orange;
+}
+
+.graph polyline {
+  fill: transparent;
+}
+
+.popover-content {
+  padding: 0 12px;
+  font-size: .9em;
+}
+
+.rect-info {
+  fill: white;
+  stroke: #333;
+  stroke-width: 2;
+}
+
+/* Fragment vis */
+
+.area {
+  fill: #444;
+}
+
+.x.axis .tick line {
+  stroke: lightgrey;
+  opacity: 0.7;
+}
+
+.x.axis .tick text {
+  fill: #555;
+}
+
+.plot path.line {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-width: 0px;
+}
+
+.brush .extent {
+  fill: black;
+  fill-opacity: .1;
+  stroke: #333;
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.chart .context .brush .resize rect {
+  fill: #333;
+  fill-opacity: .8;
+  visibility: visible !important;
+}
+
+.brush .resize rect {
+  fill: #333;
+}
+
+.chart .x.axis path {
+  display: none;
+}
+
+.axis-label {
+  fill: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+/* Network */
+
+.focus circle {
+  fill: none;
+  stroke: steelblue;
+}
+
+.pixel.active {
+  /*stroke: orange;*/
+  stroke-width: 3px;
+}
+
+.timeseries .tsline {
+  fill: none;
+  /*stroke: steelblue;
+  stroke-width: 1.5px;*/
+  shape-rendering: auto;
+}
+
+.timeseries .x.axis path {
+  display: none;
+}
+
+.matrix-chart .tick {
+  cursor: pointer;
+  font-size: 11px;
+}
