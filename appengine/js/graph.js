@@ -396,10 +396,14 @@ function Graph () {
                         graph.reduceNode([node.name]);
 
                         var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-                        manyLineCharts(chartElement, allFragments, queryPlan);
+                        if(chartElement){
+                            manyLineCharts(chartElement, allFragments, queryPlan);
+                        }
                     } else {
                         graph.state.focus = node.name;
-                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                        if(chartElement){
+                            fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                        }
                     }
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
