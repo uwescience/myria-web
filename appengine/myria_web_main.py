@@ -327,19 +327,26 @@ class Editor(MyriaPage):
 
 
 class Demo1(MyriaPage):
-    def get(self, query=defaultquery):
+    def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
+        # get query plan
+        conn = self.app.connection
+        query_id = self.request.get("queryId")
+        query_plan = {}
+        if query_id != '':
+            try:
+                query_plan = conn.get_query_status(query_id)
+            except myria.MyriaError:
+                pass
         template_vars = {}
-        # .. pass in the query
-        template_vars['query'] = query
-        # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['datalog']
         # .. connection string
-        template_vars['connectionString'] = self.get_connection_string()
+        template_vars['myriaConnection'] = self.get_connection_string()
+        # .. query plan
+        template_vars['queryPlan'] = json.dumps(query_plan)
         # .. load and render the template
-        path = os.path.join(os.path.dirname(__file__), 'templates/demo1.html')
-        self.response.out.write(template.render(path, template_vars))
+        template = JINJA_ENVIRONMENT.get_template('demo1.html')
+        self.response.out.write(template.render(template_vars))
 
 
 class Plan(MyriaHandler):
@@ -498,7 +505,7 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo1', Demo1),
+            ('/demo1', Demo1)
         ]
 
         # Connection to Myria. Thread-safe
