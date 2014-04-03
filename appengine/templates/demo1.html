@@ -8,9 +8,6 @@
     <script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/dagre-d3.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/demo1.js" type="text/javascript" charset="utf-8"></script>
@@ -28,15 +25,16 @@
                     <h3 class="panel-title">Query</h3>
                 </div>
                 <div class="panel-body">
-                    Result :- Twitter(x,y), Twitter(y,z), Twitter(x,z)
+                    Triangle(x,y,z) :- Twitter(x,y), Twitter(y,z), Twitter(x,z)
                 </div>
                 <div class="panel-body">
-                    <button type="button" class="compiler btn btn-warning">Compile 
-                    to Traditional Plan</button>
-                    <br>
-                    <br>
-                    <button type="button" class="compiler btn btn-warning">Compile 
-                    to HyperCube Plan</button>
+                    <div class="btn-group dropup">
+                        <button type="button" id="plan-btn" class="planner btn btn-info">Compile to traditional plan</button>
+                        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" title="Switch plan"><span class="caret"></span></button>
+                        <ul id="plan-menu" class="dropdown-menu" role="menu">
+                            <li><a class="changer">HyperCube plan</a></li>
+                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
