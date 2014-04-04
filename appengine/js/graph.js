@@ -101,7 +101,20 @@ function Graph () {
                 }
                 // Add in-fragment links
                 for (var key in op) {
-                    if (key.indexOf("argChild")!=-1) {
+                    if(key=="argChildren"){
+                        op[key].forEach(function(child){
+                            var link = new Object();                        // Link object
+                            link.u = {};
+                            link.v = {};
+                            link.u.fID = id;                                // Src fragment ID
+                            link.u.oID = child;                           // Src operand ID
+                            link.v.fID = id;                                // Dst fragment ID
+                            link.v.oID = op.opName;                         // Dst fragment ID
+                            var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
+                            fragment.opLinks[linkid] = link;
+                        });
+                    }
+                    else if (key.indexOf("argChild")!=-1) {
                         var link = new Object();                        // Link object
                         link.u = {};
                         link.v = {};
