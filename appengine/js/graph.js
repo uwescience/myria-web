@@ -29,6 +29,7 @@ function Graph () {
     this.state = {};        // Describes which nodes are "expanded"
     this.opName2color = {}; // Dictionary of opName - color
     this.opName2fID = {};   // Dictionary of opName - fragment ID
+    this.queryPlan = {}; // Physical plan
 
     /********************/
     // Public methods
@@ -43,6 +44,8 @@ function Graph () {
         // Get the query plan ID
         graph.qID = json.queryId
         graph.name = "Query Plan " + graph.qID;
+        // Get query plan
+        graph.queryPlan = json;
 
         // Collect graph nodes
         json.physicalPlan.fragments.forEach(function(fragment) {
@@ -408,21 +411,21 @@ function Graph () {
                         graph.state.focus = "";
                         graph.reduceNode([node.name]);
 
-                        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+                        var allFragments = _.pluck(graph.queryPlan.physicalPlan.fragments, 'fragmentIndex');
                         if(chartElement){
-                            manyLineCharts(chartElement, allFragments, queryPlan);
+                            manyLineCharts(chartElement, allFragments, graph.queryPlan);
                         }
                     } else {
                         graph.state.focus = node.name;
                         if(chartElement){
-                            fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                            fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
                         }
                     }
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
                     if(chartElement){
                         chartElement.selectAll("svg").remove();
-                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
                     }
                 }
 
@@ -439,7 +442,7 @@ function Graph () {
                     var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
                     if(chartElement){
                         chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], queryPlan);
+                        networkVisualization(chartElement, [src, dst], graph.queryPlan);
                     }
                     graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
