@@ -20,7 +20,6 @@ function Graph () {
     /********************/
     this.name = "";         // Query Name
     this.qID = 0;           // Query ID
-    this.fragCount = 0;     // Total number of fragments
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
     this.state = {};        // Describes which nodes are "expanded"
@@ -38,7 +37,7 @@ function Graph () {
         graph.state.focus = "";
 
         // Get the query plan ID
-        graph.qID = json.queryId
+        graph.qID = json.queryId;
         graph.name = "Query Plan " + graph.qID;
 
         // Collect graph nodes
@@ -56,7 +55,7 @@ function Graph () {
             var color_index = 0;
             node.operators.forEach(function(op) {
                 // Create new op node(s)
-                var opnode = new Object();
+                var opnode = {};
                 var opid = op.opName;                                   // Operand ID
                 opnode.rawData = op;                                    // Raw JSON data
                 opnode.opType = op.opType;                              // Operand type
@@ -70,11 +69,10 @@ function Graph () {
                 }
             });
             graph.nodes[id] = node;
-            graph.fragCount ++;
         });
 
         // If there are more than 10 fragments, do not expand
-        if (graph.fragCount < 10) {
+        if (json.physicalPlan.fragments.length < 10) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
@@ -134,7 +132,7 @@ function Graph () {
         var graph = this;
         nodes.forEach(function(nid){
             var index = graph.state.opened.indexOf(nid);
-            if (index>-1) {
+            if (index > -1) {
                 graph.state.opened.splice(index, 1);
             }
         });
@@ -358,7 +356,7 @@ function Graph () {
             links: links,
             height: height,
             width: width
-        }
+        };
     };
 
     // D3 rendering prototype
@@ -430,7 +428,7 @@ function Graph () {
 
             /* Nodes */
             var node = svg.selectAll("g.node")
-                .data(data.nodes, function(d) { return d.name; })
+                .data(data.nodes, function(d) { return d.name; });
 
             var nodeEnter = node.enter()
                 .append("g");
@@ -444,7 +442,7 @@ function Graph () {
                 .attr("r", 10)
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
-                })
+                });
 
             nodeEnter.append("circle")
                 .attr("r", 6)
