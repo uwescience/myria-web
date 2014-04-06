@@ -7,15 +7,15 @@ function changePlan() {
     return false;
   }
   else if(i == 0){
-      showPlan(tradPlan);
+    showPlan(tradPlan);
   }
   else if(i==1){
-      showPlan(hyperCubePlan);
+    showPlan(hyperCubePlan);
   }
 
   /* Update the UI around the plan selector button. */
   plans.splice(i, 1);
-  $('#plan-btn').text("Comple to " + plan);
+  $('#plan-btn').text("Compile to " + plan);
   var planMenu = $('#plan-menu');
   planMenu.empty();
   for (var j = 0; j < plans.length; ++j) {

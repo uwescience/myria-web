@@ -2,11 +2,9 @@
 
 {% block extra_head %}
     <script src="js/d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/colorbrewer.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/queryvis.js" type="text/javascript" charset="utf-8"></script>
@@ -23,13 +21,12 @@
                     <h3 class="panel-title">Query</h3>
                 </div>
                 <div class="panel-body">
-                    
-                    Triangle(x,y,z) :- Twitter(x,y), Twitter(y,z), Twitter(x,z)
-                    <br>
-                    <br>
-                    Meaning: <br>
-                    Compute triangles in Twitter social graph.
-                    
+                    <p>
+                        <pre>Triangle(x,y,z) :- Twitter(x,y), Twitter(y,z), Twitter(x,z)</pre>
+                    </p>
+                    <p>
+                        <strong>Meaning:</strong> Compute triangles in Twitter social graph.
+                    </p>
                 </div>
                 <div class="panel-body">
                     <div class="btn-group dropup">
@@ -37,7 +34,7 @@
                         <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" title="Switch plan"><span class="caret"></span></button>
                         <ul id="plan-menu" class="dropdown-menu" role="menu">
                             <li><a class="changer">HyperCube plan</a></li>
-                    </ul>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -46,14 +43,13 @@
             <div class="panel panel-default ">
                 <div class="panel-heading">
                     <h3 class="panel-title">Query Plan</h3>
-                </div > 
+                </div >
                 <div class="panel-body">
                    <div class="query-plan panel-body" data-type="line" data-query="{{ queryId }}"></div >
-                   <button type="button" class="executor btn btn-success">Execute
-                        the Query</button>
+                   <button type="button" class="executor btn btn-success">Execute the Query</button>
                 </div>
-            </div>   
-        </div>    
+            </div>
+        </div>
     </div>
     <a name="result"></a>
     <div class="row">
