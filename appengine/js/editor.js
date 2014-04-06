@@ -34,7 +34,7 @@ function getplan() {
     $('#relational_svg').html(result);
     $('svg').width('100%');
     $('svg').height('100%');
-  })
+  });
 }
 
 function optimizeplan() {
@@ -123,6 +123,8 @@ function checkQueryStatus(query_id) {
 }
 
 function executeplan() {
+  $('#editor-tabs a[href="#result"]').tab('show');
+
   $('#executed').text('...');
   optimizeplan(); // make sure the plan matches the query
   var query = editor.getValue();
@@ -145,6 +147,7 @@ function executeplan() {
 
 function resetResults() {
   $(".display").empty();
+  $("#executed").text("Run query to see results here...");
   $("svg").empty();
 }
 
@@ -195,9 +198,11 @@ function changeLanguage() {
     return false;
   }
 
+  $('#editor-tabs a[href="#examples"]').tab('show');
+
   /* Now let's update the UI around the language selector button. */
   languages.splice(i, 1);
-  $('#parse-btn').text("Parse " + language);
+  $('#curr-language').text(language);
   var languageMenu = $('#language-menu');
   languageMenu.empty();
   for (var j = 0; j < languages.length; ++j) {
@@ -230,11 +235,16 @@ function showSvgModal() {
   }).panzoom("reset");
 }
 
-$(document).ready(function() {
+$(function() {
+  resetResults();
+
   editor.on("change", resetResults);
   editor.on("keydown", resetResults);
   editor.on("keypress", resetResults);
-  $(".planner").click(optimizeplan);
+  $(".planner").click(function() {
+    $('#editor-tabs a[href="#queryplan"]').tab('show');
+    optimizeplan();
+  });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
   $(".changer").click(changeLanguage);
