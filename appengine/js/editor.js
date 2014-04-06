@@ -235,6 +235,18 @@ function showSvgModal() {
   }).panzoom("reset");
 }
 
+function resizeEditor() {
+  if ($('.editor-row').hasClass("expanded")) {
+    $('.editor-row').removeClass("expanded")
+    $('.editor-row>div:first').attr("class", "col-md-7");
+    $('.editor-row>div:nth-child(2)').attr("class", "col-md-5");
+  } else {
+    $('.editor-row').addClass("expanded")
+    $('.editor-row>div:first').attr("class", "col-md-12");
+    $('.editor-row>div:nth-child(2)').attr("class", "col-md-12");
+  }
+}
+
 $(function() {
   resetResults();
 
@@ -255,5 +267,6 @@ $(function() {
     optimizeplan();
   });
   $(".show-svg-modal").click(showSvgModal);
+  $(".resize-editor").click(resizeEditor);
   optimizeplan();
 });
