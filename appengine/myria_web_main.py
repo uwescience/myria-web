@@ -260,6 +260,7 @@ class Profile(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['queryId'] = query_id
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
