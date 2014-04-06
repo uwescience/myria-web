@@ -190,14 +190,11 @@ rect.background {
 }
 
 .pixel.active {
-  /*stroke: orange;*/
   stroke-width: 3px;
 }
 
 .timeseries .tsline {
   fill: none;
-  /*stroke: steelblue;
-  stroke-width: 1.5px;*/
   shape-rendering: auto;
 }
 

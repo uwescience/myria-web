@@ -1,6 +1,6 @@
 // put all the underscore templates here
 var templates = {
-    /*/
+    //*/
     urls: {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
@@ -35,7 +35,7 @@ var templates = {
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
     opname: _.template('<strong><%- name %>: </strong>')
-}
+};
 
 // Dictionary of operand name -> color
 var opToColor = {};
@@ -43,7 +43,7 @@ var opToColor = {};
 // Color pallet
 var opColors = d3.scale.category20();
 
-var animationDuration = 750
+var animationDuration = 750,
     shortDuration = 500,
     longDuration = 1000;
 
@@ -76,7 +76,7 @@ var customTimeFormat = timeFormatNs([
 
 String.prototype.hashCode = function(){
     var hash = 0, i, char;
-    if (this.length == 0) return hash;
+    if (this.length === 0) return hash;
     for (i = 0, l = this.length; i < l; i++) {
         char  = this.charCodeAt(i);
         hash  = ((hash<<5)-hash)+char;
@@ -126,7 +126,7 @@ function customFullTimeFormat(d) {
     return str;
 }
 
-var largeNumberFormat = d3.format(",")
+var largeNumberFormat = d3.format(",");
 
 var ruler = d3.select("body")
     .append("div")
