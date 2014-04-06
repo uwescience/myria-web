@@ -3,6 +3,12 @@
 {% block extra_head %}
 <script type="text/javascript" src="js/codemirror.js"></script>
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<style>
+.tab-pane {
+    height: 720px;
+    overflow-y: auto;
+}
+</style>
 {% endblock %}
 
 {% block editor_active %} class="active"{% endblock %}
@@ -43,7 +49,8 @@
 		<div class="col-md-5">
 			<ul class="nav nav-tabs" id="editor-tabs">
 				<li class="active"><a href="#examples" data-toggle="tab">Examples</a></li>
-				<li><a href="#queryplan" data-toggle="tab">Query Plan</a></li>
+				<li><a href="#relalgebra" data-toggle="tab">Relational Algebra</a></li>
+				<li><a href="#physplan" data-toggle="tab">Physical Plan</a></li>
 				<li><a href="#result" data-toggle="tab">Results</a></li>
 			</ul>
 
@@ -56,7 +63,7 @@
 						{% endfor %}
 					</div>
 				</div>
-				<div class="tab-pane fade" id="queryplan">
+				<div class="tab-pane fade" id="relalgebra">
 					<div class="panel panel-warning">
 				  		<div class="panel-heading">
 							<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="relational_svg"><span class="glyphicon glyphicon-new-window" title="See logical plan"></span></a>
@@ -66,6 +73,11 @@
 							<pre id="plan" class="display"></pre>
 							<output id="relational_svg"></output>
 						</div>
+						
+					</div>
+				</div>
+				<div class="tab-pane fade" id="physplan">
+					<div class="panel panel-warning">
 						<div class="panel-heading">
 							<a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="myria_svg"><span class="glyphicon glyphicon-new-window"  title="See physical plan"></span></a>
 							<h3 class="panel-title">Relational algebra converted and optimized into a Myria Physical Plan</h3>
