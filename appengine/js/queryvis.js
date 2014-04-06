@@ -131,8 +131,3 @@ var largeNumberFormat = d3.format(",")
 var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
-
-d3.select('.query-plan').each(function() {
-    element = d3.select(this);
-    graph(element, queryPlan);
-});
