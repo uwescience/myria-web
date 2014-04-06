@@ -14,9 +14,8 @@
     <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
-{% block editor_active %} class="active"{% endblock %}
-
 {% block content %}
+    <a name="query"></a>
     <div class="row">
         <div class="col-md-5 col-lg-4">
             <div class="panel panel-default ">
@@ -24,7 +23,13 @@
                     <h3 class="panel-title">Query</h3>
                 </div>
                 <div class="panel-body">
+                    
                     Triangle(x,y,z) :- Twitter(x,y), Twitter(y,z), Twitter(x,z)
+                    <br>
+                    <br>
+                    Meaning: <br>
+                    Compute triangles in Twitter social graph.
+                    
                 </div>
                 <div class="panel-body">
                     <div class="btn-group dropup">
@@ -50,6 +55,10 @@
             </div>   
         </div>    
     </div>
+    <a name="result"></a>
+    <div class="row">
+    </div>
+
 {% endblock %}
 
 {% block footer %}

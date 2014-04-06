@@ -36,14 +36,6 @@ function changePlan() {
 }
 
 
-function complieTraditional(){
-
-}
-
-$(document).ready(function() {
-  $(".changer").click(changePlan);
-});
-
 // put all the underscore templates here
 var templates = {
     /*/
@@ -89,9 +81,9 @@ var opToColor = {};
 // Color pallet
 var opColors = d3.scale.category20();
 
-var animationDuration = 750
-    shortDuration = 500,
-    longDuration = 1000;
+var animationDuration = 250
+    shortDuration = 120,
+    longDuration = 500;
 
 var dpi = 96;
 
@@ -178,7 +170,23 @@ var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
 
-d3.select('.query-plan').each(function() {
+function showPlan(plan){
+  d3.select('.query-plan').each(function() {
+    $('.query-plan').empty();
     element = d3.select(this);
-    graph(element, tradPlan);
+    graph(element, plan);
+  });
+}
+
+$(document).ready(function() {
+  $("#plan-btn").on('click', function(){
+    if($(this).text()==="Compile to traditional plan"){
+      showPlan(tradPlan);
+    }
+    else{
+      showPlan(hyperCubePlan);
+    }
+  });
+  $(".changer").click(changePlan);
 });
+
