@@ -1,3 +1,4 @@
+//query graph and profiling charts
 var graph = function (element, queryPlan) {
 
     var chartElement = d3.select('.chart');
@@ -11,6 +12,15 @@ var graph = function (element, queryPlan) {
 
     graphObj.render(graphElement, chartElement);
 };
+
+//query graph
+var queryGraph = function(queryPlan){
+    var graphElement = d3.select('.query-plan');
+    var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+    var graphObj = new Graph();
+    graphObj.loadQueryPlan(queryPlan);
+    graphObj.render(graphElement, null);
+}
 
 // Graph object
 function Graph () {
@@ -26,6 +36,7 @@ function Graph () {
     this.state = {};        // Describes which nodes are "expanded"
     this.opName2color = {}; // Dictionary of opName - color
     this.opName2fID = {};   // Dictionary of opName - fragment ID
+    this.queryPlan = {}; // Physical plan
 
     /********************/
     // Public methods
@@ -40,6 +51,8 @@ function Graph () {
         // Get the query plan ID
         graph.qID = json.queryId
         graph.name = "Query Plan " + graph.qID;
+        // Get query plan
+        graph.queryPlan = json;
 
         // Collect graph nodes
         json.physicalPlan.fragments.forEach(function(fragment) {
@@ -98,7 +111,20 @@ function Graph () {
                 }
                 // Add in-fragment links
                 for (var key in op) {
-                    if (key.indexOf("argChild")!=-1) {
+                    if(key=="argChildren"){
+                        op[key].forEach(function(child){
+                            var link = new Object();                        // Link object
+                            link.u = {};
+                            link.v = {};
+                            link.u.fID = id;                                // Src fragment ID
+                            link.u.oID = child;                           // Src operand ID
+                            link.v.fID = id;                                // Dst fragment ID
+                            link.v.oID = op.opName;                         // Dst fragment ID
+                            var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
+                            fragment.opLinks[linkid] = link;
+                        });
+                    }
+                    else if (key.indexOf("argChild")!=-1) {
                         var link = new Object();                        // Link object
                         link.u = {};
                         link.v = {};
@@ -392,16 +418,22 @@ function Graph () {
                         graph.state.focus = "";
                         graph.reduceNode([node.name]);
 
-                        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-                        manyLineCharts(chartElement, allFragments, queryPlan);
+                        var allFragments = _.pluck(graph.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+                        if(chartElement){
+                            manyLineCharts(chartElement, allFragments, graph.queryPlan);
+                        }
                     } else {
                         graph.state.focus = node.name;
-                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                        if(chartElement){
+                            fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
+                        }
                     }
                 } else if (node.type == "fragment") {
                     graph.expandNode([node.name]);
-                    chartElement.selectAll("svg").remove();
-                    fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, queryPlan);
+                    if(chartElement){
+                        chartElement.selectAll("svg").remove();
+                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
+                    }
                 }
 
                 var newD3data = graph.generateD3data(padding);
@@ -415,9 +447,10 @@ function Graph () {
                 if (line.type == "frag") {
                     var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
                     var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
-                    chartElement.selectAll("svg").remove();
-                    networkVisualization(chartElement, [src, dst], queryPlan);
-
+                    if(chartElement){
+                        chartElement.selectAll("svg").remove();
+                        networkVisualization(chartElement, [src, dst], graph.queryPlan);
+                    }
                     graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
                     draw(newD3data, offset, false);
