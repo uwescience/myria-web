@@ -1,5 +1,5 @@
 var manyLineCharts = function(element, fragmentIds, queryPlan) {
-    $('#title-right-vis').html(templates.titleFragmentsOverview())
+    $('#title-right-vis').html(templates.titleFragmentsOverview());
 
     $(element.node()).empty();
     _.each(fragmentIds, function(fragmentId) {

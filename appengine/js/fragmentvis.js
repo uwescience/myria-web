@@ -130,7 +130,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         .attr("clip-path", "url(#clip)")
         .attr("class", "area");
 
-    // put Time label on xAxis
+    // put time label on xAxis
     plot.append("g")
         .attr("transform", "translate(" + [width, height] + ")")
         .append("text")
@@ -142,6 +142,43 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         .selectAll("rect")
         .attr("y", -6)
         .attr("height", height + 7);
+
+    // Add zoom buttons
+    var zoomOut = plot.append("g")
+        .attr("transform", "translate(" + [10, 5] + ")")
+        .attr("class", "zoom-button")
+        .tooltip("zoom out")
+        .on("click", function() {
+            d3.event.stopPropagation();
+            var extent = x.domain();
+            if (!brush.empty()) {
+                extent = brush.extent();
+            }
+            var lower = extent[0],
+                upper = extent[1],
+                range = upper - lower,
+                dom = x2.domain(),
+                rangepart = range/5;
+            extent = [_.max([lower - rangepart, dom[0]]), _.min([upper + rangepart, dom[1]])];
+            if (extent[0] == dom[0] && extent[1] == dom[1]) {
+                brush2.clear();
+                brushendWorkers();
+            } else {
+                brush2.extent(extent);
+                brushendWorkers();
+            }
+        });
+
+    zoomOut.append("rect")
+        .attr("width", 16)
+        .attr("height", 16);
+    zoomOut.append("text")
+        .attr("fill", "white")
+        .attr("x", 16/2)
+        .attr("y", 16/2)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .text("-");
 
     // Add ruler
     var tooltip = plot.append("g")

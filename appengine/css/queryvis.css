@@ -25,8 +25,7 @@ svg {
 }
 
 rect.background {
-  fill: lightgray;
-  fill-opacity: 0.15;
+  fill: white;
 }
 
 .axis path,
@@ -182,6 +181,19 @@ rect.background {
 .axis-label {
   fill: black;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.zoom-button {
+  cursor: pointer;
+}
+
+.zoom-button rect {
+  fill: lightgray;
+}
+
+.zoom-button text {
+  fill: black;
+  font-size: 18px;
 }
 
 /* Network */
