@@ -7,20 +7,10 @@ function changePlan() {
     return false;
   }
   else if(i == 0){
-    var planElement = $('.query-plan');
-    planElement.empty();
-    d3.select('.query-plan').each(function() {
-    element = d3.select(this);
-    graph(element, tradPlan);
-    });
+      showPlan(tradPlan);
   }
   else if(i==1){
-    var planElement = $('.query-plan');
-    planElement.empty();
-    d3.select('.query-plan').each(function() {
-    element = d3.select(this);
-    graph(element, hyperCubePlan);
-    });
+      showPlan(hyperCubePlan);
   }
 
   /* Update the UI around the plan selector button. */
@@ -38,8 +28,7 @@ function changePlan() {
 function showPlan(plan){
   d3.select('.query-plan').each(function() {
     $('.query-plan').empty();
-    element = d3.select(this);
-    graph(element, plan);
+    queryGraph(plan);
   });
 }
 

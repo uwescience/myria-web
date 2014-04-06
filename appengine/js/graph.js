@@ -1,19 +1,26 @@
+//query graph and profiling charts
 var graph = function (element, queryPlan) {
 
     var chartElement = d3.select('.chart');
     var graphElement = d3.select('.query-plan');
 
     var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-    if(!chartElement[0][0]) chartElement=null;
-    if(chartElement){ 
-        manyLineCharts(chartElement, allFragments, queryPlan);
-    }
+    manyLineCharts(chartElement, allFragments, queryPlan);
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
 
     graphObj.render(graphElement, chartElement);
 };
+
+//query graph
+var queryGraph = function(queryPlan){
+    var graphElement = d3.select('.query-plan');
+    var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+    var graphObj = new Graph();
+    graphObj.loadQueryPlan(queryPlan);
+    graphObj.render(graphElement, null);
+}
 
 // Graph object
 function Graph () {
