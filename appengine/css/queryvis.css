@@ -74,8 +74,10 @@ rect.background {
 
 /* Graph */
 
-.query-plan {
-  overflow-x: scroll;
+.query-plan .overlay {
+  fill: transparent;
+  stroke: #bbb;
+  stroke-width: 1px;
 }
 
 .graph {

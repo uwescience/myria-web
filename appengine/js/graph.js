@@ -299,9 +299,9 @@ function Graph () {
         // Exploded fragments (cluster)
         graph.state.opened.forEach(function (fID) {
             var fragment = graph.nodes[fID];
-            var minX = 1000; //FIXME (min/max computation)
+            var minX = Infinity;
             var maxX = 0;
-            var minY = 1000;
+            var minY = Infinity;
             var maxY = 0;
             for (oID in fragment.opNodes) {
                 var op = fragment.opNodes[oID].viz;
@@ -366,22 +366,38 @@ function Graph () {
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
-            padding = 0.5,
-            offset = {x: 0.5, y: 0.25};
+            padding = 0.5;
 
-        var svg = graphElement
+        var wrapper = graphElement
                     .append("svg")
                     .attr("class", "graph")
-                    .attr("width", width);
+                .append("g")
+                    .call(d3.behavior.zoom().scaleExtent([0.1, 2]).on("zoom", zoom))
+        var svg = wrapper.append("g"); // avoid jitter
+
+        var overlay = svg.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("x", -200)
+            .attr("y", -200)
+            .on("dragstart", function(e) {
+                d3.event.sourceEvent.preventDefault();
+            });
+
+        function zoom() {
+            svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        }
 
         var D3data = graph.generateD3data(padding);
 
         // Initial rendering
-        draw(D3data, offset, true);
+        draw(D3data, true);
 
         // On click, update with new data
         svg.selectAll(".node")
             .on("click", function() {
+                if (d3.event.defaultPrevented) return;
+
                 var node = d3.select(this).data()[0];
 
                 // Handle fragment state
@@ -403,11 +419,13 @@ function Graph () {
                 }
 
                 var newD3data = graph.generateD3data(padding);
-                draw(newD3data, offset, false);
+                draw(newD3data, false);
             });
 
         svg.selectAll(".link")
             .on("click", function() {
+                if (d3.event.defaultPrevented) return;
+
                 var line = d3.select(this).data()[0];
 
                 if (line.type == "frag") {
@@ -418,13 +436,22 @@ function Graph () {
 
                     graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
-                    draw(newD3data, offset, false);
+                    draw(newD3data, false);
                 }
             });
 
-        function draw (data, offset, initial) {
-            svg.transition().duration(longDuration)
-                .attr("height", (data.height+2*offset.y)+"in");
+        function draw(data, initial) {
+            svg.transition()
+                .attr("height", data.height*dpi)
+                .attr("width", data.width*dpi);
+
+            overlay
+                .attr("height", data.height*dpi + 400)
+                .attr("width", data.width*dpi + 400);
+
+            graphElement.style("height", data.height*dpi + 10 + "px");
+
+            wrapper.attr("transform", "translate(" + (width/2 - data.width * dpi/2) + ", 0)")
 
             /* Nodes */
             var node = svg.selectAll("g.node")
@@ -456,8 +483,8 @@ function Graph () {
                             return;
                         }
                         if (value === null) {
-                            value = 'null'
-                        };
+                            value = 'null';
+                        }
                         if (value != null && typeof value === 'object') {
                           value = JSON.stringify(value);
                         }
@@ -471,15 +498,15 @@ function Graph () {
 
             node.select("circle").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("cx", function(d) { return (d.x+offset.x+d.w)+"in"; })
-                .attr("cy", function(d) { return (d.y+offset.y)+"in"; })
+                .attr("cx", function(d) { return (d.x+d.w) * dpi; })
+                .attr("cy", function(d) { return d.y * dpi; })
 
             node.select("rect").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("x", function(d) { return (d.x+offset.x)+"in"; })
-                .attr("y", function(d) { return (d.y+offset.y)+"in"; })
-                .attr("width", function(d) { return d.w+"in"; })
-                .attr("height", function(d) { return d.h+"in"; })
+                .attr("x", function(d) { return d.x * dpi; })
+                .attr("y", function(d) { return d.y * dpi; })
+                .attr("width", function(d) { return d.w * dpi; })
+                .attr("height", function(d) { return d.h * dpi; })
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
 
@@ -503,12 +530,12 @@ function Graph () {
 
             node.select("text").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("x", function(d) { return (d.x+d.w/2+offset.x)+"in"; })
+                .attr("x", function(d) { return (d.x+d.w/2) * dpi; })
                 .attr("y", function(d) {
                     if(d.type == "cluster") {
-                        return (d.y+offset.y+padding*3/8)+"in"
+                        return (d.y+padding*3/8) * dpi;
                     } else {
-                        return (d.y+d.h/2+offset.y)+"in"
+                        return (d.y+d.h/2) * dpi;
                     }
                 });
 
@@ -566,7 +593,7 @@ function Graph () {
                     // TODO: use d3 line
                     path = ""
                     d.points.forEach(function (point) {
-                        path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
+                        path += (point[0]*dpi)+" "+(point[1]*dpi)+", "
                     });
                     return path.substr(0, path.length-2).trim();
                 })
@@ -577,7 +604,7 @@ function Graph () {
                     // TODO: use d3 line
                     path = ""
                     d.points.forEach(function (point) {
-                        path += ((point[0]+offset.x)*dpi)+" "+((point[1]+offset.y)*dpi)+", "
+                        path += (point[0]*dpi)+" "+(point[1]*dpi)+", "
                     });
                     return path.substr(0, path.length-2).trim();
                 })
