@@ -2,28 +2,29 @@ var networkVisualization = function (element, fragments, queryPlan) {
     $('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
+    $(element.node()).append(templates.networkVisFrames);
 
-    createViz(fragments);
+    createViz();
 
-    function createViz(fragments) {
-        //initialize the visualization
-        var     matMargin = {top: 50, right: 10, bottom: 10, left: 60},
+    function createViz() {
+        var matrixElement = element.select(".matrix");
+
+        var     matMargin = {top: 50, right: 30, bottom: 10, left: 60},
                 labelMargin = {top: 40, left: 40},
                 axisMargin = {left: 30, bottom: 30, right: 30},
-                totalWidth = parseInt(element.style('width'), 10),
-                matrixWidth = 500,
-                matrixHeight = matrixWidth,
-                width = matrixWidth + matMargin.left + matMargin.right,
-                height = matrixWidth + matMargin.top + matMargin.bottom;
+                width = parseInt(matrixElement.style('width'), 10),
+                height = width,
+                matrixWidth = width - matMargin.left - matMargin.right,
+                matrixHeight = height - matMargin.top - matMargin.bottom;
 
         var columnScale = d3.scale.ordinal()
-            .rangeBands([0, matrixWidth], .1, 0);
+            .rangeBands([0, matrixWidth], 0.1, 0);
 
         var rowScale = d3.scale.ordinal()
-            .rangeBands([0, matrixHeight], .1, 0);
+            .rangeBands([0, matrixHeight], 0.1, 0);
 
         //append the svg for matrix
-        var matrixChart = element.append("svg")
+        var matrixChart = matrixElement.append("svg")
                 .attr("width", width)
                 .attr("height", height)
                 .attr("class", "matrix-chart")
@@ -70,9 +71,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
         var sources = [], destinations = [];
 
         d3.csv(url, function (data) {
-            var dataset = {};
-            //sources = [];
-            //destinations = [];
+            var dataset = {},
+                summary = {
+                    numTuples: 0,
+                    localTuples: 0
+                };
 
             // column representation to safe space
             data.forEach(function(d,i) {
@@ -89,7 +92,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         dest: dest,
                         pixelID: pixelID,
                         active: false
-                    }
+                    };
                 }
                 dataset[key].nanoTime.push(+d.nanoTime);
                 dataset[key].numTuples.push(+d.numTuples);
@@ -105,18 +108,24 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 d.values = _.zip(d.nanoTime, d.numTuples);
                 delete d.nanoTime;
                 delete d.numTuples;
-            })
+
+                summary.numTuples += d.sumTuples;
+                if (d.src == d.dest) {
+                    summary.localTuples += d.sumTuples;
+                }
+            });
+
+            summary.duration = _.max(_.pluck(dataset, 'end')) - _.min(_.pluck(dataset, 'begin'));
 
             sources = _.uniq(sources);
             destinations = _.uniq(destinations);
 
+            updateSummary(element.select(".summary"), summary);
+
             draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(destinations, function(d) {return d;}));
         });
 
-        var buttonDiv = element
-                .append("div");
-
-        var button = buttonDiv.append("button")
+        var button = element.select(".clear").append("button")
             .text('clear selection')
             .on("click", function() {
                 chart.emptyActiveKeys();
@@ -183,7 +192,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
             function addColTick(selection) {
                 selection
                     .append('text')
-                    .style('text-anchor', 'middle')
+                    .style('text-anchor', 'left')
+                    .style("alignment-baseline", "middle")
                     .attr('class','tick')
                     .on('click', function(d) {
                         pairs = [];
@@ -194,7 +204,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                             d3.select(id).datum().active = true;
                         }
                         chart.batchAdd(rawData, pairs);
-                    });
+                    })
+                    .attr("transform", "rotate(-90)");
             }
 
             function addRowTick(selection) {
@@ -226,7 +237,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             tickColEl
                 .text(function(d){ return d; })
-                .attr('x', function(d){ return columnScale(d) + columnScale.rangeBand()/2; });
+                .attr('y', function(d){ return columnScale(d) + columnScale.rangeBand()/2; });
 
             var tickRowEl = tickRow.selectAll('text.tick')
                 .data(sources);
@@ -250,7 +261,17 @@ var networkVisualization = function (element, fragments, queryPlan) {
     };
 };
 
-var timeSeriesChart = function (element) {
+var updateSummary = function(element, summary) {
+    var items = "";
+    items += templates.defItem({key: "# Tuples", value: summary.numTuples});
+    items += templates.defItem({key: "Local tuples sent", value: summary.localTuples});
+    items += templates.defItem({key: "Duration", value: customFullTimeFormat(summary.duration)});
+    items += templates.defItem({key: "Tuples per second", value: (summary.numTuples / summary.duration * 1000000).toFixed(3)});
+    var dl = templates.defList({items: items});
+    $(element.node()).html(dl);
+};
+
+var timeSeriesChart = function(element) {
     var margin = {top: 20, right: 70, bottom: 50, left:60 },
         width = parseInt(element.style('width'), 10),
         height = 300,
@@ -273,7 +294,7 @@ var timeSeriesChart = function (element) {
         .scale(y)
         .orient("left");
 
-    var chart = element.append("svg")
+    var chart = element.select(".lines").append("svg")
             .attr("width", width)
             .attr("height", height)
             .attr("class", "timeseries")
@@ -304,12 +325,12 @@ var timeSeriesChart = function (element) {
         .y(function(d) { return y(d[1]); });
 
     var activeKeys = [];
-    var rawData = {}
+    var rawData = {};
 
     function add(newRawData, src, dest) {
         //pixel is a selection
         rawData = newRawData;
-        activeKeys.push([src,dest])
+        activeKeys.push([src,dest]);
         draw();
     }
 
@@ -402,7 +423,7 @@ var timeSeriesChart = function (element) {
 
         chart.selectAll(".y.axis")
             .transition(animationDuration)
-            .call(yAxis)
+            .call(yAxis);
 
         chart.selectAll(".x.axis")
             .transition(animationDuration)
@@ -473,7 +494,7 @@ var timeSeriesChart = function (element) {
                     numTuples: d[1],
                     time: customFullTimeFormat(d[0])
                 });
-            })
+            });
     }
 
     return {
@@ -482,5 +503,5 @@ var timeSeriesChart = function (element) {
         batchAdd: batchAdd,
         remove: remove,
         emptyActiveKeys: emptyActiveKeys
-    }
+    };
 };

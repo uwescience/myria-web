@@ -34,7 +34,19 @@ var templates = {
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
-    opname: _.template('<strong><%- name %>: </strong>')
+    opname: _.template('<strong><%- name %>: </strong>'),
+    networkVisFrames:
+        '<div class="row">\
+            <div class="col-md-8 matrix"></div>\
+            <div class="col-md-4">\
+                <h3>Summary</h3><p class="summary"></p>\
+        </div></div>\
+        <div class="row"><div class="col-md-12 clear"></div></div>\
+        <div class="row">\
+            <div class="col-md-12 lines"></div>\
+        </div>',
+    defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
+    defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>')
 };
 
 // Dictionary of operand name -> color
