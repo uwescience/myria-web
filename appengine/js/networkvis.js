@@ -1,5 +1,5 @@
 var networkVisualization = function (element, fragments, queryPlan) {
-	$('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
+    $('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
 
@@ -60,24 +60,24 @@ var networkVisualization = function (element, fragments, queryPlan) {
             .attr('transform', 'translate(' + (labelMargin.top - matMargin.top) + ', 0)');
 
         // download data
-    	var fragmentId = fragments[0];
-    	var url = templates.urls.sentData({
-        	myria: myriaConnection,
-        	query: queryPlan.queryId,
-        	fragment: fragmentId
-    	});
+        var fragmentId = fragments[0];
+        var url = templates.urls.sentData({
+            myria: myriaConnection,
+            query: queryPlan.queryId,
+            fragment: fragmentId
+        });
 
         var sources = [], destinations = [];
 
-    	d3.csv(url, function (data) {
-		    var dataset = {};
+        d3.csv(url, function (data) {
+            var dataset = {};
             //sources = [];
             //destinations = [];
 
             // column representation to safe space
-  			data.forEach(function(d,i) {
-    			var source = +d.workerId;
-    			var dest = +d.destWorkerId;
+            data.forEach(function(d,i) {
+                var source = +d.workerId;
+                var dest = +d.destWorkerId;
                 var pixelID = '' + source + '_' + dest;
                 var key = [source, dest];
                 if (!(key in dataset)) {
@@ -96,7 +96,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 dataset[key].sumTuples += +d.numTuples;
                 sources.push(source);
                 destinations.push(dest);
-  			});
+            });
 
             _.each(dataset, function(d) {
                 d.maxTuples = d3.max(d.numTuples);
@@ -110,8 +110,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
             sources = _.uniq(sources);
             destinations = _.uniq(destinations);
 
-    		draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(destinations, function(d) {return d;}));
-    	});
+            draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(destinations, function(d) {return d;}));
+        });
 
         var buttonDiv = element
                 .append("div");
