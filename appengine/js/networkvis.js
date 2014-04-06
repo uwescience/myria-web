@@ -286,7 +286,7 @@ var timeSeriesChart = function(element) {
 
     var xAxis = d3.svg.axis()
         .tickFormat(customTimeFormat)
-        .tickSize(-height)
+        .tickSize(-chartHeight)
         .scale(x)
         .orient("bottom");
 
@@ -312,7 +312,7 @@ var timeSeriesChart = function(element) {
 
     chart.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," +  (height - margin.bottom) + ")")
+        .attr("transform", "translate(0, " + chartHeight + ")")
         .call(xAxis);
 
     chart.append("g")

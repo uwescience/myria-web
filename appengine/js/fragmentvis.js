@@ -166,9 +166,15 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         fragment: fragmentId
     });
 
-    d3.csv(url, type, function(error, data) {
+    d3.csv(url, function(d) {
+        d.time = +d.time;
+        d.value = +d.numWorkers;
+        delete d.numWorkers;
+        return d;
+    }, function(error, data) {
         x.domain(d3.extent(data, function(d) { return d.time; }));
-        y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
         x2.domain(x.domain());
         y2.domain(y.domain());
 
@@ -250,12 +256,6 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         d3.select(".plot .x.brush")
             .call(brush2.clear());
     }
-
-    function type(d) {
-        d.time = +d.time;
-        d.value = +d.numWorkers;
-        return d;
-    }
 }
 
 function drawLanes(element, fragmentId, queryId, numWorkers) {
@@ -335,16 +335,14 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
 
     var workersData = {};
 
-    d3.csv(url, type2, function(error, data) {
-        workersData = getWorkersStates(data);
-    });
-
-    function type2(d) {
+    d3.csv(url, function(d) {
         d.workerId = +d.workerId;
         d.nanoTime = parseFloat(d.nanoTime);
         d.numTuples = +d.numTuples;
         return d;
-    }
+    }, function(error, data) {
+        workersData = getWorkersStates(data);
+    });
 
     // Add ruler
     var tooltip = chart.append("g")

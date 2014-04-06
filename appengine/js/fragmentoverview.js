@@ -4,14 +4,16 @@ var manyLineCharts = function(element, fragmentIds, queryPlan) {
     $(element.node()).empty();
     _.each(fragmentIds, function(fragmentId) {
         element.append("div").text(templates.fragmentTitle({fragment: fragmentId}));
-        lineChart(element, fragmentId, queryPlan);
+        var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
+        var numWorkers = _.max(workers);
+        lineChart(element, fragmentId, queryPlan, numWorkers);
     });
 
     // return variables that are needed outside this scope
     return {};
-}
+};
 
-var lineChart = function(element, fragmentId, queryPlan) {
+var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
     var margin = {top: 10, right: 10, bottom: 20, left: 30 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 150 - margin.top - margin.bottom;
@@ -22,7 +24,8 @@ var lineChart = function(element, fragmentId, queryPlan) {
         .range([0, width]);
 
     var y = d3.scale.linear()
-        .range([height, 0]);
+        .range([height, 0])
+        .domain([0, numWorkers]);
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -83,19 +86,16 @@ var lineChart = function(element, fragmentId, queryPlan) {
         }
     });
 
-    d3.csv(url, function(error, data) {
-        data.forEach(function(d) {
-            d.time = parseFloat(d.time, 10);
-        });
-
+    d3.csv(url, function(d) {
+        d.time = parseFloat(d.time, 10);
+        d.numWorkers = +d.numWorkers;
+        return d;
+    }, function(error, data) {
         wholeDomain = d3.extent(data, function(d) { return d.time; });
 
         x.domain(wholeDomain);
-        y.domain(d3.extent(data, function(d) { return d.numWorkers; }));
 
         $('body').trigger('changeRange', wholeDomain);
-
-        yAxis.ticks(y.domain()[1]);
 
         svg.append("g")
             .attr("class", "x axis")
