@@ -447,7 +447,7 @@ function Graph () {
                 })
 
             nodeEnter.append("circle")
-                .attr("r", 8)
+                .attr("r", 6)
                 .attr("class", "rect-info")
                 .popover(function(d) {
                     var body = '';
