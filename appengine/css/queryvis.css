@@ -91,9 +91,9 @@ rect.background {
   cursor: pointer;
 }
 
-.interactive .graph .cluster:hover rect, .interactive .fragment:hover rect {
-  transition: fill .3s;
-  fill: #999;
+.interactive .cluster:hover rect, .interactive .fragment:hover rect {
+  transition: stroke .3s;
+  stroke: orange;
 }
 
 .graph .node {
@@ -116,6 +116,7 @@ rect.background {
 }
 
 .graph .frag:hover>polyline:not(.clickme), .graph .frag:hover marker {
+  transition: stroke .3s, fill .3s;
   stroke: orange;
   fill: orange;
 }
