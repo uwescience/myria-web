@@ -10,35 +10,45 @@
 	<div class="row editor-row">
 		<div class="col-md-7">
 			<div class="panel panel-info">
+
 				<div class="panel-heading">
 					<h3 class="panel-title">
 						Write your code here, perhaps starting from one of the examples at the right.
 						<a href="#" class="pull-right resize-editor"><span class="glyphicon glyphicon-resize-full"></span></a>
 					</h3>
 				</div>
-
 				<textarea cols="83" rows="2" id="query">{{ query }}</textarea>
 
-				<div class="row">
-					<div class="col-md-8 text-left">
-						<div class="btn-group">
-							<button type="button" id="parse-btn" class="planner btn btn-primary"><span class="glyphicon glyphicon-question-sign"></span> Parse</button>
-							<button type="button" class="executor btn btn-primary"><span class="glyphicon glyphicon-play"></span> Execute the Query</button>
-							<button type="button" class="compiler btn btn-info">Myria JSON</button>
-						</div>
-					</div>
-					<div class="col-md-4 text-right">
-						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="Switch language">
-							<span class="glyphicon glyphicon-cog"></span> <span id="curr-language">Datalog</span> <span class="caret"></span>
-						</button>
-						<ul id="language-menu" class="dropdown-menu" role="menu">
-							<li><a class="changer">MyriaL</a></li>
-							<li><a class="changer">SQL</a></li>
-						</ul>
-					</div>
+				<div class="btn-group">
+					<button type="button" id="parse-btn" class="planner btn btn-primary"><span class="glyphicon glyphicon-question-sign"></span> Parse</button>
+					<button type="button" class="executor btn btn-primary"><span class="glyphicon glyphicon-play"></span> Execute the Query</button>
+					<button type="button" class="compiler btn btn-info">Myria JSON</button>
 				</div>
 			</div>
+			<form class="form-horizontal" role="form">
+				<div class="form-group">
+					<label for="language-menu" class="col-sm-3 control-label">Query Language</label>
+					<div class="col-sm-9">
+						<select class="form-control language-menu">
+							<option>Datalog</option>
+							<option>MyriaL</option>
+							<option>SQL</option>
+						</select>
+						<span class="help-block">There are three different query languages that you can choose from.</span>
+					</div>
+				</div>
+				<div class="col-sm-offset-3 col-sm-9">
+					<div class="checkbox">
+						<label>
+							<input type="checkbox"> Profile query
+						</label>
+					</div>
+					<span class="help-block">Profiling will make the query run a little bit sower but allows you to
+					examine exactly how the query was executed.</span>
+				</div>
+			</form>
 		</div>
+
 		<div class="col-md-5">
 			<ul class="nav nav-tabs nav-justified" id="editor-tabs">
 				<li class="active"><a href="#examples" data-toggle="tab">Examples</a></li>

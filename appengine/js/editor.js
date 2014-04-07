@@ -192,23 +192,13 @@ function updateExamples(language) {
 function changeLanguage() {
   /* First make sure it's a valid language. */
   var languages = [ 'Datalog', 'MyriaL', 'SQL' ];
-  var language = $(this).text();
+  var language = $(".language-menu option:selected").text();
   var i = languages.indexOf(language);
   if (i == -1) {
     return false;
   }
 
   $('#editor-tabs a[href="#examples"]').tab('show');
-
-  /* Now let's update the UI around the language selector button. */
-  languages.splice(i, 1);
-  $('#curr-language').text(language);
-  var languageMenu = $('#language-menu');
-  languageMenu.empty();
-  for (var j = 0; j < languages.length; ++j) {
-    languageMenu.append('<li><a class="changer">' + languages[j] + '</a></li>');
-  }
-  $(".changer").click(changeLanguage);
 
   /* Now let's update the examples. */
   updateExamples(language);
@@ -259,7 +249,7 @@ $(function() {
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
-  $(".changer").click(changeLanguage);
+  $(".language-menu").change(changeLanguage);
   $(".example").click(function() {
     resetResults();
     var example_query = $(this).text();
