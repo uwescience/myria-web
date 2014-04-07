@@ -260,6 +260,7 @@ class Profile(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['queryId'] = query_id
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
@@ -323,6 +324,29 @@ class Editor(MyriaPage):
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
+        self.response.out.write(template.render(template_vars))
+
+
+class Demo1(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # get query plan
+        conn = self.app.connection
+        query_id = self.request.get("queryId")
+        query_plan = {}
+        if query_id != '':
+            try:
+                query_plan = conn.get_query_status(query_id)
+            except myria.MyriaError:
+                pass
+        template_vars = {}
+        # .. connection string
+        template_vars['myriaConnection'] = self.get_connection_string()
+        # .. query plan
+        template_vars['queryPlan'] = json.dumps(query_plan)
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('demo1.html')
         self.response.out.write(template.render(template_vars))
 
 
@@ -467,6 +491,7 @@ class Dot(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
+
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True, hostname='vega.cs.washington.edu', port=1776):
         routes = [
@@ -481,6 +506,7 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
+            ('/demo1', Demo1)
         ]
 
         # Connection to Myria. Thread-safe
