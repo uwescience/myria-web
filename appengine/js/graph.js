@@ -172,7 +172,7 @@ function Graph () {
         });
         dotStr += links + "}";
         return (dotStr);
-    }
+    };
 
     // Returns the svg description of the graph object
     Graph.prototype.generateSVG = function() {
@@ -314,9 +314,9 @@ function Graph () {
                 name: fID,
                 type: "cluster",
                 rawData: graph.nodes[fID].rawData,
-                x: minX-padding/4,
-                y: minY-3/4*padding,
-                w: maxX-minX+padding/2,
+                x: minX-padding/2,
+                y: minY-padding/2,
+                w: maxX-minX+padding,
                 h: maxY-minY+padding,
                 color: "lightgrey",
                 stroke: (graph.state.focus == fID) ? "red" : "black"
@@ -366,13 +366,13 @@ function Graph () {
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
-            padding = 0.5;
+            padding = 0.25;
 
         var wrapper = graphElement
                     .append("svg")
                     .attr("class", "graph")
                 .append("g")
-                    .call(d3.behavior.zoom().scaleExtent([0.1, 2]).on("zoom", zoom))
+                    .call(d3.behavior.zoom().scaleExtent([0.05, 2]).on("zoom", zoom))
         var svg = wrapper.append("g"); // avoid jitter
 
         var overlay = svg.append("rect")
@@ -491,7 +491,7 @@ function Graph () {
                         body += templates.row({key: key, value: value});
                     });
                     return {
-                        title: d.name,
+                        title: templates.strong({text: d.name}),
                         content: templates.table({body: body})
                     };
                 });
@@ -510,22 +510,17 @@ function Graph () {
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
 
-            nodeEnter.append("text")
+            nodeEnter.filter(function(d) {
+                return d.type == "operator";
+            }).append("text")
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
                 })
                 .text(function(d) {
-                    // TODO: (op labels) comment out for now...
-                    //if (d.type == "operator") {
-                    //    return d.optype;
-                    //} else {
-                        return d.name;
-                    //}
+                    return d.name;
                 })
                 .attr("text-anchor", "middle")
                 .attr("dy", function(d) {return"0.35em";})
-                .attr("font-family", "sans-serif")
-                .attr("font-size", "13px")
                 .attr("fill", "black");
 
             node.select("text").transition().duration(longDuration)

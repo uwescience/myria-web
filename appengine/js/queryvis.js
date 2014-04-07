@@ -20,8 +20,8 @@ var templates = {
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
-        nodeStyle: _.template("[style=\"rounded, filled\",color=\"<%- color %>\",shape=box];\n"),
-        clusterStyle: _.template("\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle=\"rounded, filled\";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n\t\tlabel = \"<%- fragment %>\";\n"),
+        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box];\n'),
+        clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
@@ -46,7 +46,8 @@ var templates = {
             <div class="col-md-12 lines"></div>\
         </div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
-    defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>')
+    defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
+    strong: _.template('<strong><%- text %></strong>')
 };
 
 // Dictionary of operand name -> color

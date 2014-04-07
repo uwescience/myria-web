@@ -103,6 +103,7 @@ rect.background {
 .graph .node text {
   fill: black;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  font-size: 14px;
 }
 
 .graph .link > polyline {
