@@ -2,7 +2,6 @@
 var graph = function (element, queryPlan) {
 
     var chartElement = d3.select('.chart');
-    var graphElement = d3.select('.query-plan');
 
     var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
     manyLineCharts(chartElement, allFragments, queryPlan);
@@ -10,17 +9,16 @@ var graph = function (element, queryPlan) {
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
 
-    graphObj.render(graphElement, chartElement);
+    graphObj.render(element, chartElement);
 };
 
 //query graph
-var queryGraph = function(queryPlan){
-    var graphElement = d3.select('.query-plan');
+var queryGraph = function(element, queryPlan){
     var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-    graphObj.render(graphElement, null);
-}
+    graphObj.render(element, null);
+};
 
 // Graph object
 function Graph () {
@@ -389,6 +387,8 @@ function Graph () {
     Graph.prototype.render = function(graphElement, chartElement) {
         var graph = this;
 
+        var interactive = chartElement ? true : false;
+
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
@@ -420,58 +420,56 @@ function Graph () {
         draw(D3data, true);
 
         // On click, update with new data
-        svg.selectAll(".node")
-            .on("click", function() {
-                if (d3.event.defaultPrevented) return;
+        if (interactive) {
+            svg.attr("class", "interactive");
 
-                var node = d3.select(this).data()[0];
+            svg.selectAll(".node")
+                .on("click", function() {
+                    if (d3.event.defaultPrevented) return;
 
-                // Handle fragment state
-                if (node.type == "cluster") {
-                    if (node.name == graph.state.focus) {
-                        graph.state.focus = "";
-                        graph.reduceNode([node.name]);
+                    var node = d3.select(this).data()[0];
 
-                        var allFragments = _.pluck(graph.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-                        if(chartElement){
+                    // Handle fragment state
+                    if (node.type == "cluster") {
+                        if (node.name == graph.state.focus) {
+                            graph.state.focus = "";
+                            graph.reduceNode([node.name]);
+
+                            var allFragments = _.pluck(graph.queryPlan.physicalPlan.fragments, 'fragmentIndex');
                             manyLineCharts(chartElement, allFragments, graph.queryPlan);
+                        } else {
+                            graph.state.focus = node.name;
+                            if(chartElement){
+                                fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
+                            }
                         }
-                    } else {
-                        graph.state.focus = node.name;
-                        if(chartElement){
-                            fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
-                        }
-                    }
-                } else if (node.type == "fragment") {
-                    graph.expandNode([node.name]);
-                    if(chartElement){
+                    } else if (node.type == "fragment") {
+                        graph.expandNode([node.name]);
                         chartElement.selectAll("svg").remove();
                         fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
                     }
-                }
 
-                var newD3data = graph.generateD3data(padding);
-                draw(newD3data, false);
-            });
-
-        svg.selectAll(".link")
-            .on("click", function() {
-                if (d3.event.defaultPrevented) return;
-
-                var line = d3.select(this).data()[0];
-
-                if (line.type == "frag") {
-                    var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
-                    var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
-                    if(chartElement){
-                        chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], graph.queryPlan);
-                    }
-                    graph.state.focus = line.name;
                     var newD3data = graph.generateD3data(padding);
                     draw(newD3data, false);
-                }
-            });
+                });
+
+            svg.selectAll(".link")
+                .on("click", function() {
+                    if (d3.event.defaultPrevented) return;
+
+                    var line = d3.select(this).data()[0];
+
+                    if (line.type == "frag") {
+                        var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
+                        var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
+                        chartElement.selectAll("svg").remove();
+                        networkVisualization(chartElement, [src, dst], graph.queryPlan);
+                        graph.state.focus = line.name;
+                        var newD3data = graph.generateD3data(padding);
+                        draw(newD3data, false);
+                    }
+                });
+        }
 
         function draw(data, initial) {
             svg.transition()
@@ -482,7 +480,7 @@ function Graph () {
                 .attr("height", data.height*dpi + 400)
                 .attr("width", data.width*dpi + 400);
 
-            graphElement.style("height", data.height*dpi + 10 + "px");
+            graphElement.style("height", (data.height + 0.5)*dpi + "px");
 
             wrapper.attr("transform", "translate(" + (width/2 - data.width * dpi/2) + ", 0)")
 
@@ -613,7 +611,7 @@ function Graph () {
             link.select("marker").transition().duration(longDuration)
                 .attr("fill", function(d) {
                     return d.stroke;
-                })
+                });
 
             link.select("polyline.line").transition().duration(longDuration)
                 .attr("opacity", 1)
