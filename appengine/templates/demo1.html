@@ -1,13 +1,6 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-    <script src="js/d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/queryvis.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="css/queryvis.css">
     <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
 {% endblock %}
@@ -58,6 +51,14 @@
 {% endblock %}
 
 {% block footer %}
+    <script src="js/d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/queryvis.js" type="text/javascript" charset="utf-8"></script>
+
     <script type="text/javascript">
     {% autoescape false %}
         var myriaConnection = '{{ myriaConnection }}';
