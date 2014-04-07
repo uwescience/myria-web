@@ -185,15 +185,21 @@ function Graph () {
         return(graphSVG);
     };
 
-    // D3 data generator
-    Graph.prototype.generateD3data = function(padding) {
+    Graph.prototype.generatePlainDot = function() {
         var graph = this;
 
         // Get dot description of the graph
         var dotStr = graph.generateDot();
 
         // Generate plain graph description
-        var graphDesc = Viz(dotStr, "plain");
+        return Viz(dotStr, "plain");
+    };
+
+    // D3 data generator
+    Graph.prototype.generateD3data = function(padding) {
+        var graph = this;
+
+        var graphDesc = graph.generatePlainDot();
 
         // Parse the plain description
         var graphDescRows = graphDesc.split("\n");
@@ -516,18 +522,22 @@ function Graph () {
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
 
-            nodeEnter.filter(function(d) {
-                return d.type == "operator";
-            }).append("text")
+            nodeEnter
+                .append("text")
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
-                })
-                .text(function(d) {
-                    return d.name;
                 })
                 .attr("text-anchor", "middle")
                 .attr("dy", function(d) {return"0.35em";})
                 .attr("fill", "black");
+
+            node.select("text")
+                .text(function(d) {
+                    if (d.type == "operator" || !_.contains(graph.state.opened, d.name)) {
+                        return d.name;
+                    }
+                    return "";
+                });
 
             node.select("text").transition().duration(longDuration)
                 .attr("opacity", 1)
