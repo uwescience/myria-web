@@ -1,3 +1,4 @@
+//query graph and profiling charts
 var graph = function (element, queryPlan) {
 
     var chartElement = d3.select('.chart');
@@ -10,6 +11,15 @@ var graph = function (element, queryPlan) {
 
     graphObj.render(element, chartElement);
 };
+
+//query graph
+var queryGraph = function(queryPlan){
+    var graphElement = d3.select('.query-plan');
+    var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+    var graphObj = new Graph();
+    graphObj.loadQueryPlan(queryPlan);
+    graphObj.render(graphElement, null);
+}
 
 // Graph object
 function Graph () {
@@ -24,14 +34,13 @@ function Graph () {
     this.state = {};        // Describes which nodes are "expanded"
     this.opName2color = {}; // Dictionary of opName - color
     this.opName2fID = {};   // Dictionary of opName - fragment ID
+    this.queryPlan = {}; // Physical plan
 
     /********************/
     // Public methods
     /********************/
     Graph.prototype.loadQueryPlan = function(json) {
         var graph = this;
-
-        graph.queryPlan = json;
 
         // Initialize the state
         graph.state.opened = [];
@@ -40,6 +49,8 @@ function Graph () {
         // Get the query plan ID
         graph.qID = json.queryId;
         graph.name = "Query Plan " + graph.qID;
+        // Get query plan
+        graph.queryPlan = json;
 
         // Collect graph nodes
         graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
@@ -97,7 +108,20 @@ function Graph () {
                 }
                 // Add in-fragment links
                 for (var key in op) {
-                    if (key.indexOf("argChild")!=-1) {
+                    if(key=="argChildren"){
+                        op[key].forEach(function(child){
+                            var link = new Object();                        // Link object
+                            link.u = {};
+                            link.v = {};
+                            link.u.fID = id;                                // Src fragment ID
+                            link.u.oID = child;                           // Src operand ID
+                            link.v.fID = id;                                // Dst fragment ID
+                            link.v.oID = op.opName;                         // Dst fragment ID
+                            var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
+                            fragment.opLinks[linkid] = link;
+                        });
+                    }
+                    else if (key.indexOf("argChild")!=-1) {
                         var link = new Object();                        // Link object
                         link.u = {};
                         link.v = {};

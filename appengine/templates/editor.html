@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<script type="text/javascript" src="js/codemirror.js"></script>
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
@@ -98,6 +97,8 @@
 {% endblock %}
 
 {% block footer %}
+<script type="text/javascript" src="js/codemirror.js"></script>
+
 <script>
 	var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
 		mode : 'application/js',
