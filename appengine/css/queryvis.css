@@ -87,11 +87,11 @@ rect.background {
   stroke-width: 2;
 }
 
-.cluster:hover, .fragment:hover {
+.interactive .cluster:hover, .interactive .fragment:hover {
   cursor: pointer;
 }
 
-.graph .cluster:hover rect, .fragment:hover rect {
+.interactive .graph .cluster:hover rect, .interactive .fragment:hover rect {
   transition: fill .3s;
   fill: #999;
 }
