@@ -132,7 +132,8 @@ function executeplan() {
     type : 'POST',
     data : {
       query : query,
-      language : editorLanguage
+      language : editorLanguage,
+      profile: $("#profile-enabled").is(':checked')
     },
     statusCode : {
       200 : displayQueryStatus,
@@ -191,8 +192,8 @@ function updateExamples(language) {
 
 function changeLanguage() {
   /* First make sure it's a valid language. */
-  var languages = [ 'Datalog', 'MyriaL', 'SQL' ];
-  var language = $(".language-menu option:selected").text();
+  var languages = [ 'datalog', 'myrial', 'sql' ];
+  var language = $(".language-menu option:selected").val();
   var i = languages.indexOf(language);
   if (i == -1) {
     return false;

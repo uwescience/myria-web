@@ -428,6 +428,7 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
+        profile = self.request.get("profile", False)
 
         cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
 
@@ -439,6 +440,8 @@ class Execute(MyriaHandler):
             catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+
+            compiled['profilingMode'] = profile
 
             # Issue the query
             query_status = conn.submit_query(compiled)
