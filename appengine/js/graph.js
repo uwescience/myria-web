@@ -579,6 +579,11 @@ function Graph () {
 
             /* Links */
 
+            var line = d3.svg.line()
+                .x(function(d) { return d[0] * dpi; })
+                .y(function(d) { return d[1] * dpi; })
+                .interpolate("montone");
+
             var link = svg.selectAll("g.link")
                 .data(data.links, function(d) { return d.name; });
 
@@ -586,7 +591,7 @@ function Graph () {
 
             link.attr("class", function(d) { return "link " + d.type; });
 
-            linkEnter.append("polyline")
+            linkEnter.append("path")
                 .attr("stroke-dasharray", function(d) {
                     return (d.type=="frag") ? ("0, 0") : ("3, 3");
                 })
@@ -595,7 +600,7 @@ function Graph () {
                 })
                 .attr("class", "line");
 
-            linkEnter.append("polyline")
+            linkEnter.append("path")
                 .attr("class", "clickme");
 
             linkEnter.append("defs").append("marker")
@@ -616,30 +621,17 @@ function Graph () {
                     return d.stroke;
                 });
 
-            link.select("polyline.line").transition().duration(longDuration)
+            link.select("path.line").transition().duration(longDuration)
                 .attr("opacity", 1)
-                .attr("points", function(d) {
-                    // TODO: use d3 line
-                    path = ""
-                    d.points.forEach(function (point) {
-                        path += (point[0]*dpi)+" "+(point[1]*dpi)+", "
-                    });
-                    return path.substr(0, path.length-2).trim();
-                })
+                .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id }) });
 
-            link.select("polyline.clickme").attr("points", function(d) {
-                    // TODO: use d3 line
-                    path = ""
-                    d.points.forEach(function (point) {
-                        path += (point[0]*dpi)+" "+(point[1]*dpi)+", "
-                    });
-                    return path.substr(0, path.length-2).trim();
-                })
+            link.select("path.clickme")
+                .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", "black");
 
-            link.exit().select("polyline").transition().duration(shortDuration)
+            link.exit().select("path").transition().duration(shortDuration)
                 .attr("opacity", 0);
 
             link.exit().select("marker").transition().duration(shortDuration)
