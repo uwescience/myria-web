@@ -217,7 +217,7 @@ function showSvgModal() {
     svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));
   }
 
-  var panzoom = $('#zoom-canvas').panzoom({
+  var panzoom = $('.zoom-canvas').panzoom({
     maxScale : 10,
     minScale : 1,
     contain : 'invert',

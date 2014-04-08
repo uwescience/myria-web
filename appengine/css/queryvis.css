@@ -198,6 +198,10 @@ rect.background {
   font-size: 18px;
 }
 
+.overlay {
+  cursor: move;
+}
+
 /* Network */
 
 .focus circle {

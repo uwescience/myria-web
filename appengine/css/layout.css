@@ -75,3 +75,6 @@ input[type=range].zoom-range {
     z-index: 10;
 }
 
+#svg-modal-body {
+	padding: 0;
+}
