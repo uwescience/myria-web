@@ -66,3 +66,12 @@ input[type=range].zoom-range {
 .triple-input .form-control:focus {
     border-right-width: 1px;
 }
+
+.back-to-top {
+    position: fixed;
+    bottom: 2em;
+    right: 0px;
+    display: none;
+    padding: 1em;
+}
+
