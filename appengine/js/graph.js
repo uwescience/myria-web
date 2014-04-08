@@ -176,16 +176,10 @@ function Graph () {
         }
         // Then add the operand links in subgraphs
         graph.state.opened.forEach(function(fragment){
-            dotStr += templates.graphViz.clusterStyle(
-                {
-                    fragment: fragment
-                });
+            dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
-                dotStr += "\t\t\"" + id + "\"" + templates.graphViz.nodeStyle(
-                {
-                    color: "white"
-                });
+                dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opType });
             }
             for (var id in graph.nodes[fragment].opLinks) {
                 var link = graph.nodes[fragment].opLinks[id];
@@ -558,7 +552,7 @@ function Graph () {
             node.select("text")
                 .text(function(d) {
                     if (d.type == "operator" || !_.contains(graph.state.opened, d.name)) {
-                        return d.name;
+                        return d.optype;
                     }
                     return "";
                 });
