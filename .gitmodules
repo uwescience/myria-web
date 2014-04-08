@@ -1,10 +1,10 @@
 [submodule "datalogcompiler"]
 	path = datalogcompiler
-	url = git@github.com:uwescience/datalogcompiler.git
+	url = https://github.com/uwescience/datalogcompiler.git
 	branch = master
 [submodule "myria-python"]
 	path = myria-python
-	url = git@github.com:uwescience/myria-python.git
+	url = https://github.com/uwescience/myria-python.git
 	branch = master
 [submodule "requests"]
 	path = requests
