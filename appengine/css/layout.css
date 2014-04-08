@@ -54,3 +54,15 @@ body {
 input[type=range].zoom-range {
 	display: inline;
 }
+
+#editor-tabs li a {
+	padding: 8px 3px;
+}
+
+.triple-input .form-control {
+    width: 33.33%;
+    border-right-width: 0px;
+}
+.triple-input .form-control:focus {
+    border-right-width: 1px;
+}

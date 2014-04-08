@@ -315,7 +315,10 @@ class Editor(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        template_vars = {}
+        template_vars = {
+            'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
+        }
+
         # .. pass in the query
         template_vars['query'] = examples['datalog'][0][1]
         # .. pass in the Datalog examples to start

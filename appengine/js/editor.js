@@ -238,6 +238,18 @@ function resizeEditor() {
   }
 }
 
+function searchDataset(e) {
+  event.preventDefault();
+  var user = $("#user-input").val(),
+    program = $("#program-input").val(),
+    relation = $("#relation-input").val(),
+    url = "http://" + myriaConnection + "/dataset/user-" + user + "/program-" + program + "/relation-" + relation;
+  $.getJSON(url, function(data) {
+    var html = JSON.stringify(data.schema, null, 4);
+    $("#dataset-information").text(html);
+  });
+}
+
 $(function() {
   resetResults();
 
@@ -259,5 +271,6 @@ $(function() {
   });
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
+  $(".dataset-search").submit(searchDataset);
   optimizeplan();
 });
