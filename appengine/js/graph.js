@@ -51,7 +51,7 @@ function Graph () {
         graph.queryPlan = json;
 
         // Collect graph nodes
-        json.physicalPlan.fragments.forEach(function(fragment) {
+        graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = new Object();                                    // Node object
             var id = "Fragment" + fragment.fragmentIndex.toString();    // Node ID
@@ -82,7 +82,7 @@ function Graph () {
         });
 
         // If there are more than 10 fragments, do not expand
-        if (json.physicalPlan.fragments.length < 10) {
+        if (graph.queryPlan.physicalPlan.fragments.length < 10) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
