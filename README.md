@@ -3,7 +3,7 @@ A web front-end for Myria
 
 This is a Google App Engine app.
 
-[![Build Status](https://magnum.travis-ci.com/uwescience/myria-web.svg?token=BLHWag1nbAUpjrkqdzEA&branch=master)](https://magnum.travis-ci.com/uwescience/myria-web)
+[![Build Status](https://travis-ci.org/uwescience/myria-web.svg?branch=master)](https://travis-ci.org/uwescience/myria-web)
 
 # Dependencies
 
