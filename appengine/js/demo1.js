@@ -28,7 +28,7 @@ function changePlan() {
 function showPlan(plan){
   d3.select('.query-plan').each(function() {
     $('.query-plan').empty();
-    queryGraph(plan);
+    queryGraph(d3.select('.query-plan'), plan);
   });
 }
 

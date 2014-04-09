@@ -19,6 +19,7 @@
 {% block extra_head %}{% endblock %}
 </head>
 <body>
+	<span id="top"></span>
 	<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
@@ -53,9 +54,20 @@
 
 	{% block extra_body %}{% endblock %}
 
+	<a class="back-to-top" href="#top">Back to top</a>
+
+	<div class="spacer">
+		<div id="footer">
+	    	<div class="container">
+	    		<p class="text-muted credit"><a href="http://myria.cs.washington.edu/">Myria Project</a> at the <a href="http://www.washington.edu/">University of Washington</a>, 2014</p>
+			</div>
+	    </div>
+	</div>
+
 	<script src="js/jquery-2.1.0.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
 	<script src="js/jquery.panzoom.min.js"></script>
+	<script src="js/main.js"></script>
 
 	{% block footer %}{% endblock %}
 </body>

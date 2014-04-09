@@ -34,7 +34,7 @@ function getplan() {
     $('#relational_svg').html(result);
     $('svg').width('100%');
     $('svg').height('100%');
-  })
+  });
 }
 
 function optimizeplan() {
@@ -123,6 +123,8 @@ function checkQueryStatus(query_id) {
 }
 
 function executeplan() {
+  $('#editor-tabs a[href="#result"]').tab('show');
+
   $('#executed').text('...');
   optimizeplan(); // make sure the plan matches the query
   var query = editor.getValue();
@@ -130,7 +132,8 @@ function executeplan() {
     type : 'POST',
     data : {
       query : query,
-      language : editorLanguage
+      language : editorLanguage,
+      profile: $("#profile-enabled").is(':checked')
     },
     statusCode : {
       200 : displayQueryStatus,
@@ -145,6 +148,7 @@ function executeplan() {
 
 function resetResults() {
   $(".display").empty();
+  $("#executed").text("Run query to see results here...");
   $("svg").empty();
 }
 
@@ -171,7 +175,7 @@ function updateExamples(language) {
     /*
      * Finally, set the global variable editorLanguage to the new language. This
      * makes all the API calls back use this query parameter.
-     * 
+     *
      * Then trigger the first example.
      */
     editorLanguage = language;
@@ -188,22 +192,14 @@ function updateExamples(language) {
 
 function changeLanguage() {
   /* First make sure it's a valid language. */
-  var languages = [ 'Datalog', 'MyriaL', 'SQL' ];
-  var language = $(this).text();
+  var languages = [ 'datalog', 'myrial', 'sql' ];
+  var language = $(".language-menu option:selected").val();
   var i = languages.indexOf(language);
   if (i == -1) {
     return false;
   }
 
-  /* Now let's update the UI around the language selector button. */
-  languages.splice(i, 1);
-  $('#parse-btn').text("Parse " + language);
-  var languageMenu = $('#language-menu');
-  languageMenu.empty();
-  for (var j = 0; j < languages.length; ++j) {
-    languageMenu.append('<li><a class="changer">' + languages[j] + '</a></li>');
-  }
-  $(".changer").click(changeLanguage);
+  $('#editor-tabs a[href="#examples"]').tab('show');
 
   /* Now let's update the examples. */
   updateExamples(language);
@@ -221,7 +217,7 @@ function showSvgModal() {
     svgModalOutput.appendChild(svgOutput.children[i].cloneNode(true));
   }
 
-  var panzoom = $('#zoom-canvas').panzoom({
+  var panzoom = $('.zoom-canvas').panzoom({
     maxScale : 10,
     minScale : 1,
     contain : 'invert',
@@ -230,14 +226,43 @@ function showSvgModal() {
   }).panzoom("reset");
 }
 
-$(document).ready(function() {
+function resizeEditor() {
+  if ($('.editor-row').hasClass("expanded")) {
+    $('.editor-row').removeClass("expanded")
+    $('.editor-row>div:first').attr("class", "col-md-7");
+    $('.editor-row>div:nth-child(2)').attr("class", "col-md-5");
+  } else {
+    $('.editor-row').addClass("expanded")
+    $('.editor-row>div:first').attr("class", "col-md-12");
+    $('.editor-row>div:nth-child(2)').attr("class", "col-md-12");
+  }
+}
+
+function searchDataset(e) {
+  event.preventDefault();
+  var user = $("#user-input").val(),
+    program = $("#program-input").val(),
+    relation = $("#relation-input").val(),
+    url = "http://" + myriaConnection + "/dataset/user-" + user + "/program-" + program + "/relation-" + relation;
+  $.getJSON(url, function(data) {
+    var html = JSON.stringify(data.schema, null, 4);
+    $("#dataset-information").text(html);
+  });
+}
+
+$(function() {
+  resetResults();
+
   editor.on("change", resetResults);
   editor.on("keydown", resetResults);
   editor.on("keypress", resetResults);
-  $(".planner").click(optimizeplan);
+  $(".planner").click(function() {
+    $('#editor-tabs a[href="#queryplan"]').tab('show');
+    optimizeplan();
+  });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
-  $(".changer").click(changeLanguage);
+  $(".language-menu").change(changeLanguage);
   $(".example").click(function() {
     resetResults();
     var example_query = $(this).text();
@@ -245,5 +270,7 @@ $(document).ready(function() {
     optimizeplan();
   });
   $(".show-svg-modal").click(showSvgModal);
+  $(".resize-editor").click(resizeEditor);
+  $(".dataset-search").submit(searchDataset);
   optimizeplan();
 });

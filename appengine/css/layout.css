@@ -24,3 +24,57 @@
 .my-fluid-container {
 	width: 100%;
 }
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
+
+#footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
+
+.container .credit {
+	margin: 20px 0;
+}
+
+.spacer {
+	padding-top: 30px;
+}
+
+input[type=range].zoom-range {
+	display: inline;
+}
+
+#editor-tabs li a {
+	padding: 8px 3px;
+}
+
+.triple-input .form-control {
+    width: 33.33%;
+    border-right-width: 0px;
+}
+.triple-input .form-control:focus {
+    border-right-width: 1px;
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    padding: 1em;
+    z-index: 10;
+}
+
+#svg-modal-body {
+	padding: 0;
+}

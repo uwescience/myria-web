@@ -315,7 +315,10 @@ class Editor(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        template_vars = {}
+        template_vars = {
+            'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
+        }
+
         # .. pass in the query
         template_vars['query'] = examples['datalog'][0][1]
         # .. pass in the Datalog examples to start
@@ -428,6 +431,7 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
+        profile = self.request.get("profile", False)
 
         cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
 
@@ -439,6 +443,8 @@ class Execute(MyriaHandler):
             catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+
+            compiled['profilingMode'] = profile
 
             # Issue the query
             query_status = conn.submit_query(compiled)

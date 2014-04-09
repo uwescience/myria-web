@@ -106,23 +106,19 @@ rect.background {
   font-size: 14px;
 }
 
-.graph .link > polyline {
+.graph .link > path {
   stroke-width: 3;
 }
 
-.graph polyline.clickme {
+.graph path.clickme {
   stroke-width: 25;
   opacity: 0;
 }
 
-.graph .frag:hover>polyline:not(.clickme), .graph .frag:hover marker {
+.graph .frag:hover>path:not(.clickme), .graph .frag:hover marker {
   transition: stroke .3s, fill .3s;
   stroke: orange;
   fill: orange;
-}
-
-.graph polyline {
-  fill: transparent;
 }
 
 .popover-content {
@@ -196,6 +192,10 @@ rect.background {
 .zoom-button text {
   fill: black;
   font-size: 18px;
+}
+
+.overlay {
+  cursor: move;
 }
 
 /* Network */

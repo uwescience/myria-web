@@ -20,7 +20,7 @@ var templates = {
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
-        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box];\n'),
+        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label=<%- label %>];\n'),
         clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
