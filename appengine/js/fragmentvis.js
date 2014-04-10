@@ -453,7 +453,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
                     }
                     content += ', ';
                 }
-                content += templates.duration({ duration: customTimeFormat(d.end - d.begin) });
+                content += templates.duration({ duration: customFullTimeFormat(d.end - d.begin) });
                 return content;
             });
         });
