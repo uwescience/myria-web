@@ -345,7 +345,6 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
         .attr("height", height)
         .attr("class", "background");
 
-
     // Place the xAxis
     chart.append("g")
         .attr("class", "x axis")
@@ -446,7 +445,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
         box.on('mouseenter', function(d){
             d3.select(this).tooltip(function(d) {
                 var content = templates.opname({ name: d.name });
-                if (d.link === null) {
+                if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
                         content += templates.numTuplesTemplate({ numTuples: d.numTuples });
                     } else {
@@ -454,7 +453,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
                     }
                     content += ', ';
                 }
-                content += templates.duration({ duration: customTimeFormat(d.end - d.begin) });
+                content += templates.duration({ duration: customFullTimeFormat(d.end - d.begin) });
                 return content;
             });
         });
@@ -561,6 +560,7 @@ function getWorkersStates(data) {
     var workersStates = {};
     var tmpStacks = {}; // a stack per worker keeps unfinished operator calls
 
+
     data.forEach(function(d) {
         stack = tmpStacks[d.workerId];
         if (stack === undefined || stack.length === 0) {
@@ -578,11 +578,12 @@ function getWorkersStates(data) {
             };
         }
 
-        states = workersStates[d.workerId].states;
-
-        top_stack = stack[stack.length - 1];
+        top_stack = _.last(stack);
         top_stack.end = d.nanoTime;
-        states.push(top_stack);
+        if (d.eventType === "return") {
+            top_stack.numTuples = d.numTuples;
+        }
+        workersStates[d.workerId].states.push(top_stack);
 
         // check the event type and push unfinished event on the stack
         if (d.eventType === "call") {
@@ -592,23 +593,21 @@ function getWorkersStates(data) {
             // with a new, same opName event that starts from d.nanoTime
             stack.pop();
             if (stack.length > 0) {
-                top_stack = stack[stack.length - 1];
+                top_stack = _.last(stack);
                 state = get_state(d);
                 state.name = top_stack.name; // the same call
-                top_stack.link = state; // belong together (still in the same call thread)
-                stack.pop();
-                stack.push(state);
+                //TODO: use links
+                //top_stack.link = state; // belong together (still in the same call thread)
+                stack[stack.length - 1] = state;
            } //TODO: eos??
         }
     });
 
     function get_state(d) {
         return {
-            link: null,           // if it belongs together with some previous event
             name: d.opName,
             begin: d.nanoTime,
-            end: null,           // we don't know this yet ...
-            numTuples: d.numTuples
+            end: null           // we don't know this yet ...
         };
     }
 
