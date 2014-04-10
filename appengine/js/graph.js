@@ -384,7 +384,7 @@ function Graph () {
 
     // D3 rendering prototype
     Graph.prototype.render = function(graphElement, chartElement) {
-        var graph = this;
+        var self = this;
 
         var interactive = chartElement ? true : false;
 
@@ -393,36 +393,41 @@ function Graph () {
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
             padding = 0.25;
 
+        var zoom = d3.behavior.zoom()
+            .scaleExtent([0.5, 4])
+            .on('zoom', onzoom);
+
         var wrapper = graphElement
                     .append("svg")
                     .attr("class", "graph")
-                .append("g")
-                    .call(d3.behavior.zoom().scaleExtent([0.05, 2]).on("zoom", zoom))
-        var svg = wrapper.append("g"); // avoid jitter
+                    .call(zoom)
+                    .append("g");
+        var graph = wrapper.append("g"); // avoid jitter
 
-        var overlay = svg.append("rect")
+        var overlay = graph.append("rect")
             .attr("class", "overlay")
-            .attr("width", width)
             .attr("x", -200)
             .attr("y", -200)
             .on("dragstart", function(e) {
                 d3.event.sourceEvent.preventDefault();
             });
 
-        function zoom() {
-            svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
+        function onzoom() {
+            graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
-        var D3data = graph.generateD3data(padding);
+
+        var D3data = self.generateD3data(padding);
 
         // Initial rendering
         draw(D3data, true);
 
         // On click, update with new data
         if (interactive) {
-            svg.attr("class", "interactive");
+            graph.attr("class", "interactive");
 
-            svg.selectAll(".node")
+            graph.selectAll(".node")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
@@ -430,48 +435,48 @@ function Graph () {
 
                     // Handle fragment state
                     if (node.type == "cluster") {
-                        if (node.name == graph.state.focus) {
-                            graph.state.focus = "";
-                            graph.reduceNode([node.name]);
+                        if (node.name == self.state.focus) {
+                            self.state.focus = "";
+                            self.reduceNode([node.name]);
 
-                            var allFragments = _.pluck(graph.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-                            manyLineCharts(chartElement, allFragments, graph.queryPlan);
+                            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+                            manyLineCharts(chartElement, allFragments, self.queryPlan);
                         } else {
-                            graph.state.focus = node.name;
+                            self.state.focus = node.name;
                             if(chartElement){
-                                fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
+                                fragmentVisualization(chartElement, self.nodes[node.name].fragmentIndex, self.queryPlan);
                             }
                         }
                     } else if (node.type == "fragment") {
-                        graph.expandNode([node.name]);
+                        self.expandNode([node.name]);
                         chartElement.selectAll("svg").remove();
-                        fragmentVisualization(chartElement, graph.nodes[node.name].fragmentIndex, graph.queryPlan);
+                        fragmentVisualization(chartElement, self.nodes[node.name].fragmentIndex, self.queryPlan);
                     }
 
-                    var newD3data = graph.generateD3data(padding);
+                    var newD3data = self.generateD3data(padding);
                     draw(newD3data, false);
                 });
 
-            svg.selectAll(".link")
+            graph.selectAll(".link")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
                     var line = d3.select(this).data()[0];
 
                     if (line.type == "frag") {
-                        var src = (line.src in graph.nodes) ? graph.nodes[line.src].fragmentIndex : graph.nodes[graph.opName2fID[line.src]].fragmentIndex;
-                        var dst = (line.dst in graph.nodes) ? graph.nodes[line.dst].fragmentIndex : graph.nodes[graph.opName2fID[line.dst]].fragmentIndex;
+                        var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opName2fID[line.src]].fragmentIndex;
+                        var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opName2fID[line.dst]].fragmentIndex;
                         chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], graph.queryPlan);
-                        graph.state.focus = line.name;
-                        var newD3data = graph.generateD3data(padding);
+                        networkVisualization(chartElement, [src, dst], self.queryPlan);
+                        self.state.focus = line.name;
+                        var newD3data = self.generateD3data(padding);
                         draw(newD3data, false);
                     }
                 });
         }
 
         function draw(data, initial) {
-            svg.transition()
+            graph
                 .attr("height", data.height*dpi)
                 .attr("width", data.width*dpi);
 
@@ -481,10 +486,22 @@ function Graph () {
 
             graphElement.style("height", (data.height + 0.5)*dpi + "px");
 
-            wrapper.attr("transform", "translate(" + (width/2 - data.width * dpi/2) + ", 0)")
+            wrapper.attr("transform", "translate(" + (width/2 - data.width * dpi/2) + ", 0)");
+
+            var scale = width/(data.width*dpi);
+            if (scale < 1) {
+                zoom.scale(scale);
+            } else {
+                scale = 1;
+            }
+
+            // see http://commons.oreilly.com/wiki/index.php/SVG_Essentials/Transforming_the_Coordinate_System#Technique:_Scaling_Around_a_Center_Point
+            var centerX = width/2;
+            zoom.translate([-centerX*(scale-1), 0]);
+            zoom.event(overlay);
 
             /* Nodes */
-            var node = svg.selectAll("g.node")
+            var node = graph.selectAll("g.node")
                 .data(data.nodes, function(d) { return d.name; });
 
             var nodeEnter = node.enter()
@@ -551,7 +568,7 @@ function Graph () {
 
             node.select("text")
                 .text(function(d) {
-                    if (d.type == "operator" || !_.contains(graph.state.opened, d.name)) {
+                    if (d.type == "operator" || !_.contains(self.state.opened, d.name)) {
                         return d.optype;
                     }
                     return "";
@@ -584,7 +601,7 @@ function Graph () {
                 .y(function(d) { return d[1] * dpi; })
                 .interpolate("montone");
 
-            var link = svg.selectAll("g.link")
+            var link = graph.selectAll("g.link")
                 .data(data.links, function(d) { return d.name; });
 
             var linkEnter = link.enter().append("g");
