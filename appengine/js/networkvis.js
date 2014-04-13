@@ -136,10 +136,25 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             summary.duration = _.max(_.pluck(dataset, 'end')) - _.min(_.pluck(dataset, 'begin'));
 
+            updateSummary(element.select(".summary"), summary);
+
             sourceList = _.map(_.pairs(sources), function(d) {return {id: +d[0], numTuples: d[1]}; });
             destinationList = _.map(_.pairs(destinations), function(d) {return {id: +d[0], numTuples: d[1]}; });
 
-            updateSummary(element.select(".summary"), summary);
+            _.each(sourceList, function(source) {
+                _.each(destinationList, function(dest) {
+                    var pixelID = '' + source.id + '_' + dest.id;
+                    var key = [source.id, dest.id];
+                    if (!(key in dataset)) {
+                        dataset[key] = {
+                            sumTuples: 0,
+                            src: source.id,
+                            dest: dest.id,
+                            pixelID: pixelID
+                        };
+                    }
+                });
+            });
 
             draw(dataset, _.sortBy(sourceList, function(d) {return d.id;}), _.sortBy(destinationList, function(d) {return d.id;}));
         });
@@ -187,6 +202,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     });
                 })
                 .on('click', function(d) {
+                    if (d.sumTuples === 0)
+                        return;
                     if (!d.active) {
                         chart.add(rawData, d.src, d.dest);
                         d3.select(this).attr("class", "pixel active");
@@ -207,6 +224,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     .on('click', function(d) {
                         pairs = [];
                         for (var i = 0; i < sources.length; i++) {
+                            if (rawData[[sources[i], d]].sumTuples == 0)
+                                continue;
                             pairs.push([sources[i], d]);
                             var id = '#pixel_' + sources[i] + '_' + d;
                             d3.select(id).attr("class", "pixel active");
@@ -226,6 +245,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     .on('click', function(d) {
                         pairs = [];
                         for (var i = 0; i < destinations.length; i++) {
+                            if (rawData[[d,destinations[i]]].sumTuples == 0)
+                                continue;
                             pairs.push([d,destinations[i]]);
                             var id = '#pixel_' + d + '_' + destinations[i];
                             d3.select(id).attr("class", "pixel active");
