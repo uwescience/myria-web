@@ -38,14 +38,14 @@ var templates = {
     opname: _.template('<strong><%- name %>: </strong>'),
     networkVisFrames:
         '<div class="row">\
-            <div class="col-md-12 matrix"></div>\
-        </div>\
-        <div class="row"><div class="col-md-12 clear"></div></div>\
-        <div class="row">\
-            <div class="col-md-8 lines"></div>\
             <div class="col-md-4">\
                 <h3>Summary</h3><p class="summary"></p>\
         	</div>\
+        	<div class="col-md-8 lines"></div>\
+        </div>\
+        <div class="row"><div class="col-md-12 controls form-inline"></div></div>\
+        <div class="row">\
+            <div class="col-md-12 matrix"></div>\
         </div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
@@ -60,7 +60,8 @@ var opColors = d3.scale.category20();
 
 var animationDuration = 750,
     shortDuration = 500,
-    longDuration = 1000;
+    longDuration = 1000,
+    delayTime = 20;
 
 var dpi = 96;
 

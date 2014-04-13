@@ -156,12 +156,16 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 });
             });
 
-            draw(dataset, _.sortBy(sourceList, function(d) {return d.id;}), _.sortBy(destinationList, function(d) {return d.id;}));
+            draw(dataset, sourceList, destinationList, 'id');
         });
 
         var chart = timeSeriesChart(element.select('.lines'));
 
-        function draw(rawData, sourceList, destinationList) {
+        var initial = true;
+
+        function draw(rawData, sourceList, destinationList, orderBy) {
+            sourceList = _.sortBy(sourceList, function(d) {return d[orderBy];})
+            destinationList = _.sortBy(destinationList, function(d) {return d[orderBy];})
             var data = _.values(rawData),
                 sources = _.pluck(sourceList, "id"),
                 destinations = _.pluck(destinationList, "id"),
@@ -175,20 +179,19 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             barHeight.domain([0, d3.max(both, function(d) { return d.numTuples; })])
 
+            var delayFunction = function(d, i) { return initial ? 0 : i * delayTime; };
+
             var pixel = rawMatrix
                 .selectAll('rect.pixel')
-                .data(data);
+                .data(data, function(d) {
+                    return d.pixelID;
+                });
 
             pixel.enter()
                 .append('rect')
-                .attr('class', 'pixel');
-
-            pixel.attr('width', columnScale.rangeBand())
+                .attr('class', 'pixel')
+                .attr('width', columnScale.rangeBand())
                 .attr('height', rowScale.rangeBand())
-                .attr('y', function(d){
-                    return rowScale(d.src);})
-                .attr('x', function(d){
-                    return columnScale(d.dest);})
                 .attr('id', function(d){
                     return "pixel_" + d.pixelID;})
                 .style('fill',function(d){
@@ -214,6 +217,17 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     }
                     d.active = !d.active;
                 });
+
+            pixel
+                .attr("opacity", 0)
+                .attr('y', function(d){
+                    return rowScale(d.src);})
+                .attr('x', function(d){
+                    return columnScale(d.dest);})
+                .transition()
+                .duration(shortDuration)
+                .delay(initial ? 0 : _.max([sources.length, destinations.length]) * delayTime + longDuration)
+                .attr("opacity", 1);
 
             function addColTick(selection) {
                 selection
@@ -259,7 +273,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     });
             }
             var tickColEl = tickCol.selectAll('text.tick')
-                .data(destinations);
+                .data(destinations, function(d) { return d; });
 
             tickColEl.enter().call(addColTick);
 
@@ -267,49 +281,67 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             tickColEl
                 .text(function(d){ return d; })
+                .transition()
+                .duration(longDuration)
+                .delay(delayFunction)
                 .attr('y', function(d){ return columnScale(d) + columnScale.rangeBand()/2; });
 
             var tickRowEl = tickRow.selectAll('text.tick')
-                .data(sources);
+                .data(sources, function(d) { return d; });
 
             tickRowEl.enter().call(addRowTick);
 
             tickRowEl
                 .text(function(d){ return d; })
+                .transition()
+                .duration(longDuration)
+                .delay(delayFunction)
                 .attr('y', function(d){return rowScale(d)  + rowScale.rangeBand()/2;});
 
             tickRowEl.exit().remove();
 
             /* Col bar chart */
-            var colBarAppend = colBarChart.selectAll("rect")
-                .data(destinationList)
-                .enter().append("rect");
+            var colBar = colBarChart.selectAll("rect")
+                .data(destinationList, function(d) { return d.id; });
 
-            colBarAppend
-                .attr("x", function(d) { return columnScale(d.id); })
-                .attr("y", function(d) { return barHeight(d.numTuples); })
-                .attr('width', columnScale.rangeBand())
-                .attr("height", function(d) { return barChartHeight - barHeight(d.numTuples); })
+            colBar.enter().append("rect")
                 .tooltip(function(d) {
                     return templates.barTooltip({ numTuples: d.numTuples, worker: d.id });
-                });
+                })
+                .attr("width", columnScale.rangeBand())
+                .attr("height", function(d) { return barChartHeight - barHeight(d.numTuples); })
+                .attr("y", function(d) { return barHeight(d.numTuples); });
+
+            colBar
+                .transition()
+                .duration(longDuration)
+                .delay(delayFunction)
+                .attr("x", function(d) { return columnScale(d.id); });
 
 
             /* Row bar chart */
-            var rowBarAppend = rowBarChart.selectAll("rect")
-                .data(sourceList)
-                .enter().append("rect");
+            var rowBar = rowBarChart.selectAll("rect")
+                .data(sourceList, function(d) { return d.id; });
 
-            rowBarAppend
-                .attr("y", function(d) { return rowScale(d.id); })
-                .attr("x", function(d) { return barHeight(d.numTuples); })
-                .attr('height', rowScale.rangeBand())
-                .attr("width", function(d) { return barChartHeight - barHeight(d.numTuples); })
+            rowBar.enter().append("rect")
                 .tooltip(function(d) {
                     return templates.barTooltip({ numTuples: d.numTuples, worker: d.id });
-                });
+                })
+                .attr("height", rowScale.rangeBand())
+                .attr("width", function(d) { return barChartHeight - barHeight(d.numTuples); })
+                .attr("x", function(d) { return barHeight(d.numTuples); });
 
-            var button = element.select(".clear").append("button")
+            rowBar
+                .transition()
+                .duration(longDuration)
+                .delay(delayFunction)
+                .attr("y", function(d) { return rowScale(d.id); });
+
+            var controls = element.select(".controls");
+            $(controls.node()).empty();
+
+            controls.append("button")
+                .attr('class', 'btn btn-primary')
                 .text('clear selection')
                 .on("click", function() {
                     chart.emptyActiveKeys();
@@ -323,6 +355,22 @@ var networkVisualization = function (element, fragments, queryPlan) {
                        }
                     }
                 });
+
+            controls.append("label").text("Order by: ");
+
+            var sel = controls.append("select")
+                .attr("class", "form-control")
+                .on("change", function() {
+                    draw(rawData, sourceList, destinationList, this.value);
+                  });
+
+            sel.append("option").attr("value", "id").text("Worker name");
+            var o = sel.append("option").attr("value", "numTuples").text("# of Tuples");
+            if (orderBy == 'numTuples') {
+                o.attr("selected", "selected");
+            }
+
+            initial = false;
         }
     }
 

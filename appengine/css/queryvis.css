@@ -228,3 +228,15 @@ rect.background {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   font-size: 13px;
 }
+
+.controls button {
+	margin-right: 30px;
+}
+
+.controls select {
+	margin-left: 4px;
+}
+
+.controls {
+	margin: 10px 0;
+}
