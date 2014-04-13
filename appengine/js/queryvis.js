@@ -27,6 +27,7 @@ var templates = {
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
+    barTooltip: _.template("Worker: <%- worker %>, # Tuples: <%- numTuples %>"),
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
     titleFragmentsOverview: _.template("Overview over all fragments"),
@@ -37,13 +38,14 @@ var templates = {
     opname: _.template('<strong><%- name %>: </strong>'),
     networkVisFrames:
         '<div class="row">\
-            <div class="col-md-8 matrix"></div>\
-            <div class="col-md-4">\
-                <h3>Summary</h3><p class="summary"></p>\
-        </div></div>\
+            <div class="col-md-12 matrix"></div>\
+        </div>\
         <div class="row"><div class="col-md-12 clear"></div></div>\
         <div class="row">\
-            <div class="col-md-12 lines"></div>\
+            <div class="col-md-8 lines"></div>\
+            <div class="col-md-4">\
+                <h3>Summary</h3><p class="summary"></p>\
+        	</div>\
         </div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),

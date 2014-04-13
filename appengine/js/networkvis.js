@@ -9,13 +9,14 @@ var networkVisualization = function (element, fragments, queryPlan) {
     function createViz() {
         var matrixElement = element.select(".matrix");
 
-        var     matMargin = {top: 50, right: 30, bottom: 10, left: 60},
-                labelMargin = {top: 40, left: 40},
+        var     matMargin = {top: 150, right: 30, bottom: 10, left: 150},
+                labelMargin = {top: 15, left: 15},
                 axisMargin = {left: 30, bottom: 30, right: 30},
-                width = parseInt(matrixElement.style('width'), 10),
+                width = parseInt(matrixElement.style('width'), 10) - 30,
                 height = width,
                 matrixWidth = width - matMargin.left - matMargin.right,
-                matrixHeight = height - matMargin.top - matMargin.bottom;
+                matrixHeight = height - matMargin.top - matMargin.bottom,
+                barChartHeight = 130;
 
         var columnScale = d3.scale.ordinal()
             .rangeBands([0, matrixWidth], 0.1, 0);
@@ -23,42 +24,53 @@ var networkVisualization = function (element, fragments, queryPlan) {
         var rowScale = d3.scale.ordinal()
             .rangeBands([0, matrixHeight], 0.1, 0);
 
+        var barHeight = d3.scale.linear()
+            .range([barChartHeight, 0]);
+
         //append the svg for matrix
-        var matrixChart = matrixElement.append("svg")
+        var svg = matrixElement.append("svg")
                 .attr("width", width)
                 .attr("height", height)
-                .attr("class", "matrix-chart")
-            .append("g")
-                .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
+                .attr("class", "matrix-chart");
+
+        var colBarChart = svg.append("g")
+            .attr("transform", "translate(" + matMargin.left + "," + 0 + ")");
+
+        var rowBarChart = svg.append("g")
+            .attr("transform", "translate(" + 0 + "," + matMargin.top + ")");
+
+        var matrixChart = svg.append("g")
+            .attr("class", "mat-chart")
+            .attr("transform", "translate(" + matMargin.left + "," + matMargin.top + ")");
 
         var colLabel = matrixChart.append('text')
-                        .text('destination worker')
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "11px")
-                        .style("text-anchor", "end")
-                        .attr('x', matrixWidth)
-                        .attr('y', -matMargin.top + labelMargin.top/3);
+            .text('destination worker')
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "11px")
+            .style("text-anchor", "middle")
+            .attr('x', matrixWidth/2)
+            .attr('y', labelMargin.top - matMargin.top);
 
         var rowLabel = matrixChart.append('text')
-                        .text('source worker')
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "11px")
-                        .style("text-anchor", "start")
-                        .attr("dy", ".71em")
-                        //.attr('y', width - matMargin.bottom - labelMargin.bottom - 15)
-                        //.attr('x', -labelMargin.left - 5);
-                        .attr('transform', 'translate(' + [-matMargin.left + labelMargin.left/3, matrixHeight] + ") rotate(-90)");
+            .text('source worker')
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "11px")
+            .style("text-anchor", "middle")
+            .attr("dy", ".71em")
+            //.attr('y', width - matMargin.bottom - labelMargin.bottom - 15)
+            //.attr('x', -labelMargin.left - 5);
+            .attr('transform', 'translate(' + [labelMargin.left - matMargin.left, matrixHeight/2] + ") rotate(-90)");
 
         var rawMatrix = matrixChart.append('g')
               .attr('class','matrix');
 
         var tickCol = matrixChart.append('g')
             .attr('class','ticks')
-            .attr('transform', 'translate(0 ,' + (labelMargin.top - matMargin.top) + ')');
+            .attr('transform', 'translate(0 ,' + (-4) + ')');
 
         var tickRow = matrixChart.append('g')
             .attr('class','ticks')
-            .attr('transform', 'translate(' + (labelMargin.top - matMargin.top) + ', 0)');
+            .attr('transform', 'translate(' + (-4) + ', 0)');
 
         // download data
         var fragmentId = fragments[0];
@@ -68,14 +80,14 @@ var networkVisualization = function (element, fragments, queryPlan) {
             fragment: fragmentId
         });
 
-        var sources = [], destinations = [];
-
         d3.csv(url, function (data) {
             var dataset = {},
                 summary = {
                     numTuples: 0,
                     localTuples: 0
-                };
+                },
+                sources = {},
+                destinations = {};
 
             // column representation to safe space
             data.forEach(function(d,i) {
@@ -97,8 +109,15 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 dataset[key].nanoTime.push(+d.nanoTime);
                 dataset[key].numTuples.push(+d.numTuples);
                 dataset[key].sumTuples += +d.numTuples;
-                sources.push(source);
-                destinations.push(dest);
+
+                if (!(source in sources)) {
+                    sources[source] = 0;
+                }
+                sources[source] += +d.numTuples;
+                if (!(dest in destinations)) {
+                    destinations[dest] = 0;
+                }
+                destinations[dest] += +d.numTuples;
             });
 
             _.each(dataset, function(d) {
@@ -117,39 +136,29 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             summary.duration = _.max(_.pluck(dataset, 'end')) - _.min(_.pluck(dataset, 'begin'));
 
-            sources = _.uniq(sources);
-            destinations = _.uniq(destinations);
+            sourceList = _.map(_.pairs(sources), function(d) {return {id: +d[0], numTuples: d[1]}; });
+            destinationList = _.map(_.pairs(destinations), function(d) {return {id: +d[0], numTuples: d[1]}; });
 
             updateSummary(element.select(".summary"), summary);
 
-            draw(dataset, _.sortBy(sources, function(d) {return d;}), _.sortBy(destinations, function(d) {return d;}));
+            draw(dataset, _.sortBy(sourceList, function(d) {return d.id;}), _.sortBy(destinationList, function(d) {return d.id;}));
         });
 
-        var button = element.select(".clear").append("button")
-            .text('clear selection')
-            .on("click", function() {
-                chart.emptyActiveKeys();
-                chart.update();
-                for (var i = 0; i < sources.length; i++) {
-                    for (var j = 0; j < destinations.length; j++) {
+        var chart = timeSeriesChart(element.select('.lines'));
 
-                        var id = '#pixel_' + sources[i] + '_' + destinations[j];
-                        d3.select(id).style("stroke", "none");
-                        d3.select(id).datum().active = false;
-                   }
-                }
-            });
-
-        var chart = timeSeriesChart(element);
-
-        function draw(rawData, sources, destinations) {
-            var data = _.values(rawData);
+        function draw(rawData, sourceList, destinationList) {
+            var data = _.values(rawData),
+                sources = _.pluck(sourceList, "id"),
+                destinations = _.pluck(destinationList, "id"),
+                both = destinationList.concat(sourceList);
             rowScale.domain(sources);
             columnScale.domain(destinations);
 
             var maxValue = d3.max(data, function(d) { return d.sumTuples; });
 
             var color = chroma.scale('BuPu').domain([0, maxValue]).correctLightness(true).mode('lab');
+
+            barHeight.domain([0, d3.max(both, function(d) { return d.numTuples; })])
 
             var pixel = rawMatrix
                 .selectAll('rect.pixel')
@@ -198,7 +207,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     .on('click', function(d) {
                         pairs = [];
                         for (var i = 0; i < sources.length; i++) {
-                            pairs.push([sources[i],d]);
+                            pairs.push([sources[i], d]);
                             var id = '#pixel_' + sources[i] + '_' + d;
                             d3.select(id).attr("class", "pixel active");
                             d3.select(id).datum().active = true;
@@ -249,6 +258,50 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr('y', function(d){return rowScale(d)  + rowScale.rangeBand()/2;});
 
             tickRowEl.exit().remove();
+
+            /* Col bar chart */
+            var colBarAppend = colBarChart.selectAll("rect")
+                .data(destinationList)
+                .enter().append("rect");
+
+            colBarAppend
+                .attr("x", function(d) { return columnScale(d.id); })
+                .attr("y", function(d) { return barHeight(d.numTuples); })
+                .attr('width', columnScale.rangeBand())
+                .attr("height", function(d) { return barChartHeight - barHeight(d.numTuples); })
+                .tooltip(function(d) {
+                    return templates.barTooltip({ numTuples: d.numTuples, worker: d.id });
+                });
+
+
+            /* Row bar chart */
+            var rowBarAppend = rowBarChart.selectAll("rect")
+                .data(sourceList)
+                .enter().append("rect");
+
+            rowBarAppend
+                .attr("y", function(d) { return rowScale(d.id); })
+                .attr("x", function(d) { return barHeight(d.numTuples); })
+                .attr('height', rowScale.rangeBand())
+                .attr("width", function(d) { return barChartHeight - barHeight(d.numTuples); })
+                .tooltip(function(d) {
+                    return templates.barTooltip({ numTuples: d.numTuples, worker: d.id });
+                });
+
+            var button = element.select(".clear").append("button")
+                .text('clear selection')
+                .on("click", function() {
+                    chart.emptyActiveKeys();
+                    chart.update();
+                    for (var i = 0; i < sources.length; i++) {
+                        for (var j = 0; j < destinations.length; j++) {
+
+                            var id = '#pixel_' + sources[i] + '_' + destinations[j];
+                            d3.select(id).style("stroke", "none");
+                            d3.select(id).datum().active = false;
+                       }
+                    }
+                });
         }
     }
 
@@ -294,7 +347,7 @@ var timeSeriesChart = function(element) {
         .scale(y)
         .orient("left");
 
-    var chart = element.select(".lines").append("svg")
+    var chart = element.append("svg")
             .attr("width", width)
             .attr("height", height)
             .attr("class", "timeseries")
