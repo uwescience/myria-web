@@ -71,6 +71,10 @@ rect.background {
   fill: none;
 }
 
+.tooltip-inner {
+    max-width: 250px;
+}
+
 /* Graph */
 
 .query-plan .overlay {
@@ -221,4 +225,35 @@ rect.background {
 .matrix-chart .tick {
   cursor: pointer;
   font-size: 11px;
+}
+
+.mat-chart text {
+  fill: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  font-size: 13px;
+}
+
+.controls button {
+	margin-right: 30px;
+}
+
+.matrix-chart .bars rect {
+	fill: #333;
+}
+
+.matrix-chart .average {
+  stroke: steelblue;
+  stroke-width: 2;
+}
+
+.controls select {
+	margin-left: 4px;
+}
+
+#legend {
+  margin-top: 10px;
+}
+
+.controls {
+	margin: 10px 0;
 }

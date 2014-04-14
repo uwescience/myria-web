@@ -15,18 +15,19 @@ var templates = {
     titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     duration: _.template("<br/>took <%- duration %>"),
-    numTuplesTemplate: _.template("<%- numTuples %> tuples returned"),
-    nullReturned: _.template("null returned"),
+    numTuplesTemplate: _.template("<br/><%- numTuples %> tuples returned"),
+    nullReturned: _.template("<br/>null returned"),
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
-        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label=<%- label %>];\n'),
+        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label="<%- label %>"];\n'),
         clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
+    barTooltip: _.template("Worker: <%- worker %>, # Tuples: <%- numTuples %>"),
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
     titleFragmentsOverview: _.template("Overview over all fragments"),
@@ -37,13 +38,14 @@ var templates = {
     opname: _.template('<strong><%- name %>: </strong>'),
     networkVisFrames:
         '<div class="row">\
-            <div class="col-md-8 matrix"></div>\
             <div class="col-md-4">\
                 <h3>Summary</h3><p class="summary"></p>\
-        </div></div>\
-        <div class="row"><div class="col-md-12 clear"></div></div>\
+        	</div>\
+        	<div class="col-md-8 lines"></div>\
+        </div>\
+        <div class="row"><div class="col-md-12 controls form-inline"></div></div>\
         <div class="row">\
-            <div class="col-md-12 lines"></div>\
+            <div class="col-md-12 matrix"></div>\
         </div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
@@ -58,7 +60,8 @@ var opColors = d3.scale.category20();
 
 var animationDuration = 750,
     shortDuration = 500,
-    longDuration = 1000;
+    longDuration = 1000,
+    delayTime = 20;
 
 var dpi = 96;
 
