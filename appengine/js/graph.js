@@ -26,12 +26,12 @@ function Graph () {
     // Public properties
     /********************/
     this.name = "";         // Query Name
-    this.qID = 0;           // Query ID
+    this.qId = 0;           // Query ID
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
     this.state = {};        // Describes which nodes are "expanded"
-    this.opID2color = {}; // Dictionary of opID - color
-    this.opID2fID = {};   // Dictionary of opID - fragment ID
+    this.opId2color = {}; // Dictionary of opId - color
+    this.opId2fID = {};   // Dictionary of opId - fragment ID
     this.queryPlan = {}; // Physical plan
 
     /********************/
@@ -45,8 +45,8 @@ function Graph () {
         graph.state.focus = "";
 
         // Get the query plan ID
-        graph.qID = json.queryId;
-        graph.name = "Query Plan " + graph.qID;
+        graph.qId = json.queryId;
+        graph.name = "Query Plan " + graph.qId;
         // Get query plan
         graph.queryPlan = json;
 
@@ -70,12 +70,12 @@ function Graph () {
                 opnode.rawData = op;                                    // Raw JSON data
                 opnode.opType = op.opType;                              // Operand type
                 opnode.opName = op.opName.replace("Myria", "");         // Operand name
-                node.opNodes[op.opID] = opnode;
-                // Add entry to opID2fID & opID2colorvar
-                if (op.hasOwnProperty('opID')) {
-                    graph.opID2fID[op.opID] = id;
-                    graph.opID2color[op.opID] = opColors(color_index);
-                    opToColor[op.opID] = opColors(color_index);
+                node.opNodes[op.opId] = opnode;
+                // Add entry to opId2fID & opId2colorvar
+                if (op.hasOwnProperty('opId')) {
+                    graph.opId2fID[op.opId] = id;
+                    graph.opId2color[op.opId] = opColors(color_index);
+                    opToColor[op.opId] = opColors(color_index);
                     color_index ++;
                 }
             });
@@ -98,10 +98,10 @@ function Graph () {
                     var link = new Object();                            // Link object
                     link.u = {};
                     link.v = {};
-                    link.u.fID = graph.opID2fID[op.argOperatorId];      // Src fragment ID
+                    link.u.fID = graph.opId2fID[op.argOperatorId];      // Src fragment ID
                     link.u.oID = op.argOperatorId;                      // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
-                    link.v.oID = op.opID;                               // Dst fragment ID
+                    link.v.oID = op.opId;                               // Dst fragment ID
                     var linkid = link.u.fID + "->" + link.v.fID;        // Link ID
                     graph.links[linkid] = link;
                 }
@@ -115,7 +115,7 @@ function Graph () {
                             link.u.fID = id;                                // Src fragment ID
                             link.u.oID = child;                             // Src operand ID
                             link.v.fID = id;                                // Dst fragment ID
-                            link.v.oID = op.opID;                           // Dst fragment ID
+                            link.v.oID = op.opId;                           // Dst fragment ID
                             var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
                             fragment.opLinks[linkid] = link;
                         });
@@ -127,7 +127,7 @@ function Graph () {
                         link.u.fID = id;                                // Src fragment ID
                         link.u.oID = op[key];                           // Src operand ID
                         link.v.fID = id;                                // Dst fragment ID
-                        link.v.oID = op.opID;                           // Dst fragment ID
+                        link.v.oID = op.opId;                           // Dst fragment ID
                         var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
                         fragment.opLinks[linkid] = link;
                     }
@@ -239,8 +239,8 @@ function Graph () {
                         color: "lightgrey",
                         stroke: (graph.state.focus == id) ? "red" : "black"
                     };
-                } else if (id in graph.opID2fID) {
-                    var node = graph.nodes[graph.opID2fID[id]];
+                } else if (id in graph.opId2fID) {
+                    var node = graph.nodes[graph.opId2fID[id]];
                     var opnode = node.opNodes[id];
                     opnode.viz = {
                         id: id,
@@ -252,7 +252,7 @@ function Graph () {
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
                         h: +cols[5],
-                        color: (graph.state.focus == graph.opID2fID[id]) ? graph.opID2color[id] : "white",
+                        color: (graph.state.focus == graph.opId2fID[id]) ? graph.opId2color[id] : "white",
                         stroke: "black"
                     };
                 }
@@ -270,28 +270,28 @@ function Graph () {
                     if(dst in graph.nodes) {
                         // frag to frag link
                         linkID = src+"->"+dst;
-                    } else if (dst in graph.opID2fID) {
+                    } else if (dst in graph.opId2fID) {
                         // frag to op link
-                        linkID = src+"->"+graph.opID2fID[dst];
+                        linkID = src+"->"+graph.opId2fID[dst];
                     }
-                } else if (src in graph.opID2fID) {
+                } else if (src in graph.opId2fID) {
                     if(dst in graph.nodes) {
                         // op to frag link
-                        linkID = graph.opID2fID[src]+"->"+dst;
-                    } else if (dst in graph.opID2fID) {
+                        linkID = graph.opId2fID[src]+"->"+dst;
+                    } else if (dst in graph.opId2fID) {
                         // op to op link
-                        if (graph.opID2fID[src] == graph.opID2fID[dst]) {
+                        if (graph.opId2fID[src] == graph.opId2fID[dst]) {
                             // inner-fragment link
                             linkID = src+"->"+dst;
                             type = "op";
                         } else {
                             // inter-fragment link
-                            linkID = graph.opID2fID[src]+"->"+graph.opID2fID[dst];
+                            linkID = graph.opId2fID[src]+"->"+graph.opId2fID[dst];
                         }
                     }
                 }
                 if (type == "op") {
-                    var link = graph.nodes[graph.opID2fID[src]].opLinks[linkID];
+                    var link = graph.nodes[graph.opId2fID[src]].opLinks[linkID];
                     link.viz = {
                         name: linkID,
                         type: type,
@@ -351,13 +351,13 @@ function Graph () {
             // Add cluster
             nodes.push(node);
             // Add op nodes
-            for (opID in fragment.opNodes) {
-                var opNode = fragment.opNodes[opID];
+            for (opId in fragment.opNodes) {
+                var opNode = fragment.opNodes[opId];
                 nodes.push(opNode.viz);
             }
             // Add links
-            for (opID in fragment.opLinks) {
-                var opLink = fragment.opLinks[opID]
+            for (opId in fragment.opLinks) {
+                var opLink = fragment.opLinks[opId]
                 links.push(opLink.viz);
             }
         });
@@ -468,8 +468,8 @@ function Graph () {
                     var line = d3.select(this).data()[0];
 
                     if (line.type == "frag") {
-                        var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opID2fID[line.src]].fragmentIndex;
-                        var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opID2fID[line.dst]].fragmentIndex;
+                        var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opId2fID[line.src]].fragmentIndex;
+                        var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fID[line.dst]].fragmentIndex;
                         chartElement.selectAll("svg").remove();
                         networkVisualization(chartElement, [src, dst], self.queryPlan);
                         self.state.focus = line.name;
@@ -528,7 +528,7 @@ function Graph () {
                 .popover(function(d) {
                     var body = '';
 
-                    //var filtered = _.pick(d.rawData, 'opID', 'opType', 'argOperatorId', 'relationKey', 'argPf');
+                    //var filtered = _.pick(d.rawData, 'opId', 'opType', 'argOperatorId', 'relationKey', 'argPf');
                     _.each(d.rawData, function(value, key){
                         if (key == 'operators') {
                             return;

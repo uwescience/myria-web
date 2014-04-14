@@ -7,7 +7,7 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
 
     _.each(queryPlan.physicalPlan.fragments, function(frag) {
         _.each(frag.operators, function(op) {
-            idNameMapping[op.opID] = op.opName;
+            idNameMapping[op.opId] = op.opName;
         });
     });
 
