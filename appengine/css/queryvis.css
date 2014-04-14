@@ -246,6 +246,10 @@ rect.background {
 	margin-left: 4px;
 }
 
+#legend {
+  margin-top: 10px;
+}
+
 .controls {
 	margin: 10px 0;
 }

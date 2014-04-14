@@ -361,6 +361,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("x2", barHeight(avg))
                 .tooltip("average");
 
+            /* Controls */
+
             var controls = element.select(".controls");
             $(controls.node()).empty();
 
@@ -393,6 +395,15 @@ var networkVisualization = function (element, fragments, queryPlan) {
             if (orderBy == 'numTuples') {
                 o.attr("selected", "selected");
             }
+
+            /* Legend */
+            var lsvg = controls.append("svg")
+                .style("height", "40")
+                .style("width", "500")
+                .attr("id", "legend")
+                .attr("class", "pull-right");
+
+            colorlegend("#legend", color, "linear", { fill: true, linearBoxes: _.min([10, maxValue + 1]), title: "Number of tuples sent or received" });
 
             initial = false;
         }
