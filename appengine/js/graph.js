@@ -69,7 +69,8 @@ function Graph () {
                 var opnode = {};
                 opnode.rawData = op;                                    // Raw JSON data
                 opnode.opType = op.opType;                              // Operand type
-                opnode.opName = op.opName.replace("Myria", "");         // Operand name
+                var hasName = _.has(op, 'opName') && op.opName;
+                opnode.opName = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
                 node.opNodes[op.opId] = opnode;
                 // Add entry to opId2fID & opId2colorvar
                 if (op.hasOwnProperty('opId')) {

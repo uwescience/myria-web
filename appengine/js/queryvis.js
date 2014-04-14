@@ -15,8 +15,8 @@ var templates = {
     titleTemplate: _.template("<strong><%- name %></strong> <small><%- type %></small>"),
     stateTemplate: _.template("<span style='color: <%- color %>'><%- state %></span>: <%- time %>"),
     duration: _.template("<br/>took <%- duration %>"),
-    numTuplesTemplate: _.template("<%- numTuples %> tuples returned"),
-    nullReturned: _.template("null returned"),
+    numTuplesTemplate: _.template("<br/><%- numTuples %> tuples returned"),
+    nullReturned: _.template("<br/>null returned"),
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
@@ -35,7 +35,7 @@ var templates = {
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
-    opname: _.template('<strong><%- name %>: </strong><br>'),
+    opname: _.template('<strong><%- name %>: </strong>'),
     networkVisFrames:
         '<div class="row">\
             <div class="col-md-4">\
