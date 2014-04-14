@@ -20,7 +20,7 @@ var templates = {
     chartTooltipTemplate: _.template("Time: <%- time %>, #: <%- number %>"),
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
-        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label=<%- label %>];\n'),
+        nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label="<%- label %>"];\n'),
         clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
@@ -35,7 +35,7 @@ var templates = {
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
-    opname: _.template('<strong><%- name %>: </strong>'),
+    opname: _.template('<strong><%- name %>: </strong><br>'),
     networkVisFrames:
         '<div class="row">\
             <div class="col-md-4">\

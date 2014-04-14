@@ -3,10 +3,18 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
 
     $(element.node()).empty();
 
+    var idNameMapping = {};
+
+    _.each(queryPlan.physicalPlan.fragments, function(frag) {
+        _.each(frag.operators, function(op) {
+            idNameMapping[op.opID] = op.opName;
+        });
+    });
+
     var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
     var numWorkers = _.max(workers);
 
-    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers);
+    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers, idNameMapping);
     drawLineChart(element, fragmentId, queryPlan.queryId, lanesChart);
 
     // return variables that are needed outside this scope
@@ -295,7 +303,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     }
 }
 
-function drawLanes(element, fragmentId, queryId, numWorkers) {
+function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
         labels_width = 20,
         fullWidth = parseInt(element.style('width'), 10) - margin.left - margin.right,
@@ -444,7 +452,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers) {
 
         box.on('mouseenter', function(d){
             d3.select(this).tooltip(function(d) {
-                var content = templates.opname({ name: d.name });
+                var content = templates.opname({ name: idNameMapping[d.name] });
                 if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
                         content += templates.numTuplesTemplate({ numTuples: d.numTuples });
