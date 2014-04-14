@@ -71,6 +71,10 @@ rect.background {
   fill: none;
 }
 
+.tooltip-inner {
+    max-width: 250px;
+}
+
 /* Graph */
 
 .query-plan .overlay {
