@@ -237,6 +237,11 @@ rect.background {
 	fill: #333;
 }
 
+.matrix-chart .average {
+  stroke: steelblue;
+  stroke-width: 2;
+}
+
 .controls select {
 	margin-left: 4px;
 }

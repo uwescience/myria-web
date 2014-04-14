@@ -339,6 +339,28 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .delay(delayFunction)
                 .attr("y", function(d) { return rowScale(d.id); });
 
+
+            // average lines
+            var avg = d3.mean(destinationList, function(d) { return d.numTuples; });
+
+            colBarChart.select("line.average").remove();
+            colBarChart.append("line")
+                .attr("class", "average")
+                .attr("x1", 0)
+                .attr("y1", barHeight(avg))
+                .attr("x2", matrixWidth)
+                .attr("y2", barHeight(avg))
+                .tooltip("average");
+
+            rowBarChart.select("line.average").remove();
+            rowBarChart.append("line")
+                .attr("class", "average")
+                .attr("y1", 0)
+                .attr("x1", barHeight(avg))
+                .attr("y2", matrixWidth)
+                .attr("x2", barHeight(avg))
+                .tooltip("average");
+
             var controls = element.select(".controls");
             $(controls.node()).empty();
 
