@@ -233,6 +233,10 @@ rect.background {
 	margin-right: 30px;
 }
 
+.matrix-chart .bars rect {
+	fill: #333;
+}
+
 .controls select {
 	margin-left: 4px;
 }

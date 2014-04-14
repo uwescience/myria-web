@@ -34,9 +34,11 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("class", "matrix-chart");
 
         var colBarChart = svg.append("g")
+            .attr("class", "bars")
             .attr("transform", "translate(" + matMargin.left + "," + 0 + ")");
 
         var rowBarChart = svg.append("g")
+            .attr("class", "bars")
             .attr("transform", "translate(" + 0 + "," + matMargin.top + ")");
 
         var matrixChart = svg.append("g")
