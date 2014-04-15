@@ -30,9 +30,9 @@ function Graph () {
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
     this.state = {};        // Describes which nodes are "expanded"
-    this.opId2color = {}; // Dictionary of opId - color
-    this.opId2fID = {};   // Dictionary of opId - fragment ID
-    this.queryPlan = {}; // Physical plan
+    this.opId2color = {};   // Dictionary of opId - color
+    this.opId2fId = {};     // Dictionary of opId - fragment ID
+    this.queryPlan = {};    // Physical plan
 
     /********************/
     // Public methods
@@ -72,9 +72,9 @@ function Graph () {
                 var hasName = _.has(op, 'opName') && op.opName;
                 opnode.opName = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
                 node.opNodes[op.opId] = opnode;
-                // Add entry to opId2fID & opId2colorvar
+                // Add entry to opId2fId & opId2colorvar
                 if (op.hasOwnProperty('opId')) {
-                    graph.opId2fID[op.opId] = id;
+                    graph.opId2fId[op.opId] = id;
                     graph.opId2color[op.opId] = opColors(color_index);
                     opToColor[op.opId] = opColors(color_index);
                     color_index ++;
@@ -99,7 +99,7 @@ function Graph () {
                     var link = new Object();                            // Link object
                     link.u = {};
                     link.v = {};
-                    link.u.fID = graph.opId2fID[op.argOperatorId];      // Src fragment ID
+                    link.u.fID = graph.opId2fId[op.argOperatorId];      // Src fragment ID
                     link.u.oID = op.argOperatorId;                      // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
                     link.v.oID = op.opId;                               // Dst fragment ID
@@ -108,7 +108,7 @@ function Graph () {
                 }
                 // Add in-fragment links
                 for (var key in op) {
-                    if(key=="argChildren"){
+                    if (key == "argChildren") {
                         op[key].forEach(function(child){
                             var link = new Object();                        // Link object
                             link.u = {};
@@ -120,8 +120,7 @@ function Graph () {
                             var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
                             fragment.opLinks[linkid] = link;
                         });
-                    }
-                    else if (key.indexOf("argChild")!=-1) {
+                    } else if (key.indexOf("argChild") != -1) {
                         var link = new Object();                        // Link object
                         link.u = {};
                         link.v = {};
@@ -143,7 +142,7 @@ function Graph () {
         nodes.forEach(function(nid){
             var exists = false;
             graph.state.opened.forEach(function(id){
-                if(nid==id) { exists = true; }
+                if(nid == id) { exists = true; }
             });
             if(!exists) {
                 graph.state.opened.push(nid);
@@ -230,7 +229,6 @@ function Graph () {
                 if (id in graph.nodes) {
                     graph.nodes[id].viz = {
                         id: id,
-                        name: id,
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
@@ -240,8 +238,8 @@ function Graph () {
                         color: "lightgrey",
                         stroke: (graph.state.focus == id) ? "red" : "black"
                     };
-                } else if (id in graph.opId2fID) {
-                    var node = graph.nodes[graph.opId2fID[id]];
+                } else if (id in graph.opId2fId) {
+                    var node = graph.nodes[graph.opId2fId[id]];
                     var opnode = node.opNodes[id];
                     opnode.viz = {
                         id: id,
@@ -253,12 +251,12 @@ function Graph () {
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
                         h: +cols[5],
-                        color: (graph.state.focus == graph.opId2fID[id]) ? graph.opId2color[id] : "white",
+                        color: (graph.state.focus == graph.opId2fId[id]) ? graph.opId2color[id] : "white",
                         stroke: "black"
                     };
                 }
             } else if (cols[0]=="edge") {
-                var linkID = "";
+                var linkID = "not found";
                 var src = cols[1].replace(/\"/g, '');
                 var dst = cols[2].replace(/\"/g, '');
                 var points = [];
@@ -271,30 +269,30 @@ function Graph () {
                     if(dst in graph.nodes) {
                         // frag to frag link
                         linkID = src+"->"+dst;
-                    } else if (dst in graph.opId2fID) {
+                    } else if (dst in graph.opId2fId) {
                         // frag to op link
-                        linkID = src+"->"+graph.opId2fID[dst];
+                        linkID = src+"->"+graph.opId2fId[dst];
                     }
-                } else if (src in graph.opId2fID) {
+                } else if (src in graph.opId2fId) {
                     if(dst in graph.nodes) {
                         // op to frag link
-                        linkID = graph.opId2fID[src]+"->"+dst;
-                    } else if (dst in graph.opId2fID) {
+                        linkID = graph.opId2fId[src]+"->"+dst;
+                    } else if (dst in graph.opId2fId) {
                         // op to op link
-                        if (graph.opId2fID[src] == graph.opId2fID[dst]) {
+                        if (graph.opId2fId[src] == graph.opId2fId[dst]) {
                             // inner-fragment link
                             linkID = src+"->"+dst;
                             type = "op";
                         } else {
                             // inter-fragment link
-                            linkID = graph.opId2fID[src]+"->"+graph.opId2fID[dst];
+                            linkID = graph.opId2fId[src]+"->"+graph.opId2fId[dst];
                         }
                     }
                 }
                 if (type == "op") {
-                    var link = graph.nodes[graph.opId2fID[src]].opLinks[linkID];
+                    var link = graph.nodes[graph.opId2fId[src]].opLinks[linkID];
                     link.viz = {
-                        name: linkID,
+                        id: linkID,
                         type: type,
                         src: src,
                         dst: dst,
@@ -305,7 +303,7 @@ function Graph () {
                 } else if (type == "frag") {
                     var link = graph.links[linkID];
                     link.viz = {
-                        name: linkID,
+                        id: linkID,
                         type: type,
                         src: src,
                         dst: dst,
@@ -422,7 +420,6 @@ function Graph () {
             graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
-
         var D3data = self.generateD3data(padding);
 
         // Initial rendering
@@ -440,22 +437,22 @@ function Graph () {
 
                     // Handle fragment state
                     if (node.type == "cluster") {
-                        if (node.name == self.state.focus) {
+                        if (node.id == self.state.focus) {
                             self.state.focus = "";
-                            self.reduceNode([node.name]);
+                            self.reduceNode([node.id]);
 
                             var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
                             manyLineCharts(chartElement, allFragments, self.queryPlan);
                         } else {
-                            self.state.focus = node.name;
+                            self.state.focus = node.id;
                             if(chartElement){
-                                fragmentVisualization(chartElement, self.nodes[node.name].fragmentIndex, self.queryPlan);
+                                fragmentVisualization(chartElement, self.nodes[node.id].fragmentIndex, self.queryPlan);
                             }
                         }
                     } else if (node.type == "fragment") {
-                        self.expandNode([node.name]);
+                        self.expandNode([node.id]);
                         chartElement.selectAll("svg").remove();
-                        fragmentVisualization(chartElement, self.nodes[node.name].fragmentIndex, self.queryPlan);
+                        fragmentVisualization(chartElement, self.nodes[node.id].fragmentIndex, self.queryPlan);
                     }
 
                     var newD3data = self.generateD3data(padding);
@@ -469,11 +466,11 @@ function Graph () {
                     var line = d3.select(this).data()[0];
 
                     if (line.type == "frag") {
-                        var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opId2fID[line.src]].fragmentIndex;
-                        var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fID[line.dst]].fragmentIndex;
+                        var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opId2fId[line.src]].fragmentIndex;
+                        var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fId[line.dst]].fragmentIndex;
                         chartElement.selectAll("svg").remove();
                         networkVisualization(chartElement, [src, dst], self.queryPlan);
-                        self.state.focus = line.name;
+                        self.state.focus = line.id;
                         var newD3data = self.generateD3data(padding);
                         draw(newD3data, false);
                     }
@@ -507,7 +504,7 @@ function Graph () {
 
             /* Nodes */
             var node = graph.selectAll("g.node")
-                .data(data.nodes, function(d) { return d.name; });
+                .data(data.nodes, function(d) { return d.id; });
 
             var nodeEnter = node.enter()
                 .append("g");
@@ -607,7 +604,7 @@ function Graph () {
                 .interpolate("montone");
 
             var link = graph.selectAll("g.link")
-                .data(data.links, function(d) { return d.name; });
+                .data(data.links, function(d) { return d.id; });
 
             var linkEnter = link.enter().append("g");
 
