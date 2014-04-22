@@ -191,7 +191,9 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             pixel.enter()
                 .append('rect')
-                .attr('class', 'pixel')
+                .attr('class', function(d) {
+                    return 'pixel' + (d.sumTuples ? ' can-click' : '');
+                })
                 .attr('width', columnScale.rangeBand())
                 .attr('height', rowScale.rangeBand())
                 .attr('id', function(d){

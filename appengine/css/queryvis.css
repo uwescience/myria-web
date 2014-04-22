@@ -223,6 +223,10 @@ svg .help-text {
   stroke: steelblue;
 }
 
+.pixel.can-click {
+  cursor: pointer;
+}
+
 .pixel.active {
   stroke-width: 3px;
 }

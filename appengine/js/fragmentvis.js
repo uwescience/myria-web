@@ -430,7 +430,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
     var toDelete = chart.append("text")
             .text("Select a small range in the chart above to see the operators.")
             .attr("x", width/2)
-            .attr("y", 50)
+            .attr("y", _.min([100, height/2]))
             .attr("text-anchor", "middle")
             .attr("class", "help-text");
 
