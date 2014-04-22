@@ -1,15 +1,21 @@
 //query graph and profiling charts
-var graph = function (element, queryPlan) {
-
+var queryGraphInteractive = function (element, queryPlan) {
     var chartElement = d3.select('.chart');
 
-    var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-    manyLineCharts(chartElement, allFragments, queryPlan);
+    function openOverview() {
+        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
+        manyLineCharts(chartElement, allFragments, queryPlan);
+    }
+
+    openOverview();
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
 
-    graphObj.render(element, chartElement);
+    return _.extend(graphObj.render(element, chartElement), {
+        graphObj: graphObj,
+        openOverview: openOverview
+    });
 };
 
 //query graph
@@ -33,6 +39,12 @@ function Graph () {
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
     this.queryPlan = {};    // Physical plan
+
+    /********************/
+    // Private properties
+    /********************/
+
+    var padding = 0.25;
 
     /********************/
     // Public methods
@@ -215,7 +227,7 @@ function Graph () {
     };
 
     // D3 data generator
-    Graph.prototype.generateD3data = function(padding) {
+    Graph.prototype.generateD3data = function() {
         var graph = this;
 
         var graphDesc = graph.generatePlainDot();
@@ -393,8 +405,7 @@ function Graph () {
 
         // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
-            width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right,
-            padding = 0.25;
+            width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
         var zoom = d3.behavior.zoom()
             .scaleExtent([0.5, 4])
@@ -420,7 +431,7 @@ function Graph () {
             graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
-        var D3data = self.generateD3data(padding);
+        var D3data = self.generateD3data();
 
         // Initial rendering
         draw(D3data, true);
@@ -438,25 +449,13 @@ function Graph () {
                     // Handle fragment state
                     if (node.type == "cluster") {
                         if (node.id == self.state.focus) {
-                            self.state.focus = "";
-                            self.reduceNode([node.id]);
-
-                            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-                            manyLineCharts(chartElement, allFragments, self.queryPlan);
+                            closeFragment(node.id);
                         } else {
-                            self.state.focus = node.id;
-                            if(chartElement){
-                                fragmentVisualization(chartElement, self.nodes[node.id].fragmentIndex, self.queryPlan);
-                            }
+                            openFragment(node.id);
                         }
                     } else if (node.type == "fragment") {
-                        self.expandNode([node.id]);
-                        chartElement.selectAll("svg").remove();
-                        fragmentVisualization(chartElement, self.nodes[node.id].fragmentIndex, self.queryPlan);
+                        openFragment(node.id);
                     }
-
-                    var newD3data = self.generateD3data(padding);
-                    draw(newD3data, false);
                 });
 
             graph.selectAll(".link")
@@ -471,10 +470,29 @@ function Graph () {
                         chartElement.selectAll("svg").remove();
                         networkVisualization(chartElement, [src, dst], self.queryPlan);
                         self.state.focus = line.id;
-                        var newD3data = self.generateD3data(padding);
+                        var newD3data = self.generateD3data();
                         draw(newD3data, false);
                     }
                 });
+        }
+
+        function openFragment(nodeId) {
+            self.expandNode([nodeId]);
+            self.state.focus = nodeId;
+            fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+
+            var newD3data = self.generateD3data();
+            draw(newD3data, false);
+        }
+
+        function closeFragment(nodeId) {
+            self.state.focus = "";
+            self.reduceNode([nodeId]);
+            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+            manyLineCharts(chartElement, allFragments, self.queryPlan);
+
+            var newD3data = self.generateD3data();
+            draw(newD3data, false);
         }
 
         function draw(data, initial) {
@@ -658,6 +676,11 @@ function Graph () {
 
             link.exit().transition().duration(shortDuration).remove();
         }
+
+        return {
+            openFragment: openFragment,
+            closeFragment: closeFragment
+        };
 
         // var xScale = d3.scale.linear()
         //         .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x+d.w; })])

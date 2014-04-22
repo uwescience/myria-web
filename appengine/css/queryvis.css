@@ -75,6 +75,15 @@ rect.background {
     max-width: 250px;
 }
 
+.overview-fragment {
+  cursor: pointer;
+}
+
+.panel-heading .breadcrumb {
+  padding: 0;
+  margin: 0;
+}
+
 /* Graph */
 
 .query-plan .overlay {

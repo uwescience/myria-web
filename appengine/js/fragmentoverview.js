@@ -1,12 +1,20 @@
 var manyLineCharts = function(element, fragmentIds, queryPlan) {
-    $('#title-right-vis').html(templates.titleFragmentsOverview());
+    $('.title-current').html('');
 
     $(element.node()).empty();
     _.each(fragmentIds, function(fragmentId) {
-        element.append("div").text(templates.fragmentTitle({fragment: fragmentId}));
+        var div = element.append("div")
+            .attr("class", "overview-fragment");
+        div.append("span")
+            .text(templates.fragmentTitle({fragment: fragmentId}));
+
+        div.on("click", function(a) {
+            d3.event.stopPropagation();
+            graph.openFragment("Frag" + fragmentId);
+        });
         var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
         var numWorkers = _.max(workers);
-        lineChart(element, fragmentId, queryPlan, numWorkers);
+        lineChart(div, fragmentId, queryPlan, numWorkers);
     });
 
     // return variables that are needed outside this scope

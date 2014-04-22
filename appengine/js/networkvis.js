@@ -1,5 +1,5 @@
 var networkVisualization = function (element, fragments, queryPlan) {
-    $('#title-right-vis').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
+    $('.title-current').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
     $(element.node()).append(templates.networkVisFrames);

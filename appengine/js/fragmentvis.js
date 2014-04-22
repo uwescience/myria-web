@@ -1,5 +1,5 @@
 var fragmentVisualization = function (element, fragmentId, queryPlan) {
-    $('#title-right-vis').html(templates.titleFragmentsVis({fragment: fragmentId}));
+    $('.title-current').html(templates.titleFragmentsVis({fragment: fragmentId}));
 
     $(element.node()).empty();
 
