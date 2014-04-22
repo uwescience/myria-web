@@ -330,6 +330,25 @@ class Editor(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
+class Demo3(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = {
+            'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
+        }
+
+        # .. pass in the query
+        template_vars['query'] = examples['datalog'][0][1]
+        # .. pass in the Datalog examples to start
+        template_vars['examples'] = examples['datalog']
+        # .. connection string
+        template_vars['connectionString'] = self.get_connection_string()
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('demo3.html')
+        self.response.out.write(template.render(template_vars))
+
+
 class Demo1(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
@@ -512,7 +531,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo1', Demo1)
+            ('/demo1', Demo1),
+            ('/demo3', Demo3),
         ]
 
         # Connection to Myria. Thread-safe

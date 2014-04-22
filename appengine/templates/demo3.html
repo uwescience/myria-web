@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+    <div class="row editor-row">
+        <div class="col-md-7">
+            <div class="panel panel-info">
+
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Write your code here, perhaps starting from one of the examples at the right.
+                        <a href="#" class="pull-right resize-editor"><span class="glyphicon glyphicon-resize-full"></span></a>
+                    </h3>
+                </div>
+                <textarea cols="83" rows="2" id="query">{{ query }}</textarea>
+
+                <div class="panel-footer">
+                    <div class="btn-group">
+                        <button type="button" id="parse-btn" class="planner btn btn-primary"><span class="glyphicon glyphicon-question-sign"></span> Parse</button>
+                        <button type="button" class="executor btn btn-primary"><span class="glyphicon glyphicon-play"></span> Execute the Query</button>
+                        <button type="button" class="compiler btn btn-info">Myria JSON</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <ul class="nav nav-tabs nav-justified" id="editor-tabs">
+                <li class="active"><a href="#examples" data-toggle="tab">Examples</a></li>
+                <li><a href="#datasets" data-toggle="tab">Datasets</a></li>
+                <li><a href="#queryplan" data-toggle="tab">Query Plan</a></li>
+                <li><a href="#result" data-toggle="tab">Results</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade in active" id="examples">
+                    <p>
+                        <div id="examples-list">
+                            {% for ex in examples %}
+                            <div class="example-label">{{ ex.0 }}</div>
+                            <div class="example">{{ ex.1 }}</div>
+                            {% endfor %}
+                        </div>
+                    </p>
+                </div>
+                <div class="tab-pane fade" id="datasets">
+                    <h3>Get the schema of a dataset</h3>
+                    <p>
+                        Use the search form to retrieve the schema of a
+                        <a href="/datasets" target=_blank>dataset</a>
+                        which includes its columns and column types.
+                    </p>
+                    <form role="form" class="dataset-search">
+                        <div class="input-group triple-input">
+                            <input type="text" class="form-control" placeholder="User" id="user-input" value="public">
+                            <input type="text" class="form-control" placeholder="Program" id="program-input" value="adhoc">
+                            <input type="text" class="form-control" placeholder="Relation" id="relation-input" value="TwitterK">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                            </span>
+                        </div>
+                    </form>
+                    <p>
+                        <pre id="dataset-information">Search to see the schema...</pre>
+                    </p>
+                </div>
+                <div class="tab-pane fade" id="queryplan">
+                    <p>
+                        <ul class="nav nav-pills nav-justified small">
+                          <li><a href="#plan">Relational Algebra</a></li>
+                          <li><a href="#optimized">Physical Plan</a></li>
+                        </ul>
+                    </p>
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="relational_svg"><span class="glyphicon glyphicon-new-window" title="See logical plan"></span></a>
+                            <h3 class="panel-title">Code parsed as Relational Algebra</h3>
+                        </div>
+                        <div class="panel-body">
+                            <pre id="plan" class="display"></pre>
+                            <output id="relational_svg"></output>
+                        </div>
+                    </div>
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <a href="#show-svg" class="pull-right show-svg-modal" data-toggle="modal" data-output="myria_svg"><span class="glyphicon glyphicon-new-window"  title="See physical plan"></span></a>
+                            <h3 class="panel-title">Relational algebra converted and optimized into a Myria Physical Plan</h3>
+                        </div>
+                        <div class="panel-body">
+                            <pre id="optimized" class="display"></pre>
+                            <output id="myria_svg"></output>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="result">
+                    <div class="panel-body">
+                        <pre id="executed"></pre>
+                    </div>
+                    <div id="#response"></div>
+                    <div id="sig"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_body %}
+    <div class="modal fade" id="show-svg" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="zoom-label">Zoom: </span><input type="range" class="zoom-range">
+                    <button type="button" class="btn btn-sm zoom-reset">reset view</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body" id ="svg-modal-body">
+                    <div class="zoom-canvas">
+                        <output id="svg-modal-output"></output>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <output id="relational_svg" hidden="true"></output>
+    <output id="myria_svg" hidden="true"></output>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/codemirror.js"></script>
+
+<script>
+    {% autoescape false %}
+        var myriaConnection = '{{ myriaConnection }}';
+    {% endautoescape %}
+    var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
+        mode : 'application/js',
+        lineNumbers : true,
+        lineWrapping : true,
+        viewportMargin: Infinity
+    });
+</script>
+<script type="text/javascript" src="js/viz.js">
+    // This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
+</script>
+<script type="text/javascript" src="js/editor.js"></script>
+{% endblock %}
