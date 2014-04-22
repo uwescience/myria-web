@@ -2,6 +2,7 @@
 
 {% block extra_head %}
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/demo3.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
 {% block editor_active %} class="active"{% endblock %}
@@ -142,6 +143,9 @@
         lineNumbers : true,
         lineWrapping : true,
         viewportMargin: Infinity
+    });
+    editor.markText({line: 0, ch: 0}, {line: 10, ch: 0}, {
+      className: "demo3_indexed",
     });
 </script>
 <script type="text/javascript" src="js/viz.js">

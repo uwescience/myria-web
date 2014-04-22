@@ -339,7 +339,7 @@ class Demo3(MyriaPage):
         }
 
         # .. pass in the query
-        template_vars['query'] = demo3_examples[0]
+        template_vars['query'] = demo3_examples[0][1]
         # .. pass in the Datalog examples to start
         template_vars['examples'] = demo3_examples
         # .. connection string
