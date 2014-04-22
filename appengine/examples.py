@@ -68,3 +68,8 @@ STORE(InDegree, public:adhoc:InDegree);'''),
 examples = { 'datalog' : datalog_examples,
              'myrial' : myria_examples,
              'sql' : sql_examples }
+
+demo3_examples = [
+    ('Sigma-Clipping', sigma_clipping),
+    ('Sigma-Clipping Optimized', sigma_clipping_opt),
+]

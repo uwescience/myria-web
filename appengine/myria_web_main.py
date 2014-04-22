@@ -16,7 +16,7 @@ from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco import scheme
-from examples import examples
+from examples import examples, demo3_examples
 from pagination import Pagination
 
 import myria
@@ -339,9 +339,9 @@ class Demo3(MyriaPage):
         }
 
         # .. pass in the query
-        template_vars['query'] = examples['datalog'][0][1]
+        template_vars['query'] = demo3_examples[0]
         # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['datalog']
+        template_vars['examples'] = demo3_examples
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
