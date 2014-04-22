@@ -58,9 +58,9 @@ var opToColor = {};
 // Color pallet
 var opColors = d3.scale.category20();
 
-var animationDuration = 750,
+var animationDuration = 600,
     shortDuration = 500,
-    longDuration = 1000,
+    longDuration = 800,
     delayTime = 20;
 
 var dpi = 96;

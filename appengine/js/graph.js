@@ -115,8 +115,8 @@ function Graph () {
                     link.u.oID = op.argOperatorId;                      // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
                     link.v.oID = op.opId;                               // Dst fragment ID
-                    var linkid = link.u.fID + "->" + link.v.fID;        // Link ID
-                    graph.links[linkid] = link;
+                    var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
+                    graph.links["link-" + linkID.hashCode()] = link;
                 }
                 // Add in-fragment links
                 for (var key in op) {
@@ -129,8 +129,8 @@ function Graph () {
                             link.u.oID = child;                             // Src operand ID
                             link.v.fID = id;                                // Dst fragment ID
                             link.v.oID = op.opId;                           // Dst fragment ID
-                            var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
-                            fragment.opLinks[linkid] = link;
+                            var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
+                            fragment.opLinks["link-" + linkID.hashCode()] = link;
                         });
                     } else if (key.indexOf("argChild") != -1) {
                         var link = new Object();                        // Link object
@@ -140,8 +140,8 @@ function Graph () {
                         link.u.oID = op[key];                           // Src operand ID
                         link.v.fID = id;                                // Dst fragment ID
                         link.v.oID = op.opId;                           // Dst fragment ID
-                        var linkid = link.u.oID + "->" + link.v.oID;    // Link ID
-                        fragment.opLinks[linkid] = link;
+                        var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
+                        fragment.opLinks["link-" + linkID.hashCode()] = link;
                     }
                 }
             });
@@ -301,27 +301,26 @@ function Graph () {
                         }
                     }
                 }
+                var lid = "link-" + linkID.hashCode()
                 if (type == "op") {
-                    var link = graph.nodes[graph.opId2fId[src]].opLinks[linkID];
+                    var link = graph.nodes[graph.opId2fId[src]].opLinks[lid];
                     link.viz = {
-                        id: linkID,
                         type: type,
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == linkID) ? "red" : "black",
-                        id: "link-" + linkID.hashCode()
+                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        id: lid
                     }
                 } else if (type == "frag") {
-                    var link = graph.links[linkID];
+                    var link = graph.links[lid];
                     link.viz = {
-                        id: linkID,
                         type: type,
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == linkID) ? "red" : "black",
-                        id: "link-" + linkID.hashCode()
+                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        id: lid
                     }
                 }
             }
