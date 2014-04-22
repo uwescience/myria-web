@@ -427,8 +427,17 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
             .attr("y", bbox.y - 3);
     });
 
+    var toDelete = chart.append("text")
+            .text("Select a small range in the chart above to see the operators.")
+            .attr("x", width/2)
+            .attr("y", 50)
+            .attr("text-anchor", "middle")
+            .attr("class", "help-text");
+
     function redrawLanes(xDomain) {
         var data = _.values(workersData);
+
+        toDelete.remove();
 
         y.domain(_.pluck(data, 'workerId'));
         x.domain(xDomain);

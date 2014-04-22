@@ -165,7 +165,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
         var initial = true;
 
-        function draw(rawData, sourceList, destinationList, orderBy) {
+        function draw (rawData, sourceList, destinationList, orderBy) {
             sourceList = _.sortBy(sourceList, function(d) {return d[orderBy];})
             destinationList = _.sortBy(destinationList, function(d) {return d[orderBy];})
             var data = _.values(rawData),
@@ -367,7 +367,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             $(controls.node()).empty();
 
             controls.append("button")
-                .attr('class', 'btn btn-primary')
+                .attr('class', 'btn btn-primary pull-right')
                 .text('clear selection')
                 .on("click", function() {
                     chart.emptyActiveKeys();
@@ -534,7 +534,6 @@ var timeSeriesChart = function(element) {
         ys = ys * ys;
 
         return Math.sqrt( xs + ys );
-
     }
 
     function getNearestPointOnLine(points, x, y) {
@@ -552,8 +551,22 @@ var timeSeriesChart = function(element) {
         return minPoint;
     }
 
+    // shows text about what to do
+    var toDelete;
+
     function draw() {
         var chartData = _.values(_.pick(rawData, activeKeys));
+
+        if (chartData.length == 0) {
+            toDelete = chart.append("text")
+                .text("Select a communication from the matrix.")
+                .attr("x", chartWidth/2)
+                .attr("y", chartHeight/2)
+                .attr("text-anchor", "middle")
+                .attr("class", "help-text");
+        } else {
+            toDelete.remove();
+        }
 
         // don't update domain when last is removed
         if (activeKeys.length > 0) {
@@ -653,6 +666,8 @@ var timeSeriesChart = function(element) {
                 });
             });
     }
+
+    draw()
 
     return {
         update: draw,

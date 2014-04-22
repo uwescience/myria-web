@@ -84,6 +84,11 @@ rect.background {
   margin: 0;
 }
 
+svg .help-text {
+  font-size: 14px;
+  fill: #888;
+}
+
 /* Graph */
 
 .query-plan .overlay {
