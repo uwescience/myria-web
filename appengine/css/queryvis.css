@@ -75,6 +75,20 @@ rect.background {
     max-width: 250px;
 }
 
+.overview-fragment {
+  cursor: pointer;
+}
+
+.panel-heading .breadcrumb {
+  padding: 0;
+  margin: 0;
+}
+
+svg .help-text {
+  font-size: 14px;
+  fill: #888;
+}
+
 /* Graph */
 
 .query-plan .overlay {
@@ -96,12 +110,12 @@ rect.background {
 }
 
 .interactive .cluster:hover rect, .interactive .fragment:hover rect {
-  transition: stroke .3s;
+  transition: stroke .1s;
   stroke: orange;
 }
 
 .graph .node {
-  transition: fill .3s;
+  transition: fill .1s;
 }
 
 .graph .node text {
@@ -120,7 +134,7 @@ rect.background {
 }
 
 .graph .frag:hover>path:not(.clickme), .graph .frag:hover marker {
-  transition: stroke .3s, fill .3s;
+  transition: stroke .1s, fill .1s;
   stroke: orange;
   fill: orange;
 }
@@ -207,6 +221,10 @@ rect.background {
 .focus circle {
   fill: none;
   stroke: steelblue;
+}
+
+.pixel.can-click {
+  cursor: pointer;
 }
 
 .pixel.active {
