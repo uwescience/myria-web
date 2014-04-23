@@ -1,6 +1,7 @@
 import copy
 import json
 import math
+import os
 import requests
 from threading import Lock
 import urllib
@@ -32,6 +33,12 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as version_file:
+        VERSION = version_file.read().strip()
+except:
+    VERSION = "commit version file not found"
 
 QUERIES_PER_PAGE = 10
 
@@ -235,6 +242,7 @@ class Queries(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['version'] = VERSION
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('queries.html')
         self.response.out.write(template.render(template_vars))
@@ -260,6 +268,7 @@ class Profile(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['version'] = VERSION
         template_vars['queryId'] = query_id
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
@@ -286,6 +295,7 @@ class Datasets(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['version'] = VERSION
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('datasets.html')
         self.response.out.write(template.render(template_vars))
@@ -325,6 +335,7 @@ class Editor(MyriaPage):
         template_vars['examples'] = examples['datalog']
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+        template_vars['version'] = VERSION
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
@@ -346,6 +357,7 @@ class Demo1(MyriaPage):
         template_vars = {}
         # .. connection string
         template_vars['myriaConnection'] = self.get_connection_string()
+        template_vars['version'] = VERSION
         # .. query plan
         template_vars['queryPlan'] = json.dumps(query_plan)
         # .. load and render the template
