@@ -275,6 +275,11 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
 
     function brushEnd() {
         lanesChart.redrawLanes(brush.extent());
+        if (brush.empty()) {
+        	lanesChart.toggleHelp(true);
+        } else {
+        	lanesChart.toggleHelp(false);
+        }
     }
 
     function brushendWorkers() {
@@ -283,6 +288,11 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         var brush_extent = brush2.extent();
 
         lanesChart.redrawLanes(brush2.extent());
+        if (brush2.empty()) {
+        	lanesChart.toggleHelp(true);
+        } else {
+        	lanesChart.toggleHelp(false);
+        }
 
         x.domain(brush2.empty() ? x2.domain() : brush_extent);
         plot.select(".area")
@@ -427,17 +437,25 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
             .attr("y", bbox.y - 3);
     });
 
-    var toDelete = chart.append("text")
-            .text("Select a small range in the chart above to see the operators.")
-            .attr("x", width/2)
-            .attr("y", _.min([100, height/2]))
-            .attr("text-anchor", "middle")
-            .attr("class", "help-text");
+    var toDelete;
+
+    function toggleHelp(show) {
+    	if (show) {
+            toDelete = chart.append("text")
+	            .text("Select a small range in the chart above to see the operators.")
+	            .attr("x", width/2)
+	            .attr("y", _.min([100, height/2]))
+	            .attr("text-anchor", "middle")
+	            .attr("class", "help-text");
+        } else {
+            toDelete.remove();
+        }
+    }
+
+    toggleHelp(true);
 
     function redrawLanes(xDomain) {
         var data = _.values(workersData);
-
-        toDelete.remove();
 
         y.domain(_.pluck(data, 'workerId'));
         x.domain(xDomain);
@@ -553,7 +571,8 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
     }
 
     return {
-        redrawLanes: redrawLanes
+        redrawLanes: redrawLanes,
+        toggleHelp: toggleHelp
     };
 }
 

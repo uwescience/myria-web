@@ -110,12 +110,12 @@ svg .help-text {
 }
 
 .interactive .cluster:hover rect, .interactive .fragment:hover rect {
-  transition: stroke .3s;
+  transition: stroke .1s;
   stroke: orange;
 }
 
 .graph .node {
-  transition: fill .3s;
+  transition: fill .1s;
 }
 
 .graph .node text {
@@ -134,7 +134,7 @@ svg .help-text {
 }
 
 .graph .frag:hover>path:not(.clickme), .graph .frag:hover marker {
-  transition: stroke .3s, fill .3s;
+  transition: stroke .1s, fill .1s;
   stroke: orange;
   fill: orange;
 }

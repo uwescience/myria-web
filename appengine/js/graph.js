@@ -73,7 +73,7 @@ function Graph () {
             node.operators = fragment.operators;                        // List of operators
             node.opNodes = {};                                          // List of graph operand nodes
             node.opLinks = {};                                          // List of graph operand edges
-            node.name = "Fragment " + fragment.fragmentIndex.toString();
+            node.name = "Fragment " + fragment.fragmentIndex.toString();// Name for fragment node
             // Process each operator
             var color_index = 0;
             node.operators.forEach(function(op) {
@@ -188,8 +188,8 @@ function Graph () {
             links += templates.graphViz.link({u: u, v: v});
         }
         // Then add the operand links in subgraphs
-        graph.state.opened.forEach(function(fragment){
-            dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
+        graph.state.opened.forEach(function(fragment) {
+        	dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
@@ -200,8 +200,13 @@ function Graph () {
             }
             dotStr += "\t}\n";
         });
+        // closed fragments
+        _.each(_.difference(_.keys(graph.nodes), graph.state.opened), function(key) {
+    		var node = graph.nodes[key];
+    		dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
+        });
         dotStr += links + "}";
-        return (dotStr);
+        return dotStr;
     };
 
     // Returns the svg description of the graph object
@@ -241,6 +246,7 @@ function Graph () {
                 if (id in graph.nodes) {
                     graph.nodes[id].viz = {
                         id: id,
+                        name: graph.nodes[id].name,
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
@@ -348,7 +354,7 @@ function Graph () {
             }
             var node = {
                 id: fID,
-                name: fID,
+                name: fragment.name,
                 type: "cluster",
                 rawData: graph.nodes[fID].rawData,
                 x: minX-padding/2,
@@ -562,12 +568,12 @@ function Graph () {
                     };
                 });
 
-            node.select("circle").transition().duration(longDuration)
+            node.select("circle").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("cx", function(d) { return (d.x+d.w) * dpi; })
                 .attr("cy", function(d) { return d.y * dpi; })
 
-            node.select("rect").transition().duration(longDuration)
+            node.select("rect").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("x", function(d) { return d.x * dpi; })
                 .attr("y", function(d) { return d.y * dpi; })
@@ -587,13 +593,13 @@ function Graph () {
 
             node.select("text")
                 .text(function(d) {
-                    if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
-                        return d.name;
+                	if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
+                	    return d.name;
                     }
                     return "";
                 });
 
-            node.select("text").transition().duration(longDuration)
+            node.select("text").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("x", function(d) { return (d.x+d.w/2) * dpi; })
                 .attr("y", function(d) {
@@ -652,12 +658,12 @@ function Graph () {
                 .append("path")
                     .attr("d", "M 0,0 V 4 L6,2 Z");
 
-            link.select("marker").transition().duration(longDuration)
+            link.select("marker").transition().duration(shortDuration)
                 .attr("fill", function(d) {
                     return d.stroke;
                 });
 
-            link.select("path.line").transition().duration(longDuration)
+            link.select("path.line").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
