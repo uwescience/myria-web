@@ -34,8 +34,11 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as version_file:
-    VERSION = version_file.read().strip()
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as version_file:
+        VERSION = version_file.read().strip()
+except:
+    VERSION = "commit version file not found"
 
 QUERIES_PER_PAGE = 10
 
