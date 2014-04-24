@@ -40,6 +40,11 @@ try:
 except:
     VERSION = "commit version file not found"
 
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'BRANCH'), 'r') as branch_file:
+        BRANCH = branch_file.read().strip()
+except:
+    BRANCH = "branch file not found"
 
 QUERIES_PER_PAGE = 10
 
@@ -168,7 +173,8 @@ class MyriaPage(MyriaHandler):
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{h}:{p}".format(h=self.app.hostname, p=self.app.port),
-                'version': VERSION}
+                'version': VERSION,
+                'branch': BRANCH}
 
 
 def nano_to_str(elapsed):

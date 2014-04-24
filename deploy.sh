@@ -10,5 +10,6 @@ then
 	echo "myria-web is not on the production branch; cannot deploy"
 else
 	git rev-parse HEAD > appengine/VERSION && \
+	git rev-parse --abbrev-ref HEAD > appengine/BRANCH && \
 	appcfg.py --oauth2 update appengine
 fi
