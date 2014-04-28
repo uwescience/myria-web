@@ -144,9 +144,13 @@
         lineWrapping : true,
         viewportMargin: Infinity
     });
-    editor.markText({line: 0, ch: 0}, {line: 10, ch: 0}, {
-      className: "demo3_indexed",
+
+    {% for start, end, css_class in colorings %}
+    editor.markText({line: {{start}}, ch: 0}, {line: {{end}}, ch: 0}, {
+      className: "{{css_class}}",
     });
+    {% endfor %}
+
 </script>
 <script type="text/javascript" src="js/viz.js">
     // This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js

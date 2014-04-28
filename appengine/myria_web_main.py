@@ -353,6 +353,10 @@ class Demo3(MyriaPage):
         template_vars['examples'] = demo3_examples
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
+
+        colorings = [(0, 3, 'demo3_indexed'), (3, 5, 'demo3_slow'), (8, 12, 'demo3_fast')]
+        template_vars['colorings'] = colorings
+
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('demo3.html')
         self.response.out.write(template.render(template_vars))
