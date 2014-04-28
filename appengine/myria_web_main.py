@@ -1,6 +1,7 @@
 import copy
 import json
 import math
+import os
 import requests
 from threading import Lock
 import urllib
@@ -32,6 +33,18 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as version_file:
+        VERSION = version_file.read().strip()
+except:
+    VERSION = "commit version file not found"
+
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'BRANCH'), 'r') as branch_file:
+        BRANCH = branch_file.read().strip()
+except:
+    BRANCH = "branch file not found"
 
 QUERIES_PER_PAGE = 10
 
@@ -157,6 +170,12 @@ class MyriaPage(MyriaHandler):
                 connection_string = "error connecting to %s:%d" % (hostname, port)
         return connection_string
 
+    def base_template_vars(self):
+        return {'connectionString': self.get_connection_string(),
+                'myriaConnection': "{h}:{p}".format(h=self.app.hostname, p=self.app.port),
+                'version': VERSION,
+                'branch': BRANCH}
+
 
 def nano_to_str(elapsed):
     if elapsed is None:
@@ -201,9 +220,10 @@ class Queries(MyriaPage):
             else:
                 q['bootstrapStatus'] = ''
 
-        template_vars = {'queries': queries,
-                         'prevUrl': None,
-                         'nextUrl': None}
+        template_vars = self.base_template_vars()
+        template_vars.update({'queries': queries,
+                              'prevUrl': None,
+                              'nextUrl': None})
 
         if queries:
             page = int(math.ceil(count - max_) / limit) + 1
@@ -233,8 +253,6 @@ class Queries(MyriaPage):
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        # .. connection string
-        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('queries.html')
         self.response.out.write(template.render(template_vars))
@@ -251,16 +269,12 @@ class Profile(MyriaPage):
             except myria.MyriaError:
                 pass
 
-        template_vars = {
-            'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
-            'queryPlan': json.dumps(query_plan)
-        }
+        template_vars = self.base_template_vars()
+        template_vars['queryPlan'] = json.dumps(query_plan)
+        template_vars['queryId'] = query_id
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        # .. connection string
-        template_vars['connectionString'] = self.get_connection_string()
-        template_vars['queryId'] = query_id
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
@@ -280,12 +294,11 @@ class Datasets(MyriaPage):
             except:
                 pass
 
-        template_vars = {'datasets': datasets}
+        template_vars = self.base_template_vars()
+        template_vars['datasets'] = datasets
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        # .. connection string
-        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('datasets.html')
         self.response.out.write(template.render(template_vars))
@@ -315,16 +328,12 @@ class Editor(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
-        template_vars = {
-            'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
-        }
+        template_vars = self.base_template_vars()
 
         # .. pass in the query
         template_vars['query'] = examples['datalog'][0][1]
         # .. pass in the Datalog examples to start
         template_vars['examples'] = examples['datalog']
-        # .. connection string
-        template_vars['connectionString'] = self.get_connection_string()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
@@ -362,9 +371,7 @@ class Demo1(MyriaPage):
                 query_plan = conn.get_query_status(query_id)
             except myria.MyriaError:
                 pass
-        template_vars = {}
-        # .. connection string
-        template_vars['myriaConnection'] = self.get_connection_string()
+        template_vars = self.base_template_vars()
         # .. query plan
         template_vars['queryPlan'] = json.dumps(query_plan)
         # .. load and render the template

@@ -27,7 +27,13 @@
 				<td class="query-status">{{q.status}}</td>
 				<td>
 					{% if q.profilingMode %}
-						<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-tasks"></a>
+						{% if q.status == 'SUCCESS' %}
+							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-tasks" title="Visualization of query profiling" data-toggle="tooltip"></a>
+						{% elif q.status in ['RUNNING', 'ACCEPTED'] %}
+							<span class="glyphicon glyphicon-tasks" title="Visualization will be available when the query has finished" data-toggle="tooltip"></span>
+						{% else %}
+							<span class="glyphicon glyphicon-tasks" title="Visualization not available for failed queries" data-toggle="tooltip"></span>
+						{% endif %}
 					{% else %}
 						-
 					{% endif %}

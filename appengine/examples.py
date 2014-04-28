@@ -46,7 +46,7 @@ with open(path) as fh:
 
 justx = '''T1 = SCAN(TwitterK);
 
-T2 = [FROM T1 EMIT $0];
+T2 = [FROM T1 EMIT $0 AS x];
 
 STORE (T2, JustX);'''
 
@@ -57,7 +57,7 @@ myria_examples = [
 ]
 
 sql_examples = [
-    ('JustX', '''JustX = SELECT $0 FROM SCAN(TwitterK) AS Twitter;
+    ('JustX', '''JustX = SELECT $0 AS x FROM SCAN(TwitterK) AS Twitter;
 
 STORE(JustX, public:adhoc:JustX);'''),
     ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(TwitterK) AS Twitter;
