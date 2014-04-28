@@ -69,7 +69,13 @@ examples = { 'datalog' : datalog_examples,
              'myrial' : myria_examples,
              'sql' : sql_examples }
 
+
+def read_demo3_example(phile):
+  path = os.path.join(os.path.dirname(__file__), 'demo3_examples/%s' % phile)
+  with open(path) as fh:
+    return fh.read()
+
 demo3_examples = [
-    ('Sigma-Clipping', sigma_clipping),
-    ('Sigma-Clipping Optimized', sigma_clipping_opt),
+    ('Naive', read_demo3_example('sigma-clipping-v0.myl')),
+    ('Optimized', read_demo3_example('sigma-clipping-v0.myl')),
 ]
