@@ -34,20 +34,12 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
 ]
 
 
-path = os.path.join(os.path.dirname(__file__),
-                    'examples/sigma-clipping-v0.myl')
-with open(path) as fh:
-    sigma_clipping = fh.read()
+def get_example(name):
+    path = os.path.join(os.path.dirname(__file__),
+                    'examples/{}'.format(name))
+    with open(path) as fh:
+        return fh.read()
 
-path = os.path.join(os.path.dirname(__file__),
-                    'examples/sigma-clipping.myl')
-with open(path) as fh:
-    sigma_clipping_opt = fh.read()
-
-path = os.path.join(os.path.dirname(__file__),
-                    'examples/language_demo.myl')
-with open(path) as fh:
-    language_demo = fh.read()
 
 justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
@@ -55,9 +47,9 @@ store(T2, JustX);'''
 
 myria_examples = [
     ('JustX', justx),
-    ('Sigma-Clipping', sigma_clipping),
-    ('Sigma-Clipping Optimized', sigma_clipping_opt),
-    ('Highlighter demo', language_demo)
+    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
+    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
+    ('Highlighter demo', get_example('language_demo.myl'))
 ]
 
 sql_examples = [
