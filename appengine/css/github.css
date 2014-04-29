@@ -75,10 +75,10 @@
         /*z-index: 3;*/
 }
 
-.CodeMirror span.cm-atom { color: blue; }
+.CodeMirror span.cm-atom { color: #333; }
 .CodeMirror span.cm-qualifier { color: #0086B3; }
 .CodeMirror span.cm-keyword { color: #000000; font-weight: bold }
-.CodeMirror span.cm-comment { color: #999988; font-style: italic }
+.CodeMirror span.cm-comment { color: #998; font-style: italic }
 .CodeMirror span.cm-operator { color: #000000; font-weight: bold }
 .CodeMirror span.cm-def { color: #900; font-weight: bold }
 .CodeMirror span.cm-string {color: #d01040}
