@@ -15,12 +15,14 @@ CodeMirror.defineMode("myrial", function(conf, parserConf) {
     var wordOperators = wordRegexp(['and', 'or', 'not', 'is', 'in']);
     var comprehensionKeywords = ['as', 'emit', 'from', 'select', 'where'];
     var commonKeywords = ['apply', 'def', 'diff', 'do', 'while'];
-    var commonBuiltins = ['scan', 'sin', 'cos', 'abs', 'store', 'sum', 'count', 'avg', 'empty'];
-    var commonTypes = ['int', 'float'];
+    // TODO: get builtins from raco
+    var commonBuiltins = ['abs', 'avg', 'cos', 'count', 'empty', 'scan', 'sin', 'stdev', 'store', 'sum', 'tan'];
+    var commonTypes = ['double', 'float', 'int', 'string'];
 
     if(parserConf.extra_keywords != undefined){
         commonKeywords = commonKeywords.concat(parserConf.extra_keywords);
     }
+
     if(parserConf.extra_builtins != undefined){
         commonBuiltins = commonBuiltins.concat(parserConf.extra_builtins);
     }
