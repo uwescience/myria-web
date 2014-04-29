@@ -44,23 +44,29 @@ path = os.path.join(os.path.dirname(__file__),
 with open(path) as fh:
     sigma_clipping_opt = fh.read()
 
-justx = '''T1 = SCAN(TwitterK);
-T2 = [FROM T1 EMIT $0 AS x];
-STORE (T2, JustX);'''
+path = os.path.join(os.path.dirname(__file__),
+                    'examples/language_demo.myl')
+with open(path) as fh:
+    language_demo = fh.read()
+
+justx = '''T1 = scan(TwitterK);
+T2 = [from T1 emit $0 as x];
+store(T2, JustX);'''
 
 myria_examples = [
     ('JustX', justx),
     ('Sigma-Clipping', sigma_clipping),
     ('Sigma-Clipping Optimized', sigma_clipping_opt),
+    ('Highlighter demo', language_demo)
 ]
 
 sql_examples = [
     ('JustX', '''JustX = SELECT $0 AS x FROM SCAN(TwitterK) AS Twitter;
 
-STORE(JustX, public:adhoc:JustX);'''),
+store(JustX, public:adhoc:JustX);'''),
     ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(TwitterK) AS Twitter;
 
-STORE(InDegree, public:adhoc:InDegree);'''),
+store(InDegree, public:adhoc:InDegree);'''),
 ]
 
 examples = { 'datalog' : datalog_examples,
