@@ -12,12 +12,9 @@ CodeMirror.defineMode("myrial", function(conf, parserConf) {
     var brackets = new RegExp("^[\\(\\)\\[\\]\\{\\}]")
     var hangingIndent = parserConf.hangingIndent || parserConf.indentUnit;
 
-    var wordOperators = wordRegexp(['and', 'or', 'not', 'is', 'in']);
-    var comprehensionKeywords = ['as', 'emit', 'from', 'select', 'where'];
-    var commonKeywords = ['apply', 'def', 'diff', 'do', 'while'];
-    // TODO: get builtins from raco
-    var commonBuiltins = ['abs', 'avg', 'cos', 'count', 'empty', 'scan', 'sin', 'stdev', 'store', 'sum', 'tan'];
-    var commonTypes = ['double', 'float', 'int', 'string'];
+    var comprehensionKeywords = myrialKeywords.comprehension_keywords;
+    var commonKeywords = myrialKeywords.keywords;
+    var commonBuiltins = myrialKeywords.builtins;
 
     if(parserConf.extra_keywords != undefined){
         commonKeywords = commonKeywords.concat(parserConf.extra_keywords);
@@ -29,7 +26,8 @@ CodeMirror.defineMode("myrial", function(conf, parserConf) {
 
     var keywords = wordRegexp(comprehensionKeywords.concat(commonKeywords));
     var builtins = wordRegexp(commonBuiltins);
-    var types = wordRegexp(commonTypes);
+    var types = wordRegexp(myrialKeywords.types);
+    var wordOperators = wordRegexp(myrialKeywords.word_operators);
 
     // tokenizers
     function tokenBase(stream, state) {

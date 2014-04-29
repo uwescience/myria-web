@@ -16,6 +16,7 @@ from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
+from raco.myrial.keywords import get_keywords
 from raco import scheme
 from examples import examples
 from pagination import Pagination
@@ -334,6 +335,8 @@ class Editor(MyriaPage):
         template_vars['query'] = examples['myrial'][0][1]
         # .. pass in the Datalog examples to start
         template_vars['examples'] = examples['myrial']
+        # .. pass myrial keywords
+        template_vars['myrialKeywords'] = get_keywords()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
