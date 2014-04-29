@@ -34,35 +34,31 @@ Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
 ]
 
 
-path = os.path.join(os.path.dirname(__file__),
-                    'examples/sigma-clipping-v0.myl')
-with open(path) as fh:
-    sigma_clipping = fh.read()
+def get_example(name):
+    path = os.path.join(os.path.dirname(__file__),
+                    'examples/{}'.format(name))
+    with open(path) as fh:
+        return fh.read()
 
-path = os.path.join(os.path.dirname(__file__),
-                    'examples/sigma-clipping.myl')
-with open(path) as fh:
-    sigma_clipping_opt = fh.read()
 
-justx = '''T1 = SCAN(TwitterK);
-
-T2 = [FROM T1 EMIT $0 AS x];
-
-STORE (T2, JustX);'''
+justx = '''T1 = scan(TwitterK);
+T2 = [from T1 emit $0 as x];
+store(T2, JustX);'''
 
 myria_examples = [
     ('JustX', justx),
-    ('Sigma-Clipping', sigma_clipping),
-    ('Sigma-Clipping Optimized', sigma_clipping_opt),
+    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
+    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
+    ('Highlighter demo', get_example('language_demo.myl'))
 ]
 
 sql_examples = [
     ('JustX', '''JustX = SELECT $0 AS x FROM SCAN(TwitterK) AS Twitter;
 
-STORE(JustX, public:adhoc:JustX);'''),
+store(JustX, public:adhoc:JustX);'''),
     ('InDegree', '''InDegree = SELECT $0, COUNT($1) FROM SCAN(TwitterK) AS Twitter;
 
-STORE(InDegree, public:adhoc:InDegree);'''),
+store(InDegree, public:adhoc:InDegree);'''),
 ]
 
 examples = { 'datalog' : datalog_examples,
