@@ -1,5 +1,5 @@
 /* Setup the global language variable. */
-var editorLanguage = 'Myrial';
+var editorLanguage = 'Datalog';
 
 function handleerrors(request, display) {
   request.done(function(result) {
@@ -19,9 +19,6 @@ function handleerrors(request, display) {
 
 function getplan() {
   var query = editor.getValue();
-  console.info("query: " + query)
-  console.info("language: " + editorLanguage)
-
   var request = $.post("plan", {
     query : query,
     language : editorLanguage
@@ -269,19 +266,7 @@ $(function() {
   $(".example").click(function() {
     resetResults();
     var example_query = $(this).text();
-    editor.setValue(example_query)
-
-    var colors = JSON.parse(this.getAttribute('colors'));
-    for (var i=0; i < colors.length; i++) {
-        var first_line = colors[i][0];
-        var last_line = colors[i][1];
-        var css_class = colors[i][2];
-
-        editor.markText({line: first_line, ch: 0}, {line: last_line, ch: 0}, {
-          className: css_class,
-        });
-    }
-
+    editor.setValue(example_query);
     optimizeplan();
   });
   $(".show-svg-modal").click(showSvgModal);
