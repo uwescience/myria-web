@@ -87,8 +87,7 @@
 .CodeMirror span.cm-bracket {color: #000000}
 .CodeMirror span.cm-string-2 {color: #d01040}
 .CodeMirror span.cm-variable { color: #333; }
-/*.CodeMirror span.cm-variable-2 { color: #000000; }*/
-.CodeMirror span.cm-variable- { color: #458; font-weight: bold }
+.CodeMirror span.cm-variable-2 { color: #458; font-weight: bold }
 .CodeMirror span.cm-tag { color: #000080; }
 .CodeMirror span.cm-attribute { color: #008080; }
 .CodeMirror span.cm-property { color: black; }
