@@ -45,7 +45,7 @@ var colorlegend = function (target, scale, type, options) {
     }
   }
   if (! found)
-    throw new Error('Scale type, ' + type + ', is not suported.');
+    throw new Error('Scale type, ' + type + ', is not supported.');
 
 
   // setup the colors to use

@@ -78,3 +78,12 @@ input[type=range].zoom-range {
 #svg-modal-body {
 	padding: 0;
 }
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}
+.CodeMirror-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
