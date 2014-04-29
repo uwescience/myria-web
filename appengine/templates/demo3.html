@@ -145,7 +145,7 @@
         viewportMargin: Infinity
     });
 
-    {% for start, end, css_class in colorings %}
+    {% for start, end, css_class in classes %}
     editor.markText({line: {{start}}, ch: 0}, {line: {{end}}, ch: 0}, {
       className: "{{css_class}}",
     });

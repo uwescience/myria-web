@@ -1,6 +1,7 @@
 import copy
 import json
 import math
+import re
 import os
 import requests
 from threading import Lock
@@ -347,15 +348,38 @@ class Demo3(MyriaPage):
             'myriaConnection': "%s:%d" % (self.app.hostname, self.app.port),
         }
 
+        formatted_examples = [] # a list of tuples of (name, text, css_classes)
+
+        for name, text in demo3_examples:
+            lines = text.split('\n')
+            formatted_lines = []
+            classes = []
+
+            prev_class = 'demo3_default'
+            prev_start = 0
+
+            for line_no, line in enumerate(lines):
+                idx = line.find('---')
+                if idx >= 0:
+                    claz = line[idx+3:].strip()
+                    if claz != prev_class:
+                        classes.append((prev_start, line_no, prev_class))
+                        prev_start = line_no
+                        prev_class = claz
+                    formatted_lines.append(line[:idx])
+                else:
+                    formatted_lines.append(line)
+            classes.append((prev_start, line_no, prev_class))
+            formatted_examples.append((name, '\n'.join(formatted_lines), classes))
+
         # .. pass in the query
-        template_vars['query'] = demo3_examples[0][1]
+        template_vars['query'] = formatted_examples[0][1]
+        template_vars['classes'] = formatted_examples[0][2]
+
         # .. pass in the Datalog examples to start
-        template_vars['examples'] = demo3_examples
+        template_vars['examples'] = formatted_examples
         # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
-
-        colorings = [(0, 3, 'demo3_indexed'), (3, 5, 'demo3_slow'), (8, 12, 'demo3_fast')]
-        template_vars['colorings'] = colorings
 
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('demo3.html')
