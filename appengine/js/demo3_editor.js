@@ -19,8 +19,6 @@ function handleerrors(request, display) {
 
 function getplan() {
   var query = editor.getValue();
-  console.info("query: " + query)
-  console.info("language: " + editorLanguage)
 
   var request = $.post("plan", {
     query : query,
