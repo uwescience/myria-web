@@ -44,7 +44,7 @@
                         <div id="examples-list">
                             {% for ex in examples %}
                             <div class="example-label">{{ ex.0 }}</div>
-                            <div class="example">{{ ex.1 }}</div>
+                            <div class="example" colors="{{ex.2}}">{{ ex.1 }}</div>
                             {% endfor %}
                         </div>
                     </p>
@@ -144,12 +144,6 @@
         lineWrapping : true,
         viewportMargin: Infinity
     });
-
-    {% for start, end, css_class in classes %}
-    editor.markText({line: {{start}}, ch: 0}, {line: {{end}}, ch: 0}, {
-      className: "{{css_class}}",
-    });
-    {% endfor %}
 
 </script>
 <script type="text/javascript" src="js/viz.js">

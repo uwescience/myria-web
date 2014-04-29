@@ -77,5 +77,5 @@ def read_demo3_example(phile):
 
 demo3_examples = [
     ('Naive', read_demo3_example('sigma-clipping-v0.myl')),
-    ('Optimized', read_demo3_example('sigma-clipping-v0.myl')),
+    ('Optimized', read_demo3_example('sigma-clipping.myl')),
 ]

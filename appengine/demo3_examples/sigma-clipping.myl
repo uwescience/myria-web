@@ -1,9 +1,9 @@
-Points = SCAN(public:adhoc:sc_points); --- slow
+Points = SCAN(public:adhoc:sc_points);
 
-aggs = [FROM Points EMIT SUM(v) AS _sum, SUM(v*v) AS sumsq, COUNT(v) AS cnt];
+aggs = [FROM Points EMIT SUM(v) AS _sum, SUM(v*v) AS sumsq, COUNT(v) AS cnt]; --- demo3_slow
 newBad = EMPTY(id:int, v:float);
 
-bounds = [FROM Points EMIT MIN(v) AS lower, MAX(v) AS upper];
+bounds = [FROM Points EMIT MIN(v) AS lower, MAX(v) AS upper]; --- demo3_indexed
 
 -- number of allowed standard deviations
 N = [2];
@@ -25,19 +25,19 @@ DO
   newBounds = [FROM stats EMIT mean - *N * std AS lower,
                                mean + *N * std AS upper];
 
-  newBad = [FROM Points, bounds, newBounds
+  newBad = [FROM Points, bounds, newBounds --- demo3_indexed
             WHERE (newBounds.upper < v
                    AND v <= bounds.upper)
                OR (newBounds.lower > v
                    AND v >= bounds.lower)
             EMIT Points.*];
 
-  bounds = newBounds;
+  bounds = newBounds; --- demo3_fast
   continue = [FROM newBad EMIT COUNT(v) > 0];
 WHILE continue;
 
 output = [FROM Points, bounds
           WHERE Points.v > bounds.lower
                 AND Points.v < bounds.upper
-          EMIT Points.*];
-STORE(output, OUTPUT);
+          EMIT Points.*]; --- demo3_indexed
+STORE(output, OUTPUT); --- demo3_default

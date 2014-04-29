@@ -353,7 +353,7 @@ class Demo3(MyriaPage):
         for name, text in demo3_examples:
             lines = text.split('\n')
             formatted_lines = []
-            classes = []
+            colors = []
 
             prev_class = 'demo3_default'
             prev_start = 0
@@ -363,18 +363,18 @@ class Demo3(MyriaPage):
                 if idx >= 0:
                     claz = line[idx+3:].strip()
                     if claz != prev_class:
-                        classes.append((prev_start, line_no, prev_class))
+                        colors.append((prev_start, line_no, prev_class))
                         prev_start = line_no
                         prev_class = claz
                     formatted_lines.append(line[:idx])
                 else:
                     formatted_lines.append(line)
-            classes.append((prev_start, line_no, prev_class))
-            formatted_examples.append((name, '\n'.join(formatted_lines), classes))
+            colors.append((prev_start, line_no, prev_class))
+            formatted_examples.append((name, '\n'.join(formatted_lines), json.dumps(colors)))
 
         # .. pass in the query
         template_vars['query'] = formatted_examples[0][1]
-        template_vars['classes'] = formatted_examples[0][2]
+#        template_vars['colors'] = formatted_examples[0][2]
 
         # .. pass in the Datalog examples to start
         template_vars['examples'] = formatted_examples
