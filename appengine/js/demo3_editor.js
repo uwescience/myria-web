@@ -285,5 +285,6 @@ $(function() {
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
   $(".dataset-search").submit(searchDataset);
-  optimizeplan();
+
+  $(".example").first().click();
 });
