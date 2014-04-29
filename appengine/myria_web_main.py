@@ -372,16 +372,9 @@ class Demo3(MyriaPage):
             colors.append((prev_start, line_no, prev_class))
             formatted_examples.append((name, '\n'.join(formatted_lines), json.dumps(colors)))
 
-        # .. pass in the query
-        template_vars['query'] = formatted_examples[0][1]
-#        template_vars['colors'] = formatted_examples[0][2]
-
-        # .. pass in the Datalog examples to start
         template_vars['examples'] = formatted_examples
-        # .. connection string
         template_vars['connectionString'] = self.get_connection_string()
 
-        # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('demo3.html')
         self.response.out.write(template.render(template_vars))
 
