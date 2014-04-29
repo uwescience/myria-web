@@ -309,8 +309,8 @@ class Examples(MyriaPage):
         # Get the language
         language = self.request.get('language')
         if not language:
-            # default to Datalog
-            language = 'datalog'
+            # default to MyriaL
+            language = 'myrial'
         else:
             language = language.strip().lower()
         # Is language recognized?
@@ -331,9 +331,9 @@ class Editor(MyriaPage):
         template_vars = self.base_template_vars()
 
         # .. pass in the query
-        template_vars['query'] = examples['datalog'][0][1]
+        template_vars['query'] = examples['myrial'][0][1]
         # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['datalog']
+        template_vars['examples'] = examples['myrial']
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))

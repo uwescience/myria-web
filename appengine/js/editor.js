@@ -1,5 +1,5 @@
 /* Setup the global language variable. */
-var editorLanguage = 'Datalog';
+var editorLanguage = 'MyriaL';
 
 function handleerrors(request, display) {
   request.done(function(result) {
@@ -200,6 +200,15 @@ function changeLanguage() {
   }
 
   $('#editor-tabs a[href="#examples"]').tab('show');
+
+  if (language === 'myrial') {
+    editor.setOption('mode', {name: 'myrial',
+               singleLineStringErrors: false});
+  } else if (language === 'sql') {
+    editor.setOption('mode', 'text/x-sql');
+  } else {
+    editor.setOption('mode', {name: 'prolog'});
+  }
 
   /* Now let's update the examples. */
   updateExamples(language);

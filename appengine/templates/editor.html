@@ -2,6 +2,7 @@
 
 {% block extra_head %}
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/solarized.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
 {% block editor_active %} class="active"{% endblock %}
@@ -33,7 +34,7 @@
                     <div class="col-sm-9">
                         <select class="form-control language-menu">
                             <option value="datalog">Datalog</option>
-                            <option value="myrial">MyriaL</option>
+                            <option value="myrial" selected>MyriaL</option>
                             <option value="sql">SQL</option>
                         </select>
                     </div>
@@ -153,20 +154,23 @@
 
 {% block footer %}
 <script type="text/javascript" src="js/codemirror.js"></script>
+<script type="text/javascript" src="js/myrial.js"></script>
+<script type="text/javascript" src="js/sql.js"></script>
+<script type="text/javascript" src="js/prolog.js"></script>
 
 <script>
     {% autoescape false %}
         var myriaConnection = '{{ myriaConnection }}';
     {% endautoescape %}
     var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
-        mode : 'application/js',
+        indentUnit: 2,
+        theme: 'solarized light',
+        autofocus: true,
+        matchBrackets: true,
         lineNumbers : true,
         lineWrapping : true,
         viewportMargin: Infinity
     });
-</script>
-<script type="text/javascript" src="js/viz.js">
-    // This is from mdaines on github: http://mdaines.github.io/viz.js/viz.js
 </script>
 <script type="text/javascript" src="js/editor.js"></script>
 {% endblock %}

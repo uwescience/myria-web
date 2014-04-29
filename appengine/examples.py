@@ -45,9 +45,7 @@ with open(path) as fh:
     sigma_clipping_opt = fh.read()
 
 justx = '''T1 = SCAN(TwitterK);
-
 T2 = [FROM T1 EMIT $0 AS x];
-
 STORE (T2, JustX);'''
 
 myria_examples = [
