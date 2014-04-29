@@ -2,7 +2,7 @@
 
 {% block extra_head %}
 <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
-<link href="css/solarized.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
 {% block editor_active %} class="active"{% endblock %}
@@ -164,7 +164,7 @@
     {% endautoescape %}
     var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
         indentUnit: 2,
-        theme: 'solarized light',
+        theme: 'github',
         autofocus: true,
         matchBrackets: true,
         lineNumbers : true,

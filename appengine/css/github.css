@@ -1,0 +1,108 @@
+/** SIDEBAR **/
+#sidebar{
+        background:#F8F8F8;
+        text-shadow:none;
+}
+#working-set-header, #open-files-container{ /* Working files */
+        background:#f0f0f0;
+}
+#project-files-header, #working-set-header{/* "working files" header and folder header*/
+        color:#777!important;
+}
+#project-files-header{ border-top: 1px solid rgba(0,0,0,0.2);} /* Delimiter between "working files" and project files */
+#project-dropdown-toggle:hover{ /* Open url when hover */
+    color:#555!important;
+    background:#e8e8e8;
+        border:1px solid #c9c9c9;
+}
+.jstree-brackets li a, .jstree-brackets li .extension, .jstree-brackets li a.jstree-clicked, /* Files, folder and extensions */
+#open-files-container li a, #open-files-container li .extension, #open-files-container li a.jstree-clicked{ /* Files, folder and extensions in "working fiels"*/
+        color:#222!important;
+}
+
+.sidebar-selection, .sidebar-selection-triangle{ /* Selected file or folder */
+        background:#cccedb;
+}
+.sidebar-selection-triangle.triangle-visible::before{
+        border-left:12px solid #cccedb;
+}
+
+/** TOOLBAR **/
+#main-toolbar{
+    background:#f6f6f6;
+}
+
+/** STATUSBAR **/
+#status-bar{
+    background:#f6f6f6;
+    border-top:1px solid #d4d4d4;
+}
+#status-indicators, #status-info{ /* Status bar text */
+    background:transparent;
+}
+
+/** QUICK EDIT ETC: **/
+.inline-widget{
+        background:#F4F4F4;
+}
+
+/** CODEMIRROR **/
+.CodeMirror-scroll{
+    background-color: white;
+    color:black;
+}
+
+.CodeMirror .CodeMirror-lines pre{
+    z-index: 3;
+}
+
+.CodeMirror .CodeMirror-gutters{
+        background-color: white;
+}
+
+.CodeMirror .CodeMirror-linenumber{
+        color: rgba(0, 0, 0, 0.298039);
+        background-color: white;
+}
+
+.CodeMirror .CodeMirror-matchingbracket{
+        color: red !important;
+        background-color: #dedede;
+}
+
+.CodeMirror .CodeMirror-linebackground{
+        background-color: rgba(0, 0, 0, 0.2);
+        /*z-index: 3;*/
+}
+
+.CodeMirror span.cm-atom { color: blue; }
+.CodeMirror span.cm-qualifier { color: #0086B3; }
+.CodeMirror span.cm-keyword { color: #000000; font-weight: bold }
+.CodeMirror span.cm-comment { color: #999988; font-style: italic }
+.CodeMirror span.cm-operator { color: #000000; font-weight: bold }
+.CodeMirror span.cm-def { color: #900; font-weight: bold }
+.CodeMirror span.cm-string {color: #d01040}
+.CodeMirror span.cm-number { color: #099; }
+.CodeMirror span.cm-builtin { color: #0086B3; }
+.CodeMirror span.cm-bracket {color: #000000}
+.CodeMirror span.cm-string-2 {color: #d01040}
+.CodeMirror span.cm-variable { color: #333; }
+/*.CodeMirror span.cm-variable-2 { color: #000000; }*/
+.CodeMirror span.cm-variable- { color: #458; font-weight: bold }
+.CodeMirror span.cm-tag { color: #000080; }
+.CodeMirror span.cm-attribute { color: #008080; }
+.CodeMirror span.cm-property { color: black; }
+
+.CodeMirror span.cm-matchhighlight{
+        background-color: #ffffcc;
+}
+
+.CodeMirror-selected { 
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.CodeMirror span.cm-error,
+.CodeMirror span.cm-invalidchar {
+  color: #586e75;
+  border-bottom: 1px dotted #dc322f;
+}
