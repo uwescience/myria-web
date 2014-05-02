@@ -3,7 +3,7 @@ $(document).ready(function() {
 		var qid = $(this).attr('data-id');
 		window.setInterval(function() {
 			$.getJSON('/execute', { 'queryId': qid }, function(data) {
-				if (data.queryStatus.status != 'RUNNING') {
+				if (data.status != 'RUNNING') {
 					location.reload();
 				}
 			});
