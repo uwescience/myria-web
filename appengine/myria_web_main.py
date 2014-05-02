@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import math
 import os
 import requests
@@ -529,6 +530,9 @@ class Application(webapp2.WSGIApplication):
         self.connection = myria.MyriaConnection(hostname=hostname, port=port)
         self.hostname = hostname
         self.port = port
+
+        # Quiet logging for production
+        logging.getLogger().setLevel(logging.WARN)
 
         webapp2.WSGIApplication.__init__(self, routes, debug=debug, config=None)
 
