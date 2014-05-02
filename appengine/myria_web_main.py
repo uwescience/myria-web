@@ -47,7 +47,7 @@ try:
 except:
     BRANCH = "branch file not found"
 
-QUERIES_PER_PAGE = 10
+QUERIES_PER_PAGE = 25
 
 
 def get_plan(query, language, plan_type, connection):

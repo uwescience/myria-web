@@ -18,4 +18,6 @@ $(function() {
   });
 
   $("[data-toggle=tooltip]").tooltip();
+
+  $("abbr.timeago").timeago();
 });

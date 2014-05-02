@@ -39,7 +39,9 @@
 					{% endif %}
 				</td>
 				<td class="query-elapsed">{{q.elapsedStr}}</td>
-				<td class="query-finish">{{q.finishTime}}</td>
+				<td class="query-finish">
+					<abbr class="timeago" title="{{q.finishTime}}">{{q.finishTime}}</abbr>
+				</td>
 			</tr>
 			{% endfor %}
 		</table>
