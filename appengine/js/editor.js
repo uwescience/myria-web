@@ -253,7 +253,7 @@ function initializeDatasetSearch() {
   };
 
   $(".dataset-search").select2({
-    placeholder: "Search for a dataset",
+    placeholder: "Search for a dataset...",
     minimumInputLength: 3,
     ajax: {
       url: "http://" + myriaConnection + "/dataset/search/",
@@ -271,7 +271,30 @@ function initializeDatasetSearch() {
         };
       }
     },
-    formatResult: dataToRelKeyString,
+    formatResult: function(d, container, query) {
+      var stringParts = dataToRelKeyString(d).split('');
+      var queryParts = query.term.toLowerCase().split('');
+      var i = 0, j = 0,
+        result = '',
+        bold = false;
+      while (i < stringParts.length) {
+        if (stringParts[i].toLowerCase() == queryParts[j]) {
+          if (!bold) {
+            result += '<strong>';
+            bold = true;
+          }
+          j++;
+        } else {
+          if (bold) {
+            result += '</strong>';
+            bold = false;
+          }
+        }
+        result += stringParts[i];
+        i++;
+      }
+      return result;
+    },
     id: dataToRelKeyString,
     formatSelection: dataToRelKeyString,
     dropdownCssClass: "bigdrop",

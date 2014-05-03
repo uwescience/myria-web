@@ -91,3 +91,7 @@ input[type=range].zoom-range {
   overflow-y: hidden;
   overflow-x: auto;
 }
+
+.select2-result-label strong {
+  text-decoration: underline;
+}
