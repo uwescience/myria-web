@@ -54,6 +54,7 @@
 
 .CodeMirror .CodeMirror-lines pre{
     z-index: 3;
+    line-height: 1.2em;
 }
 
 .CodeMirror .CodeMirror-gutters{
@@ -71,7 +72,7 @@
 }
 
 .CodeMirror .CodeMirror-linebackground{
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: #fffeeb;
         /*z-index: 3;*/
 }
 
