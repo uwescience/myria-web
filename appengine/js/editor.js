@@ -247,15 +247,65 @@ function resizeEditor() {
   }
 }
 
-function searchDataset(e) {
-  event.preventDefault();
-  var user = $("#user-input").val(),
-    program = $("#program-input").val(),
-    relation = $("#relation-input").val(),
-    url = "http://" + myriaConnection + "/dataset/user-" + user + "/program-" + program + "/relation-" + relation;
-  $.getJSON(url, function(data) {
-    var html = JSON.stringify(data.schema, null, 4);
-    $("#dataset-information").text(html);
+function initializeDatasetSearch() {
+  var dataToRelKeyString = function(d) {
+    return d.userName + ':' + d.programName + ':' + d.relationName;
+  };
+
+  $(".dataset-search").select2({
+    placeholder: "Search for a dataset...",
+    minimumInputLength: 3,
+    ajax: {
+      url: "http://" + myriaConnection + "/dataset/search/",
+      dataType: 'json',
+      quietMillis: 100,
+      data: function (term) {
+        return {
+          q: term
+        };
+      },
+      results: function (data) {
+        return {
+          results: data,
+          more: false
+        };
+      }
+    },
+    formatResult: function(d, container, query) {
+      var stringParts = dataToRelKeyString(d).split('');
+      var queryParts = query.term.toLowerCase().split('');
+      var i = 0, j = 0,
+        result = '',
+        bold = false;
+      while (i < stringParts.length) {
+        if (stringParts[i].toLowerCase() == queryParts[j]) {
+          if (!bold) {
+            result += '<strong>';
+            bold = true;
+          }
+          j++;
+        } else {
+          if (bold) {
+            result += '</strong>';
+            bold = false;
+          }
+        }
+        result += stringParts[i];
+        i++;
+      }
+      return result;
+    },
+    id: dataToRelKeyString,
+    formatSelection: dataToRelKeyString,
+    dropdownCssClass: "bigdrop",
+    escapeMarkup: function (m) { return m; }
+  }).on("change", function(e) {
+    var rel = $(".dataset-search").select2("data")
+    url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+    $.getJSON(url, function(data) {
+      var html = JSON.stringify(data.schema, null, 4);
+      $("#dataset-information").text(html);
+    });
   });
 }
 
@@ -280,6 +330,6 @@ $(function() {
   });
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
-  $(".dataset-search").submit(searchDataset);
+  initializeDatasetSearch();
   optimizeplan();
 });

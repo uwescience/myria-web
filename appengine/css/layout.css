@@ -59,6 +59,10 @@ input[type=range].zoom-range {
 	padding: 8px 3px;
 }
 
+.dataset-search {
+  width: 100%;
+}
+
 .triple-input .form-control {
     width: 33.33%;
     border-right-width: 0px;
@@ -86,4 +90,8 @@ input[type=range].zoom-range {
 .CodeMirror-scroll {
   overflow-y: hidden;
   overflow-x: auto;
+}
+
+.select2-result-label strong {
+  text-decoration: underline;
 }
