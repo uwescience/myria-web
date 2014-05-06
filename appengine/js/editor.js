@@ -1,5 +1,6 @@
-/* Setup the global language variable. */
-var editorLanguage = 'MyriaL';
+var editorLanguage = 'MyriaL',
+  editorContentKey = "code-editor-content",
+  editorLanguageKey = "active-language";
 
 function handleerrors(request, display) {
   request.done(function(result) {
@@ -309,6 +310,19 @@ function initializeDatasetSearch() {
   });
 }
 
+function saveState() {
+  localStorage.setItem(editorContentKey, editor.getValue());
+  localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
+}
+
+function restoreState() {
+  var content = localStorage.getItem(editorContentKey);
+  if (content) {
+    editor.setValue(content);
+    $(".language-menu").val(localStorage.getItem(editorLanguageKey));
+  }
+}
+
 $(function() {
   resetResults();
 
@@ -332,4 +346,12 @@ $(function() {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
   optimizeplan();
+
+  restoreState();
+
+  // save state every 2 seconds or when page is unloaded
+  window.onbeforeunload = saveState;
+  setInterval(function(){
+    saveState();
+ }, 2000);
 });
