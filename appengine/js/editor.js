@@ -178,7 +178,6 @@ function updateExamples(language, callback) {
      * makes all the API calls back use this query parameter.
      */
     editorLanguage = language;
-
     callback();
   };
 
@@ -193,7 +192,9 @@ function updateExamples(language, callback) {
 
 function changeLanguage() {
   var language = $(".language-menu option:selected").val();
-  setLanguage(language, function() {
+  setLanguage(language);
+
+  updateExamples(language, function() {
     $(".example").first().click();
   });
 }
@@ -215,9 +216,6 @@ function setLanguage(language) {
   } else if (language === 'datalog') {
     editor.setOption('mode', {name: 'prolog'});
   }
-
-  /* Now let's update the examples. */
-  updateExamples(language, function() {});
 }
 
 /**
@@ -322,10 +320,11 @@ function saveState() {
 
 function restoreState() {
   var content = localStorage.getItem(editorContentKey);
-  var lang = localStorage.getItem(editorLanguageKey);
+  var language = localStorage.getItem(editorLanguageKey);
   if (content) {
-    $(".language-menu").val(lang);
-    setLanguage(lang);
+    $(".language-menu").val(language);
+    setLanguage(language);
+    updateExamples(language, function() {});
     editor.setValue(content);
   }
 }
