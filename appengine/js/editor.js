@@ -1,5 +1,6 @@
-/* Setup the global language variable. */
-var editorLanguage = 'MyriaL';
+var editorLanguage = 'MyriaL',
+  editorContentKey = 'code-editor-content',
+  editorLanguageKey = 'active-language';
 
 function handleerrors(request, display) {
   request.done(function(result) {
@@ -152,7 +153,7 @@ function resetResults() {
   $("svg").empty();
 }
 
-function updateExamples(language) {
+function updateExamples(language, callback) {
   var doUpdateExamples = function(data) {
     var examplesList = $('#examples-list');
     examplesList.empty();
@@ -175,12 +176,11 @@ function updateExamples(language) {
     /*
      * Finally, set the global variable editorLanguage to the new language. This
      * makes all the API calls back use this query parameter.
-     *
-     * Then trigger the first example.
      */
     editorLanguage = language;
-    $(".example").first().click();
-  }
+    callback();
+  };
+
   $.ajax("examples", {
     type : 'GET',
     data : {
@@ -191,12 +191,19 @@ function updateExamples(language) {
 }
 
 function changeLanguage() {
-  /* First make sure it's a valid language. */
-  var languages = [ 'datalog', 'myrial', 'sql' ];
   var language = $(".language-menu option:selected").val();
-  var i = languages.indexOf(language);
-  if (i == -1) {
-    return false;
+  setLanguage(language);
+
+  updateExamples(language, function() {
+    $(".example").first().click();
+  });
+}
+
+function setLanguage(language) {
+  var languages = [ 'datalog', 'myrial', 'sql' ];
+  if (!_.contains(languages, language)) {
+    console.log('Language not supported: ' + language);
+    return;
   }
 
   $('#editor-tabs a[href="#examples"]').tab('show');
@@ -206,12 +213,9 @@ function changeLanguage() {
                singleLineStringErrors: false});
   } else if (language === 'sql') {
     editor.setOption('mode', 'text/x-sql');
-  } else {
+  } else if (language === 'datalog') {
     editor.setOption('mode', {name: 'prolog'});
   }
-
-  /* Now let's update the examples. */
-  updateExamples(language);
 }
 
 /**
@@ -309,6 +313,22 @@ function initializeDatasetSearch() {
   });
 }
 
+function saveState() {
+  localStorage.setItem(editorContentKey, editor.getValue());
+  localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
+}
+
+function restoreState() {
+  var content = localStorage.getItem(editorContentKey);
+  var language = localStorage.getItem(editorLanguageKey);
+  if (content) {
+    $(".language-menu").val(language);
+    setLanguage(language);
+    updateExamples(language, function() {});
+    editor.setValue(content);
+  }
+}
+
 $(function() {
   resetResults();
 
@@ -331,5 +351,12 @@ $(function() {
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
+
+  restoreState();
+
   optimizeplan();
+
+  // save state every 2 seconds or when page is unloaded
+  window.onbeforeunload = saveState;
+  setInterval(saveState, 2000);
 });
