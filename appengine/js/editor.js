@@ -351,7 +351,5 @@ $(function() {
 
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
-  setInterval(function(){
-    saveState();
- }, 2000);
+  setInterval(saveState, 2000);
 });
