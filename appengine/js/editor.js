@@ -1,5 +1,6 @@
 var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
+  editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language';
 
 function handleerrors(request, display) {
@@ -314,18 +315,22 @@ function initializeDatasetSearch() {
 }
 
 function saveState() {
+  localStorage.setItem(editorHistoryKey, JSON.stringify(editor.getHistory()));
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
 }
 
 function restoreState() {
+  var history = JSON.parse(localStorage.getItem(editorHistoryKey));
   var content = localStorage.getItem(editorContentKey);
   var language = localStorage.getItem(editorLanguageKey);
   if (content) {
     $(".language-menu").val(language);
     setLanguage(language);
     updateExamples(language, function() {});
+
     editor.setValue(content);
+    editor.setHistory(history);
   }
 }
 
