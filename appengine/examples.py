@@ -38,7 +38,7 @@ def get_example(name):
     path = os.path.join(os.path.dirname(__file__),
                     'examples/{}'.format(name))
     with open(path) as fh:
-        return fh.read()
+        return fh.read().strip()
 
 
 justx = '''T1 = scan(TwitterK);
