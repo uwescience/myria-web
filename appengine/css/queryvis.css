@@ -89,6 +89,10 @@ svg .help-text {
   fill: #888;
 }
 
+.graph-panel .panel-body {
+  padding: 0;
+}
+
 /* Graph */
 
 .query-plan .overlay {
@@ -126,6 +130,7 @@ svg .help-text {
 
 .graph .link > path {
   stroke-width: 3;
+  fill: transparent;
 }
 
 .graph path.clickme {
