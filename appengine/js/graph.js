@@ -667,12 +667,5 @@ function Graph () {
             openFragment: openFragment,
             closeFragment: closeFragment
         };
-
-        // var xScale = d3.scale.linear()
-        //         .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x+d.w; })])
-        //         .range([padding, width-padding]),
-        //     yScale = d3.scale.linear()
-        //         .domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y+d.h; })])
-        //         .range([padding, height-padding]);
     };
 };
