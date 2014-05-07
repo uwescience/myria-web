@@ -423,15 +423,6 @@ function Graph () {
                     .append("g");
         var graph = wrapper.append("g"); // avoid jitter
 
-        var overlay = graph.append("rect")
-            .attr("class", "overlay")
-            .attr("x", -200)
-            .attr("y", -200)
-            .on("dragstart", function(e) {
-                d3.event.sourceEvent.preventDefault();
-            });
-
-
         function onzoom() {
             graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
@@ -505,25 +496,15 @@ function Graph () {
                 .attr("height", data.height*dpi)
                 .attr("width", data.width*dpi);
 
-            overlay
-                .attr("height", data.height*dpi + 400)
-                .attr("width", data.width*dpi + 400);
-
             graphElement.style("height", (data.height + 0.5)*dpi + "px");
 
-            wrapper.attr("transform", "translate(" + (width/2 - data.width * dpi/2) + ", 0)");
-
-            var scale = width/(data.width*dpi);
+            var scale = width/(data.width*dpi + 10);
             if (scale < 1) {
                 zoom.scale(scale);
             } else {
                 scale = 1;
             }
-
-            // see http://commons.oreilly.com/wiki/index.php/SVG_Essentials/Transforming_the_Coordinate_System#Technique:_Scaling_Around_a_Center_Point
-            var centerX = width/2;
-            zoom.translate([-centerX*(scale-1), 0]);
-            zoom.event(overlay);
+            zoom.event(graph);
 
             /* Nodes */
             var node = graph.selectAll("g.node")
@@ -686,12 +667,5 @@ function Graph () {
             openFragment: openFragment,
             closeFragment: closeFragment
         };
-
-        // var xScale = d3.scale.linear()
-        //         .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x+d.w; })])
-        //         .range([padding, width-padding]),
-        //     yScale = d3.scale.linear()
-        //         .domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y+d.h; })])
-        //         .range([padding, height-padding]);
     };
 };
