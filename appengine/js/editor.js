@@ -163,13 +163,15 @@ function updateExamples(language, callback) {
     } else {
       /* Populate the list of examples. */
       for (var i = 0; i < data.length; ++i) {
-        examplesList.append('<div class="example-label">' + data[i][0] + '</div>');
-        examplesList.append('<div class="example">' + data[i][1] + '</div>');
+        $('<div class="example"></div>')
+          .text(data[i][0])
+          .attr('data-code', data[i][1])
+          .appendTo(examplesList);
       }
       /* Restore the click functionality on the examples. */
       $(".example").click(function() {
         resetResults();
-        var example_query = $(this).text();
+        var example_query = this.getAttribute('data-code');
         editor.setValue(example_query);
         optimizeplan();
       });

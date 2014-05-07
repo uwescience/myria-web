@@ -3,15 +3,10 @@
 	padding-bottom: 5px;
 }
 
-.example-label {
+.example {
 	font-size: normal;
 	font-style: italic;
 	color: #000;
-}
-
-.example {
-	font-size: 11px;
-	font-family: "Monaco", monospace;
 	cursor: pointer;
 }
 

@@ -66,8 +66,7 @@
                     <p>
                         <div id="examples-list">
                             {% for ex in examples %}
-                            <div class="example-label">{{ ex.0 }}</div>
-                            <div class="example">{{ ex.1 }}</div>
+                            <div class="example" data-code="{{ ex.1 }}">{{ ex.0 }}</div>
                             {% endfor %}
                         </div>
                     </p>
