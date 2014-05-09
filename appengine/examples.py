@@ -45,8 +45,27 @@ justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
 store(T2, JustX);'''
 
+phytoplankton = '''OppData = scan(armbrustlab:seaflow:all_opp_v3);
+VctData = scan(armbrustlab:seaflow:all_vct);
+
+OppWithPop = select opp.*, vct.pop
+             from OppData as opp,
+                  VctData as vct
+             where opp.Cruise = vct.Cruise
+               and opp.Day = vct.Day
+               and opp.File_Id = vct.File_Id
+               and opp.Cell_Id = vct.Cell_Id;
+
+PlanktonCount = select Cruise, COUNT(*) as Phytoplankton
+                from OppWithPop
+                where pop != "beads" and pop != "noise"
+                  and fsc_small > 10000;
+
+store(PlanktonCount, public:demo:PlanktonCount);'''
+
 myria_examples = [
-    ('JustX', justx),
+    ('JustX: A simple projection query on TwitterK', justx),
+    ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
 #    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
 #    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
 #    ('Highlighter demo', get_example('language_demo.myl'))
