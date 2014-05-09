@@ -63,13 +63,11 @@
 
             <div class="tab-content">
                 <div class="tab-pane fade in active" id="examples">
-                    <p>
-                        <div id="examples-list">
-                            {% for ex in examples %}
-                            <div class="example" data-code="{{ ex.1 }}">{{ ex.0 }}</div>
-                            {% endfor %}
-                        </div>
-                    </p>
+                    <ul class="list-group" id="examples-list">
+                        {% for ex in examples %}
+                        <li class="list-group-item example" data-code="{{ ex.1 }}">{{ ex.0 }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 <div class="tab-pane fade" id="datasets">
                     <h3>Get the schema of a dataset</h3>

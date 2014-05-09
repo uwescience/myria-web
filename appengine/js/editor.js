@@ -163,7 +163,7 @@ function updateExamples(language, callback) {
     } else {
       /* Populate the list of examples. */
       for (var i = 0; i < data.length; ++i) {
-        $('<div class="example"></div>')
+        $('<li class="list-group-item example"></li>')
           .text(data[i][0])
           .attr('data-code', data[i][1])
           .appendTo(examplesList);
