@@ -163,8 +163,16 @@ function updateExamples(language, callback) {
     } else {
       /* Populate the list of examples. */
       for (var i = 0; i < data.length; ++i) {
+        var str = data[i][1],
+          delimiter = '\n',
+          tokens = str.split(delimiter).slice(0, 2),
+          result = tokens.join(delimiter);
+        var numLines = str.split(/\r\n|\r|\n/).length;
+        var heading = $('<h5>').text(data[i][0]),
+          program = $('<pre>').text(result + (numLines > 2 ? '\n...' : ''));
         $('<a href="#" class="list-group-item example"></a>')
-          .text(data[i][0])
+          .append(heading)
+          .append(program)
           .attr('data-code', data[i][1])
           .appendTo(examplesList);
       }

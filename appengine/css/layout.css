@@ -83,3 +83,17 @@ input[type=range].zoom-range {
 .select2-result-label strong {
   text-decoration: underline;
 }
+
+#examples-list .list-group-item {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#examples-list pre {
+  font-size: 10px;
+}
+
+#examples-list {
+  overflow: auto;
+  height: 700px;
+}
