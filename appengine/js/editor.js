@@ -163,13 +163,14 @@ function updateExamples(language, callback) {
     } else {
       /* Populate the list of examples. */
       for (var i = 0; i < data.length; ++i) {
-        $('<li class="list-group-item example"></li>')
+        $('<a href="#" class="list-group-item example"></a>')
           .text(data[i][0])
           .attr('data-code', data[i][1])
           .appendTo(examplesList);
       }
       /* Restore the click functionality on the examples. */
-      $(".example").click(function() {
+      $(".example").click(function(e) {
+        e.preventDefault();
         resetResults();
         var example_query = this.getAttribute('data-code');
         editor.setValue(example_query);

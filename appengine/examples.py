@@ -68,7 +68,6 @@ myria_examples = [
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
 #    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
 #    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
-#    ('Highlighter demo', get_example('language_demo.myl'))
 ]
 
 sql_examples = [
