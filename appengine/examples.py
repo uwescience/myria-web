@@ -8,8 +8,8 @@ datalog_examples = [
   ('Triangles', '''A(x,y,z) :- R(x,y), S(y,z), T(z,x)'''),
   ('Cross Product', '''A(x,z) :- S(x), T(z)'''),
   ('Two cycles', 'A(x,z) :- R(x,y), S(y,a,z), T(z,b,x), W(a,b)'),
-  ('Two Chained Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- A(3,w)'),
-  ('Two Independent Rules', 'A(x,z) :- R(x,y,z)\n\nB(w) :- C(3,w)'),
+  ('Two Chained Rules', 'A(x,z) :- R(x,y,z).\nB(w) :- A(3,w)'),
+  ('Two Independent Rules', 'A(x,z) :- R(x,y,z).\nB(w) :- C(3,w)'),
   ('Project TwitterK', 'JustX(x) :- TwitterK(x,y)'),
   ('Self Join TwitterK', 'SelfJoin(x,z) :- TwitterK(x,y), TwitterK(y,z)'),
   ('In Degrees from TwitterK', 'InDegree(x, COUNT(y)) :- TwitterK(x,y)'),
@@ -19,18 +19,15 @@ datalog_examples = [
     nccdc(src,dst,proto,time, x, y, z)
     , time > 1366475761
     , time < 1366475821'''),
-  ('NCCDC DDOS Victims', '''InDegree(dst, count(time)) :- nccdc(src, dst, proto, time, x, y, z)
-
+  ('NCCDC DDOS Victims', '''InDegree(dst, count(time)) :- nccdc(src, dst, prot, time, x, y, z).
 Victim(dst) :- InDegree(dst, cnt), cnt > 10000'''),
   ('SP2Bench Q10', '''Q10(subject, predicate) :-
     sp2bench_1m(subject, predicate, 'person:Paul_Erdoes')'''),
-  ('SP2Bench Q3a', '''Q3a(article) :-
-    sp2bench_1m(article, 'rdf:type', 'bench:Article')
-    , sp2bench_1m(article, 'swrc:pages', value)'''),
-  ('SP2Bench Q1', '''Q1(yr) :-
-    sp2bench_1m(journal, 'rdf:type', 'bench:Journal')
-    , sp2bench_1m(journal, 'dc:title', 'Journal 1 (1940)')
-    , sp2bench_1m(journal, 'dcterms:issued', yr)''')
+  ('SP2Bench Q3a', '''Q3a(article) :- sp2bench_1m(article, 'rdf:type', 'bench:Article')
+              , sp2bench_1m(article, 'swrc:pages', value)'''),
+  ('SP2Bench Q1', '''Q1(yr) :- sp2bench_1m(journal, 'rdf:type', 'bench:Journal')
+        , sp2bench_1m(journal, 'dc:title', 'Journal 1 (1940)')
+        , sp2bench_1m(journal, 'dcterms:issued', yr)''')
 ]
 
 
