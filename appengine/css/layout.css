@@ -95,5 +95,5 @@ input[type=range].zoom-range {
 
 #examples-list {
   overflow: auto;
-  height: 700px;
+  max-height: 450px;
 }
