@@ -3,6 +3,10 @@
 	padding-bottom: 5px;
 }
 
+.navbar-inverse {
+	margin-bottom: 10px;
+}
+
 .modal-header input[type=range] {
 	width: 250px;
 	height: 10px;
@@ -36,7 +40,7 @@ body {
 }
 
 .spacer {
-	padding-top: 30px;
+	padding-top: 10px;
 }
 
 input[type=range].zoom-range {
