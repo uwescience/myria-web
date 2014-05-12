@@ -75,8 +75,9 @@ input[type=range].zoom-range {
     position: fixed;
     bottom: 8px;
     right: 8px;
-    padding: 1em;
+    padding: 8px 12px;
     z-index: 10;
+    background-color: rgba(255, 255, 255, 0.7);
 }
 
 #svg-modal-body {
