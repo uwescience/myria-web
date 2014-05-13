@@ -165,11 +165,13 @@ function updateExamples(language, callback) {
       for (var i = 0; i < data.length; ++i) {
         var str = data[i][1],
           delimiter = '\n',
-          tokens = str.split(delimiter).slice(0, 2),
+          allTokens = str.split(delimiter),
+          tokens = allTokens.slice(0, 2),
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
+        var tmpl = _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? '\n...' : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? tmpl({remaining: allTokens.length - 2}) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
