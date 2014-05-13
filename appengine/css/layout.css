@@ -3,16 +3,8 @@
 	padding-bottom: 5px;
 }
 
-.example-label {
-	font-size: normal;
-	font-style: italic;
-	color: #000;
-}
-
-.example {
-	font-size: 11px;
-	font-family: "Monaco", monospace;
-	cursor: pointer;
+.navbar-inverse {
+	margin-bottom: 10px;
 }
 
 .modal-header input[type=range] {
@@ -48,7 +40,7 @@ body {
 }
 
 .spacer {
-	padding-top: 30px;
+	padding-top: 10px;
 }
 
 input[type=range].zoom-range {
@@ -95,4 +87,17 @@ input[type=range].zoom-range {
 
 .select2-result-label strong {
   text-decoration: underline;
+}
+
+#examples-list .list-group-item {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#examples-list pre {
+  font-size: 10px;
+}
+
+#examples-list {
+  overflow: auto;
 }

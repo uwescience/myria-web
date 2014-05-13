@@ -163,13 +163,27 @@ function updateExamples(language, callback) {
     } else {
       /* Populate the list of examples. */
       for (var i = 0; i < data.length; ++i) {
-        examplesList.append('<div class="example-label">' + data[i][0] + '</div>');
-        examplesList.append('<div class="example">' + data[i][1] + '</div>');
+        var str = data[i][1],
+          delimiter = '\n',
+          allTokens = str.split(delimiter),
+          tokens = allTokens.slice(0, 2),
+          result = tokens.join(delimiter);
+        var numLines = str.split(/\r\n|\r|\n/).length;
+        var tmpl = _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
+        var heading = $('<h5>').text(data[i][0]),
+          program = $('<pre>').text(result + (numLines > 2 ? tmpl({remaining: allTokens.length - 2}) : ''));
+        $('<a href="#" class="list-group-item example"></a>')
+          .append(heading)
+          .append(program)
+          .attr('data-code', data[i][1])
+          .appendTo(examplesList);
+        updateExamplesHeight();
       }
       /* Restore the click functionality on the examples. */
-      $(".example").click(function() {
+      $(".example").click(function(e) {
+        e.preventDefault();
         resetResults();
-        var example_query = $(this).text();
+        var example_query = this.getAttribute('data-code');
         editor.setValue(example_query);
         optimizeplan();
       });

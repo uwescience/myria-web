@@ -11,7 +11,7 @@
 
 {% block content %}
     <div class="row editor-row">
-        <div class="col-md-7">
+        <div class="col-md-7" id="editor-column">
             <div class="panel panel-info">
 
                 <div class="panel-heading">
@@ -63,14 +63,15 @@
 
             <div class="tab-content">
                 <div class="tab-pane fade in active" id="examples">
-                    <p>
-                        <div id="examples-list">
-                            {% for ex in examples %}
-                            <div class="example-label">{{ ex.0 }}</div>
-                            <div class="example">{{ ex.1 }}</div>
-                            {% endfor %}
-                        </div>
-                    </p>
+                    <h4>Click on any of these examples to load them into the editor.</h4>
+                    <div class="list-group" id="examples-list">
+                        {% for ex in examples %}
+                        <a href="#" class="list-group-item example" data-code="{{ ex.1 }}">
+                            <h5>{{ ex.0 }}</h5>
+                            <pre>{{ ex.1 | truncate(50) }}</pre>
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="tab-pane fade" id="datasets">
                     <h3>Get the schema of a dataset</h3>
