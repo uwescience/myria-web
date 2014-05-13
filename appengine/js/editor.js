@@ -175,6 +175,7 @@ function updateExamples(language, callback) {
           .append(program)
           .attr('data-code', data[i][1])
           .appendTo(examplesList);
+        updateExamplesHeight();
       }
       /* Restore the click functionality on the examples. */
       $(".example").click(function(e) {
