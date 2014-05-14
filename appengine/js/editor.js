@@ -271,6 +271,9 @@ function initializeDatasetSearch() {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
+  var table = _.template('<table class="table table-condensed><%= content %></table>');
+  var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>')
+
   $(".dataset-search").select2({
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
@@ -322,8 +325,10 @@ function initializeDatasetSearch() {
     var rel = $(".dataset-search").select2("data")
     url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function(data) {
-      var html = JSON.stringify(data.schema, null, 4);
-      $("#dataset-information").text(html);
+      console.log(data);
+      html = table({content: "foo"});
+      //var html = JSON.stringify(data.schema, null, 4);
+      $("#dataset-information").html(html);
     });
   });
 }
