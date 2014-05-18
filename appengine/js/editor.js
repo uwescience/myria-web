@@ -271,7 +271,7 @@ function initializeDatasetSearch() {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
-  var table = _.template('<table class="table table-condensed"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
+  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
   var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>')
 
   $(".dataset-search").select2({
@@ -322,15 +322,14 @@ function initializeDatasetSearch() {
     dropdownCssClass: "bigdrop",
     escapeMarkup: function (m) { return m; }
   }).on("change", function(e) {
-    var rel = $(".dataset-search").select2("data")
+    var rel = $(".dataset-search").select2("data");
     url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function(data) {
       var html = '';
-      for (var i = 0; i < data.schema.columnTypes.length; i++) {
-        html += row({name: data.schema.columnNames[i], type: data.schema.columnTypes[i]})
-      }
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
+        html += row({name: d[0], type: d[1]});
+      });
       html = table({content: html});
-      //var html = JSON.stringify(data.schema, null, 4);
       $("#dataset-information").html(html);
     });
   });
