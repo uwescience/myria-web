@@ -79,3 +79,12 @@ store(InDegree, public:adhoc:InDegree);'''),
 examples = { 'datalog' : datalog_examples,
              'myrial' : myria_examples,
              'sql' : sql_examples }
+
+demo3_myr_examples = [
+    ('Count large phytoplankton in SeaFlow data', phytoplankton),
+    ('Sigma-clipping (naive version)', get_example('sigma-clipping-v0.myl'))
+]
+
+demo3_examples = { 'datalog' : [], 'sql': [],
+                  'myrial' : demo3_myr_examples
+                  }
