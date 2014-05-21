@@ -316,14 +316,21 @@ class Examples(MyriaPage):
         else:
             language = language.strip().lower()
         # Is language recognized?
-        if language not in examples:
+
+        example_set = self.request.get('subset') or 'default'
+        if example_set == 'demo3':
+            examples_to_use = demo3_examples
+        else:
+            examples_to_use = examples
+
+        if language not in examples_to_use:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 404
             self.response.write('Error 404 (Not Found): language %s not found' % language)
             return
         # Return the objects as json
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(examples[language]))
+        self.response.write(json.dumps(examples_to_use[language]))
 
 
 class Editor(MyriaPage):
@@ -332,6 +339,8 @@ class Editor(MyriaPage):
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
         template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'default'
+
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))

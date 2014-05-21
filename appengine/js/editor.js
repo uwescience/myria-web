@@ -157,6 +157,7 @@ function resetResults() {
 function updateExamples(language, callback) {
   var doUpdateExamples = function(data) {
     var examplesList = $('#examples-list');
+
     examplesList.empty();
     if (data.length === 0) {
       examplesList.append('No ' + language + ' examples found');
@@ -199,7 +200,8 @@ function updateExamples(language, callback) {
   $.ajax("examples", {
     type : 'GET',
     data : {
-      language : language
+      language : language,
+      subset: $('#examples-list').attr('subset')
     },
     success : doUpdateExamples
   });
