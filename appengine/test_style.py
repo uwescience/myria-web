@@ -18,7 +18,7 @@ class StyleTest(unittest.TestCase):
             subprocess.check_output(
                 ['flake8',
                  '--exclude='+','.join(exclude),
-                 'appengine'],
+                 '.'],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             print >> sys.stderr, e.output
