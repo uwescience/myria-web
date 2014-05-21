@@ -7,16 +7,17 @@ class StyleTest(unittest.TestCase):
     "run flake8 with the right arguments and ensure all files pass"
     def test_style(self):
         try:
-            execlude = [
+            exclude = [
                 'ply',
                 'networkx',
                 'pyparsing.py',
                 'parsetab.py',
-                'test_myria_up.py'
+                'test_myria_up.py',
+                'examples.py'
             ]
             subprocess.check_output(
                 ['flake8',
-                 '--exclude='+','.join(execlude),
+                 '--exclude='+','.join(exclude),
                  'appengine'],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
