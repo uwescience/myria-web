@@ -378,4 +378,6 @@ $(function() {
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
+
+  changeLanguage();
 });

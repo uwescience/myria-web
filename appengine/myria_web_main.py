@@ -331,12 +331,6 @@ class Editor(MyriaPage):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
-
-        # .. pass in the query
-        template_vars['query'] = examples['myrial'][0][1]
-        # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['myrial']
-        # .. pass myrial keywords
         template_vars['myrialKeywords'] = get_keywords()
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
