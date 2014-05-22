@@ -186,12 +186,4 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
                 .attr("y", bbox.y - 3);
         });
     });
-
-    function brushed(brush) {
-        x.domain(brush.empty() ? wholeDomain : brush.extent());
-        svg.select("path.area").attr("d", area);
-        svg.select(".x.axis").call(xAxis);
-    }
-
-    return brushed;
 };
