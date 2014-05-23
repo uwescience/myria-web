@@ -48,7 +48,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
 
     var area = d3.svg.area()
         .interpolate("step-after")
-        .x(function(d) { return x(d.time); })
+        .x(function(d) { return x(d.nanoTime); })
         .y0(height)
         .y1(function(d) { return y(d.numWorkers); });
 
@@ -76,7 +76,10 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
     var url = templates.urls.histogram({
         myria: myriaConnection,
         query: queryPlan.queryId,
-        fragment: fragmentId
+        fragment: fragmentId,
+        start: 0,
+        end: queryPlan.elapsedNanos,
+        step: queryPlan.elapsedNanos/1000
     });
 
     $('body').on('changeRange', function(e, lower, upper) {
@@ -95,11 +98,11 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
     });
 
     d3.csv(url, function(d) {
-        d.time = parseFloat(d.time, 10);
+        d.nanoTime = parseFloat(d.nanoTime, 10);
         d.numWorkers = +d.numWorkers;
         return d;
     }, function(error, data) {
-        wholeDomain = d3.extent(data, function(d) { return d.time; });
+        wholeDomain = d3.extent(data, function(d) { return d.nanoTime; });
 
         x.domain(wholeDomain);
 
