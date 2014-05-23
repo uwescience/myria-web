@@ -271,6 +271,10 @@ function initializeDatasetSearch() {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
+  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
+  var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>');
+  var dslink = _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
+
   $(".dataset-search").select2({
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
@@ -278,6 +282,7 @@ function initializeDatasetSearch() {
       url: "http://" + myriaConnection + "/dataset/search/",
       dataType: 'json',
       quietMillis: 100,
+      cache: true,
       data: function (term) {
         return {
           q: term
@@ -319,11 +324,15 @@ function initializeDatasetSearch() {
     dropdownCssClass: "bigdrop",
     escapeMarkup: function (m) { return m; }
   }).on("change", function(e) {
-    var rel = $(".dataset-search").select2("data")
-    url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+    var rel = $(".dataset-search").select2("data"),
+      url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function(data) {
-      var html = JSON.stringify(data.schema, null, 4);
-      $("#dataset-information").text(html);
+      var html = '';
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
+        html += row({name: d[0], type: d[1]});
+      });
+      html = table({content: html});
+      $("#dataset-information").html(dslink({url: url, user:rel.userName, program: rel.programName, name: rel.relationName}) + html);
     });
   });
 }
