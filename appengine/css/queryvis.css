@@ -138,10 +138,15 @@ svg .help-text {
   opacity: 0;
 }
 
-.graph .frag:hover>path:not(.clickme), .graph .frag:hover marker {
+.graph .frag:hover>path:not(.clickme) {
   transition: stroke .1s, fill .1s;
   stroke: orange;
-  fill: orange;
+}
+
+.graph .frag:hover marker {
+  transition: stroke .1s, fill .1s;
+  stroke: orange;
+  fill:orange;
 }
 
 .popover-content {
