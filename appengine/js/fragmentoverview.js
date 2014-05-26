@@ -47,7 +47,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         .orient("left");
 
     var area = d3.svg.area()
-        .interpolate("step-after")
+        .interpolate("montone")
         .x(function(d) { return x(d.nanoTime); })
         .y0(height)
         .y1(function(d) { return y(d.numWorkers); });
@@ -73,13 +73,15 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
 
     var wholeDomain;
 
+    var step = Math.floor(queryPlan.elapsedNanos/defaultNumSteps);
+
     var url = templates.urls.histogram({
         myria: myriaConnection,
         query: queryPlan.queryId,
         fragment: fragmentId,
         start: 0,
         end: queryPlan.elapsedNanos,
-        step: queryPlan.elapsedNanos/1000
+        step: step
     });
 
     $('body').on('changeRange', function(e, lower, upper) {
@@ -101,7 +103,10 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         d.nanoTime = parseFloat(d.nanoTime, 10);
         d.numWorkers = +d.numWorkers;
         return d;
-    }, function(error, data) {
+    }, function(error, incompleteData) {
+        // reconstruct all data, the data from myria has missing values where no workers were active
+        var data = reconstructFullData(incompleteData, 0, queryPlan.elapsedNanos, step);
+
         wholeDomain = d3.extent(data, function(d) { return d.nanoTime; });
 
         x.domain(wholeDomain);

@@ -164,6 +164,7 @@ svg .help-text {
 
 .area {
   fill: #444;
+  shape-rendering: auto;
 }
 
 .x.axis .tick line {

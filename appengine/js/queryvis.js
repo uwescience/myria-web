@@ -149,3 +149,29 @@ var largeNumberFormat = d3.format(",");
 var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
+
+var defaultNumSteps = 1000;
+
+// reconstruct all data, the data from myria has missing values where no workers were active
+function reconstructFullData(incompleteData, start, end, step) {
+    var range = _.range(start, end, step),
+        data = [],
+        indexed = _.object(_.map(incompleteData, function(x){return [x.nanoTime, x.numWorkers]})),
+        c = 0;
+    _.each(range, function(d) {
+        var value = indexed[d];
+        if (value !== undefined) {
+            c++;
+        }
+        data.push({
+            nanoTime: d,
+            numWorkers: value !== undefined ? value : 0
+        });
+    });
+
+    if (c != incompleteData.length) {
+        console.error("Incomplete data");
+    }
+
+    return data;
+}
