@@ -238,47 +238,54 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     }
 
     // initially fetch data and load minimap
-    fetchData(0, queryPlan.elapsedNanos, function(data) {
-        x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
-        y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
-
-        y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
-        plot.select(".y.axis").call(yAxis);
-
-        plot.on("mousemove", function (e) {
-            ruler
-                .style("display", "block")
-                .style("left", d3.event.pageX - 1 + "px");
-
-            var xPixels = d3.mouse(this)[0],
-                xValue = Math.round(x.invert(xPixels));
-
-            var i = bisectTime(data, xValue),
-                d0 = data[i - 1];
-
-            if (d0 === undefined) {
-                return;
-            }
-
-            plot
-                .select(".rulerInfo")
-                .style("opacity", 1)
-                .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
-
-            tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
-
-            var bbox = tttext.node().getBBox();
-            tooltip.select("rect")
-                .attr("width", bbox.width + 10)
-                .attr("height", bbox.height + 6)
-                .attr("x", bbox.x - 5)
-                .attr("y", bbox.y - 3);
+    var url = templates.urls.range({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId
         });
+    d3.csv(url, function(d) {
+        fetchData(+d[0].min_startTime, +d[0].max_endTime, function(data) {
+            x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
+            y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
 
-        mini_brush.select(".x.axis").call(xAxis2);
-        mini_brush.select(".area")
-            .datum(data)
-            .attr("d", area2);
+            y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
+            plot.select(".y.axis").call(yAxis);
+
+            plot.on("mousemove", function (e) {
+                ruler
+                    .style("display", "block")
+                    .style("left", d3.event.pageX - 1 + "px");
+
+                var xPixels = d3.mouse(this)[0],
+                    xValue = Math.round(x.invert(xPixels));
+
+                var i = bisectTime(data, xValue),
+                    d0 = data[i - 1];
+
+                if (d0 === undefined) {
+                    return;
+                }
+
+                plot
+                    .select(".rulerInfo")
+                    .style("opacity", 1)
+                    .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
+
+                tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+                var bbox = tttext.node().getBBox();
+                tooltip.select("rect")
+                    .attr("width", bbox.width + 10)
+                    .attr("height", bbox.height + 6)
+                    .attr("x", bbox.x - 5)
+                    .attr("y", bbox.y - 3);
+            });
+
+            mini_brush.select(".x.axis").call(xAxis2);
+            mini_brush.select(".area")
+                .datum(data)
+                .attr("d", area2);
+        });
     });
 
     function brushed() {
