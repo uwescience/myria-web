@@ -86,5 +86,5 @@ demo3_myr_examples = [
 ]
 
 demo3_examples = { 'datalog' : [], 'sql': [],
-                  'myrial' : demo3_myr_examples
-                  }
+                   'myrial' : demo3_myr_examples
+                 } 
