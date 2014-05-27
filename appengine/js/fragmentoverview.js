@@ -73,7 +73,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
 
     var wholeDomain;
 
-    var step = Math.floor(queryPlan.elapsedNanos/defaultNumSteps);
+    var step = Math.floor(queryPlan.elapsedNanos/width);
 
     var url = templates.urls.histogram({
         myria: myriaConnection,
@@ -104,7 +104,6 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         d.numWorkers = +d.numWorkers;
         return d;
     }, function(error, incompleteData) {
-        // reconstruct all data, the data from myria has missing values where no workers were active
         var data = reconstructFullData(incompleteData, 0, queryPlan.elapsedNanos, step);
 
         wholeDomain = d3.extent(data, function(d) { return d.nanoTime; });

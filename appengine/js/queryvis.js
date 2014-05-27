@@ -170,6 +170,9 @@ function reconstructFullData(incompleteData, start, end, step) {
     });
 
     if (c != incompleteData.length) {
+        debug(incompleteData)
+        debug(data)
+        debug(range)
         console.error("Incomplete data");
     }
 

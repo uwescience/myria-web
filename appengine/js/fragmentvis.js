@@ -69,17 +69,17 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
 
     // Area 1 generator
     var area = d3.svg.area()
-        .interpolate("step-after")
-        .x(function(d) { return x(d.time); })
+        .interpolate("montone")
+        .x(function(d) { return x(d.nanoTime); })
         .y0(height)
-        .y1(function(d) { return y(d.value); });
+        .y1(function(d) { return y(d.numWorkers); });
 
     // Area 2 generator
     var area2 = d3.svg.area()
-        .interpolate("step-after")
-        .x(function(d) { return x2(d.time); })
+        .interpolate("montone")
+        .x(function(d) { return x2(d.nanoTime); })
         .y0(height2)
-    .y1(function(d) { return y2(d.value); });
+    .y1(function(d) { return y2(d.numWorkers); });
 
     // Svg element to draw the fragment utilization plot
     //var svg = element.append("svg")
@@ -206,23 +206,44 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             .style("opacity", 0);
     });
 
-    var url = templates.urls.histogram({
-        myria: myriaConnection,
-        query: queryId,
-        fragment: fragmentId
-    });
+    // fetch histogram data and show it
+    function fetchData(start, end, callback) {
+        var step = Math.floor((end - start)/width);
 
-    d3.csv(url, function(d) {
-        d.time = +d.time;
-        d.value = +d.numWorkers;
-        delete d.numWorkers;
-        return d;
-    }, function(error, data) {
-        x.domain(d3.extent(data, function(d) { return d.time; }));
-        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+        var url = templates.urls.histogram({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId,
+            start: start,
+            end: end,
+            step: step
+        });
 
-        x2.domain(x.domain());
-        y2.domain(y.domain());
+        d3.csv(url, function(d) {
+            d.nanoTime = +d.nanoTime;
+            d.numWorkers = +d.numWorkers;
+            return d;
+        }, function(error, incompleteData) {
+            var data = reconstructFullData(incompleteData, start, end, step);
+
+            x.domain(d3.extent(data, function(d) { return d.nanoTime; }));
+
+            plot.select(".x.axis").call(xAxis);
+            plot.select(".area")
+                .datum(data)
+                .attr("d", area);
+
+            callback(data);
+        });
+    }
+
+    // initially fetch data and load minimap
+    fetchData(0, queryPlan.elapsedNanos, function(data) {
+        x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
+        y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
+
+        y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
+        plot.select(".y.axis").call(yAxis);
 
         plot.on("mousemove", function (e) {
             ruler
@@ -254,17 +275,10 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
                 .attr("y", bbox.y - 3);
         });
 
-        // TODO: do before we have the data
         mini_brush.select(".x.axis").call(xAxis2);
         mini_brush.select(".area")
             .datum(data)
             .attr("d", area2);
-
-        plot.select(".x.axis").call(xAxis);
-        plot.select(".y.axis").call(yAxis);
-        plot.select(".area")
-            .datum(data)
-            .attr("d", area);
     });
 
     function brushed() {
@@ -274,27 +288,30 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     }
 
     function brushEnd() {
+        var brush_extent = brush.empty() ? x2.domain() : brush.extent();
+        fetchData(Math.floor(brush_extent[0]), Math.ceil(brush_extent[1]), function() {});
+
         lanesChart.redrawLanes(brush.extent());
         if (brush.empty()) {
-        	lanesChart.toggleHelp(true);
+            lanesChart.toggleHelp(true);
         } else {
-        	lanesChart.toggleHelp(false);
+            lanesChart.toggleHelp(false);
         }
     }
 
     function brushendWorkers() {
-        //called brush; modify the lanes Chart ...
-        //compute the visible workers
-        var brush_extent = brush2.extent();
+        var brush_extent = brush2.empty() ? x2.domain() : brush2.extent();
 
         lanesChart.redrawLanes(brush2.extent());
         if (brush2.empty()) {
-        	lanesChart.toggleHelp(true);
+            lanesChart.toggleHelp(true);
         } else {
-        	lanesChart.toggleHelp(false);
+            lanesChart.toggleHelp(false);
         }
 
-        x.domain(brush2.empty() ? x2.domain() : brush_extent);
+        x.domain(brush_extent);
+
+        // animate before loading new data
         plot.select(".area")
             .transition()
             .duration(animationDuration)
@@ -302,9 +319,12 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         plot.select(".x.axis")
             .transition()
             .duration(animationDuration)
-            .call(xAxis);
+            .call(xAxis)
+            .each("end", function() {
+                fetchData(Math.floor(brush_extent[0]), Math.ceil(brush_extent[1]), function() {});
+            });
 
-        brush.extent(brush_extent);
+        brush.extent(brush2.extent());
         d3.select(".context .x.brush")
             .transition()
             .duration(animationDuration)
@@ -440,13 +460,13 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
     var toDelete;
 
     function toggleHelp(show) {
-    	if (show) {
+        if (show) {
             toDelete = chart.append("text")
-	            .text("Select a small range in the chart above to see the operators.")
-	            .attr("x", width/2)
-	            .attr("y", _.min([100, height/2]))
-	            .attr("text-anchor", "middle")
-	            .attr("class", "help-text");
+                .text("Select a small range in the chart above to see the operators.")
+                .attr("x", width/2)
+                .attr("y", _.min([100, height/2]))
+                .attr("text-anchor", "middle")
+                .attr("class", "help-text");
         } else {
             toDelete.remove();
         }
