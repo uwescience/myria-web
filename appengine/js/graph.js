@@ -189,7 +189,7 @@ function Graph () {
         }
         // Then add the operand links in subgraphs
         graph.state.opened.forEach(function(fragment) {
-        	dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
+            dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
@@ -202,8 +202,8 @@ function Graph () {
         });
         // closed fragments
         _.each(_.difference(_.keys(graph.nodes), graph.state.opened), function(key) {
-    		var node = graph.nodes[key];
-    		dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
+            var node = graph.nodes[key];
+            dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
         });
         dotStr += links + "}";
         return dotStr;
@@ -416,10 +416,12 @@ function Graph () {
             .scaleExtent([0.5, 4])
             .on('zoom', onzoom);
 
-        var wrapper = graphElement
+        var svg = graphElement
                     .append("svg")
+                    .style("width", width)
                     .attr("class", "graph")
-                    .call(zoom)
+                    .call(zoom);
+        var wrapper = svg
                     .append("g");
         var graph = wrapper.append("g"); // avoid jitter
 
@@ -492,6 +494,9 @@ function Graph () {
         }
 
         function draw(data, initial) {
+            svg
+                .style("height", (data.height + 0.5)*dpi);
+
             graph
                 .attr("height", data.height*dpi)
                 .attr("width", data.width*dpi);
@@ -574,8 +579,8 @@ function Graph () {
 
             node.select("text")
                 .text(function(d) {
-                	if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
-                	    return d.name;
+                    if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
+                        return d.name;
                     }
                     return "";
                 });
