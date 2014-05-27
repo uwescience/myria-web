@@ -71,7 +71,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         .attr("height", height + 10)
         .attr("y", -10);
 
-    var wholeDomain;
+    var wholeDomain = [0, queryPlan.elapsedNanos];
 
     var step = Math.floor(queryPlan.elapsedNanos/width);
 
@@ -84,21 +84,6 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         step: step
     });
 
-    $('body').on('changeRange', function(e, lower, upper) {
-        if (wholeDomain == undefined || lower == undefined || isNaN(lower) || lower == -Infinity) {
-            return;
-        }
-
-        var previousDomain = wholeDomain;
-        wholeDomain = [_.min([lower, wholeDomain[0]]), _.max([upper, wholeDomain[1]])];
-        if (previousDomain[0] != wholeDomain[0] || previousDomain[1] != wholeDomain[1]) {
-            x.domain(wholeDomain);
-            svg.select("g.x.axis").call(xAxis);
-            svg.select("path.area").attr("d", area);
-            $('body').trigger('changeRange', wholeDomain);
-        }
-    });
-
     d3.csv(url, function(d) {
         d.nanoTime = parseFloat(d.nanoTime, 10);
         d.numWorkers = +d.numWorkers;
@@ -106,11 +91,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
     }, function(error, incompleteData) {
         var data = reconstructFullData(incompleteData, 0, queryPlan.elapsedNanos, step);
 
-        wholeDomain = d3.extent(data, function(d) { return d.nanoTime; });
-
         x.domain(wholeDomain);
-
-        $('body').trigger('changeRange', wholeDomain);
 
         svg.append("g")
             .attr("class", "x axis")
