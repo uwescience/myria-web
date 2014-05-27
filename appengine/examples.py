@@ -60,6 +60,23 @@ PlanktonCount = select Cruise, COUNT(*) as Phytoplankton
 
 store(PlanktonCount, public:demo:PlanktonCount);'''
 
+sigma_clipping_naive = """-- Simple and slow implementation of sigma clipping
+
+Good = scan(public:adhoc:sc_points);
+
+-- number of allowed standard deviations
+const Nstd: 2;
+
+do
+    stats = [from Good emit avg(v) AS mean, stdev(v) AS std];
+    NewBad = [from Good, stats where abs(Good.v - mean) > Nstd * std emit Good.*];
+    Good = diff(Good, NewBad);
+    continue = [from NewBad emit count(NewBad.v) > 0];
+while continue;
+
+store(Good, OUTPUT);
+"""
+
 myria_examples = [
     ('JustX: A simple projection query on TwitterK', justx),
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
@@ -82,7 +99,7 @@ examples = { 'datalog' : datalog_examples,
 
 demo3_myr_examples = [
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
-    ('Sigma-clipping (naive version)', get_example('sigma-clipping-v0.myl'))
+    ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
 
 demo3_examples = { 'datalog' : [], 'sql': [],
