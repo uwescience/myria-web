@@ -207,7 +207,9 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     });
 
     // fetch histogram data and show it
-    function fetchData(start, end, callback) {
+    function fetchData(range, callback) {
+        var start = range[0],
+            end = range[1];
         var step = Math.floor((end - start)/width);
 
         var url = templates.urls.histogram({
@@ -244,7 +246,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             fragment: fragmentId
         });
     d3.csv(url, function(d) {
-        fetchData(+d[0].min_startTime, +d[0].max_endTime, function(data) {
+        fetchData([+d[0].min_startTime, +d[0].max_endTime], function(data) {
             x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
             y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
 
@@ -254,7 +256,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             plot.on("mousemove", function (e) {
                 ruler
                     .style("display", "block")
-                    .style("left", d3.event.pageX - 1 + "px");
+                    .style("left", d3.event.pageX + "px");
 
                 var xPixels = d3.mouse(this)[0],
                     xValue = Math.round(x.invert(xPixels));
@@ -296,9 +298,10 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
 
     function brushEnd() {
         var brush_extent = brush.empty() ? x2.domain() : brush.extent();
-        fetchData(Math.floor(brush_extent[0]), Math.ceil(brush_extent[1]), function() {});
+        var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+        fetchData(range, function() {});
 
-        lanesChart.redrawLanes(brush.extent());
+        lanesChart.fetchData(range);
         if (brush.empty()) {
             lanesChart.toggleHelp(true);
         } else {
@@ -309,7 +312,8 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     function brushendWorkers() {
         var brush_extent = brush2.empty() ? x2.domain() : brush2.extent();
 
-        lanesChart.redrawLanes(brush2.extent());
+        var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+        lanesChart.fetchData(range);
         if (brush2.empty()) {
             lanesChart.toggleHelp(true);
         } else {
@@ -328,7 +332,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             .duration(animationDuration)
             .call(xAxis)
             .each("end", function() {
-                fetchData(Math.floor(brush_extent[0]), Math.ceil(brush_extent[1]), function() {});
+                fetchData([Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])], function() {});
             });
 
         brush.extent(brush2.extent());
@@ -347,10 +351,12 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
         fullWidth = parseInt(element.style('width'), 10) - margin.left - margin.right,
         width = fullWidth - labels_width;
 
-    var height =  numWorkers * 30;
+    var height =  numWorkers * 50;
 
     var x = d3.scale.linear().clamp(true).range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
+
+    y.domain(_.range(1, numWorkers+1));
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -408,24 +414,6 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
         .append("text")
         .call(xAxisLabel);
 
-    /* Collect data for states at each worker */
-    var url = templates.urls.profiling({
-        myria: myriaConnection,
-        query: queryId,
-        fragment: fragmentId
-    });
-
-    var workersData = {};
-
-    d3.csv(url, function(d) {
-        d.workerId = +d.workerId;
-        d.nanoTime = parseFloat(d.nanoTime);
-        d.numTuples = +d.numTuples;
-        return d;
-    }, function(error, data) {
-        workersData = getWorkersStates(data);
-    });
-
     // Add ruler
     var tooltip = chart.append("g")
         .attr({"class": "rulerInfo"})
@@ -481,33 +469,56 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
 
     toggleHelp(true);
 
-    function redrawLanes(xDomain) {
-        var data = _.values(workersData);
+    function fetchData(range) {
+         var url = templates.urls.profiling({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId,
+            start: range[0],
+            end: range[1],
+        });
 
-        y.domain(_.pluck(data, 'workerId'));
-        x.domain(xDomain);
+        d3.csv(url, function(d) {
+            d.workerId = +d.workerId;
+            d.startTime = +d.startTime;
+            d.endTime = +d.endTime;
+            d.numTuples = +d.numTuples;
+            return d;
+        }, function(error, data) {
+            var aggregatedData = [],
+                grouped = _.groupBy(data, 'workerId'),
+                numOps = queryPlan.physicalPlan.fragments[fragmentId].operators.length;
+            aggregatedData = _.map(grouped, function(val, key){
+                return { workerId: +key, states: val };
+            });
+            redrawLanes(aggregatedData, range);
+        });
+    }
 
-        var lane = lanes.selectAll(".worker").data(data, function(d) { return d.workerId; });
+    function redrawLanes(data, range) {
+        x.domain(range);
+
+        var lane = lanes
+            .selectAll(".worker")
+            .data(data, function(d) { return d.workerId; });
         lane.enter().append("g").attr("class", "worker");
         lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
         lane.exit().remove();
 
         var box = lane.selectAll("rect")
             .data(function(d) {
-                return _.filter(d.states, function(s) {
-                    // overlap
-                    return xDomain[0] < s.end && xDomain[1] > s.begin;
-                });
-            }, function(d) { return d.begin; });
+                return d.states;
+            }, function(d) { return d.startTime; });
 
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return opToColor[d.name]; })
-            .attr("class", "box");
+            .style("fill", function(d) { return opToColor[d.opId]; })
+            .attr("class", "box")
+            .attr("height", function(d) { return y.rangeBand(); });
 
         box.on('mouseenter', function(d){
             d3.select(this).tooltip(function(d) {
-                var content = templates.opname({ name: idNameMapping[d.name] });
+                var content = templates.opname({ name: idNameMapping[d.opId] });
                 if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
                         content += templates.numTuplesTemplate({ numTuples: d.numTuples });
@@ -516,7 +527,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
                     }
                     content += ', ';
                 }
-                content += templates.duration({ duration: customFullTimeFormat(d.end - d.begin) });
+                content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime) });
                 return content;
             });
         });
@@ -524,12 +535,11 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
         box
             .transition()
             .duration(animationDuration)
-            .attr("x", function(d) { return x(d.begin); })
+            .attr("x", function(d) { return x(d.startTime); })
             .style("opacity", 1)
             .attr("width", function(d) {
-                return x(d.end) - x(d.begin);
-            })
-            .attr("height", function(d) { return y.rangeBand(); });
+                return x(d.endTime) - x(d.startTime);
+            });
 
         box.exit().remove();
 
@@ -599,7 +609,8 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
 
     return {
         redrawLanes: redrawLanes,
-        toggleHelp: toggleHelp
+        toggleHelp: toggleHelp,
+        fetchData: fetchData
     };
 }
 
@@ -609,71 +620,4 @@ function xAxisLabel(selection) {
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Time");
-}
-
-function getWorkersStates(data) {
-    // TODO: this parsing function assumes the following about the data
-    // received:
-    //   - events are sorted at each worker
-
-    // Create a structure:
-    //  workers = [{ workerId : [{opName : [{}]}] }]
-    //
-    // TODO: use queryPlan to put the right lane numbers?
-
-    var workersStates = {};
-    var tmpStacks = {}; // a stack per worker keeps unfinished operator calls
-
-
-    data.forEach(function(d) {
-        stack = tmpStacks[d.workerId];
-        if (stack === undefined || stack.length === 0) {
-            tmpStacks[d.workerId] = [get_state(d)];
-            return;
-        }
-
-        // event on top of stack completed (we now know its endTime), add
-        // to states
-
-        if (!_.has(workersStates, d.workerId)) {
-            workersStates[d.workerId] = {
-                workerId: d.workerId,
-                states: []
-            };
-        }
-
-        top_stack = _.last(stack);
-        top_stack.end = d.nanoTime;
-        if (d.eventType === "return") {
-            top_stack.numTuples = d.numTuples;
-        }
-        workersStates[d.workerId].states.push(top_stack);
-
-        // check the event type and push unfinished event on the stack
-        if (d.eventType === "call") {
-            stack.push(get_state(d));
-        } else if (d.eventType === "return") {
-            // it's a return, update the link and replace top of stack
-            // with a new, same opName event that starts from d.nanoTime
-            stack.pop();
-            if (stack.length > 0) {
-                top_stack = _.last(stack);
-                state = get_state(d);
-                state.name = top_stack.name; // the same call
-                //TODO: use links
-                //top_stack.link = state; // belong together (still in the same call thread)
-                stack[stack.length - 1] = state;
-           } //TODO: eos??
-        }
-    });
-
-    function get_state(d) {
-        return {
-            name: d.opName,
-            begin: d.nanoTime,
-            end: null           // we don't know this yet ...
-        };
-    }
-
-    return workersStates;
 }

@@ -3,7 +3,7 @@ var templates = {
     //*/
     urls: {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>"),
         range: _.template("http://<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&step=<%- step %>")
     },
