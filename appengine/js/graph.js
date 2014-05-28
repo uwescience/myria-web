@@ -65,7 +65,7 @@ function Graph () {
         // Collect graph nodes
         graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
             // Create fragment node object
-            var node = new Object();                                    // Node object
+            var node = {};                                              // Node object
             var id = "Frag" + fragment.fragmentIndex.toString();        // Node ID
             node.fragmentIndex = fragment.fragmentIndex.toString();     // Fragment ID
             node.rawData = fragment;                                    // RAW JSON data
@@ -108,7 +108,7 @@ function Graph () {
             fragment.operators.forEach(function(op) {
                 // Add cross-fragment links
                 if (op.hasOwnProperty('argOperatorId')) {
-                    var link = new Object();                            // Link object
+                    var link = {};                                      // Link object
                     link.u = {};
                     link.v = {};
                     link.u.fID = graph.opId2fId[op.argOperatorId];      // Src fragment ID
@@ -122,7 +122,7 @@ function Graph () {
                 for (var key in op) {
                     if (key == "argChildren") {
                         op[key].forEach(function(child){
-                            var link = new Object();                        // Link object
+                            var link = {};                                  // Link object
                             link.u = {};
                             link.v = {};
                             link.u.fID = id;                                // Src fragment ID
@@ -133,7 +133,7 @@ function Graph () {
                             fragment.opLinks["link-" + linkID.hashCode()] = link;
                         });
                     } else if (key.indexOf("argChild") != -1) {
-                        var link = new Object();                        // Link object
+                        var link = {};                                  // Link object
                         link.u = {};
                         link.v = {};
                         link.u.fID = id;                                // Src fragment ID
@@ -317,7 +317,7 @@ function Graph () {
                         points: points,
                         stroke: (graph.state.focus == lid) ? "red" : "black",
                         id: lid
-                    }
+                    };
                 } else if (type == "frag") {
                     var link = graph.links[lid];
                     link.viz = {
@@ -327,7 +327,7 @@ function Graph () {
                         points: points,
                         stroke: (graph.state.focus == lid) ? "red" : "black",
                         id: lid
-                    }
+                    };
                 }
             }
         });
@@ -543,7 +543,7 @@ function Graph () {
                         if (value === null) {
                             value = 'null';
                         }
-                        if (value != null && typeof value === 'object') {
+                        if (value !== null && typeof value === 'object') {
                           value = JSON.stringify(value);
                         }
                         body += templates.row({key: key, value: value});
@@ -557,7 +557,7 @@ function Graph () {
             node.select("circle").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("cx", function(d) { return (d.x+d.w) * dpi; })
-                .attr("cy", function(d) { return d.y * dpi; })
+                .attr("cy", function(d) { return d.y * dpi; });
 
             node.select("rect").transition().duration(animationDuration)
                 .attr("opacity", 1)
@@ -653,7 +653,7 @@ function Graph () {
                 .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id }) });
+                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });});
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
@@ -663,7 +663,7 @@ function Graph () {
                 .attr("opacity", 0);
 
             link.exit().select("marker").transition().duration(shortDuration)
-                .attr("fill-opacity", 0)
+                .attr("fill-opacity", 0);
 
             link.exit().transition().duration(shortDuration).remove();
         }
@@ -673,4 +673,4 @@ function Graph () {
             closeFragment: closeFragment
         };
     };
-};
+}
