@@ -78,6 +78,9 @@ function timeFormat(formats) {
 
 function timeFormatNs(formats) {
   return function(date) {
+    if (date === 0) {
+        return "0";
+    }
     if (date % 1e6 !== 0) {
         return (date % 1e6).toExponential(2) + " ns";
     }
