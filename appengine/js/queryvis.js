@@ -164,7 +164,7 @@ var defaultNumSteps = 1000;
 
 // if a range longer than this time is requests in the fragment visualization, then the
 // data is limited to root operators
-var maxTimeForDetails = 10 * 1e9;
+var maxTimeForDetails = 30 * 1e9;
 
 // reconstruct all data, the data from myria has missing values where no workers were active
 function reconstructFullData(incompleteData, start, end, step) {
