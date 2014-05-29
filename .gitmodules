@@ -1,6 +1,6 @@
-[submodule "datalogcompiler"]
+[submodule "raco"]
 	path = submodules/raco
-	url = https://github.com/uwescience/datalogcompiler.git
+	url = https://github.com/uwescience/raco.git
 	branch = master
 [submodule "myria-python"]
 	path = submodules/myria-python
