@@ -176,10 +176,9 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             var lower = extent[0],
                 upper = extent[1],
                 range = upper - lower,
-                dom = x2.domain(),
                 rangepart = range/5;
-            extent = [_.max([lower - rangepart, dom[0]]), _.min([upper + rangepart, dom[1]])];
-            if (extent[0] == dom[0] && extent[1] == dom[1]) {
+            extent = [_.max([lower - rangepart, wholeRange[0]]), _.min([upper + rangepart, wholeRange[1]])];
+            if (extent[0] == wholeRange[0] && extent[1] == wholeRange[1]) {
                 brush2.clear();
                 brushendWorkers();
             } else {
