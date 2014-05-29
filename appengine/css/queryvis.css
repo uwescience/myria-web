@@ -286,3 +286,16 @@ svg .help-text {
 .controls {
 	margin: 10px 0;
 }
+
+/* Treemap */
+.treemap .node {
+  border: solid 4px black;
+  font: 10px sans-serif;
+  color: black;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  line-height: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  text-indent: 2px;
+}

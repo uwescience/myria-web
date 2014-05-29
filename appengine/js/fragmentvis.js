@@ -2,15 +2,9 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     $('.title-current').html(templates.titleFragmentsVis({fragment: fragmentId}));
 
     $(element.node()).empty();
+    $(element.node()).append(templates.fragmentVisFrames);
 
-    var idNameMapping = {};
-
-    _.each(queryPlan.physicalPlan.fragments, function(frag) {
-        _.each(frag.operators, function(op) {
-            var hasName = _.has(op, 'opName') && op.opName;
-            idNameMapping[op.opId] = hasName ? op.opName.replace("Myria", "") : op.opId;
-        });
-    });
+    var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.fragments);
 
     var hierarchy = graph.nested[fragmentId],
         levels = {};
@@ -25,8 +19,10 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
     var numWorkers = _.max(workers);
 
-    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
-    drawLineChart(element, fragmentId, queryPlan.queryId, lanesChart);
+    var opVis = operatorVisualization(element.select(".contrib"), fragmentId, queryPlan, graph);
+
+    var lanesChart = drawLanes(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
+    drawLineChart(element.select(".details"), fragmentId, queryPlan.queryId, lanesChart);
 
     // return variables that are needed outside this scope
     return {};
@@ -92,7 +88,6 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     .y1(function(d) { return y2(d.numWorkers); });
 
     // Svg element to draw the fragment utilization plot
-    //var svg = element.append("svg")
     var svg = element.insert("svg", ":first-child")
                      .attr("width", width + labels_width + margin.left + margin.right)
                      .attr("height", height + margin.top + margin.bottom)
@@ -555,7 +550,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
 
         box.on('mouseenter', function(d) {
             d3.select(this).tooltip(function(d) {
-                var content = templates.opname({ name: idNameMapping[d.opId] });
+                var content = templates.strong({ text: idNameMapping[d.opId] });
                 if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
                         content += templates.numTuplesTemplate({ numTuples: d.numTuples });

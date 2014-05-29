@@ -5,7 +5,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan) {
     _.each(fragmentIds, function(fragmentId) {
         var div = element.append("div")
             .attr("class", "overview-fragment");
-        div.append("span")
+        div.append("h4")
             .text(templates.fragmentTitle({fragment: fragmentId}));
 
         div.on("click", function(a) {

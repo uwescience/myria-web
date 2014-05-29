@@ -5,6 +5,7 @@ var templates = {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
         range: _.template("http://<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        contribution: _.template("http://<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&step=<%- step %>")
     },
     /*/
@@ -36,7 +37,6 @@ var templates = {
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
-    opname: _.template('<strong><%- name %>: </strong>'),
     networkVisFrames:
         '<div class="row">\
             <div class="col-md-4">\
@@ -50,9 +50,15 @@ var templates = {
         <div class="row">\
             <div class="col-md-12 matrix"></div>\
         </div>',
+    fragmentVisFrames:
+        '<h4>Query time contribution <a href="#contribCollapsible" data-toggle="collapse"><small>collapse/expand</small></a></h4>\
+        <div class="contrib collapse in" id="contribCollapsible"></div>\
+        <h4>Detailed execution</h4>\
+        <div class="details" id="detailsCollapsible"></div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
-    strong: _.template('<strong><%- text %></strong>')
+    strong: _.template('<strong><%- text %></strong>'),
+    opPopover: _.template('<p><strong>Overall runtime: </strong><%- time %></p>')
 };
 
 // Dictionary of operand name -> color
@@ -185,4 +191,15 @@ function reconstructFullData(incompleteData, start, end, step) {
     }
 
     return data;
+}
+
+function nameMappingFromFragments(fragments) {
+    var idNameMapping = {};
+    _.each(fragments, function(frag) {
+        _.each(frag.operators, function(op) {
+            var hasName = _.has(op, 'opName') && op.opName;
+            idNameMapping[op.opId] = hasName ? op.opName.replace("Myria", "") : op.opId;
+        });
+    });
+    return idNameMapping;
 }
