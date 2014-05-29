@@ -10,6 +10,8 @@ import webapp2
 
 import jinja2
 
+from google.appengine.api import users
+
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
@@ -185,8 +187,23 @@ class MyriaPage(MyriaHandler):
                     hostname, port)
         return connection_string
 
+
+    def get_greeting(self):
+        '''Construct an HTML fragment that displays login status and a link to either login or out'''
+        user = users.get_current_user()
+        if user:
+            greeting = ('Logged in as %s (<a href="%s">logout</a>)' %
+                        (user.nickname(), users.create_logout_url('/')))
+        else:
+            greeting = ('<a href="%s">Login with Google</a>' %
+                        users.create_login_url('/'))
+
+        return greeting
+
     def base_template_vars(self):
+
         return {'connectionString': self.get_connection_string(),
+                'greeting' : self.get_greeting(),
                 'myriaConnection': "{h}:{p}".format(
                     h=self.app.hostname, p=self.app.port),
                 'version': VERSION,
@@ -349,6 +366,7 @@ class Examples(MyriaPage):
 class Editor(MyriaPage):
 
     def get(self):
+    
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
