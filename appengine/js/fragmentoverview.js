@@ -26,7 +26,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 150 - margin.top - margin.bottom;
 
-    var bisectTime = d3.bisector(function(d) { return d.time; }).right;
+    var bisectTime = d3.bisector(function(d) { return d.nanoTime; }).right;
 
     var x = d3.scale.linear()
         .range([0, width]);

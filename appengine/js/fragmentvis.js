@@ -38,7 +38,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
 
-    var bisectTime = d3.bisector(function(d) { return d.time; }).right;
+    var bisectTime = d3.bisector(function(d) { return d.nanoTime; }).right;
 
     width = width - labels_width;
 
