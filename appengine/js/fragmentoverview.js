@@ -73,7 +73,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
 
     var wholeDomain = [0, queryPlan.elapsedNanos];
 
-    var step = Math.floor(queryPlan.elapsedNanos/width);
+    var step = Math.floor(0.5*queryPlan.elapsedNanos/width);
 
     var url = templates.urls.histogram({
         myria: myriaConnection,

@@ -493,7 +493,9 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
             fragment: fragmentId,
             start: range[0],
             end: range[1],
-            onlyRootOp: tooLarge
+            onlyRootOp: tooLarge,
+            // don't request anything that is less than a pixel wide
+            minLength: Math.floor(0.5*(range[1] - range[0])/width)
         });
 
         d3.csv(url, function(d) {
