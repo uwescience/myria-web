@@ -483,7 +483,7 @@ function Graph () {
 
                     // Handle fragment state
                     if (node.type == "cluster") {
-                        if (node.id == self.state.focus) {
+                        if (node.id === self.state.focus) {
                             closeFragment(node.id);
                         } else {
                             openFragment(node.id);
