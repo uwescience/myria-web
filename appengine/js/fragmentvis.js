@@ -545,7 +545,16 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
                 return y.rangeBand() - getHeight(d);
             });
 
-        box.on('mouseenter', function(d){
+        box.on('mouseover', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .attr("height", function(d) {
+                    return getHeight(d) + 4;
+                })
+                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).darker(0.3); });
+        });
+
+        box.on('mouseenter', function(d) {
             d3.select(this).tooltip(function(d) {
                 var content = templates.opname({ name: idNameMapping[d.opId] });
                 if (_.has(d, 'numTuples')) {
@@ -559,6 +568,13 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
                 content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime) });
                 return content;
             });
+        });
+
+        box.on('mouseleave', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .attr("height", getHeight)
+                .style("fill", function(d) { return opToColor[d.opId]; });
         });
 
         box
