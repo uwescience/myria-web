@@ -92,8 +92,8 @@ function timeFormatNs(formats) {
 var customTimeFormat = timeFormatNs([
   [d3.time.format("%H:%M"), function(d) { return true; }],
   [d3.time.format("%H:%M:%S"), function(d) { return d.getMinutes(); }],
-  [d3.time.format(":%S.%L"), function(d) { return d.getSeconds(); }],
-  [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
+  [d3.time.format("%S s"), function(d) { return d.getSeconds(); }],
+  [d3.time.format(".%L s"), function(d) { return d.getMilliseconds(); }]
 ]);
 
 String.prototype.hashCode = function(){

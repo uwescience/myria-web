@@ -10,7 +10,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan) {
 
         div.on("click", function(a) {
             d3.event.stopPropagation();
-            graph.openFragment("Frag" + fragmentId);
+            graph.openFragment(fragmentId);
         });
         var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
         var numWorkers = _.max(workers);

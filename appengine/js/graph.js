@@ -62,18 +62,25 @@ function Graph () {
         // Get query plan
         graph.queryPlan = json;
 
+        // a nested version of op ids, not needed in here but useful for other visualizations
+        graph.nested = {};
+
+        // edges, used to construct graph.nested
+        var links = {};
+
         // Collect graph nodes
         graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = {};                                              // Node object
-            var id = "Frag" + fragment.fragmentIndex.toString();        // Node ID
-            node.fragmentIndex = fragment.fragmentIndex.toString();     // Fragment ID
+            var id = fragment.fragmentIndex        // Node ID
+            node.fragmentIndex = fragment.fragmentIndex;     // Fragment ID
             node.rawData = fragment;                                    // RAW JSON data
             node.workers = fragment.workers;                            // List of workers
             node.operators = fragment.operators;                        // List of operators
             node.opNodes = {};                                          // List of graph operand nodes
             node.opLinks = {};                                          // List of graph operand edges
             node.name = "Fragment " + fragment.fragmentIndex.toString();// Name for fragment node
+
             // Process each operator
             var color_index = 0;
             node.operators.forEach(function(op) {
@@ -98,13 +105,15 @@ function Graph () {
         // If there are more than 10 fragments, do not expand
         if (graph.queryPlan.physicalPlan.fragments.length < 10) {
             for (var id in graph.nodes) {
-                graph.state.opened.push(id);
+                graph.state.opened.push(+id);
             }
         }
 
         // Collect graph links
         for (var id in graph.nodes) {
+            id = +id;
             var fragment = graph.nodes[id];
+            links[id] = {};
             fragment.operators.forEach(function(op) {
                 // Add cross-fragment links
                 if (op.hasOwnProperty('argOperatorId')) {
@@ -131,6 +140,11 @@ function Graph () {
                             link.v.oID = op.opId;                           // Dst fragment ID
                             var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
                             fragment.opLinks["link-" + linkID.hashCode()] = link;
+
+                            if (!_.has(links[id], op.opId)) {
+                                links[id][op.opId] = [];
+                            }
+                            links[id][op.opId].push(child);
                         });
                     } else if (key.indexOf("argChild") != -1) {
                         var link = {};                                  // Link object
@@ -142,23 +156,45 @@ function Graph () {
                         link.v.oID = op.opId;                           // Dst fragment ID
                         var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
                         fragment.opLinks["link-" + linkID.hashCode()] = link;
+
+                        if (!_.has(links[id], op.opId)) {
+                            links[id][op.opId] = [];
+                        }
+                        links[id][op.opId].push(op[key]);
                     }
                 }
             });
         }
+
+        _.each(links, function(linkdict, fragid) {
+            var roots = _.difference(_.keys(linkdict), _.flatten(_.values(linkdict)));
+            if (roots.length !== 1) {
+                console.warn("Too many roots");
+            }
+            var root = roots[0];
+            var addChildren = function(name) {
+                var c = {
+                    name: name,
+                    children: _.map(linkdict[name], addChildren)
+                };
+                return c;
+            };
+            graph.nested[fragid] = addChildren(root);
+        });
     };
 
     // Function that updates the graph edges when a fragment gets expanded
     Graph.prototype.expandNode = function(nodes) {
         var graph = this;
         nodes.forEach(function(nid){
+            nid = +nid;
             var exists = false;
             graph.state.opened.forEach(function(id){
                 if(nid == id) { exists = true; }
             });
             if(!exists) {
-                graph.state.opened.push(nid);
-                graph.state.focus = nid;
+                graph.state.opened.push(+nid);
+                graph.state.focus = +nid;
             }
         });
     };
@@ -254,7 +290,7 @@ function Graph () {
                         w: +cols[4],
                         h: +cols[5],
                         color: "lightgrey",
-                        stroke: (graph.state.focus == id) ? "red" : "black"
+                        stroke: (graph.state.focus === id) ? "red" : "black"
                     };
                 } else if (id in graph.opId2fId) {
                     var node = graph.nodes[graph.opId2fId[id]];
@@ -269,7 +305,7 @@ function Graph () {
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
                         h: +cols[5],
-                        color: (graph.state.focus == graph.opId2fId[id]) ? graph.opId2color[id] : "white",
+                        color: (graph.state.focus === graph.opId2fId[id]) ? graph.opId2color[id] : "white",
                         stroke: "black"
                     };
                 }
@@ -307,7 +343,7 @@ function Graph () {
                         }
                     }
                 }
-                var lid = "link-" + linkID.hashCode()
+                var lid = "link-" + linkID.hashCode();
                 if (type == "op") {
                     var link = graph.nodes[graph.opId2fId[src]].opLinks[lid];
                     link.viz = {
@@ -315,7 +351,7 @@ function Graph () {
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        stroke: (graph.state.focus === lid) ? "red" : "black",
                         id: lid
                     };
                 } else if (type == "frag") {
@@ -325,7 +361,7 @@ function Graph () {
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        stroke: (graph.state.focus === lid) ? "red" : "black",
                         id: lid
                     };
                 }
@@ -362,7 +398,7 @@ function Graph () {
                 w: maxX-minX+padding,
                 h: maxY-minY+padding,
                 color: "lightgrey",
-                stroke: (graph.state.focus == fID) ? "red" : "black"
+                stroke: (graph.state.focus === fID) ? "red" : "black"
             };
             // Add cluster
             nodes.push(node);
@@ -379,6 +415,7 @@ function Graph () {
         });
         // Add non-exploded fragments
         for (fragID in graph.nodes) {
+            fragID = +fragID;
             if (graph.state.opened.indexOf(fragID) == -1) {
                 nodes.push(graph.nodes[fragID].viz);
             }
@@ -476,7 +513,7 @@ function Graph () {
 
         function openFragment(nodeId) {
             self.expandNode([nodeId]);
-            self.state.focus = nodeId;
+            self.state.focus = +nodeId;
             fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
 
             var newD3data = self.generateD3data();

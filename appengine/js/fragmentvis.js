@@ -1,4 +1,4 @@
-var fragmentVisualization = function (element, fragmentId, queryPlan) {
+var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     $('.title-current').html(templates.titleFragmentsVis({fragment: fragmentId}));
 
     $(element.node()).empty();
@@ -12,10 +12,20 @@ var fragmentVisualization = function (element, fragmentId, queryPlan) {
         });
     });
 
+    var hierarchy = graph.nested[fragmentId],
+        levels = {};
+    function addLevels(node, level) {
+        levels[node.name] = level++;
+        _.map(node.children, function(n) {
+            addLevels(n, level);
+        });
+    }
+    addLevels(hierarchy, 0);
+
     var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
     var numWorkers = _.max(workers);
 
-    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers, idNameMapping);
+    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
     drawLineChart(element, fragmentId, queryPlan.queryId, lanesChart);
 
     // return variables that are needed outside this scope
@@ -239,6 +249,8 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         });
     }
 
+    var wholeRange;
+
     // initially fetch data and load minimap
     var url = templates.urls.range({
             myria: myriaConnection,
@@ -246,7 +258,8 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             fragment: fragmentId
         });
     d3.csv(url, function(d) {
-        fetchData([+d[0].min_startTime, +d[0].max_endTime], function(data) {
+        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
+        fetchData(wholeRange, function(data) {
             x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
             y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
 
@@ -291,32 +304,35 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     });
 
     function brushed() {
-        x.domain(brush.empty() ? x2.domain() : brush.extent());
+        x.domain(brush.empty() ? wholeRange : brush.extent());
         plot.select(".area").attr("d", area);
         plot.select(".x.axis").call(xAxis);
     }
 
     function brushEnd() {
-        var brush_extent = brush.empty() ? x2.domain() : brush.extent();
+        var brush_extent = brush.empty() ? wholeRange : brush.extent();
         var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+
         fetchData(range, function() {});
 
-        lanesChart.fetchData(range);
         if (brush.empty()) {
+            lanesChart.redrawLanes([], [0, 1]);
             lanesChart.toggleHelp(true);
         } else {
+            lanesChart.fetchData(range);
             lanesChart.toggleHelp(false);
         }
     }
 
     function brushendWorkers() {
-        var brush_extent = brush2.empty() ? x2.domain() : brush2.extent();
-
+        var brush_extent = brush2.empty() ? wholeRange : brush2.extent();
         var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
-        lanesChart.fetchData(range);
+
         if (brush2.empty()) {
+            lanesChart.redrawLanes([], [0, 1]);
             lanesChart.toggleHelp(true);
         } else {
+            lanesChart.fetchData(range);
             lanesChart.toggleHelp(false);
         }
 
@@ -332,7 +348,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             .duration(animationDuration)
             .call(xAxis)
             .each("end", function() {
-                fetchData([Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])], function() {});
+                fetchData(range, function() {});
             });
 
         brush.extent(brush2.extent());
@@ -345,7 +361,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     }
 }
 
-function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
+function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, levels) {
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
         labels_width = 20,
         fullWidth = parseInt(element.style('width'), 10) - margin.left - margin.right,
@@ -495,6 +511,8 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
         });
     }
 
+    var maxLevel = _.max(_.values(levels));
+
     function redrawLanes(data, range) {
         x.domain(range);
 
@@ -510,11 +528,18 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
                 return d.states;
             }, function(d) { return d.startTime; });
 
+        function getHeight(d) {
+            return y.rangeBand() * (0.5 + (maxLevel - levels[d.opId])/(2*maxLevel));
+        }
+
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return opToColor[d.opId]; })
             .attr("class", "box")
-            .attr("height", function(d) { return y.rangeBand(); });
+            .attr("height", getHeight)
+            .attr("y", function(d) {
+                return y.rangeBand() - getHeight(d);
+            });
 
         box.on('mouseenter', function(d){
             d3.select(this).tooltip(function(d) {
