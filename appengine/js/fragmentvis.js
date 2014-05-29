@@ -486,12 +486,14 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
     toggleHelp(true);
 
     function fetchData(range) {
+        var tooLarge = range[1] - range[0] > maxTimeForDetails;
          var url = templates.urls.profiling({
             myria: myriaConnection,
             query: queryId,
             fragment: fragmentId,
             start: range[0],
             end: range[1],
+            onlyRootOp: tooLarge
         });
 
         d3.csv(url, function(d) {
