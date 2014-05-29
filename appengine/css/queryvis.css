@@ -7,6 +7,24 @@ html {
   max-width: 700px;
 }
 
+.popover-content {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0;
+  font-size: .9em;
+}
+
+.popover pre {
+  padding: 2px;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.popover table {
+  margin-bottom: 0;
+}
+
 .table-responsive table tr td:nth-child(1) {
   max-width: 150px;
   word-wrap: break-word;
@@ -114,8 +132,9 @@ svg .help-text {
 }
 
 .interactive .cluster:hover rect, .interactive .fragment:hover rect {
-  transition: stroke .1s;
+  transition: stroke .1s, fill .1s;
   stroke: orange;
+  fill: #ddd;
 }
 
 .graph .node {
@@ -147,11 +166,6 @@ svg .help-text {
   transition: stroke .1s, fill .1s;
   stroke: orange;
   fill:orange;
-}
-
-.popover-content {
-  padding: 0 12px;
-  font-size: .9em;
 }
 
 .rect-info {
@@ -289,13 +303,13 @@ svg .help-text {
 
 /* Treemap */
 .treemap .node {
-  border: solid 4px black;
+  /*border: solid 4px black;*/
   font: 10px sans-serif;
   color: black;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-  line-height: 12px;
+  line-height: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   position: absolute;
-  text-indent: 2px;
+  text-indent: 4px;
 }

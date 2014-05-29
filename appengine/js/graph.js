@@ -581,7 +581,7 @@ function Graph () {
                             value = 'null';
                         }
                         if (value !== null && typeof value === 'object') {
-                          value = JSON.stringify(value);
+                          value = templates.code({code: JSON.stringify(value, undefined, 2)});
                         }
                         body += templates.row({key: key, value: value});
                     });

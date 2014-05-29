@@ -1,5 +1,5 @@
 var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
-    //$(element.node()).empty();
+    $(element.node()).empty();
 
     var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.fragments);
 
@@ -13,8 +13,8 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         .size([width, height])
         .sticky(false)
         .round(true)
-        .padding(5)
-        .value(function(d) { return _.max([d.size, 1540159000/100]); });
+        .padding(4)
+        .value(function(d) { return _.max([d.size, rootSize/150]); });
 
     var div = element.append("div")
         .style("position", "relative")
@@ -68,16 +68,39 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
           .enter().append("div")
             .attr("class", "node")
             .call(position)
-            .style("border-color", function(d) { return opToColor[d.name]; })
-            .style("background", function(d) { return d.children ? null : opToColor[d.name]; })
+            .style("background", function(d) { return opToColor[d.name]; })
             .text(function(d) { return d.children ? null : idNameMapping[d.name]; })
             .popover(function(d) {
-                var body = templates.opPopover({ time: customFullTimeFormat(d.value)});
+                var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.value)});
+                _.each(graph.nodes[fragmentId].opNodes[d.name].rawData, function(value, key){
+                    if (key == 'operators') {
+                        return;
+                    }
+                    if (value === null) {
+                        value = 'null';
+                    }
+                    if (value !== null && typeof value === 'object') {
+                      value = templates.code({code: JSON.stringify(value, undefined, 2)});
+                    }
+                    body += templates.row({key: key, value: value});
+                });
                 return {
                     title: templates.strong({text: idNameMapping[d.name]}),
                     content: templates.table({body: body})
                 };
             });
+
+        node.on('mouseover', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .style("background", function(d) { return d3.rgb(opToColor[d.name]).brighter(0.4); });
+        });
+
+        node.on('mouseout', function(d) {
+            d3.select(this)
+                .transition().duration(animationDuration)
+                .style("background", function(d) { return opToColor[d.name]; });
+        });
     });
 
     // return variables that are needed outside this scope

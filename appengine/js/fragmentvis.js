@@ -545,7 +545,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
                 .attr("height", function(d) {
                     return getHeight(d) + 4;
                 })
-                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).darker(0.3); });
+                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).brighter(0.4); });
         });
 
         box.on('mouseenter', function(d) {

@@ -36,7 +36,7 @@ var templates = {
     fragmentTitle: _.template("Fragment <%- fragment %>:"),
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
-    row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
+    row: _.template('<tr><th><%- key %></th><td><%= value %></td></tr>'),
     networkVisFrames:
         '<div class="row">\
             <div class="col-md-4">\
@@ -58,7 +58,7 @@ var templates = {
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
     strong: _.template('<strong><%- text %></strong>'),
-    opPopover: _.template('<p><strong>Overall runtime: </strong><%- time %></p>')
+    code: _.template('<pre><%- code %></pre>')
 };
 
 // Dictionary of operand name -> color

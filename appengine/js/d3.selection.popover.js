@@ -38,8 +38,17 @@
                     content: popover.content,
                     container: 'body',
                     placement: 'auto',
+                    offset: 10,
+                    trigger: 'manual',
                     html: true,
-                    trigger: 'hover'
+                    template: '<div class="popover" onmouseover="clearTimeout(timeoutObj);$(this).mouseleave(function() {$(this).hide();});"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
+                }).mouseenter(function(e) {
+                    $(this).popover('show');
+                }).mouseleave(function(e) {
+                    var ref = $(this);
+                    timeoutObj = setTimeout(function(){
+                        ref.popover('hide');
+                    }, 100);
                 });
             }
         });
