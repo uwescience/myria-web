@@ -530,6 +530,12 @@ function Graph () {
             draw(newD3data, false);
         }
 
+        function unfocus() {
+            self.state.focus = "";
+            var newD3data = self.generateD3data();
+            draw(newD3data, false);
+        }
+
         function draw(data, initial) {
             svg
                 .style("height", (data.height + 0.5)*dpi);
@@ -707,7 +713,8 @@ function Graph () {
 
         return {
             openFragment: openFragment,
-            closeFragment: closeFragment
+            closeFragment: closeFragment,
+            unfocus: unfocus
         };
     };
 }

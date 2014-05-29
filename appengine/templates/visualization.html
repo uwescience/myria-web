@@ -80,6 +80,7 @@
 		$(function() {
 			$('.show-overview').click(function(event) {
 				event.preventDefault();
+				graph.unfocus();
 				graph.openOverview();
 			});
 		});
