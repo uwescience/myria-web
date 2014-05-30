@@ -1,28 +1,31 @@
 var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
     $(element.node()).empty();
 
+    var hierarchy = graph.nested[fragmentId],
+        levels = {};
+    function addLevels(node, level) {
+        levels[node.name] = level++;
+        _.map(node.children, function(n) {
+            addLevels(n, level);
+        });
+    }
+    addLevels(hierarchy, 0);
+
     var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.fragments);
 
     var margin = {top: 0, right: 0, bottom: 0, left: 0 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-        height = 200 - margin.top - margin.bottom;
+        height = 60 - margin.top - margin.bottom;
 
-    var rootSize = 0;
+    var x = d3.scale.linear()
+        .range([0, width]);
 
-    var treemap = d3.layout.treemap()
-        .size([width, height])
-        .sticky(false)
-        .round(true)
-        .padding(4)
-        .value(function(d) { return _.max([d.size, rootSize/150]); });
-
-    var div = element.append("div")
-        .style("position", "relative")
-        .style("width", (width) + "px")
-        .style("height", (height) + "px")
-        .style("left", margin.left + "px")
-        .style("top", margin.top + "px")
-        .attr("class", "treemap");
+    var svg = element.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "map");
 
     var url = templates.urls.contribution({
         myria: myriaConnection,
@@ -30,49 +33,50 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         fragment: fragmentId
     });
 
-    d3.csv(url, function(error, data) {
-        data = _.object(_.map(data, function(x){return [x.opId, +x.nanoTime]; }));
+    var total = 0;
+    d3.csv(url, function(d) {
+        d.nanoTime = +d.nanoTime;
+        return d;
+    }, function(error, data) {
+        data = _.map(data, function(d) {
+            d.level = levels[d.opId];
+            d.name = idNameMapping[d.opId];
+            d.rawData = graph.nodes[fragmentId].opNodes[d.opId].rawData;
+            total += d.nanoTime;
+            return d;
+        });
 
-        function addSizes(node) {
-            if (node.children === undefined || node.children.length === 0) {
-                node.size = data[node.name];
-            } else {
-                _.map(node.children, addSizes);
-                var size = data[node.name] - _.reduce(_.map(node.children, function(child) {
-                    return data[child.name];
-                }), function(memo, num){ return memo + num; });
-                node.children.push({
-                    name: node.name,
-                    size: size,
-                    children: []
-                });
-            }
-        }
+        data = _.sortBy(data, 'level');
 
-        // var nested = _.cloneDeep(graph.nested);
-        // var root = {name: "query plan", children: []}
-        // _.each(nested, function(tree, fragId) {
-        //     root.children.push(tree);
-        // });
-        // rootSize = _.reduce(_.map(root.children, function(child) {
-        //     return data[child.name];
-        // }), function(memo, num){ return memo + num; });
-        // root.size = rootSize;
+        var totalDomain = 0;
+        data = _.map(data, function(d) {
+            d.share = _.max([0.03, d.nanoTime/total]);
+            d.prevEnd = totalDomain;
+            totalDomain += d.share;
+            return d;
+        });
 
-        var root = _.cloneDeep(graph.nested[fragmentId]);
-        rootSize = data[root.name];
-        addSizes(root);
+        x.domain([0, totalDomain]);
 
-        var node = div.datum(root).selectAll(".node")
-            .data(treemap.nodes)
-          .enter().append("div")
-            .attr("class", "node")
-            .call(position)
-            .style("background", function(d) { return opToColor[d.name]; })
-            .text(function(d) { return d.children ? null : idNameMapping[d.name]; })
+        var op = svg.selectAll(".op").data(data)
+          .enter().append("g")
+            .attr("class", "op");
+
+        op.append("rect")
+            .attr("x", function(d) { return x(d.prevEnd); })
+            .attr("width", function(d) { return x(d.share); })
+            .attr("height", height)
+            .style("fill", function(d) { return opToColor[d.opId]; })
+
+        op.append("text")
+            .attr("dx", 5)
+            .attr("dy", 20)
+            .attr("x", function(d) { return x(d.prevEnd); })
+            .style("fill", "black")
+            .text(function(d) { return d.name.substr(0, x(d.share)/5); })
             .popover(function(d) {
-                var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.value)});
-                _.each(graph.nodes[fragmentId].opNodes[d.name].rawData, function(value, key){
+                var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.nanoTime)});
+                _.each(d.rawData, function(value, key){
                     if (key == 'operators') {
                         return;
                     }
@@ -85,31 +89,31 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
                     body += templates.row({key: key, value: value});
                 });
                 return {
-                    title: templates.strong({text: idNameMapping[d.name]}),
+                    title: templates.strong({text: d.name}),
                     content: templates.table({body: body})
                 };
             });
 
-        node.on('mouseover', function(d) {
-            d3.select(this)
+        op.append("text")
+            .attr("dx", 5)
+            .attr("dy", 40)
+            .attr("x", function(d) { return x(d.prevEnd); })
+            .style("fill", "black")
+            .text(function(d) { return Math.round(100* d.nanoTime/total) + " %"; });
+
+        op.on('mouseover', function(d) {
+            d3.select(this).select("rect")
                 .transition().duration(shortDuration)
-                .style("background", function(d) { return d3.rgb(opToColor[d.name]).brighter(0.4); });
+                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).brighter(0.4); });
         });
 
-        node.on('mouseout', function(d) {
-            d3.select(this)
+        op.on('mouseout', function(d) {
+            d3.select(this).select("rect")
                 .transition().duration(animationDuration)
-                .style("background", function(d) { return opToColor[d.name]; });
+                .style("fill", function(d) { return opToColor[d.opId]; });
         });
     });
 
     // return variables that are needed outside this scope
     return {};
 };
-
-function position() {
-  this.style("left", function(d) { return d.x + "px"; })
-      .style("top", function(d) { return d.y + "px"; })
-      .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
-      .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
-}
