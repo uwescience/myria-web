@@ -186,30 +186,14 @@ function Graph () {
     };
 
     // Function that updates the graph edges when a fragment gets expanded
-    Graph.prototype.expandNode = function(nodes) {
-        var graph = this;
-        nodes.forEach(function(nid){
-            nid = +nid;
-            var exists = false;
-            graph.state.opened.forEach(function(id){
-                if(nid == id) { exists = true; }
-            });
-            if(!exists) {
-                graph.state.opened.push(+nid);
-                graph.state.focus = +nid;
-            }
-        });
+    Graph.prototype.expandNode = function(node) {
+        this.state.opened = _.union(this.state.opened, [+node]);
+        this.state.focus = +node;
     };
 
     // Function that updates the graph edges when a fragment gets reduced
-    Graph.prototype.reduceNode = function (nodes) {
-        var graph = this;
-        nodes.forEach(function(nid){
-            var index = graph.state.opened.indexOf(nid);
-            if (index > -1) {
-                graph.state.opened.splice(index, 1);
-            }
-        });
+    Graph.prototype.reduceNode = function (node) {
+        this.state.opened = _.without(this.state.opened, +node);
     };
 
     // Function that spits out graph description in dot
@@ -289,9 +273,9 @@ function Graph () {
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
-                        y: +cols[3]-cols[5]/2 - padding,
+                        y: +cols[3]-cols[5]/2,
                         w: +cols[4],
-                        h: +cols[5] + padding,
+                        h: +cols[5],
                         color: "lightgrey",
                         stroke: (graph.state.focus === id) ? "red" : "black"
                     };
@@ -465,10 +449,10 @@ function Graph () {
                     .call(zoom);
         var wrapper = svg
                     .append("g");
-        var graph = wrapper.append("g"); // avoid jitter
+        var gel = wrapper.append("g"); // avoid jitter
 
         function onzoom() {
-            graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            gel.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
         var D3data = self.generateD3data();
@@ -478,9 +462,9 @@ function Graph () {
 
         // On click, update with new data
         if (interactive) {
-            graph.attr("class", "interactive");
+            gel.attr("class", "interactive");
 
-            graph.selectAll(".node")
+            gel.selectAll(".node")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
@@ -498,7 +482,7 @@ function Graph () {
                     }
                 });
 
-            graph.selectAll(".link")
+            gel.selectAll(".link")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
@@ -517,7 +501,7 @@ function Graph () {
         }
 
         function openFragment(nodeId) {
-            self.expandNode([nodeId]);
+            self.expandNode(nodeId);
             self.state.focus = +nodeId;
             fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
 
@@ -527,7 +511,7 @@ function Graph () {
 
         function closeFragment(nodeId) {
             self.state.focus = "";
-            self.reduceNode([nodeId]);
+            self.reduceNode(nodeId);
             var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
             manyLineCharts(chartElement, allFragments, self.queryPlan);
 
@@ -545,7 +529,7 @@ function Graph () {
             svg
                 .style("height", (data.height + 0.5)*dpi);
 
-            graph
+            gel
                 .attr("height", data.height*dpi)
                 .attr("width", data.width*dpi);
 
@@ -557,10 +541,10 @@ function Graph () {
             } else {
                 scale = 1;
             }
-            zoom.event(graph);
+            zoom.event(gel);
 
             /* Nodes */
-            var node = graph.selectAll("g.node")
+            var node = gel.selectAll("g.node")
                 .data(data.nodes, function(d) { return d.id; });
 
             var nodeEnter = node.enter()
@@ -622,17 +606,16 @@ function Graph () {
                     return initial ? 1 : 0;
                 })
                 .attr("text-anchor", "middle")
-                .attr("dy", function(d) {
-                    if (d.type !== "operator") {
-                        return  "0.8em";
-                    }
-                    return "0.35em";
-                })
                 .attr("fill", "black");
 
             node.select("text")
                 .text(function(d) {
                     return d.name;
+                }).attr("dy", function(d) {
+                    if (d.type !== "operator" && _.contains(self.state.opened, d.rawData.fragmentIndex)) {
+                        return  "0.8em";
+                    }
+                    return "0.35em";
                 });
 
             node.select("text").transition().duration(animationDuration)
@@ -662,7 +645,7 @@ function Graph () {
                 .y(function(d) { return d[1] * dpi; })
                 .interpolate("montone");
 
-            var link = graph.selectAll("g.link")
+            var link = gel.selectAll("g.link")
                 .data(data.links, function(d) { return d.id; });
 
             var linkEnter = link.enter().append("g");
