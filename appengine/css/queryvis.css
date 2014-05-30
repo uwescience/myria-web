@@ -162,7 +162,7 @@ svg .help-text {
   stroke: orange;
 }
 
-.graph .frag:hover marker {
+.query-graph .frag:hover marker {
   transition: stroke .1s, fill .1s;
   stroke: orange;
   fill:orange;

@@ -536,13 +536,15 @@ function Graph () {
 
             graphElement.style("height", (data.height + 0.5)*dpi + "px");
 
-            var scale = width/(data.width*dpi + 10);
-            if (scale < 1) {
-                zoom.scale(scale);
-            } else {
-                scale = 1;
+            if (initial) {
+                    var scale = width/(data.width*dpi + 10);
+                if (scale < 1) {
+                    zoom.scale(scale);
+                } else {
+                    scale = 1;
+                }
+                zoom.event(gel);
             }
-            zoom.event(gel);
 
             /* Nodes */
             var node = gel.selectAll("g.node")
