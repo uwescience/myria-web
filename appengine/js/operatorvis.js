@@ -80,7 +80,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
                         value = 'null';
                     }
                     if (value !== null && typeof value === 'object') {
-                      value = templates.code({code: JSON.stringify(value, undefined, 2)});
+                      value = templates.code({code: JSON.stringify(value)});
                     }
                     body += templates.row({key: key, value: value});
                 });

@@ -23,7 +23,7 @@ var templates = {
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
         nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label="<%- label %>"];\n'),
-        clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
+        clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tlabel="<%- label %>";\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
     nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),

@@ -225,7 +225,7 @@ function Graph () {
         }
         // Then add the operand links in subgraphs
         graph.state.opened.forEach(function(fragment) {
-            dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
+            dotStr += templates.graphViz.clusterStyle({ fragment: fragment, label:graph.nodes[fragment].name });
             for (var id in graph.nodes[fragment].opNodes) {
                 var node = graph.nodes[fragment].opNodes[id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
@@ -237,7 +237,7 @@ function Graph () {
             dotStr += "\t}\n";
         });
         // closed fragments
-        _.each(_.difference(_.keys(graph.nodes), graph.state.opened), function(key) {
+        _.each(_.difference(_.map(_.keys(graph.nodes), function(x) { return +x; } ), graph.state.opened), function(key) {
             var node = graph.nodes[key];
             dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
         });
@@ -286,9 +286,9 @@ function Graph () {
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
-                        y: +cols[3]-cols[5]/2,
+                        y: +cols[3]-cols[5]/2 - padding,
                         w: +cols[4],
-                        h: +cols[5],
+                        h: +cols[5] + padding,
                         color: "lightgrey",
                         stroke: (graph.state.focus === id) ? "red" : "black"
                     };
@@ -394,9 +394,9 @@ function Graph () {
                 type: "cluster",
                 rawData: graph.nodes[fID].rawData,
                 x: minX-padding/2,
-                y: minY-padding/2,
+                y: minY-padding/2 - padding,
                 w: maxX-minX+padding,
-                h: maxY-minY+padding,
+                h: maxY-minY+padding + padding,
                 color: "lightgrey",
                 stroke: (graph.state.focus === fID) ? "red" : "black"
             };
@@ -587,7 +587,7 @@ function Graph () {
                             value = 'null';
                         }
                         if (value !== null && typeof value === 'object') {
-                          value = templates.code({code: JSON.stringify(value, undefined, 2)});
+                          value = templates.code({code: JSON.stringify(value)});
                         }
                         body += templates.row({key: key, value: value});
                     });
@@ -617,15 +617,17 @@ function Graph () {
                     return initial ? 1 : 0;
                 })
                 .attr("text-anchor", "middle")
-                .attr("dy", function(d) {return"0.35em";})
+                .attr("dy", function(d) {
+                    if (d.type !== "operator") {
+                        return  "0.8em";
+                    }
+                    return "0.35em";
+                })
                 .attr("fill", "black");
 
             node.select("text")
                 .text(function(d) {
-                    if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
-                        return d.name;
-                    }
-                    return "";
+                    return d.name;
                 });
 
             node.select("text").transition().duration(animationDuration)
