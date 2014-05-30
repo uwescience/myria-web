@@ -85,12 +85,14 @@ function Graph () {
             var color_index = 0;
             node.operators.forEach(function(op) {
                 // Create new op node(s)
-                var opnode = {};
-                opnode.rawData = op;                                    // Raw JSON data
-                opnode.opType = op.opType;                              // Operand type
+                var opNode = {};
+                opNode.rawData = op;                                    // Raw JSON data
+                opNode.opType = op.opType;                              // Operand type
                 var hasName = _.has(op, 'opName') && op.opName;
-                opnode.opName = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
-                node.opNodes[op.opId] = opnode;
+                var name = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
+                opNode.fullName = name;
+                opNode.opName = name.substring(0, 50) + (name.length > 50 ? "...": "");
+                node.opNodes[op.opId] = opNode;
                 // Add entry to opId2fId & opId2colorvar
                 if (op.hasOwnProperty('opId')) {
                     graph.opId2fId[op.opId] = id;
@@ -283,6 +285,7 @@ function Graph () {
                     graph.nodes[id].viz = {
                         id: id,
                         name: graph.nodes[id].name,
+                        fullName: graph.nodes[id].name,
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
@@ -294,13 +297,14 @@ function Graph () {
                     };
                 } else if (id in graph.opId2fId) {
                     var node = graph.nodes[graph.opId2fId[id]];
-                    var opnode = node.opNodes[id];
-                    opnode.viz = {
+                    var opNode = node.opNodes[id];
+                    opNode.viz = {
                         id: id,
-                        name: opnode.opName,
+                        name: opNode.opName,
+                        fullName: opNode.fullName,
                         type: "operator",
-                        optype: opnode.opType,
-                        rawData: opnode.rawData,
+                        optype: opNode.opType,
+                        rawData: opNode.rawData,
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
@@ -391,6 +395,7 @@ function Graph () {
             var node = {
                 id: fID,
                 name: fragment.name,
+                fullName: fragment.name,
                 type: "cluster",
                 rawData: graph.nodes[fID].rawData,
                 x: minX-padding/2,
@@ -592,7 +597,7 @@ function Graph () {
                         body += templates.row({key: key, value: value});
                     });
                     return {
-                        title: templates.strong({text: d.name}),
+                        title: templates.strong({text: d.fullName}),
                         content: templates.table({body: body})
                     };
                 });
