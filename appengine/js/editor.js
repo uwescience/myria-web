@@ -40,6 +40,7 @@ function getplan() {
 }
 
 function optimizeplan() {
+  $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.post("optimize", {
@@ -47,16 +48,30 @@ function optimizeplan() {
     language : editorLanguage
   });
   handleerrors(request, "#optimized");
-  var request = $.post("dot", {
+
+  var url = "compile?" + $.param({
     query : query,
-    type : 'physical',
-    language : editorLanguage
+    language : editorLanguage,
   });
-  request.success(function(dot) {
-    var result = Viz(dot, "svg");
-    $('#myria_svg').html(result);
-    $('svg').width('100%');
-    $('svg').height('100%');
+  var request = $.getJSON(url).success(function(queryPlan) {
+    var i = 0;
+    queryPlan.fragments = _.map(queryPlan.fragments, function(frag) {
+      frag.fragmentIndex = i++;
+      return frag;
+    });
+
+    function rerender() {
+      $('#myria_svg').empty();
+      var g = new Graph();
+      g.loadQueryPlan({ physicalPlan: queryPlan });
+      g.render(d3.select('#myria_svg'));
+    }
+    rerender();
+
+    // rerender when opening tab because of different space available
+    $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    $("#optimized").text(jqXHR.responseText);
   });
 }
 

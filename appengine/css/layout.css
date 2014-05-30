@@ -101,3 +101,7 @@ input[type=range].zoom-range {
 #examples-list {
   overflow: auto;
 }
+
+#myria_svg {
+  width: 100%;
+}

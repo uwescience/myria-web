@@ -23,6 +23,7 @@ var queryGraph = function(element, queryPlan){
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
     graphObj.render(element, null);
+    return graphObj;
 };
 
 // Graph object
@@ -444,8 +445,8 @@ function Graph () {
 
         var svg = graphElement
                     .append("svg")
-                    .style("width", width)
-                    .attr("class", "graph")
+                    .style("width", "100%")
+                    .attr("class", "query-graph")
                     .call(zoom);
         var wrapper = svg
                     .append("g");
