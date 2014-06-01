@@ -107,7 +107,7 @@ function Graph () {
         });
 
         // If there are more than 10 fragments, do not expand
-        if (graph.queryPlan.physicalPlan.fragments.length < 10) {
+        if (graph.queryPlan.physicalPlan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
@@ -504,7 +504,7 @@ function Graph () {
 
         function openFragment(nodeId) {
             self.expandNode(nodeId);
-            self.state.focus = +nodeId;
+            self.state.focus = nodeId;
             fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
 
             var newD3data = self.generateD3data();
@@ -514,7 +514,7 @@ function Graph () {
         function closeFragment(nodeId) {
             self.state.focus = "";
             self.reduceNode(nodeId);
-            var allFragments = _.map(_.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex'), function(fid) { return "f"+fid; });
+            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
             manyLineCharts(chartElement, allFragments, self.queryPlan);
 
             var newD3data = self.generateD3data();

@@ -222,7 +222,8 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             fragment: fragmentId,
             start: start,
             end: end,
-            step: step
+            step: step,
+            onlyRootOp: true
         });
 
         d3.csv(url, function(d) {

@@ -81,7 +81,8 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         fragment: fragmentId,
         start: 0,
         end: queryPlan.elapsedNanos,
-        step: step
+        step: step,
+        onlyRootOp: true  // TODO
     });
 
     d3.csv(url, function(d) {
