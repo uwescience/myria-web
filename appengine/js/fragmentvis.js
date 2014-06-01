@@ -6,10 +6,10 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
 
     var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.fragments);
 
-    var hierarchy = graph.nested[fragmentId],
+    var hierarchy = graph.nested["f"+fragmentId],
         levels = {};
     function addLevels(node, level) {
-        levels[node.name] = level++;
+        levels[node.id] = level++;
         _.map(node.children, function(n) {
             addLevels(n, level);
         });

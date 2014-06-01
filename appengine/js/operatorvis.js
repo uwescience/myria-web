@@ -1,10 +1,10 @@
 var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
     $(element.node()).empty();
 
-    var hierarchy = graph.nested[fragmentId],
+    var hierarchy = graph.nested["f"+fragmentId],
         levels = {};
     function addLevels(node, level) {
-        levels[node.name] = level++;
+        levels[node.id] = level++;
         _.map(node.children, function(n) {
             addLevels(n, level);
         });
@@ -41,7 +41,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         data = _.map(data, function(d) {
             d.level = levels[d.opId];
             d.name = idNameMapping[d.opId];
-            d.rawData = graph.nodes[fragmentId].opNodes[d.opId].rawData;
+            d.rawData = graph.nodes["f"+fragmentId].opNodes[d.opId].rawData;
             total += d.nanoTime;
             return d;
         });
