@@ -58,11 +58,12 @@ rect.background {
   display: none;
   top: 0px;
   bottom: 0px;
-  background: #000;
-  opacity: 0.5;
-  z-index: 2;
   width: 1px;
   pointer-events: none;
+
+  background: #000;
+  opacity: .3;
+  z-index: 2;
 }
 
 .rulerInfo rect {

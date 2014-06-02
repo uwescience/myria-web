@@ -34,7 +34,7 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">
 		   			<ol class="breadcrumb">
-						<li><a href="#" class="show-overview">Query plan visualization</a></li>
+						<li><a href="#" class="show-overview">Overview</a></li>
 						<li><span class="title-current">Fragment overview</span></li>
 					</ol>
 			    </div>
@@ -74,14 +74,14 @@
 	<script async defer>
 		d3.select('.query-plan').each(function() {
 		    element = d3.select(this);
-		    graph = queryGraphInteractive(element, queryPlan);
+		    theGraph = queryGraphInteractive(element, queryPlan);
 		});
 
 		$(function() {
 			$('.show-overview').click(function(event) {
 				event.preventDefault();
-				graph.unfocus();
-				graph.openOverview();
+				theGraph.unfocus();
+				theGraph.openOverview();
 			});
 		});
 	</script>

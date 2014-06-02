@@ -1,4 +1,4 @@
-var manyLineCharts = function(element, fragmentIds, queryPlan) {
+var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
     $('.title-current').html('');
 
     $(element.node()).empty();
@@ -10,29 +10,52 @@ var manyLineCharts = function(element, fragmentIds, queryPlan) {
 
         div.on("click", function(a) {
             d3.event.stopPropagation();
-            graph.openFragment(fragmentId);
+            graph.openFragment("f"+fragmentId);
         });
         var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
         var numWorkers = _.max(workers);
-        lineChart(div, fragmentId, queryPlan, numWorkers);
+
+        var hierarchy = graph.nested["f"+fragmentId],
+            levels = {};
+        function addLevels(node, level) {
+            levels[node.id] = level++;
+            _.map(node.children, function(n) {
+                addLevels(n, level);
+            });
+        }
+        addLevels(hierarchy, 0);
+
+        var operators = _.map(graph.nodes["f"+fragmentId].opNodes, function(d, opId) {
+            d.level = levels[opId];
+            d.opId = opId;
+            return d;
+        });
+
+        operators = _.sortBy(operators, 'level');
+
+        lineChart(div, fragmentId, queryPlan, numWorkers, operators);
     });
 
     // return variables that are needed outside this scope
     return {};
 };
 
-var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
+var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) {
     var margin = {top: 10, right: 10, bottom: 20, left: 30 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-        height = 150 - margin.top - margin.bottom;
+        height = operators.length * 80 - margin.top - margin.bottom;
 
     var bisectTime = d3.bisector(function(d) { return d.nanoTime; }).right;
+
+    var o = d3.scale.ordinal()
+        .domain(_.pluck(operators, "opId"))
+        .rangeRoundBands([height, 0], 0.15, 0);
 
     var x = d3.scale.linear()
         .range([0, width]);
 
     var y = d3.scale.linear()
-        .range([height, 0])
+        .range([o.rangeBand(), 0])
         .domain([0, numWorkers]);
 
     var xAxis = d3.svg.axis()
@@ -49,7 +72,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
     var area = d3.svg.area()
         .interpolate("montone")
         .x(function(d) { return x(d.nanoTime); })
-        .y0(height)
+        .y0(o.rangeBand())
         .y1(function(d) { return y(d.numWorkers); });
 
     var svg = element.append("svg")
@@ -82,15 +105,33 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
         start: 0,
         end: queryPlan.elapsedNanos,
         step: step,
-        onlyRootOp: true  // TODO
+        onlyRootOp: false
     });
 
     d3.csv(url, function(d) {
-        d.nanoTime = parseFloat(d.nanoTime, 10);
+        d.nanoTime = +d.nanoTime;
         d.numWorkers = +d.numWorkers;
         return d;
     }, function(error, incompleteData) {
-        var data = reconstructFullData(incompleteData, 0, queryPlan.elapsedNanos, step);
+        var incompleteNested = d3.nest()
+            .key(function(d) { return d.opId; })
+            .entries(incompleteData);
+
+        // extend data to include operators without data
+        incompleteNested = _.map(operators, function(op) {
+            for (var i = 0; i < incompleteNested.length; i++) {
+                var d = incompleteNested[i];
+                if (d.key === op.opId) {
+                    return d;
+                }
+            }
+            return {
+                key: op.opId,
+                values: []
+            };
+        });
+
+        var data = reconstructFullData(incompleteNested, 0, queryPlan.elapsedNanos, step, true);
 
         x.domain(wholeDomain);
 
@@ -99,21 +140,31 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers) {
             .attr("transform", "translate(0," + height + ")")
             .call(xAxis);
 
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-          .append("text")
+        svg.selectAll(".lane").data(data)
+            .enter().append("g")
+            .attr("class", "lane")
+            .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
+            .each(multiple);
+
+        svg.append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", -40)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
             .text("Number of nodes working");
 
-        svg.append("path")
-            .attr("clip-path", "url(#chartclip)")
-            .datum(data)
-            .attr("class", "area")
-            .attr("d", area);
+        function multiple(op) {
+            var lane = d3.select(this);
+
+            lane.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+            lane.append("path")
+                //.attr("clip-path", "url(#chartclip)")
+                .attr("class", "area")
+                .attr("d", area(op.values));
+        }
 
         // put Time label on xAxis
         svg.append("g")

@@ -2,20 +2,11 @@
 var queryGraphInteractive = function (element, queryPlan) {
     var chartElement = d3.select('.chart');
 
-    function openOverview() {
-        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-        manyLineCharts(chartElement, allFragments, queryPlan);
-    }
-
-    openOverview();
-
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-
-    return _.extend(graphObj.render(element, chartElement), {
-        graphObj: graphObj,
-        openOverview: openOverview
-    });
+    graphObj.render(element, chartElement);
+    graphObj.openOverview();
+    return graphObj;
 };
 
 //query graph
@@ -434,6 +425,8 @@ function Graph () {
     Graph.prototype.render = function(graphElement, chartElement) {
         var self = this;
 
+        self.chartElement = chartElement;
+
         var interactive = chartElement ? true : false;
 
         // D3 stuff...
@@ -475,12 +468,12 @@ function Graph () {
                     // Handle fragment state
                     if (node.type == "cluster") {
                         if (node.id === self.state.focus) {
-                            closeFragment(node.id);
+                            self.closeFragment(node.id);
                         } else {
-                            openFragment(node.id);
+                            self.openFragment(node.id);
                         }
                     } else if (node.type == "fragment") {
-                        openFragment(node.id);
+                        self.openFragment(node.id);
                     }
                 });
 
@@ -500,31 +493,6 @@ function Graph () {
                         draw(newD3data, false);
                     }
                 });
-        }
-
-        function openFragment(nodeId) {
-            self.expandNode(nodeId);
-            self.state.focus = nodeId;
-            fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
-
-            var newD3data = self.generateD3data();
-            draw(newD3data, false);
-        }
-
-        function closeFragment(nodeId) {
-            self.state.focus = "";
-            self.reduceNode(nodeId);
-            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-            manyLineCharts(chartElement, allFragments, self.queryPlan);
-
-            var newD3data = self.generateD3data();
-            draw(newD3data, false);
-        }
-
-        function unfocus() {
-            self.state.focus = "";
-            var newD3data = self.generateD3data();
-            draw(newD3data, false);
         }
 
         function draw(data, initial) {
@@ -705,10 +673,43 @@ function Graph () {
             link.exit().transition().duration(shortDuration).remove();
         }
 
-        return {
-            openFragment: openFragment,
-            closeFragment: closeFragment,
-            unfocus: unfocus
-        };
+        Graph.prototype.draw = draw;
+    };
+
+    Graph.prototype.openFragment = function(nodeId) {
+        var self = this;
+
+        self.expandNode(nodeId);
+        self.state.focus = nodeId;
+        fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.closeFragment = function(nodeId) {
+        var self = this;
+
+        self.state.focus = "";
+        self.reduceNode(nodeId);
+        var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+        manyLineCharts(self.chartElement, allFragments, self.queryPlan);
+
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.unfocus = function() {
+        var self = this;
+
+        self.state.focus = "";
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.openOverview = function() {
+        var self = this;
+        var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+        manyLineCharts(self.chartElement, allFragments, self.queryPlan, self);
     };
 }

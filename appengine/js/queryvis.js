@@ -167,30 +167,48 @@ var defaultNumSteps = 1000;
 var maxTimeForDetails = 30 * 1e9;
 
 // reconstruct all data, the data from myria has missing values where no workers were active
-function reconstructFullData(incompleteData, start, end, step) {
-    var range = _.range(start, end, step),
-        data = [],
-        indexed = _.object(_.map(incompleteData, function(x){return [x.nanoTime, x.numWorkers]})),
-        c = 0;
-    _.each(range, function(d) {
-        var value = indexed[d];
-        if (value !== undefined) {
-            c++;
-        }
-        data.push({
-            nanoTime: d,
-            numWorkers: value !== undefined ? value : 0
-        });
-    });
-
-    if (c != incompleteData.length) {
-        debug(incompleteData)
-        debug(data)
-        debug(range)
-        console.error("Incomplete data");
+function reconstructFullData(incompleteData, start, end, step, nested) {
+    if (!nested) {
+        incompleteData = [{ key: "foo", values: incompleteData }];
     }
 
-    return data;
+    var range = _.range(start, end, step),
+        result = {};
+
+    result = _.map(incompleteData, function(op) {
+        var indexed = _.object(_.map(op.values, function(x){ return [x.nanoTime, x.numWorkers]; })),
+            c = 0,
+            data = [];
+
+        _.each(range, function(d) {
+            var value = indexed[d];
+            if (value !== undefined) {
+                c++;
+            }
+            data.push({
+                nanoTime: d,
+                numWorkers: value !== undefined ? value : 0
+            });
+        });
+
+        if (c != op.values.length) {
+            //debug(incompleteData);
+            //debug(data);
+            //debug(range);
+            console.error("Incomplete data");
+        }
+
+        return {
+            key: op.key,
+            values: data
+        };
+    });
+
+    if (!nested) {
+        return result[0].values;
+    }
+
+    return result;
 }
 
 function nameMappingFromFragments(fragments) {

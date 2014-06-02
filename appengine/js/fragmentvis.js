@@ -231,7 +231,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             d.numWorkers = +d.numWorkers;
             return d;
         }, function(error, incompleteData) {
-            var data = reconstructFullData(incompleteData, start, end, step);
+            var data = reconstructFullData(incompleteData, start, end, step, false);
 
             x.domain(d3.extent(data, function(d) { return d.nanoTime; }));
 
