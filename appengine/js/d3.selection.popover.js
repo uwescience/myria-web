@@ -37,7 +37,7 @@
                     title: popover.title,
                     content: popover.content,
                     container: 'body',
-                    placement: 'auto',
+                    placement: popover.placement ? popover.placement : 'auto',
                     offset: 10,
                     trigger: 'manual',
                     html: true,
