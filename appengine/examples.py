@@ -53,28 +53,62 @@ OppWithPop = select opp.*, vct.pop
                and opp.File_Id = vct.File_Id
                and opp.Cell_Id = vct.Cell_Id;
 
-PlanktonCount = select Cruise, COUNT(*) as Phytoplankton
+PlanktonCount = select Cruise, count(*) as Phytoplankton
                 from OppWithPop
                 where pop != "beads" and pop != "noise"
                   and fsc_small > 10000;
 
 store(PlanktonCount, public:demo:PlanktonCount);'''
 
-sigma_clipping_naive = """-- Simple and slow implementation of sigma clipping
-
-Good = scan(public:adhoc:sc_points);
+sigma_clipping_naive = """Good = scan(public:adhoc:sc_points);
 
 -- number of allowed standard deviations
 const Nstd: 2;
 
 do
     stats = [from Good emit avg(v) AS mean, stdev(v) AS std];
-    NewBad = [from Good, stats where abs(Good.v - mean) > Nstd * std emit Good.*];
+    NewBad = [from Good, stats where abs(Good.v - mean) > Nstd * std
+              emit Good.*];
     Good = diff(Good, NewBad);
     continue = [from NewBad emit count(NewBad.v) > 0];
 while continue;
 
 store(Good, OUTPUT);
+"""
+
+pagerank ="""const alpha: .85;
+const epsilon: .0001;
+
+Edge = scan(public:adhoc:edges);
+Vertex = scan(public:adhoc:vertices);
+
+N = countall(Vertex);
+min_rank = [(1 - alpha) / *N];
+
+OutDegree = [from Edge emit Edge.src as id, count(Edge.dst) as cnt];
+PageRank = [from Vertex emit Vertex.id as id, 1.0 / *N as rank];
+
+do
+    -- Calculate each node's outbound page rank contribution
+    PrOut = [from PageRank, OutDegree where PageRank.id == OutDegree.id
+             emit PageRank.id as id, PageRank.rank / OutDegree.cnt
+             as out_rank];
+
+    -- Compute the inbound summands for each node
+    Summand = [from Vertex, Edge, PrOut
+                where Edge.dst == Vertex.id and Edge.src == PrOut.id
+                emit Vertex.id as id, PrOut.out_rank as summand];
+
+    -- Sum up the summands; adjust by alpha
+    NewPageRank = [from Summand emit id as id,
+                   *min_rank + alpha * sum(Summand.summand) as rank];
+    Delta = [from NewPageRank, PageRank where NewPageRank.id == PageRank.id
+             emit ABS(NewPageRank.rank - PageRank.rank) as val];
+    Continue = [from Delta emit max(Delta.val) > epsilon];
+    PageRank = NewPageRank;
+while Continue;
+
+store(PageRank, OUTPUT);
 """
 
 myria_examples = [
@@ -98,6 +132,7 @@ examples = { 'datalog' : datalog_examples,
              'sql' : sql_examples }
 
 demo3_myr_examples = [
+    ('Pagerank', pagerank),
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
     ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
