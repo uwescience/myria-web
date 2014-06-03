@@ -111,6 +111,30 @@ while Continue;
 store(PageRank, OUTPUT);
 """
 
+center_of_mass = """const PI: 3.14159;
+
+def degrees_to_radians(d): d * PI / 180;
+def radians_to_degrees(r): r * 180 / PI;
+def hypotenuse(x, y): sqrt(x * x + y * y);
+
+Points = scan(public:adhoc:lat_lon_points);
+AsRads = [from Points emit degrees_to_radians(lat) AS latr,
+                           degrees_to_radians(lon) AS lonr];
+Cartesian = [from AsRads emit cos(latr) * cos(lonr) AS x,
+                              cos(latr) * sin(lonr) AS y,
+                              sin(latr) as z];
+NumPoints = countall(Points);
+WeightedAverage = [from Cartesian emit sum(x) / *NumPoints as xa,
+                                       sum(y) / *NumPoints as ya,
+                                       sum(z) / *NumPoints as za];
+CoMr = [from WeightedAverage
+        emit atan2(za, hypotenuse(xa, ya)) as latr,
+             atan2(ya, xa) as lonr];
+CoM = [from CoMr emit radians_to_degrees(latr) as lat,
+                      radians_to_degrees(lonr) as lon];
+Store(CoM, OUTPUT);
+"""
+
 myria_examples = [
     ('JustX: A simple projection query on TwitterK', justx),
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
@@ -133,6 +157,7 @@ examples = { 'datalog' : datalog_examples,
 
 demo3_myr_examples = [
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
+    ('Geographic center of mass', center_of_mass),
     ('Pagerank', pagerank),
     ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
