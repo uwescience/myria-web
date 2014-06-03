@@ -83,7 +83,7 @@ Edge = scan(public:adhoc:edges);
 Vertex = scan(public:adhoc:vertices);
 
 N = countall(Vertex);
-min_rank = [(1 - alpha) / *N];
+MinRank = [(1 - alpha) / *N];
 
 OutDegree = [from Edge emit Edge.src as id, count(Edge.dst) as cnt];
 PageRank = [from Vertex emit Vertex.id as id, 1.0 / *N as rank];
@@ -101,7 +101,7 @@ do
 
     -- Sum up the summands; adjust by alpha
     NewPageRank = [from Summand emit id as id,
-                   *min_rank + alpha * sum(Summand.summand) as rank];
+                   *MinRank + alpha * sum(Summand.summand) as rank];
     Delta = [from NewPageRank, PageRank where NewPageRank.id == PageRank.id
              emit ABS(NewPageRank.rank - PageRank.rank) as val];
     Continue = [from Delta emit max(Delta.val) > epsilon];
@@ -132,8 +132,8 @@ examples = { 'datalog' : datalog_examples,
              'sql' : sql_examples }
 
 demo3_myr_examples = [
-    ('Pagerank', pagerank),
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
+    ('Pagerank', pagerank),
     ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
 
