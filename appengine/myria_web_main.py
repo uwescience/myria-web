@@ -19,7 +19,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco import scheme
-from examples import examples
+from examples import examples, demo3_examples
 from pagination import Pagination
 
 import myria
@@ -335,7 +335,14 @@ class Examples(MyriaPage):
         else:
             language = language.strip().lower()
         # Is language recognized?
-        if language not in examples:
+
+        example_set = self.request.get('subset') or 'default'
+        if example_set == 'demo3':
+            examples_to_use = demo3_examples
+        else:
+            examples_to_use = examples
+
+        if language not in examples_to_use:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 404
             self.response.write(
@@ -343,7 +350,7 @@ class Examples(MyriaPage):
             return
         # Return the objects as json
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(examples[language]))
+        self.response.write(json.dumps(examples_to_use[language]))
 
 
 class Editor(MyriaPage):
@@ -352,13 +359,22 @@ class Editor(MyriaPage):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
-
-        # .. pass in the query
-        template_vars['query'] = examples['myrial'][0][1]
-        # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['myrial']
-        # .. pass myrial keywords
         template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'default'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('editor.html')
+        self.response.out.write(template.render(template_vars))
+
+
+class Demo3(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'demo3'
+
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
@@ -565,7 +581,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo1', Demo1)
+            ('/demo1', Demo1),
+            ('/demo3', Demo3)
         ]
 
         # Connection to Myria. Thread-safe
