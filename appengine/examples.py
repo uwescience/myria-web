@@ -118,10 +118,10 @@ def radians_to_degrees(r): r * 180 / PI;
 def hypotenuse(x, y): sqrt(x * x + y * y);
 
 Points = scan(public:adhoc:lat_lon_points);
-AsRads = [from Points emit degrees_to_radians(lat) AS latr,
-                           degrees_to_radians(lon) AS lonr];
-Cartesian = [from AsRads emit cos(latr) * cos(lonr) AS x,
-                              cos(latr) * sin(lonr) AS y,
+AsRads = [from Points emit degrees_to_radians(lat) as latr,
+                           degrees_to_radians(lon) as lonr];
+Cartesian = [from AsRads emit cos(latr) * cos(lonr) as x,
+                              cos(latr) * sin(lonr) as y,
                               sin(latr) as z];
 NumPoints = countall(Points);
 WeightedAverage = [from Cartesian emit sum(x) / *NumPoints as xa,
@@ -132,7 +132,7 @@ CoMr = [from WeightedAverage
              atan2(ya, xa) as lonr];
 CoM = [from CoMr emit radians_to_degrees(latr) as lat,
                       radians_to_degrees(lonr) as lon];
-Store(CoM, OUTPUT);
+store(CoM, OUTPUT);
 """
 
 myria_examples = [
