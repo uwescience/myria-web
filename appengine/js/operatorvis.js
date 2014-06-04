@@ -2,9 +2,11 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
     $(element.node()).empty();
 
     var hierarchy = graph.nested["f"+fragmentId],
-        levels = {};
+        levels = {},
+        children = {};
     function addLevels(node, level) {
         levels[node.id] = level++;
+        children[node.id] = _.pluck(node.children, 'id');
         _.map(node.children, function(n) {
             addLevels(n, level);
         });
@@ -33,16 +35,18 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         fragment: fragmentId
     });
 
-    var total = 0;
     d3.csv(url, function(d) {
         d.nanoTime = +d.nanoTime;
         return d;
     }, function(error, data) {
+        var indexedData = _.object(_.map(data, function(x){ return [x.opId, x]; }));
+        var rootTime = indexedData[hierarchy.id].nanoTime;
         data = _.map(data, function(d) {
             d.level = levels[d.opId];
             d.name = idNameMapping[d.opId];
             d.rawData = graph.nodes["f"+fragmentId].opNodes[d.opId].rawData;
-            total += d.nanoTime;
+            var sumChildren = _.reduce(_.pluck(_.pick(indexedData, children[d.opId]), 'nanoTime'), function(a,b) { return a + b; }, 0);
+            d.timeWithoutChildren = d.nanoTime - sumChildren;
             return d;
         });
 
@@ -50,7 +54,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
 
         var totalDomain = 0;
         data = _.map(data, function(d) {
-            d.share = _.max([0.03, d.nanoTime/total]);
+            d.share = _.max([0.03, d.timeWithoutChildren/rootTime]);
             d.prevEnd = totalDomain;
             totalDomain += d.share;
             return d;
@@ -76,6 +80,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
             .text(function(d) { return d.name.substr(0, x(d.share)/5); })
             .popover(function(d) {
                 var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.nanoTime)});
+                body += templates.row({key: "Time spent in this operator", value: customFullTimeFormat(d.timeWithoutChildren)});
                 _.each(d.rawData, function(value, key){
                     if (key == 'operators') {
                         return;
@@ -99,7 +104,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
             .attr("dy", 40)
             .attr("x", function(d) { return x(d.prevEnd); })
             .style("fill", "black")
-            .text(function(d) { return Math.round(100* d.nanoTime/total) + " %"; });
+            .text(function(d) { return Math.round(100* d.timeWithoutChildren/rootTime) + " %"; });
 
         op.on('mouseover', function(d) {
             d3.select(this).select("rect")
