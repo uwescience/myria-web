@@ -39,11 +39,8 @@ var templates = {
     row: _.template('<tr><th><%- key %></th><td><%= value %></td></tr>'),
     networkVisFrames:
         '<div class="row">\
-            <div class="col-md-4">\
+            <div class="col-md-12">\
                 <h3>Summary</h3><p class="summary"></p>\
-            </div>\
-            <div class="col-md-8 lines">\
-                <h4>Details about when communication occurred</h4>\
             </div>\
         </div>\
         <div class="row"><div class="col-md-12 controls form-inline"></div></div>\

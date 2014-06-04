@@ -55,7 +55,7 @@ function optimizeplan() {
   });
   var request = $.getJSON(url).success(function(queryPlan) {
     var i = 0;
-    queryPlan.fragments = _.map(queryPlan.fragments, function(frag) {
+    queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
       frag.fragmentIndex = i++;
       return frag;
     });

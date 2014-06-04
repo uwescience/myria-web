@@ -61,7 +61,7 @@ function Graph () {
         var links = {};
 
         // Collect graph nodes
-        graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
+        graph.queryPlan.physicalPlan.plan.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = {};                                              // Node object
             var id = "f"+fragment.fragmentIndex;                            // Node ID
@@ -98,7 +98,7 @@ function Graph () {
         });
 
         // If there are more than 10 fragments, do not expand
-        if (graph.queryPlan.physicalPlan.fragments.length < 7) {
+        if (graph.queryPlan.physicalPlan.plan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
@@ -692,8 +692,7 @@ function Graph () {
 
         self.state.focus = "";
         self.reduceNode(nodeId);
-        var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-        manyLineCharts(self.chartElement, allFragments, self.queryPlan);
+        self.openOverview();
 
         var newD3data = self.generateD3data();
         self.draw(newD3data, false);
@@ -709,7 +708,7 @@ function Graph () {
 
     Graph.prototype.openOverview = function() {
         var self = this;
-        var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
+        var allFragments = _.pluck(self.queryPlan.physicalPlan.plan.fragments, 'fragmentIndex');
         manyLineCharts(self.chartElement, allFragments, self.queryPlan, self);
     };
 }

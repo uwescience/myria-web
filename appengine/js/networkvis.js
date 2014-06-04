@@ -104,8 +104,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         sumTuples: 0,
                         src: source,
                         dest: dest,
-                        pixelID: pixelID,
-                        active: false
+                        pixelID: pixelID
                     };
                 }
                 dataset[key].nanoTime.push(+d.nanoTime);
@@ -161,8 +160,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
             draw(dataset, sourceList, destinationList, 'id');
         });
 
-        var chart = timeSeriesChart(element.select('.lines'));
-
         var initial = true;
 
         function draw (rawData, sourceList, destinationList, orderBy) {
@@ -191,13 +188,8 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             pixel.enter()
                 .append('rect')
-                .attr('class', function(d) {
-                    return 'pixel' + (d.sumTuples ? ' can-click' : '');
-                })
                 .attr('width', columnScale.rangeBand())
                 .attr('height', rowScale.rangeBand())
-                .attr('id', function(d){
-                    return "pixel_" + d.pixelID;})
                 .style('fill',function(d){
                     // access value
                     return color(d.sumTuples);})
@@ -207,19 +199,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
                         src: d.src,
                         dest: d.dest
                     });
-                })
-                .on('click', function(d) {
-                    if (d.sumTuples === 0)
-                        return;
-                    if (!d.active) {
-                        chart.add(rawData, d.src, d.dest);
-                        d3.select(this).attr("class", "pixel active");
-                    } else {
-                        chart.remove(d.src, d.dest);
-                        d3.select(this)
-                          .style("stroke", "none");
-                    }
-                    d.active = !d.active;
                 });
 
             pixel
@@ -239,18 +218,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     .style('text-anchor', 'left')
                     .style("alignment-baseline", "middle")
                     .attr('class','tick')
-                    .on('click', function(d) {
-                        pairs = [];
-                        for (var i = 0; i < sources.length; i++) {
-                            if (rawData[[sources[i], d]].sumTuples == 0)
-                                continue;
-                            pairs.push([sources[i], d]);
-                            var id = '#pixel_' + sources[i] + '_' + d;
-                            d3.select(id).attr("class", "pixel active");
-                            d3.select(id).datum().active = true;
-                        }
-                        chart.batchAdd(rawData, pairs);
-                    })
                     .attr("transform", "rotate(-90)");
             }
 
@@ -259,22 +226,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                     .append('text')
                     .attr('class','tick')
                     .style("alignment-baseline", "middle")
-                    .style('text-anchor', 'end')
-                    .on('click', function(d) {
-                        pairs = [];
-                        for (var i = 0; i < destinations.length; i++) {
-                            if (rawData[[d,destinations[i]]].sumTuples == 0)
-                                continue;
-                            pairs.push([d,destinations[i]]);
-                            var id = '#pixel_' + d + '_' + destinations[i];
-                            d3.select(id).attr("class", "pixel active");
-                            d3.select(id).datum().active = true;
-                        }
-                        chart.batchAdd(rawData, pairs);
-                    })
-                    .on('mouseover', function(d) {
-                        d3.select(this).style('cursor','pointer');
-                    });
+                    .style('text-anchor', 'end');
             }
             var tickColEl = tickCol.selectAll('text.tick')
                 .data(destinations, function(d) { return d; });
@@ -368,22 +320,6 @@ var networkVisualization = function (element, fragments, queryPlan) {
             var controls = element.select(".controls");
             $(controls.node()).empty();
 
-            controls.append("button")
-                .attr('class', 'btn btn-primary pull-right')
-                .text('clear selection')
-                .on("click", function() {
-                    chart.emptyActiveKeys();
-                    chart.update();
-                    for (var i = 0; i < sources.length; i++) {
-                        for (var j = 0; j < destinations.length; j++) {
-
-                            var id = '#pixel_' + sources[i] + '_' + destinations[j];
-                            d3.select(id).style("stroke", "none");
-                            d3.select(id).datum().active = false;
-                       }
-                    }
-                });
-
             controls.append("label").text("Order by: ");
 
             var sel = controls.append("select")
@@ -428,254 +364,4 @@ var updateSummary = function(element, summary) {
     items += templates.defItem({key: "Tuples per second", value: (summary.numTuples / summary.duration * 1000000).toFixed(3)});
     var dl = templates.defList({items: items});
     $(element.node()).html(dl);
-};
-
-var timeSeriesChart = function(element) {
-    var margin = {top: 20, right: 70, bottom: 50, left:60 },
-        width = parseInt(element.style('width'), 10),
-        height = 300,
-        chartWidth = width - margin.left - margin.right,
-        chartHeight = height - margin.top - margin.bottom;
-
-    var x = d3.scale.linear()
-         .range([0, chartWidth]);
-
-    var y = d3.scale.linear()
-        .range([chartHeight, 0]);
-
-    var xAxis = d3.svg.axis()
-        .tickFormat(customTimeFormat)
-        .tickSize(-chartHeight)
-        .scale(x)
-        .orient("bottom");
-
-    var yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left");
-
-    var chart = element.append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("class", "timeseries")
-        .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    chart.append("text")
-      //.attr("x", 5)
-      //.attr("y", height - margin.bottom - 20)
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "10px")
-      .style("text-anchor", "start")
-      .attr('transform', 'translate(' + [-margin.left/(1.3),height - margin.bottom - 20] + ") rotate(-90)")
-      .text("number of tuples");
-
-    chart.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0, " + chartHeight + ")")
-        .call(xAxis);
-
-    chart.append("g")
-         .attr("class", "y axis")
-         .call(yAxis);
-
-    var line = d3.svg.line()
-        //.interpolate('cardinal')
-        .x(function(d) { return x(d[0]); })
-        .y(function(d) { return y(d[1]); });
-
-    var activeKeys = [];
-    var rawData = {};
-
-    function add(newRawData, src, dest) {
-        //pixel is a selection
-        rawData = newRawData;
-        activeKeys.push([src,dest]);
-        draw();
-    }
-
-    function emptyActiveKeys() {
-        activeKeys = [];
-    }
-
-    function batchAdd(newRawData, pairs) {
-
-        rawData = newRawData;
-        for (var i = 0; i < pairs.length; i++) {
-            var exists = false;
-            for (var j = 0; j < activeKeys.length; j++) {
-              if (activeKeys[j][0]==pairs[i][0] && activeKeys[j][1]==pairs[i][1]) {
-                  exists = true;
-                  break;
-              }
-            }
-            if (!exists)
-                activeKeys.push(pairs[i]);
-        }
-        draw();
-    }
-
-    function remove(src, dest) {
-        // remove from array O(n)
-        var indexToRemove = -1;
-        for (var i = 0; i < activeKeys.length; i++) {
-            if (activeKeys[i][0]==src && activeKeys[i][1]==dest) {
-                indexToRemove = i;
-                break;
-            }
-        }
-        activeKeys.splice(indexToRemove, 1);
-        draw();
-    }
-
-    function getDist(x1,x2,y1,y2) {
-
-        var xs = x1 - x2;
-        xs = xs * xs;
-
-        var ys = y1 - y2;
-        ys = ys * ys;
-
-        return Math.sqrt( xs + ys );
-    }
-
-    function getNearestPointOnLine(points, x, y) {
-
-        var minDist = Number.MAX_VALUE;
-        var minPoint, d;
-        for (var i = 0; i < points.length; i++) {
-
-            d = getDist(points[i][0], x, points[i][1], y);
-            if (d < minDist) {
-                minDist = d;
-                minPoint = i;
-            }
-        }
-        return minPoint;
-    }
-
-    // shows text about what to do
-    var toDelete;
-
-    function draw() {
-        var chartData = _.values(_.pick(rawData, activeKeys));
-
-        if (chartData.length == 0) {
-            toDelete = chart.append("text")
-                .text("Select a communication from the matrix.")
-                .attr("x", chartWidth/2)
-                .attr("y", chartHeight/2)
-                .attr("text-anchor", "middle")
-                .attr("class", "help-text");
-        } else {
-            toDelete.remove();
-        }
-
-        // don't update domain when last is removed
-        if (activeKeys.length > 0) {
-            var xDomain = [d3.min(_.pluck(chartData, 'begin')), d3.max(_.pluck(chartData, 'end'))],
-                yDomain = [0, d3.max(_.pluck(chartData, 'maxTuples'))];
-
-            x.domain(xDomain);
-            y.domain(yDomain);
-
-            /*
-            var legend = chart.selectAll(".legend")
-            .data(activeKeys)
-            .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", function(d, i) { return "translate(0" + "," + (100 + i*10) + ")"; });
-
-            legend.append("rect")
-            .attr("x", 100)
-            .attr("width", 10)
-            .attr("height", 10)
-            .style("fill", opColors);
-            */
-        }
-
-        chart.selectAll(".y.axis")
-            .transition(animationDuration)
-            .call(yAxis);
-
-        chart.selectAll(".x.axis")
-            .transition(animationDuration)
-            .call(xAxis);
-
-        var pair = chart.selectAll(".pair")
-            .data(chartData, function(d) { return [d.src, d.dest]; });
-
-        var pairGroups = pair.enter().append("g")
-            .attr("class", "pair");
-
-        pairGroups.append("path")
-            .on("mouseover", function(d) {
-                d3.select("#pixel_" + d.pixelID)
-                  .style("stroke-width",'5px');
-              })
-            .on("mouseout", function(d) {
-                d3.select(this)
-                  .style("stroke-width",'3px');
-
-                d3.select("#pixel_" + d.pixelID)
-                  .style("stroke-width", "3px");
-            })
-            .style("stroke-width", 3)
-            .style("stroke", function(d,i) {
-                d3.select("#pixel_" + d.pixelID)
-                  .style("stroke", opColors(i));
-
-                return opColors(i);
-            })
-            .attr("stroke-dasharray", function(d) {
-                return (d.src != d.dest) ? ("0, 0") : ("3, 3");
-            })
-            .attr("class", "tsline");
-
-        pairGroups.append("text")
-            .attr("class", "line-label")
-            .attr("dy", ".35em")
-            .attr("dx", "8px")
-            .text(function(d) {
-                return templates.nwLineTooltip(d);
-            });
-
-        pair.transition(animationDuration).selectAll(".tsline")
-            .attr("d", function(d) { return line(d.values); });
-
-        pair.transition(animationDuration).selectAll(".line-label")
-            .attr("x", function(d) { return x(_.last(d.values)[0]); })
-            .attr("y", function(d) { return y(_.last(d.values)[1]); });
-
-        pair.exit().remove();
-
-        var dot = pair.selectAll("circle")
-            .data(function(d) {
-                return d.values;
-            });
-
-        dot.enter()
-            .append("circle")
-            .attr("r", 5);
-
-        dot.attr("cx", function(d) {
-                return x(d[0]);
-            }).attr("cy", function(d) {
-                return y(d[1]);
-            }).tooltip(function(d) {
-                return templates.nwPointTooltip({
-                    numTuples: d[1],
-                    time: customFullTimeFormat(d[0])
-                });
-            });
-    }
-
-    draw()
-
-    return {
-        update: draw,
-        add: add,
-        batchAdd: batchAdd,
-        remove: remove,
-        emptyActiveKeys: emptyActiveKeys
-    };
 };

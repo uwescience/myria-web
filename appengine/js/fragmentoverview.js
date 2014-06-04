@@ -12,7 +12,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
             d3.event.stopPropagation();
             graph.openFragment("f"+fragmentId);
         });
-        var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
+        var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
         var numWorkers = _.max(workers);
 
         var hierarchy = graph.nested["f"+fragmentId],

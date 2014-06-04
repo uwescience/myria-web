@@ -4,7 +4,7 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     $(element.node()).empty();
     $(element.node()).append(templates.fragmentVisFrames);
 
-    var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.fragments);
+    var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.plan.fragments);
 
     var hierarchy = graph.nested["f"+fragmentId],
         levels = {};
@@ -16,7 +16,7 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     }
     addLevels(hierarchy, 0);
 
-    var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
+    var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
     var numWorkers = _.max(workers);
 
     var opVis = operatorVisualization(element.select(".contrib"), fragmentId, queryPlan, graph);
@@ -502,7 +502,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         }, function(error, data) {
             var aggregatedData = [],
                 grouped = _.groupBy(data, 'workerId'),
-                numOps = queryPlan.physicalPlan.fragments[fragmentId].operators.length;
+                numOps = queryPlan.physicalPlan.plan.fragments[fragmentId].operators.length;
             aggregatedData = _.map(grouped, function(val, key){
                 return { workerId: +key, states: val };
             });
