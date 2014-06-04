@@ -2,15 +2,25 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
     $('.title-current').html('');
 
     $(element.node()).empty();
-    _.each(fragmentIds, function(fragmentId) {
+
+    charts = [];
+
+    function changeRange(range) {
+        _.each(charts, function (c) {
+            c.changeDomain(range);
+        });
+    }
+
+    charts = _.map(fragmentIds, function(fragmentId) {
         var div = element.append("div")
             .attr("class", "overview-fragment");
-        div.append("h4").append("a")
+        var h = div.append("h4").append("a").attr("href", "#")
             .text(templates.fragmentTitle({fragment: fragmentId}));
 
-        div.on("click", function(a) {
+        h.on("click", function(a) {
             d3.event.stopPropagation();
             graph.openFragment("f"+fragmentId);
+            d3.event.preventDefault();
         });
         var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
         var numWorkers = _.max(workers);
@@ -35,14 +45,14 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
             return -d.level;
         });
 
-        lineChart(div, fragmentId, queryPlan, numWorkers, operators);
+        return lineChart(div, fragmentId, queryPlan, numWorkers, operators, changeRange);
     });
 
     // return variables that are needed outside this scope
     return {};
 };
 
-var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) {
+var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, callback) {
     var margin = {top: 10, right: 10, bottom: 20, left: 180 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = operators.length * 70 - margin.top - margin.bottom;
@@ -102,200 +112,274 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) 
         .attr("height", height)
         .attr("y", -10);
 
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
     var wholeDomain = [0, queryPlan.elapsedNanos];
 
-    var step = Math.floor(0.5*queryPlan.elapsedNanos/width);
+    fetchData(wholeDomain);
 
-    var url = templates.urls.histogram({
-        myria: myriaConnection,
-        query: queryPlan.queryId,
-        fragment: fragmentId,
-        start: 0,
-        end: queryPlan.elapsedNanos,
-        step: step,
-        onlyRootOp: false
+    var plot = svg.append("g")
+        .attr("class", "plot");
+
+    plot.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("opacity", 0);
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 5)
+        .attr("dy", -25)
+        .style("font-size", 9)
+        .attr("x", -height)
+        .style("text-anchor", "start")
+        .text("Number of nodes working");
+
+    // put Time label on xAxis
+    svg.append("g")
+        .attr("transform", "translate(" + [width, height] + ")")
+        .append("text")
+        .attr("class", "axis-label")
+        .attr({"x": - 6, "y": -12, "text-anchor": "middle"})
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Time");
+
+    /* Ruler */
+    var tooltip = svg
+        .append("g")
+        .attr({"class": "rulerInfo"})
+        .attr("transform", "translate(" + [10, height + 10] + ")");
+
+    tooltip.append("rect");
+
+    var tttext = tooltip.append("text")
+        .attr("text-anchor", "left");
+
+    svg.on("mouseleave", function (e) {
+        d3.select(".ruler").style("display", "none");
     });
 
-    d3.csv(url, function(d) {
-        d.nanoTime = +d.nanoTime;
-        d.numWorkers = +d.numWorkers;
-        return d;
-    }, function(error, incompleteData) {
-        var incompleteNested = d3.nest()
-            .key(function(d) { return d.opId; })
-            .entries(incompleteData);
+    svg.on("mousemove", function (e) {
+        d3.select(".ruler")
+            .style("display", "block")
+            .style("left", d3.event.pageX - 1 + "px");
+    });
 
-        var opIndex = _.object(_.map(operators, function(x){ return [x.opId, x]; }));
 
-        // extend data to include operators without data
-        incompleteNested = _.map(operators, function(op) {
-            for (var i = 0; i < incompleteNested.length; i++) {
-                var d = incompleteNested[i];
-                if (d.key === op.opId) {
-                    return d;
-                }
-            }
-            return {
-                key: op.opId,
-                values: []
-            };
+    var lanes = [];
+
+    // fetch histogram data and show it
+    function fetchData(range) {
+        var start = range[0],
+            end = range[1];
+        var step = Math.floor((end - start)/width);
+
+        var url = templates.urls.histogram({
+            myria: myriaConnection,
+            query: queryPlan.queryId,
+            fragment: fragmentId,
+            start: start,
+            end: end,
+            step: step,
+            onlyRootOp: false
         });
 
-        var data = reconstructFullData(incompleteNested, 0, queryPlan.elapsedNanos, step, true);
+        d3.csv(url, function(d) {
+            d.nanoTime = +d.nanoTime;
+            d.numWorkers = +d.numWorkers;
+            return d;
+        }, function(error, incompleteData) {
+            var incompleteNested = d3.nest()
+                .key(function(d) { return d.opId; })
+                .entries(incompleteData);
 
-        x.domain(wholeDomain);
+            var opIndex = _.object(_.map(operators, function(x){ return [x.opId, x]; }));
 
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
-
-        svg.selectAll(".lane").data(data)
-            .enter().append("g")
-            .attr("class", "lane")
-            .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
-            .each(multiple);
-
-        svg.append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 5)
-            .attr("dy", -25)
-            .style("font-size", 9)
-            .attr("x", -height)
-            .style("text-anchor", "start")
-            .text("Number of nodes working");
-
-        function multiple(op) {
-            var lane = d3.select(this);
-
-            lane.append("g")
-                .attr("class", "y axis")
-                .call(yAxis);
-
-            var t = lane.append("g")
-                .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 10) + ")"; })
-                .attr("clip-path", "url(#textclip)")
-                .popover(function(d) {
-                    var body = '';
-                    _.each(opIndex[d.key].rawData, function(value, key){
-                        if (key == 'operators') {
-                            return;
-                        }
-                        if (value === null) {
-                            value = 'null';
-                        }
-                        if (value !== null && typeof value === 'object') {
-                          value = templates.code({code: JSON.stringify(value)});
-                        }
-                        body += templates.row({key: key, value: value});
-                    });
-                    return {
-                        placement: 'left',
-                        title: templates.strong({text: opIndex[d.key].opName}),
-                        content: templates.table({body: body})
-                    };
-                });
-
-            t.append("text")
-                .style("font-size", 12)
-                .attr("class", "strong")
-                .attr("dx", function(d) {
-                    return opIndex[d.key].level * 5;
-                })
-                .text(function(d) {
-                    return opIndex[d.key].opName;
-                });
-
-            t.append("text")
-                .style("font-size", 11)
-                .attr("dx", function(d) {
-                    return opIndex[d.key].level * 5;
-                })
-                .attr("dy", "1.8em")
-                .attr("class", "muted")
-                .text(function(d) {
-                    return opIndex[d.key].opType;
-                });
-
-            // for hover
-            t.append("rect")
-                .attr("width", margin.left)
-                .attr("height", 32)
-                .attr("y", -10)
-                .style("opacity", 0);
-
-            /* ruler */
-            lane.append("rect")
-                .attr("width", width)
-                .attr("height", o.rangeBand())
-                .style("opacity", 0);
-
-            svg.on("mouseleave", function (e) {
-                d3.select(".ruler").style("display", "none");
-                svg
-                    .select(".rulerInfo")
-                    .style("opacity", 0);
-            });
-
-            lane.on("mousemove", function (e) {
-                d3.select(".ruler")
-                    .style("display", "block")
-                    .style("left", d3.event.pageX - 1 + "px");
-
-                var xPixels = d3.mouse(this)[0],
-                    xValue = Math.round(x.invert(xPixels));
-
-                var i = bisectTime(op.values, xValue),
-                    d0 = op.values[i - 1];
-
-                if (d0 === undefined) {
-                    return;
+            // extend data to include operators without data
+            incompleteNested = _.map(operators, function(op) {
+                for (var i = 0; i < incompleteNested.length; i++) {
+                    var d = incompleteNested[i];
+                    if (d.key === op.opId) {
+                        return d;
+                    }
                 }
-
-                svg
-                    .select(".rulerInfo")
-                    .style("opacity", 1)
-                    .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
-
-                tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
-
-                var bbox = tttext.node().getBBox();
-                tooltip.select("rect")
-                    .attr("width", bbox.width + 10)
-                    .attr("height", bbox.height + 6)
-                    .attr("x", bbox.x - 5)
-                    .attr("y", bbox.y - 3);
+                return {
+                    key: op.opId,
+                    values: []
+                };
             });
 
-            /* Area */
-            lane.append("path")
-                .attr("clip-path", "url(#chartclip)")
-                .attr("class", "area")
-                .attr("d", area(op.values));
-        }
+            var data = reconstructFullData(incompleteNested, start, end, step, true);
 
-        // put Time label on xAxis
-        svg.append("g")
-            .attr("transform", "translate(" + [width, height] + ")")
-            .append("text")
-            .attr("class", "axis-label")
-            .attr({"x": - 6, "y": -12, "text-anchor": "middle"})
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Time");
+            x.domain(range);
 
-        svg.select("g.x.axis").call(xAxis);
+            svg.select(".x.axis").call(xAxis);
 
-        /* Ruler */
-        var tooltip = svg
-            .append("g")
-            .attr({"class": "rulerInfo"})
-            .attr("transform", "translate(" + [10, height + 10] + ")");
+            lanes = plot.selectAll(".lane").data(data);
 
-        tooltip.append("svg:rect");
+            lanes.enter().append("g")
+                .attr("class", "lane")
+                .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
+                .each(multiple);
 
-        var tttext = tooltip.append("svg:text")
-            .attr("text-anchor", "left");
+            lanes.select(".area").attr("d", function(op) {
+                return area(op.values);
+            });
 
-    });
+            function multiple(op) {
+                var lane = d3.select(this);
+
+                lane.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis);
+
+                var t = lane.append("g")
+                    .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 10) + ")"; })
+                    .attr("clip-path", "url(#textclip)")
+                    .popover(function(d) {
+                        var body = '';
+                        _.each(opIndex[d.key].rawData, function(value, key){
+                            if (key == 'operators') {
+                                return;
+                            }
+                            if (value === null) {
+                                value = 'null';
+                            }
+                            if (value !== null && typeof value === 'object') {
+                              value = templates.code({code: JSON.stringify(value)});
+                            }
+                            body += templates.row({key: key, value: value});
+                        });
+                        return {
+                            placement: 'left',
+                            title: templates.strong({text: opIndex[d.key].opName}),
+                            content: templates.table({body: body})
+                        };
+                    });
+
+                t.append("text")
+                    .style("font-size", 12)
+                    .attr("class", "strong")
+                    .attr("dx", function(d) {
+                        return opIndex[d.key].level * 5;
+                    })
+                    .text(function(d) {
+                        return opIndex[d.key].opName;
+                    });
+
+                t.append("text")
+                    .style("font-size", 11)
+                    .attr("dx", function(d) {
+                        return opIndex[d.key].level * 5;
+                    })
+                    .attr("dy", "1.8em")
+                    .attr("class", "muted")
+                    .text(function(d) {
+                        return opIndex[d.key].opType;
+                    });
+
+                // for hover
+                t.append("rect")
+                    .attr("width", margin.left)
+                    .attr("height", 32)
+                    .attr("y", -10)
+                    .style("opacity", 0)
+                // avoid ruler over op texts
+                .on("mousemove", function () {
+                    d3.select(".ruler").style("display", "none");
+                    d3.event.stopPropagation();
+                });
+
+                /* Ruler */
+                lane.append("rect")
+                    .attr("width", width)
+                    .attr("height", o.rangeBand())
+                    .style("opacity", 0);
+
+                lane.on("mouseleave", function () {
+                    svg
+                        .select(".rulerInfo")
+                        .style("opacity", 0);
+                });
+
+                lane.on("mousemove", function (e) {
+                    var xPixels = d3.mouse(this)[0],
+                        xValue = Math.round(x.invert(xPixels));
+
+                    var i = bisectTime(op.values, xValue),
+                        d0 = op.values[i - 1];
+
+                    if (d0 === undefined) {
+                        return;
+                    }
+
+                    svg
+                        .select(".rulerInfo")
+                        .style("opacity", 1)
+                        .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
+
+                    tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+                    var bbox = tttext.node().getBBox();
+                    tooltip.select("rect")
+                        .attr("width", bbox.width + 10)
+                        .attr("height", bbox.height + 6)
+                        .attr("x", bbox.x - 5)
+                        .attr("y", bbox.y - 3);
+                });
+
+                /* Area */
+                lane.append("path")
+                    .attr("clip-path", "url(#chartclip)")
+                    .attr("class", "area");
+
+                // Brush
+                var brush = d3.svg.brush()
+                    .x(x)
+                    .on("brushend", brushend);
+
+                var brushElement = lane.append("g")
+                    .attr("class", "brush")
+                    .call(brush);
+                brushElement.selectAll('rect')
+                    .attr('height', o.rangeBand());
+
+                function brushend() {
+                    var brush_extent = brush.empty() ? wholeDomain : brush.extent();
+                    var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+
+                    callback(range);
+
+                    brushElement.call(brush.clear());
+                }
+            }
+        });
+    }
+
+    function changeDomain(range) {
+        x.domain(range);
+
+        lanes.select(".area")
+            .transition()
+            .duration(animationDuration)
+            .attr("d", function(d) {
+                return area(d.values);
+            });
+
+        svg.select(".x.axis")
+            .transition()
+            .duration(animationDuration)
+            .call(xAxis)
+            .each("end", function() {
+                fetchData(range);
+            });
+    }
+
+    return {
+        changeDomain: changeDomain
+    };
 };
