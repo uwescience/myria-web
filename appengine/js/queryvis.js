@@ -26,7 +26,7 @@ var templates = {
         clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tlabel="<%- label %>";\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
-    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwTooltip: _.template("<%- numTuples %> tuples from <%- src %> to <%- dest %>"),
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
     barTooltip: _.template("Worker: <%- worker %>, # Tuples: <%- numTuples %>"),

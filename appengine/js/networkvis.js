@@ -82,89 +82,51 @@ var networkVisualization = function (element, fragments, queryPlan) {
             fragment: fragmentId
         });
 
-        d3.csv(url, function (data) {
-            var dataset = {},
-                summary = {
+        d3.csv(url, function(d) {
+            d.numTuples = +d.numTuples;
+            return d;
+        }, function (data) {
+            var summary = {
                     numTuples: 0,
                     localTuples: 0
                 },
                 sources = {},
                 destinations = {};
 
-            // column representation to safe space
-            data.forEach(function(d,i) {
-                var source = +d.workerId;
-                var dest = +d.destWorkerId;
-                var pixelID = '' + source + '_' + dest;
-                var key = [source, dest];
-                if (!(key in dataset)) {
-                    dataset[key] = {
-                        nanoTime: [],
-                        numTuples: [],
-                        sumTuples: 0,
-                        src: source,
-                        dest: dest,
-                        pixelID: pixelID
-                    };
+            data = _.map(data, function(d) {
+                if (!(d.src in sources)) {
+                    sources[d.src] = 0;
                 }
-                dataset[key].nanoTime.push(+d.nanoTime);
-                dataset[key].numTuples.push(+d.numTuples);
-                dataset[key].sumTuples += +d.numTuples;
+                sources[d.src] += +d.numTuples;
 
-                if (!(source in sources)) {
-                    sources[source] = 0;
+                if (!(d.dest in destinations)) {
+                    destinations[d.dest] = 0;
                 }
-                sources[source] += +d.numTuples;
-                if (!(dest in destinations)) {
-                    destinations[dest] = 0;
-                }
-                destinations[dest] += +d.numTuples;
-            });
+                destinations[d.dest] += +d.numTuples;
 
-            _.each(dataset, function(d) {
-                d.maxTuples = d3.max(d.numTuples);
-                d.begin = d3.min(d.nanoTime);
-                d.end = d3.max(d.nanoTime);
-                d.values = _.zip(d.nanoTime, d.numTuples);
-                delete d.nanoTime;
-                delete d.numTuples;
-
-                summary.numTuples += d.sumTuples;
+                summary.numTuples += d.numTuples;
                 if (d.src == d.dest) {
-                    summary.localTuples += d.sumTuples;
+                    summary.localTuples += d.numTuples;
                 }
+                d.pixelID = '' + d.src + '_' + d.dest;
+                return d;
             });
 
-            summary.duration = _.max(_.pluck(dataset, 'end')) - _.min(_.pluck(dataset, 'begin'));
+            summary.duration = queryPlan.elapsedNanos;
 
             updateSummary(element.select(".summary"), summary);
 
             sourceList = _.map(_.pairs(sources), function(d) {return {id: +d[0], numTuples: d[1]}; });
             destinationList = _.map(_.pairs(destinations), function(d) {return {id: +d[0], numTuples: d[1]}; });
 
-            _.each(sourceList, function(source) {
-                _.each(destinationList, function(dest) {
-                    var pixelID = '' + source.id + '_' + dest.id;
-                    var key = [source.id, dest.id];
-                    if (!(key in dataset)) {
-                        dataset[key] = {
-                            sumTuples: 0,
-                            src: source.id,
-                            dest: dest.id,
-                            pixelID: pixelID
-                        };
-                    }
-                });
-            });
-
-            draw(dataset, sourceList, destinationList, 'id');
+            draw(data, sourceList, destinationList, 'id');
         });
 
         var initial = true;
 
         function draw (rawData, sourceList, destinationList, orderBy) {
-            sourceList = _.sortBy(sourceList, function(d) {return d[orderBy];})
-            destinationList = _.sortBy(destinationList, function(d) {return d[orderBy];})
+            sourceList = _.sortBy(sourceList, function(d) {return d[orderBy];});
+            destinationList = _.sortBy(destinationList, function(d) {return d[orderBy];});
             var data = _.values(rawData),
                 sources = _.pluck(sourceList, "id"),
                 destinations = _.pluck(destinationList, "id"),
@@ -172,7 +134,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
             rowScale.domain(sources);
             columnScale.domain(destinations);
 
-            var maxValue = d3.max(data, function(d) { return d.sumTuples; });
+            var maxValue = d3.max(data, function(d) { return d.numTuples; });
 
             var color = chroma.scale('BuPu').domain([0, maxValue]).correctLightness(true).mode('lab');
 
@@ -192,10 +154,10 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr('height', rowScale.rangeBand())
                 .style('fill',function(d){
                     // access value
-                    return color(d.sumTuples);})
+                    return color(d.numTuples);})
                 .tooltip(function(d) {
                     return templates.nwTooltip({
-                        sumTuples: largeNumberFormat(d.sumTuples),
+                        numTuples: largeNumberFormat(d.numTuples),
                         src: d.src,
                         dest: d.dest
                     });
@@ -326,7 +288,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("class", "form-control")
                 .on("change", function() {
                     draw(rawData, sourceList, destinationList, this.value);
-                  });
+                });
 
             sel.append("option").attr("value", "id").text("Worker name");
             var o = sel.append("option").attr("value", "numTuples").text("# of Tuples");
