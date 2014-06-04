@@ -17,19 +17,19 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     addLevels(hierarchy, 0);
 
     var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
-    var numWorkers = _.max(workers);
+    var numWorkers = workers.length;
 
     var opVis = operatorVisualization(element.select(".contrib"), fragmentId, queryPlan, graph);
 
     var lanesChart = drawLanes(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
-    drawLineChart(element.select(".details"), fragmentId, queryPlan.queryId, lanesChart);
+    drawLineChart(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, lanesChart);
 
     // return variables that are needed outside this scope
     return {};
 };
 
 // Draw the area plot and the mini-brush and big-brush for it
-function drawLineChart(element, fragmentId, queryId, lanesChart) {
+function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
         labels_width = 20,
@@ -232,8 +232,8 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             return d;
         }, function(error, incompleteData) {
             var data = reconstructFullData(incompleteData, start, end, step, false);
-
-            x.domain(d3.extent(data, function(d) { return d.nanoTime; }));
+            x.domain(range);
+            y.domain([0, numWorkers]);
 
             plot.select(".x.axis").call(xAxis);
             plot.select(".area")
@@ -255,10 +255,9 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     d3.csv(url, function(d) {
         wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
         fetchData(wholeRange, function(data) {
-            x2.domain(d3.extent(data, function(d) { return d.nanoTime; }));
-            y2.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
+            x2.domain(wholeRange);
+            y2.domain([0, numWorkers]);
 
-            y.domain([0, d3.max(data, function(d) { return d.numWorkers; })]);
             plot.select(".y.axis").call(yAxis);
 
             plot.on("mousemove", function (e) {
