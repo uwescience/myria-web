@@ -60,10 +60,11 @@ function optimizeplan() {
       return frag;
     });
 
+    var g = new Graph();
+    g.loadQueryPlan({ physicalPlan: queryPlan });
+
     function rerender() {
       $('#myria_svg').empty();
-      var g = new Graph();
-      g.loadQueryPlan({ physicalPlan: queryPlan });
       g.render(d3.select('#myria_svg'));
     }
     rerender();
@@ -72,6 +73,7 @@ function optimizeplan() {
     $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
   }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
+    $('#myria_svg').empty();
   });
 }
 
