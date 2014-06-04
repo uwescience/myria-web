@@ -373,7 +373,10 @@ function restoreState() {
 
     editor.setValue(content);
     editor.setHistory(history);
+    return true;
   }
+
+  return false;
 }
 
 updateExamplesHeight = function() {
@@ -404,15 +407,15 @@ $(function() {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
 
-  restoreState();
+  if (!restoreState()) {
+    changeLanguage();
+  }
 
   optimizeplan();
 
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
-
-  changeLanguage();
 
   $(window).resize(function() {
     updateExamplesHeight();
