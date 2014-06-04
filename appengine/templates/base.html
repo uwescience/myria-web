@@ -42,9 +42,11 @@
 					<li{% block queries_active %}{% endblock %}><a href="/queries">Queries</a></li>
 					<li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
 				</ul>
-				<p class="navbar-text navbar-right">{{connectionString}}</p>
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
+					<li>
+						<a href="http://{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
+					</li>
 				</ul>
 			</div>
 		</div>

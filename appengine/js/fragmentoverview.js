@@ -45,7 +45,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
 var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) {
     var margin = {top: 10, right: 10, bottom: 20, left: 180 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-        height = operators.length * 60 - margin.top - margin.bottom;
+        height = operators.length * 70 - margin.top - margin.bottom;
 
     margin.left = _.max([margin.left, width / 6]);
 
@@ -98,7 +98,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) 
     defs.append("clipPath")
         .attr("id", "textclip")
       .append("rect")
-        .attr("width", margin.left - 25)
+        .attr("width", margin.left - 28)
         .attr("height", height)
         .attr("y", -10);
 
@@ -159,9 +159,10 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) 
         svg.append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 5)
-            .attr("dy", ".71em")
+            .attr("dy", -25)
             .style("font-size", 9)
-            .style("text-anchor", "end")
+            .attr("x", -height)
+            .style("text-anchor", "start")
             .text("Number of nodes working");
 
         function multiple(op) {
@@ -172,7 +173,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) 
                 .call(yAxis);
 
             var t = lane.append("g")
-                .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 15) + ")"; })
+                .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 10) + ")"; })
                 .attr("clip-path", "url(#textclip)")
                 .popover(function(d) {
                     var body = '';
@@ -210,15 +211,17 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators) 
                 .attr("dx", function(d) {
                     return opIndex[d.key].level * 5;
                 })
-                .attr("dy", "2em")
+                .attr("dy", "1.8em")
                 .attr("class", "muted")
                 .text(function(d) {
                     return opIndex[d.key].opType;
                 });
 
+            // for hover
             t.append("rect")
                 .attr("width", margin.left)
-                .attr("height", "3em")
+                .attr("height", 32)
+                .attr("y", -10)
                 .style("opacity", 0);
 
             /* ruler */

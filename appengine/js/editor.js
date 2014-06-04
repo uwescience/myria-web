@@ -363,6 +363,11 @@ function restoreState() {
   }
 }
 
+updateExamplesHeight = function() {
+  // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
+  $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
+};
+
 $(function() {
   resetResults();
 
@@ -393,4 +398,8 @@ $(function() {
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
+
+  $(window).resize(function() {
+    updateExamplesHeight();
+  });
 });
