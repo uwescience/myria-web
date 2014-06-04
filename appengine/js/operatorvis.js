@@ -45,6 +45,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
             d.level = levels[d.opId];
             d.name = idNameMapping[d.opId];
             d.rawData = graph.nodes["f"+fragmentId].opNodes[d.opId].rawData;
+            // contributions from children should be excluded
             var sumChildren = _.reduce(_.pluck(_.pick(indexedData, children[d.opId]), 'nanoTime'), function(a,b) { return a + b; }, 0);
             d.timeWithoutChildren = d.nanoTime - sumChildren;
             return d;

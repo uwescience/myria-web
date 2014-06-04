@@ -26,9 +26,11 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
         var numWorkers = _.max(workers);
 
         var hierarchy = graph.nested["f"+fragmentId],
-            levels = {};
+            levels = {},
+            children = {};
         function addLevels(node, level) {
             levels[node.id] = level++;
+            children[node.id] = _.pluck(node.children, 'id');
             _.map(node.children, function(n) {
                 addLevels(n, level);
             });
@@ -37,6 +39,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
 
         var operators = _.map(graph.nodes["f"+fragmentId].opNodes, function(d, opId) {
             d.level = levels[opId];
+            d.children = children[opId];
             d.opId = opId;
             return d;
         });
@@ -213,7 +216,20 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                 };
             });
 
-            var data = reconstructFullData(incompleteNested, start, end, step, true);
+            var data = _.sortBy(reconstructFullData(incompleteNested, start, end, step, true), function(d) {
+                return opIndex[d.key].level;
+            });
+
+            // subtract data from children to get the self time, not total
+            indexedData = _.object(_.map(data, function(x){ return [x.key, x.values]; }));
+            _.each(data, function(d) {
+                var allChildrenValues = _.values(_.pick(indexedData, opIndex[d.key].children));
+                _.each(allChildrenValues, function(childValues) {
+                    for (var i = 0; i < d.values.length; i++) {
+                        d.values[i].numWorkers -= childValues[i].numWorkers;
+                    }
+                });
+            });
 
             x.domain(range);
 
