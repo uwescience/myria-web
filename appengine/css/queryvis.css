@@ -4,7 +4,25 @@ html {
 }
 
 .popover {
-  max-width: 700px;
+  max-width: 400px;
+}
+
+.popover-content {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0 0;
+  font-size: .9em;
+}
+
+.popover pre {
+  padding: 2px;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.popover table {
+  margin-bottom: 0;
 }
 
 .table-responsive table tr td:nth-child(1) {
@@ -15,6 +33,14 @@ html {
 .table-responsive table tr td:nth-child(2) {
   max-width: 500px;
   word-wrap: break-word;
+}
+
+svg .muted {
+  fill: darkgray;
+}
+
+svg .strong {
+  font-weight: bold;
 }
 
 /* General */
@@ -40,11 +66,12 @@ rect.background {
   display: none;
   top: 0px;
   bottom: 0px;
-  background: #000;
-  opacity: 0.5;
-  z-index: 2;
   width: 1px;
   pointer-events: none;
+
+  background: #000;
+  opacity: .3;
+  z-index: 2;
 }
 
 .rulerInfo rect {
@@ -75,10 +102,6 @@ rect.background {
     max-width: 250px;
 }
 
-.overview-fragment {
-  cursor: pointer;
-}
-
 .panel-heading .breadcrumb {
   padding: 0;
   margin: 0;
@@ -101,11 +124,11 @@ svg .help-text {
   stroke-width: 1px;
 }
 
-.graph {
+.query-graph {
   shape-rendering: auto;
 }
 
-.graph rect {
+.query-graph rect {
   stroke-width: 2;
 }
 
@@ -114,39 +137,40 @@ svg .help-text {
 }
 
 .interactive .cluster:hover rect, .interactive .fragment:hover rect {
-  transition: stroke .1s;
+  transition: stroke .1s, fill .1s;
   stroke: orange;
+  fill: #ddd;
 }
 
-.graph .node {
+.query-graph .node {
   transition: fill .1s;
 }
 
-.graph .node text {
+.query-graph .node text {
   fill: black;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   font-size: 14px;
 }
 
-.graph .link > path {
+.query-graph .link > path {
   stroke-width: 3;
   fill: transparent;
 }
 
-.graph path.clickme {
+.query-graph path.clickme {
   stroke-width: 25;
   opacity: 0;
 }
 
-.graph .frag:hover>path:not(.clickme), .graph .frag:hover marker {
+.query-graph .frag:hover>path:not(.clickme) {
   transition: stroke .1s, fill .1s;
   stroke: orange;
-  fill: orange;
 }
 
-.popover-content {
-  padding: 0 12px;
-  font-size: .9em;
+.query-graph .frag:hover marker {
+  transition: stroke .1s, fill .1s;
+  stroke: orange;
+  fill:orange;
 }
 
 .rect-info {
@@ -159,6 +183,7 @@ svg .help-text {
 
 .area {
   fill: #444;
+  shape-rendering: auto;
 }
 
 .x.axis .tick line {
@@ -177,16 +202,16 @@ svg .help-text {
 }
 
 .brush .extent {
-  fill: black;
+  fill: steelblue;
   fill-opacity: .1;
-  stroke: #333;
+  stroke: steelblue;
   stroke-opacity: 0.7;
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 
 .chart .context .brush .resize rect {
-  fill: #333;
+  fill: steelblue;
   fill-opacity: .8;
   visibility: visible !important;
 }
@@ -279,4 +304,20 @@ svg .help-text {
 
 .controls {
 	margin: 10px 0;
+}
+
+/* Map */
+.map .node {
+  /*border: solid 4px black;*/
+  font: 10px sans-serif;
+  color: black;
+  line-height: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  text-indent: 4px;
+}
+
+.map text {
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }

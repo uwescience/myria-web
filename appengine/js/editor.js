@@ -41,6 +41,7 @@ function getplan() {
 }
 
 function optimizeplan() {
+  $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = false
@@ -55,17 +56,35 @@ function optimizeplan() {
   });
   console.log($("#multiway-join").is(':checked'));
   handleerrors(request, "#optimized");
-  var request = $.post("dot", {
+
+  var url = "compile?" + $.param({
     query : query,
     type : 'physical',
     language : editorLanguage,
     multiway_join: $("#multiway-join").is(':checked')
+    language : editorLanguage,
   });
-  request.success(function(dot) {
-    var result = Viz(dot, "svg");
-    $('#myria_svg').html(result);
-    $('svg').width('100%');
-    $('svg').height('100%');
+  var request = $.getJSON(url).success(function(queryPlan) {
+    var i = 0;
+    queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
+      frag.fragmentIndex = i++;
+      return frag;
+    });
+
+    var g = new Graph();
+    g.loadQueryPlan({ physicalPlan: queryPlan });
+
+    function rerender() {
+      $('#myria_svg').empty();
+      g.render(d3.select('#myria_svg'));
+    }
+    rerender();
+
+    // rerender when opening tab because of different space available
+    $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    $("#optimized").text(jqXHR.responseText);
+    $('#myria_svg').empty();
   });
 }
 
@@ -168,6 +187,7 @@ function resetResults() {
 function updateExamples(language, callback) {
   var doUpdateExamples = function(data) {
     var examplesList = $('#examples-list');
+
     examplesList.empty();
     if (data.length === 0) {
       examplesList.append('No ' + language + ' examples found');
@@ -210,7 +230,8 @@ function updateExamples(language, callback) {
   $.ajax("examples", {
     type : 'GET',
     data : {
-      language : language
+      language : language,
+      subset: $('#examples-list').attr('subset')
     },
     success : doUpdateExamples
   });
@@ -282,6 +303,10 @@ function initializeDatasetSearch() {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
+  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
+  var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>');
+  var dslink = _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
+
   $(".dataset-search").select2({
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
@@ -289,6 +314,7 @@ function initializeDatasetSearch() {
       url: "http://" + myriaConnection + "/dataset/search/",
       dataType: 'json',
       quietMillis: 100,
+      cache: true,
       data: function (term) {
         return {
           q: term
@@ -330,11 +356,15 @@ function initializeDatasetSearch() {
     dropdownCssClass: "bigdrop",
     escapeMarkup: function (m) { return m; }
   }).on("change", function(e) {
-    var rel = $(".dataset-search").select2("data")
-    url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+    var rel = $(".dataset-search").select2("data"),
+      url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function(data) {
-      var html = JSON.stringify(data.schema, null, 4);
-      $("#dataset-information").text(html);
+      var html = '';
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
+        html += row({name: d[0], type: d[1]});
+      });
+      html = table({content: html});
+      $("#dataset-information").html(dslink({url: url, user:rel.userName, program: rel.programName, name: rel.relationName}) + html);
     });
   });
 }
@@ -356,8 +386,16 @@ function restoreState() {
 
     editor.setValue(content);
     editor.setHistory(history);
+    return true;
   }
+
+  return false;
 }
+
+updateExamplesHeight = function() {
+  // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
+  $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
+};
 
 $(function() {
   resetResults();
@@ -382,11 +420,17 @@ $(function() {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
 
-  restoreState();
+  if (!restoreState()) {
+    changeLanguage();
+  }
 
   optimizeplan();
 
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
+
+  $(window).resize(function() {
+    updateExamplesHeight();
+  });
 });

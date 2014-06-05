@@ -19,7 +19,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco import scheme
-from examples import examples
+from examples import examples, demo3_examples
 from pagination import Pagination
 
 import myria
@@ -36,14 +36,17 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
+version_file_path = os.path.join(os.path.dirname(__file__), 'VERSION')
+branch_file_path = os.path.join(os.path.dirname(__file__), 'BRANCH')
+
 try:
-    with open(os.path.join(os.path.dirname(__file__), 'VERSION'), 'r') as version_file:
+    with open(version_file_path, 'r') as version_file:
         VERSION = version_file.read().strip()
 except:
     VERSION = "commit version file not found"
 
 try:
-    with open(os.path.join(os.path.dirname(__file__), 'BRANCH'), 'r') as branch_file:
+    with open(branch_file_path, 'r') as branch_file:
         BRANCH = branch_file.read().strip()
 except:
     BRANCH = "branch file not found"
@@ -76,6 +79,7 @@ def get_plan(query, language, plan_type, connection,
         if plan_type == 'logical':
             return dlog.logicalplan
         dlog.optimize(target=target_algebra)
+
         if plan_type == 'physical':
             return dlog.physicalplan
         else:
@@ -124,6 +128,7 @@ def get_datasets(connection):
 
 
 class MyriaCatalog:
+
     def __init__(self, connection):
         self.connection = connection
         self.cached = {
@@ -166,9 +171,11 @@ class MyriaCatalog:
 
 
 class MyriaHandler(webapp2.RequestHandler):
+
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
-        if isinstance(exception, (ValueError, SyntaxError, MyrialCompileException)):
+        if isinstance(exception,
+                      (ValueError, SyntaxError, MyrialCompileException)):
             self.response.status = 400
             msg = '{}: {}'.format(exception.__class__.__name__, exception)
         else:
@@ -183,6 +190,7 @@ class MyriaHandler(webapp2.RequestHandler):
 
 
 class RedirectToEditor(MyriaHandler):
+
     def get(self, query=None):
         if query is not None:
             self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
@@ -191,6 +199,7 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
+
     def get_connection_string(self):
         conn = self.app.connection
         hostname = self.app.hostname
@@ -201,14 +210,17 @@ class MyriaPage(MyriaHandler):
             try:
                 workers = conn.workers()
                 alive = conn.workers_alive()
-                connection_string = "%s:%d [%d/%d]" % (hostname, port, len(alive), len(workers))
+                connection_string = "%s:%d [%d/%d]" %\
+                    (hostname, port, len(alive), len(workers))
             except:
-                connection_string = "error connecting to %s:%d" % (hostname, port)
+                connection_string = "error connecting to %s:%d" % (
+                    hostname, port)
         return connection_string
 
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
-                'myriaConnection': "{h}:{p}".format(h=self.app.hostname, p=self.app.port),
+                'myriaConnection': "{h}:{p}".format(
+                    h=self.app.hostname, p=self.app.port),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -231,6 +243,7 @@ def nano_to_str(elapsed):
 
 
 class Queries(MyriaPage):
+
     def get(self):
         conn = self.app.connection
         try:
@@ -295,6 +308,7 @@ class Queries(MyriaPage):
 
 
 class Profile(MyriaPage):
+
     def get(self):
         conn = self.app.connection
         query_id = self.request.get("queryId")
@@ -317,6 +331,7 @@ class Profile(MyriaPage):
 
 
 class Datasets(MyriaPage):
+
     def get(self, connection_=None):
         conn = self.app.connection
         try:
@@ -326,7 +341,8 @@ class Datasets(MyriaPage):
 
         for d in datasets:
             try:
-                d['queryUrl'] = 'http://%s:%d/query/query-%d' % (self.app.hostname, self.app.port, d['queryId'])
+                d['queryUrl'] = 'http://%s:%d/query/query-%d' %\
+                    (self.app.hostname, self.app.port, d['queryId'])
             except:
                 pass
 
@@ -341,6 +357,7 @@ class Datasets(MyriaPage):
 
 
 class Examples(MyriaPage):
+
     def get(self):
         # Get the language
         language = self.request.get('language')
@@ -350,34 +367,53 @@ class Examples(MyriaPage):
         else:
             language = language.strip().lower()
         # Is language recognized?
-        if language not in examples:
+
+        example_set = self.request.get('subset') or 'default'
+        if example_set == 'demo3':
+            examples_to_use = demo3_examples
+        else:
+            examples_to_use = examples
+
+        if language not in examples_to_use:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 404
-            self.response.write('Error 404 (Not Found): language %s not found' % language)
+            self.response.write(
+                'Error 404 (Not Found): language %s not found' % language)
             return
         # Return the objects as json
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(examples[language]))
+        self.response.write(json.dumps(examples_to_use[language]))
 
 
 class Editor(MyriaPage):
+
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
-
-        # .. pass in the query
-        template_vars['query'] = examples['myrial'][0][1]
-        # .. pass in the Datalog examples to start
-        template_vars['examples'] = examples['myrial']
-        # .. pass myrial keywords
         template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'default'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('editor.html')
+        self.response.out.write(template.render(template_vars))
+
+
+class Demo3(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'demo3'
+
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
 
 
 class Demo1(MyriaPage):
+
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -399,6 +435,7 @@ class Demo1(MyriaPage):
 
 
 class Plan(MyriaHandler):
+
     def post(self):
         "The same as get(), here because there may be long programs"
         self.get()
@@ -409,7 +446,8 @@ class Plan(MyriaHandler):
         language = self.request.get("language")
         try:
             plan = get_logical_plan(query, language, self.app.connection)
-        except (MyrialCompileException, MyrialInterpreter.NoSuchRelationException) as e:
+        except (MyrialCompileException,
+                MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(str(e))
             self.response.status = 400
@@ -420,6 +458,7 @@ class Plan(MyriaHandler):
 
 
 class Optimize(MyriaHandler):
+
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
@@ -446,6 +485,7 @@ class Optimize(MyriaHandler):
 
 
 class Compile(MyriaHandler):
+
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
@@ -482,6 +522,7 @@ class Compile(MyriaHandler):
 
 
 class Execute(MyriaHandler):
+
     def post(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
@@ -493,8 +534,8 @@ class Execute(MyriaHandler):
         if multiway_join == 'false':
             multiway_join = False
 
-        cached_logicalplan = str(get_logical_plan(
-            query, language, self.app.connection))
+        cached_logicalplan = str(
+            get_logical_plan(query, language, self.app.connection))
 
         try:
             # Generate physical plan
@@ -511,7 +552,8 @@ class Execute(MyriaHandler):
 
             # Issue the query
             query_status = conn.submit_query(compiled)
-            query_url = 'http://%s:%d/execute?query_id=%d' % (self.app.hostname, self.app.port, query_status['queryId'])
+            query_url = 'http://%s:%d/execute?query_id=%d' %\
+                (self.app.hostname, self.app.port, query_status['queryId'])
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -525,7 +567,9 @@ class Execute(MyriaHandler):
         except requests.ConnectionError as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
-            self.response.write('Error 503 (Unavailable): Unable to connect to REST server to issue query')
+            self.response.write(
+                'Error 503 (Unavailable): \
+                 Unable to connect to REST server to issue query')
             return
 
     def get(self):
@@ -546,6 +590,7 @@ class Execute(MyriaHandler):
 
 
 class Dot(MyriaHandler):
+
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
@@ -567,7 +612,8 @@ class Dot(MyriaHandler):
 
 
 class Application(webapp2.WSGIApplication):
-    def __init__(self, debug=True, hostname='dbserver02.cs.washington.edu', port=10032):
+    def __init__(self, debug=True,
+                 hostname='vega.cs.washington.edu', port=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -580,7 +626,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo1', Demo1)
+            ('/demo1', Demo1),
+            ('/demo3', Demo3)
         ]
 
         # Connection to Myria. Thread-safe
@@ -591,6 +638,7 @@ class Application(webapp2.WSGIApplication):
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
 
-        webapp2.WSGIApplication.__init__(self, routes, debug=debug, config=None)
+        webapp2.WSGIApplication.__init__(
+            self, routes, debug=debug, config=None)
 
 app = Application()

@@ -1,29 +1,35 @@
-var fragmentVisualization = function (element, fragmentId, queryPlan) {
+var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     $('.title-current').html(templates.titleFragmentsVis({fragment: fragmentId}));
 
     $(element.node()).empty();
+    $(element.node()).append(templates.fragmentVisFrames);
 
-    var idNameMapping = {};
+    var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.plan.fragments);
 
-    _.each(queryPlan.physicalPlan.fragments, function(frag) {
-        _.each(frag.operators, function(op) {
-            var hasName = _.has(op, 'opName') && op.opName;
-            idNameMapping[op.opId] = hasName ? op.opName.replace("Myria", "") : op.opId;
+    var hierarchy = graph.nested["f"+fragmentId],
+        levels = {};
+    function addLevels(node, level) {
+        levels[node.id] = level++;
+        _.map(node.children, function(n) {
+            addLevels(n, level);
         });
-    });
+    }
+    addLevels(hierarchy, 0);
 
-    var workers = queryPlan.physicalPlan.fragments[fragmentId].workers;
-    var numWorkers = _.max(workers);
+    var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
+    var numWorkers = workers.length;
 
-    var lanesChart = drawLanes(element, fragmentId, queryPlan.queryId, numWorkers, idNameMapping);
-    drawLineChart(element, fragmentId, queryPlan.queryId, lanesChart);
+    var opVis = operatorVisualization(element.select(".contrib"), fragmentId, queryPlan, graph);
+
+    var lanesChart = drawLanes(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
+    drawLineChart(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, lanesChart);
 
     // return variables that are needed outside this scope
     return {};
 };
 
 // Draw the area plot and the mini-brush and big-brush for it
-function drawLineChart(element, fragmentId, queryId, lanesChart) {
+function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
         labels_width = 20,
@@ -32,7 +38,7 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         height = 200 - margin.top - margin.bottom,
         height2 = 200 - margin2.top - margin2.bottom;
 
-    var bisectTime = d3.bisector(function(d) { return d.time; }).right;
+    var bisectTime = d3.bisector(function(d) { return d.nanoTime; }).right;
 
     width = width - labels_width;
 
@@ -69,20 +75,19 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
 
     // Area 1 generator
     var area = d3.svg.area()
-        .interpolate("step-after")
-        .x(function(d) { return x(d.time); })
+        .interpolate("montone")
+        .x(function(d) { return x(d.nanoTime); })
         .y0(height)
-        .y1(function(d) { return y(d.value); });
+        .y1(function(d) { return y(d.numWorkers); });
 
     // Area 2 generator
     var area2 = d3.svg.area()
-        .interpolate("step-after")
-        .x(function(d) { return x2(d.time); })
+        .interpolate("montone")
+        .x(function(d) { return x2(d.nanoTime); })
         .y0(height2)
-    .y1(function(d) { return y2(d.value); });
+    .y1(function(d) { return y2(d.numWorkers); });
 
     // Svg element to draw the fragment utilization plot
-    //var svg = element.append("svg")
     var svg = element.insert("svg", ":first-child")
                      .attr("width", width + labels_width + margin.left + margin.right)
                      .attr("height", height + margin.top + margin.bottom)
@@ -166,10 +171,9 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             var lower = extent[0],
                 upper = extent[1],
                 range = upper - lower,
-                dom = x2.domain(),
                 rangepart = range/5;
-            extent = [_.max([lower - rangepart, dom[0]]), _.min([upper + rangepart, dom[1]])];
-            if (extent[0] == dom[0] && extent[1] == dom[1]) {
+            extent = [_.max([lower - rangepart, wholeRange[0]]), _.min([upper + rangepart, wholeRange[1]])];
+            if (extent[0] == wholeRange[0] && extent[1] == wholeRange[1]) {
                 brush2.clear();
                 brushendWorkers();
             } else {
@@ -206,95 +210,129 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
             .style("opacity", 0);
     });
 
-    var url = templates.urls.histogram({
-        myria: myriaConnection,
-        query: queryId,
-        fragment: fragmentId
-    });
+    // fetch histogram data and show it
+    function fetchData(range, callback) {
+        var start = range[0],
+            end = range[1];
+        var step = Math.floor((end - start)/width);
 
-    d3.csv(url, function(d) {
-        d.time = +d.time;
-        d.value = +d.numWorkers;
-        delete d.numWorkers;
-        return d;
-    }, function(error, data) {
-        x.domain(d3.extent(data, function(d) { return d.time; }));
-        y.domain([0, d3.max(data, function(d) { return d.value; })]);
-
-        x2.domain(x.domain());
-        y2.domain(y.domain());
-
-        plot.on("mousemove", function (e) {
-            ruler
-                .style("display", "block")
-                .style("left", d3.event.pageX - 1 + "px");
-
-            var xPixels = d3.mouse(this)[0],
-                xValue = Math.round(x.invert(xPixels));
-
-            var i = bisectTime(data, xValue),
-                d0 = data[i - 1];
-
-            if (d0 === undefined) {
-                return;
-            }
-
-            plot
-                .select(".rulerInfo")
-                .style("opacity", 1)
-                .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
-
-            tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
-
-            var bbox = tttext.node().getBBox();
-            tooltip.select("rect")
-                .attr("width", bbox.width + 10)
-                .attr("height", bbox.height + 6)
-                .attr("x", bbox.x - 5)
-                .attr("y", bbox.y - 3);
+        var url = templates.urls.histogram({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId,
+            start: start,
+            end: end,
+            step: step,
+            onlyRootOp: true
         });
 
-        // TODO: do before we have the data
-        mini_brush.select(".x.axis").call(xAxis2);
-        mini_brush.select(".area")
-            .datum(data)
-            .attr("d", area2);
+        d3.csv(url, function(d) {
+            d.nanoTime = +d.nanoTime;
+            d.numWorkers = +d.numWorkers;
+            return d;
+        }, function(error, incompleteData) {
+            var data = reconstructFullData(incompleteData, start, end, step, false);
+            x.domain(range);
+            y.domain([0, numWorkers]);
 
-        plot.select(".x.axis").call(xAxis);
-        plot.select(".y.axis").call(yAxis);
-        plot.select(".area")
-            .datum(data)
-            .attr("d", area);
+            plot.select(".x.axis").call(xAxis);
+            plot.select(".area")
+                .datum(data)
+                .attr("d", area);
+
+            callback(data);
+        });
+    }
+
+    var wholeRange;
+
+    // initially fetch data and load minimap
+    var url = templates.urls.range({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId
+        });
+    d3.csv(url, function(d) {
+        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
+        fetchData(wholeRange, function(data) {
+            x2.domain(wholeRange);
+            y2.domain([0, numWorkers]);
+
+            plot.select(".y.axis").call(yAxis);
+
+            plot.on("mousemove", function (e) {
+                ruler
+                    .style("display", "block")
+                    .style("left", d3.event.pageX + "px");
+
+                var xPixels = d3.mouse(this)[0],
+                    xValue = Math.round(x.invert(xPixels));
+
+                var i = bisectTime(data, xValue),
+                    d0 = data[i - 1];
+
+                if (d0 === undefined) {
+                    return;
+                }
+
+                plot
+                    .select(".rulerInfo")
+                    .style("opacity", 1)
+                    .attr("transform", "translate(" + [d3.mouse(this)[0] + 6, height + 14] + ")");
+
+                tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+                var bbox = tttext.node().getBBox();
+                tooltip.select("rect")
+                    .attr("width", bbox.width + 10)
+                    .attr("height", bbox.height + 6)
+                    .attr("x", bbox.x - 5)
+                    .attr("y", bbox.y - 3);
+            });
+
+            mini_brush.select(".x.axis").call(xAxis2);
+            mini_brush.select(".area")
+                .datum(data)
+                .attr("d", area2);
+        });
     });
 
     function brushed() {
-        x.domain(brush.empty() ? x2.domain() : brush.extent());
+        x.domain(brush.empty() ? wholeRange : brush.extent());
         plot.select(".area").attr("d", area);
         plot.select(".x.axis").call(xAxis);
     }
 
     function brushEnd() {
-        lanesChart.redrawLanes(brush.extent());
+        var brush_extent = brush.empty() ? wholeRange : brush.extent();
+        var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+
+        fetchData(range, function() {});
+
         if (brush.empty()) {
-        	lanesChart.toggleHelp(true);
+            lanesChart.redrawLanes([], [0, 1]);
+            lanesChart.toggleHelp(true);
         } else {
-        	lanesChart.toggleHelp(false);
+            lanesChart.fetchData(range);
+            lanesChart.toggleHelp(false);
         }
     }
 
     function brushendWorkers() {
-        //called brush; modify the lanes Chart ...
-        //compute the visible workers
-        var brush_extent = brush2.extent();
+        var brush_extent = brush2.empty() ? wholeRange : brush2.extent();
+        var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
 
-        lanesChart.redrawLanes(brush2.extent());
         if (brush2.empty()) {
-        	lanesChart.toggleHelp(true);
+            lanesChart.redrawLanes([], [0, 1]);
+            lanesChart.toggleHelp(true);
         } else {
-        	lanesChart.toggleHelp(false);
+            lanesChart.fetchData(range);
+            lanesChart.toggleHelp(false);
         }
 
-        x.domain(brush2.empty() ? x2.domain() : brush_extent);
+        x.domain(brush_extent);
+
+        // animate before loading new data
         plot.select(".area")
             .transition()
             .duration(animationDuration)
@@ -302,9 +340,12 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
         plot.select(".x.axis")
             .transition()
             .duration(animationDuration)
-            .call(xAxis);
+            .call(xAxis)
+            .each("end", function() {
+                fetchData(range, function() {});
+            });
 
-        brush.extent(brush_extent);
+        brush.extent(brush2.extent());
         d3.select(".context .x.brush")
             .transition()
             .duration(animationDuration)
@@ -314,16 +355,18 @@ function drawLineChart(element, fragmentId, queryId, lanesChart) {
     }
 }
 
-function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
+function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, levels) {
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
         labels_width = 20,
         fullWidth = parseInt(element.style('width'), 10) - margin.left - margin.right,
         width = fullWidth - labels_width;
 
-    var height =  numWorkers * 30;
+    var height =  numWorkers * 50;
 
     var x = d3.scale.linear().clamp(true).range([0, width]),
         y = d3.scale.ordinal().rangeRoundBands([height, 0], 0.2, 0.1);
+
+    y.domain(_.range(1, numWorkers+1));
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -381,24 +424,6 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
         .append("text")
         .call(xAxisLabel);
 
-    /* Collect data for states at each worker */
-    var url = templates.urls.profiling({
-        myria: myriaConnection,
-        query: queryId,
-        fragment: fragmentId
-    });
-
-    var workersData = {};
-
-    d3.csv(url, function(d) {
-        d.workerId = +d.workerId;
-        d.nanoTime = parseFloat(d.nanoTime);
-        d.numTuples = +d.numTuples;
-        return d;
-    }, function(error, data) {
-        workersData = getWorkersStates(data);
-    });
-
     // Add ruler
     var tooltip = chart.append("g")
         .attr({"class": "rulerInfo"})
@@ -440,13 +465,13 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
     var toDelete;
 
     function toggleHelp(show) {
-    	if (show) {
+        if (show) {
             toDelete = chart.append("text")
-	            .text("Select a small range in the chart above to see the operators.")
-	            .attr("x", width/2)
-	            .attr("y", _.min([100, height/2]))
-	            .attr("text-anchor", "middle")
-	            .attr("class", "help-text");
+                .text("Select a small range in the chart above to see the operators.")
+                .attr("x", width/2)
+                .attr("y", _.min([100, height/2]))
+                .attr("text-anchor", "middle")
+                .attr("class", "help-text");
         } else {
             toDelete.remove();
         }
@@ -454,33 +479,78 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
 
     toggleHelp(true);
 
-    function redrawLanes(xDomain) {
-        var data = _.values(workersData);
+    function fetchData(range) {
+        var tooLarge = range[1] - range[0] > maxTimeForDetails;
+         var url = templates.urls.profiling({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId,
+            start: range[0],
+            end: range[1],
+            onlyRootOp: tooLarge,
+            // don't request anything that is less than a pixel wide
+            minLength: Math.floor(0.5*(range[1] - range[0])/width)
+        });
 
-        y.domain(_.pluck(data, 'workerId'));
-        x.domain(xDomain);
+        d3.csv(url, function(d) {
+            d.workerId = +d.workerId;
+            d.startTime = +d.startTime;
+            d.endTime = +d.endTime;
+            d.numTuples = +d.numTuples;
+            return d;
+        }, function(error, data) {
+            var aggregatedData = [],
+                grouped = _.groupBy(data, 'workerId'),
+                numOps = queryPlan.physicalPlan.plan.fragments[fragmentId].operators.length;
+            aggregatedData = _.map(grouped, function(val, key){
+                return { workerId: +key, states: val };
+            });
+            redrawLanes(aggregatedData, range);
+        });
+    }
 
-        var lane = lanes.selectAll(".worker").data(data, function(d) { return d.workerId; });
+    var maxLevel = _.max(_.values(levels));
+
+    function redrawLanes(data, range) {
+        x.domain(range);
+
+        var lane = lanes
+            .selectAll(".worker")
+            .data(data, function(d) { return d.workerId; });
         lane.enter().append("g").attr("class", "worker");
         lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
         lane.exit().remove();
 
         var box = lane.selectAll("rect")
             .data(function(d) {
-                return _.filter(d.states, function(s) {
-                    // overlap
-                    return xDomain[0] < s.end && xDomain[1] > s.begin;
-                });
-            }, function(d) { return d.begin; });
+                return d.states;
+            }, function(d) { return d.startTime; });
+
+        function getHeight(d) {
+            return y.rangeBand() * (0.5 + (maxLevel - levels[d.opId])/(2*maxLevel));
+        }
 
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
-            .style("fill", function(d) { return opToColor[d.name]; })
-            .attr("class", "box");
+            .style("fill", function(d) { return opToColor[d.opId]; })
+            .attr("class", "box")
+            .attr("height", getHeight)
+            .attr("y", function(d) {
+                return y.rangeBand() - getHeight(d);
+            });
 
-        box.on('mouseenter', function(d){
+        box.on('mouseover', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .attr("height", function(d) {
+                    return getHeight(d) + 4;
+                })
+                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).brighter(0.4); });
+        });
+
+        box.on('mouseenter', function(d) {
             d3.select(this).tooltip(function(d) {
-                var content = templates.opname({ name: idNameMapping[d.name] });
+                var content = templates.strong({ text: idNameMapping[d.opId] });
                 if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
                         content += templates.numTuplesTemplate({ numTuples: d.numTuples });
@@ -489,20 +559,26 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
                     }
                     content += ', ';
                 }
-                content += templates.duration({ duration: customFullTimeFormat(d.end - d.begin) });
+                content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime) });
                 return content;
             });
+        });
+
+        box.on('mouseleave', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .attr("height", getHeight)
+                .style("fill", function(d) { return opToColor[d.opId]; });
         });
 
         box
             .transition()
             .duration(animationDuration)
-            .attr("x", function(d) { return x(d.begin); })
+            .attr("x", function(d) { return x(d.startTime); })
             .style("opacity", 1)
             .attr("width", function(d) {
-                return x(d.end) - x(d.begin);
-            })
-            .attr("height", function(d) { return y.rangeBand(); });
+                return x(d.endTime) - x(d.startTime);
+            });
 
         box.exit().remove();
 
@@ -572,7 +648,8 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping) {
 
     return {
         redrawLanes: redrawLanes,
-        toggleHelp: toggleHelp
+        toggleHelp: toggleHelp,
+        fetchData: fetchData
     };
 }
 
@@ -582,71 +659,4 @@ function xAxisLabel(selection) {
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Time");
-}
-
-function getWorkersStates(data) {
-    // TODO: this parsing function assumes the following about the data
-    // received:
-    //   - events are sorted at each worker
-
-    // Create a structure:
-    //  workers = [{ workerId : [{opName : [{}]}] }]
-    //
-    // TODO: use queryPlan to put the right lane numbers?
-
-    var workersStates = {};
-    var tmpStacks = {}; // a stack per worker keeps unfinished operator calls
-
-
-    data.forEach(function(d) {
-        stack = tmpStacks[d.workerId];
-        if (stack === undefined || stack.length === 0) {
-            tmpStacks[d.workerId] = [get_state(d)];
-            return;
-        }
-
-        // event on top of stack completed (we now know its endTime), add
-        // to states
-
-        if (!_.has(workersStates, d.workerId)) {
-            workersStates[d.workerId] = {
-                workerId: d.workerId,
-                states: []
-            };
-        }
-
-        top_stack = _.last(stack);
-        top_stack.end = d.nanoTime;
-        if (d.eventType === "return") {
-            top_stack.numTuples = d.numTuples;
-        }
-        workersStates[d.workerId].states.push(top_stack);
-
-        // check the event type and push unfinished event on the stack
-        if (d.eventType === "call") {
-            stack.push(get_state(d));
-        } else if (d.eventType === "return") {
-            // it's a return, update the link and replace top of stack
-            // with a new, same opName event that starts from d.nanoTime
-            stack.pop();
-            if (stack.length > 0) {
-                top_stack = _.last(stack);
-                state = get_state(d);
-                state.name = top_stack.name; // the same call
-                //TODO: use links
-                //top_stack.link = state; // belong together (still in the same call thread)
-                stack[stack.length - 1] = state;
-           } //TODO: eos??
-        }
-    });
-
-    function get_state(d) {
-        return {
-            name: d.opName,
-            begin: d.nanoTime,
-            end: null           // we don't know this yet ...
-        };
-    }
-
-    return workersStates;
 }

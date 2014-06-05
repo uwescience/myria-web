@@ -20,13 +20,4 @@ $(function() {
   $("[data-toggle=tooltip]").tooltip();
 
   $("abbr.timeago").timeago();
-
-  $(window).resize(function() {
-    updateExamplesHeight();
-  });
 });
-
-updateExamplesHeight = function() {
-  // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
-  $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
-};
