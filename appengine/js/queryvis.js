@@ -3,8 +3,10 @@ var templates = {
     //*/
     urls: {
         sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>")
+        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
+        range: _.template("http://<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        contribution: _.template("http://<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&step=<%- step %>&onlyRootOp=<%- onlyRootOp %>")
     },
     /*/
     urls: {
@@ -21,10 +23,10 @@ var templates = {
     ganttTooltipTemplate: _.template("Time: <%- time %>"),
     graphViz: {
         nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label="<%- label %>"];\n'),
-        clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tnode [style=filled,color=white];\n'),
+        clusterStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tlabel="<%- label %>";\n\t\tnode [style=filled,color=white];\n'),
         link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
     },
-    nwTooltip: _.template("<%- sumTuples %> tuples from <%- src %> to <%- dest %>"),
+    nwTooltip: _.template("<%- numTuples %> tuples from <%- src %> to <%- dest %>"),
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),
     nwLineTooltip: _.template("from <%- src %> to <%- dest %>"),
     barTooltip: _.template("Worker: <%- worker %>, # Tuples: <%- numTuples %>"),
@@ -34,24 +36,26 @@ var templates = {
     fragmentTitle: _.template("Fragment <%- fragment %>:"),
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
-    row: _.template('<tr><th><%- key %></th><td><%- value %></td></tr>'),
-    opname: _.template('<strong><%- name %>: </strong>'),
+    row: _.template('<tr><th><%- key %></th><td><%= value %></td></tr>'),
     networkVisFrames:
         '<div class="row">\
-            <div class="col-md-4">\
+            <div class="col-md-12">\
                 <h3>Summary</h3><p class="summary"></p>\
-            </div>\
-            <div class="col-md-8 lines">\
-                <h4>Details about when communication occurred</h4>\
             </div>\
         </div>\
         <div class="row"><div class="col-md-12 controls form-inline"></div></div>\
         <div class="row">\
             <div class="col-md-12 matrix"></div>\
         </div>',
+    fragmentVisFrames:
+        '<h4>Query time contribution <a href="#contribCollapsible" data-toggle="collapse"><small>collapse/expand</small></a></h4>\
+        <div class="contrib collapse in" id="contribCollapsible"></div>\
+        <h4>Detailed execution</h4>\
+        <div class="details" id="detailsCollapsible"></div>',
     defList: _.template('<dl class="dl-horizontal"><%= items %></dl>'),
     defItem: _.template('<dt><%- key %></dt><dd><%- value %></dd>'),
-    strong: _.template('<strong><%- text %></strong>')
+    strong: _.template('<strong><%- text %></strong>'),
+    code: _.template('<pre><%- code %></pre>')
 };
 
 // Dictionary of operand name -> color
@@ -77,6 +81,9 @@ function timeFormat(formats) {
 
 function timeFormatNs(formats) {
   return function(date) {
+    if (date === 0) {
+        return "0";
+    }
     if (date % 1e6 !== 0) {
         return (date % 1e6).toExponential(2) + " ns";
     }
@@ -88,8 +95,8 @@ function timeFormatNs(formats) {
 var customTimeFormat = timeFormatNs([
   [d3.time.format("%H:%M"), function(d) { return true; }],
   [d3.time.format("%H:%M:%S"), function(d) { return d.getMinutes(); }],
-  [d3.time.format(":%S.%L"), function(d) { return d.getSeconds(); }],
-  [d3.time.format(".%L"), function(d) { return d.getMilliseconds(); }]
+  [d3.time.format("%S s"), function(d) { return d.getSeconds(); }],
+  [d3.time.format(".%L s"), function(d) { return d.getMilliseconds(); }]
 ]);
 
 String.prototype.hashCode = function(){
@@ -149,3 +156,65 @@ var largeNumberFormat = d3.format(",");
 var ruler = d3.select("body")
     .append("div")
     .attr("class", "ruler");
+
+var defaultNumSteps = 1000;
+
+// if a range longer than this time is requests in the fragment visualization, then the
+// data is limited to root operators
+var maxTimeForDetails = 30 * 1e9;
+
+// reconstruct all data, the data from myria has missing values where no workers were active
+function reconstructFullData(incompleteData, start, end, step, nested) {
+    if (!nested) {
+        incompleteData = [{ key: "foo", values: incompleteData }];
+    }
+
+    var range = _.range(start, end, step),
+        result = {};
+
+    result = _.map(incompleteData, function(op) {
+        var indexed = _.object(_.map(op.values, function(x){ return [x.nanoTime, x.numWorkers]; })),
+            c = 0,
+            data = [];
+
+        _.each(range, function(d) {
+            var value = indexed[d];
+            if (value !== undefined) {
+                c++;
+            }
+            data.push({
+                nanoTime: d,
+                numWorkers: value !== undefined ? value : 0
+            });
+        });
+
+        if (c != op.values.length) {
+            //debug(incompleteData);
+            //debug(data);
+            //debug(range);
+            console.error("Incomplete data");
+        }
+
+        return {
+            key: op.key,
+            values: data
+        };
+    });
+
+    if (!nested) {
+        return result[0].values;
+    }
+
+    return result;
+}
+
+function nameMappingFromFragments(fragments) {
+    var idNameMapping = {};
+    _.each(fragments, function(frag) {
+        _.each(frag.operators, function(op) {
+            var hasName = _.has(op, 'opName') && op.opName;
+            idNameMapping[op.opId] = hasName ? op.opName.replace("Myria", "") : op.opId;
+        });
+    });
+    return idNameMapping;
+}

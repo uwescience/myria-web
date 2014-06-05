@@ -14,13 +14,13 @@
 	</div>
 
 	<p class="lead">
-		This page shows a visualization of how query {{ queryId }} was executed. On the left, you can see the physical query plan which consists of operators that are grouped in fragments. Communication between fragments is over the network.
+		This page shows a visualization of how query {{ queryId }} was executed. On the left, you can see the physical query plan consisting of operators that are grouped in fragments.
 
-		You can click on a fragment to explore what happened inside a fragment and on a connection between fragments to explore the network communication.
+		Click on a fragment to explore what happened inside a fragment and on a connection between fragments to explore the network communication.
 	</p>
 
 	<div class="row">
-		<div class="col-md-5 col-lg-4 graph-panel">
+		<div class="col-md-5 col-lg-3 graph-panel">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 			   		<h3 class="panel-title">Physical Query Plan:</h3>
@@ -30,11 +30,11 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-md-7 col-lg-8">
+		<div class="col-md-7 col-lg-9">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 		   			<ol class="breadcrumb">
-						<li><a href="#" class="show-overview">Query plan visualization</a></li>
+						<li><a href="#" class="show-overview">Overview</a></li>
 						<li><span class="title-current">Fragment overview</span></li>
 					</ol>
 			    </div>
@@ -60,6 +60,7 @@
 	<script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/operatorvis.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
 
@@ -73,13 +74,14 @@
 	<script async defer>
 		d3.select('.query-plan').each(function() {
 		    element = d3.select(this);
-		    graph = queryGraphInteractive(element, queryPlan);
+		    theGraph = queryGraphInteractive(element, queryPlan);
 		});
 
 		$(function() {
 			$('.show-overview').click(function(event) {
 				event.preventDefault();
-				graph.openOverview();
+				theGraph.unfocus();
+				theGraph.openOverview();
 			});
 		});
 	</script>

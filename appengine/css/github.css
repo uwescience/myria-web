@@ -106,3 +106,7 @@
   color: #586e75;
   border-bottom: 1px dotted #dc322f;
 }
+
+.cm-trailingspace {
+    background-color: #ccc;
+}

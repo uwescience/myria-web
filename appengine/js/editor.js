@@ -40,6 +40,7 @@ function getplan() {
 }
 
 function optimizeplan() {
+  $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.post("optimize", {
@@ -47,16 +48,32 @@ function optimizeplan() {
     language : editorLanguage
   });
   handleerrors(request, "#optimized");
-  var request = $.post("dot", {
+
+  var url = "compile?" + $.param({
     query : query,
-    type : 'physical',
-    language : editorLanguage
+    language : editorLanguage,
   });
-  request.success(function(dot) {
-    var result = Viz(dot, "svg");
-    $('#myria_svg').html(result);
-    $('svg').width('100%');
-    $('svg').height('100%');
+  var request = $.getJSON(url).success(function(queryPlan) {
+    var i = 0;
+    queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
+      frag.fragmentIndex = i++;
+      return frag;
+    });
+
+    var g = new Graph();
+    g.loadQueryPlan({ physicalPlan: queryPlan });
+
+    function rerender() {
+      $('#myria_svg').empty();
+      g.render(d3.select('#myria_svg'));
+    }
+    rerender();
+
+    // rerender when opening tab because of different space available
+    $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    $("#optimized").text(jqXHR.responseText);
+    $('#myria_svg').empty();
   });
 }
 
@@ -356,8 +373,16 @@ function restoreState() {
 
     editor.setValue(content);
     editor.setHistory(history);
+    return true;
   }
+
+  return false;
 }
+
+updateExamplesHeight = function() {
+  // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
+  $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
+};
 
 $(function() {
   resetResults();
@@ -382,7 +407,9 @@ $(function() {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
 
-  restoreState();
+  if (!restoreState()) {
+    changeLanguage();
+  }
 
   optimizeplan();
 
@@ -390,5 +417,7 @@ $(function() {
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
-  changeLanguage();
+  $(window).resize(function() {
+    updateExamplesHeight();
+  });
 });

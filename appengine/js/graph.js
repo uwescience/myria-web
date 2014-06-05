@@ -2,20 +2,11 @@
 var queryGraphInteractive = function (element, queryPlan) {
     var chartElement = d3.select('.chart');
 
-    function openOverview() {
-        var allFragments = _.pluck(queryPlan.physicalPlan.fragments, 'fragmentIndex');
-        manyLineCharts(chartElement, allFragments, queryPlan);
-    }
-
-    openOverview();
-
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-
-    return _.extend(graphObj.render(element, chartElement), {
-        graphObj: graphObj,
-        openOverview: openOverview
-    });
+    graphObj.render(element, chartElement);
+    graphObj.openOverview();
+    return graphObj;
 };
 
 //query graph
@@ -23,6 +14,7 @@ var queryGraph = function(element, queryPlan){
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
     graphObj.render(element, null);
+    return graphObj;
 };
 
 // Graph object
@@ -62,28 +54,38 @@ function Graph () {
         // Get query plan
         graph.queryPlan = json;
 
+        // a nested version of op ids, not needed in here but useful for other visualizations
+        graph.nested = {};
+
+        // edges, used to construct graph.nested
+        var links = {};
+
         // Collect graph nodes
-        graph.queryPlan.physicalPlan.fragments.forEach(function(fragment) {
+        graph.queryPlan.physicalPlan.plan.fragments.forEach(function(fragment) {
             // Create fragment node object
-            var node = new Object();                                    // Node object
-            var id = "Frag" + fragment.fragmentIndex.toString();        // Node ID
-            node.fragmentIndex = fragment.fragmentIndex.toString();     // Fragment ID
+            var node = {};                                              // Node object
+            var id = "f"+fragment.fragmentIndex;                            // Node ID
+            node.fragmentIndex = fragment.fragmentIndex;                // Fragment ID
             node.rawData = fragment;                                    // RAW JSON data
             node.workers = fragment.workers;                            // List of workers
             node.operators = fragment.operators;                        // List of operators
             node.opNodes = {};                                          // List of graph operand nodes
             node.opLinks = {};                                          // List of graph operand edges
             node.name = "Fragment " + fragment.fragmentIndex.toString();// Name for fragment node
+
             // Process each operator
             var color_index = 0;
             node.operators.forEach(function(op) {
+                op.opId = ""+op.opId;
                 // Create new op node(s)
-                var opnode = {};
-                opnode.rawData = op;                                    // Raw JSON data
-                opnode.opType = op.opType;                              // Operand type
+                var opNode = {};
+                opNode.rawData = op;                                    // Raw JSON data
+                opNode.opType = op.opType;                              // Operand type
                 var hasName = _.has(op, 'opName') && op.opName;
-                opnode.opName = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
-                node.opNodes[op.opId] = opnode;
+                var name = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
+                opNode.fullName = name;
+                opNode.opName = name.substring(0, 50) + (name.length > 50 ? "...": "");
+                node.opNodes[op.opId] = opNode;
                 // Add entry to opId2fId & opId2colorvar
                 if (op.hasOwnProperty('opId')) {
                     graph.opId2fId[op.opId] = id;
@@ -96,7 +98,7 @@ function Graph () {
         });
 
         // If there are more than 10 fragments, do not expand
-        if (graph.queryPlan.physicalPlan.fragments.length < 10) {
+        if (graph.queryPlan.physicalPlan.plan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
@@ -105,73 +107,87 @@ function Graph () {
         // Collect graph links
         for (var id in graph.nodes) {
             var fragment = graph.nodes[id];
+            links[id] = {};
             fragment.operators.forEach(function(op) {
                 // Add cross-fragment links
                 if (op.hasOwnProperty('argOperatorId')) {
-                    var link = new Object();                            // Link object
+                    var link = {};                                      // Link object
                     link.u = {};
                     link.v = {};
-                    link.u.fID = graph.opId2fId[op.argOperatorId];      // Src fragment ID
-                    link.u.oID = op.argOperatorId;                      // Src operand ID
+                    link.u.fID = graph.opId2fId[""+op.argOperatorId];   // Src fragment ID
+                    link.u.oID = ""+op.argOperatorId;                   // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
-                    link.v.oID = op.opId;                               // Dst fragment ID
+                    link.v.oID = ""+op.opId;                            // Dst fragment ID
                     var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
                     graph.links["link-" + linkID.hashCode()] = link;
                 }
                 // Add in-fragment links
                 for (var key in op) {
+                    op.opId = ""+op.opId;
                     if (key == "argChildren") {
                         op[key].forEach(function(child){
-                            var link = new Object();                        // Link object
+                            child = ""+child;
+                            var link = {};                                  // Link object
                             link.u = {};
                             link.v = {};
                             link.u.fID = id;                                // Src fragment ID
                             link.u.oID = child;                             // Src operand ID
                             link.v.fID = id;                                // Dst fragment ID
-                            link.v.oID = op.opId;                           // Dst fragment ID
+                            link.v.oID = ""+op.opId;                        // Dst fragment ID
                             var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
                             fragment.opLinks["link-" + linkID.hashCode()] = link;
+
+                            if (!_.has(links[id], ""+op.opId)) {
+                                links[id][""+op.opId] = [];
+                            }
+                            links[id][""+op.opId].push(child);
                         });
                     } else if (key.indexOf("argChild") != -1) {
-                        var link = new Object();                        // Link object
+                        var link = {};                                  // Link object
                         link.u = {};
                         link.v = {};
                         link.u.fID = id;                                // Src fragment ID
-                        link.u.oID = op[key];                           // Src operand ID
+                        link.u.oID = ""+op[key];                        // Src operand ID
                         link.v.fID = id;                                // Dst fragment ID
-                        link.v.oID = op.opId;                           // Dst fragment ID
+                        link.v.oID = ""+op.opId;                        // Dst fragment ID
                         var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
                         fragment.opLinks["link-" + linkID.hashCode()] = link;
+
+                        if (!_.has(links[id], ""+op.opId)) {
+                            links[id][""+op.opId] = [];
+                        }
+                        links[id][""+op.opId].push(""+op[key]);
                     }
                 }
             });
         }
+
+        _.each(links, function(linkdict, fragid) {
+            var roots = _.difference(_.keys(linkdict), _.flatten(_.values(linkdict)));
+            if (roots.length !== 1) {
+                console.warn("Too many roots");
+            }
+            var root = roots[0];
+            var addChildren = function(id) {
+                var c = {
+                    id: id,
+                    children: _.map(linkdict[id], addChildren)
+                };
+                return c;
+            };
+            graph.nested[fragid] = addChildren(root);
+        });
     };
 
     // Function that updates the graph edges when a fragment gets expanded
-    Graph.prototype.expandNode = function(nodes) {
-        var graph = this;
-        nodes.forEach(function(nid){
-            var exists = false;
-            graph.state.opened.forEach(function(id){
-                if(nid == id) { exists = true; }
-            });
-            if(!exists) {
-                graph.state.opened.push(nid);
-                graph.state.focus = nid;
-            }
-        });
+    Graph.prototype.expandNode = function(node) {
+        this.state.opened = _.union(this.state.opened, [node]);
+        this.state.focus = +node;
     };
 
     // Function that updates the graph edges when a fragment gets reduced
-    Graph.prototype.reduceNode = function (nodes) {
-        var graph = this;
-        nodes.forEach(function(nid){
-            var index = graph.state.opened.indexOf(nid);
-            if (index > -1) {
-                graph.state.opened.splice(index, 1);
-            }
-        });
+    Graph.prototype.reduceNode = function (node) {
+        this.state.opened = _.without(this.state.opened, node);
     };
 
     // Function that spits out graph description in dot
@@ -189,9 +205,9 @@ function Graph () {
         }
         // Then add the operand links in subgraphs
         graph.state.opened.forEach(function(fragment) {
-        	dotStr += templates.graphViz.clusterStyle({ fragment: fragment });
+            dotStr += templates.graphViz.clusterStyle({ fragment: fragment, label:graph.nodes[fragment].name });
             for (var id in graph.nodes[fragment].opNodes) {
-                var node = graph.nodes[fragment].opNodes[id];
+                var node = graph.nodes[fragment].opNodes[+id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
             }
             for (var id in graph.nodes[fragment].opLinks) {
@@ -202,8 +218,8 @@ function Graph () {
         });
         // closed fragments
         _.each(_.difference(_.keys(graph.nodes), graph.state.opened), function(key) {
-    		var node = graph.nodes[key];
-    		dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
+            var node = graph.nodes[key];
+            dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
         });
         dotStr += links + "}";
         return dotStr;
@@ -242,11 +258,12 @@ function Graph () {
         graphDescRows.forEach(function(line) {
             var cols = line.split(" ");
             if(cols[0]=="node") {
-                var id = cols[1].replace(/\"/g, '');
+                var id = ""+cols[1].replace(/\"/g, '');
                 if (id in graph.nodes) {
                     graph.nodes[id].viz = {
                         id: id,
                         name: graph.nodes[id].name,
+                        fullName: graph.nodes[id].name,
                         type: "fragment",
                         rawData: graph.nodes[id].rawData,
                         x: +cols[2]-cols[4]/2,
@@ -254,27 +271,28 @@ function Graph () {
                         w: +cols[4],
                         h: +cols[5],
                         color: "lightgrey",
-                        stroke: (graph.state.focus == id) ? "red" : "black"
+                        stroke: (graph.state.focus === id) ? "red" : "black"
                     };
                 } else if (id in graph.opId2fId) {
                     var node = graph.nodes[graph.opId2fId[id]];
-                    var opnode = node.opNodes[id];
-                    opnode.viz = {
+                    var opNode = node.opNodes[id];
+                    opNode.viz = {
                         id: id,
-                        name: opnode.opName,
+                        name: opNode.opName,
+                        fullName: opNode.fullName,
                         type: "operator",
-                        optype: opnode.opType,
-                        rawData: opnode.rawData,
+                        optype: opNode.opType,
+                        rawData: opNode.rawData,
                         x: +cols[2]-cols[4]/2,
                         y: +cols[3]-cols[5]/2,
                         w: +cols[4],
                         h: +cols[5],
-                        color: (graph.state.focus == graph.opId2fId[id]) ? graph.opId2color[id] : "white",
+                        color: (graph.state.focus === graph.opId2fId[id]) ? graph.opId2color[id] : "white",
                         stroke: "black"
                     };
                 }
             } else if (cols[0]=="edge") {
-                var linkID = "not found";
+                var linkID = undefined;
                 var src = cols[1].replace(/\"/g, '');
                 var dst = cols[2].replace(/\"/g, '');
                 var points = [];
@@ -307,7 +325,7 @@ function Graph () {
                         }
                     }
                 }
-                var lid = "link-" + linkID.hashCode()
+                var lid = "link-" + linkID.hashCode();
                 if (type == "op") {
                     var link = graph.nodes[graph.opId2fId[src]].opLinks[lid];
                     link.viz = {
@@ -315,9 +333,9 @@ function Graph () {
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        stroke: (graph.state.focus === lid) ? "red" : "black",
                         id: lid
-                    }
+                    };
                 } else if (type == "frag") {
                     var link = graph.links[lid];
                     link.viz = {
@@ -325,9 +343,9 @@ function Graph () {
                         src: src,
                         dst: dst,
                         points: points,
-                        stroke: (graph.state.focus == lid) ? "red" : "black",
+                        stroke: (graph.state.focus === lid) ? "red" : "black",
                         id: lid
-                    }
+                    };
                 }
             }
         });
@@ -355,14 +373,15 @@ function Graph () {
             var node = {
                 id: fID,
                 name: fragment.name,
+                fullName: fragment.name,
                 type: "cluster",
                 rawData: graph.nodes[fID].rawData,
                 x: minX-padding/2,
-                y: minY-padding/2,
+                y: minY-padding/2 - padding,
                 w: maxX-minX+padding,
-                h: maxY-minY+padding,
+                h: maxY-minY+padding + padding,
                 color: "lightgrey",
-                stroke: (graph.state.focus == fID) ? "red" : "black"
+                stroke: (graph.state.focus === fID) ? "red" : "black"
             };
             // Add cluster
             nodes.push(node);
@@ -406,6 +425,8 @@ function Graph () {
     Graph.prototype.render = function(graphElement, chartElement) {
         var self = this;
 
+        self.chartElement = chartElement;
+
         var interactive = chartElement ? true : false;
 
         // D3 stuff...
@@ -416,15 +437,17 @@ function Graph () {
             .scaleExtent([0.5, 4])
             .on('zoom', onzoom);
 
-        var wrapper = graphElement
+        var svg = graphElement
                     .append("svg")
-                    .attr("class", "graph")
-                    .call(zoom)
+                    .style("width", "100%")
+                    .attr("class", "query-graph")
+                    .call(zoom);
+        var wrapper = svg
                     .append("g");
-        var graph = wrapper.append("g"); // avoid jitter
+        var gel = wrapper.append("g"); // avoid jitter
 
         function onzoom() {
-            graph.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            gel.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
         var D3data = self.generateD3data();
@@ -434,9 +457,9 @@ function Graph () {
 
         // On click, update with new data
         if (interactive) {
-            graph.attr("class", "interactive");
+            gel.attr("class", "interactive");
 
-            graph.selectAll(".node")
+            gel.selectAll(".node")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
@@ -444,17 +467,17 @@ function Graph () {
 
                     // Handle fragment state
                     if (node.type == "cluster") {
-                        if (node.id == self.state.focus) {
-                            closeFragment(node.id);
+                        if (node.id === self.state.focus) {
+                            self.closeFragment(node.id);
                         } else {
-                            openFragment(node.id);
+                            self.openFragment(node.id);
                         }
                     } else if (node.type == "fragment") {
-                        openFragment(node.id);
+                        self.openFragment(node.id);
                     }
                 });
 
-            graph.selectAll(".link")
+            gel.selectAll(".link")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
 
@@ -472,42 +495,28 @@ function Graph () {
                 });
         }
 
-        function openFragment(nodeId) {
-            self.expandNode([nodeId]);
-            self.state.focus = nodeId;
-            fragmentVisualization(chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
-
-            var newD3data = self.generateD3data();
-            draw(newD3data, false);
-        }
-
-        function closeFragment(nodeId) {
-            self.state.focus = "";
-            self.reduceNode([nodeId]);
-            var allFragments = _.pluck(self.queryPlan.physicalPlan.fragments, 'fragmentIndex');
-            manyLineCharts(chartElement, allFragments, self.queryPlan);
-
-            var newD3data = self.generateD3data();
-            draw(newD3data, false);
-        }
-
         function draw(data, initial) {
-            graph
+            svg
+                .style("height", (data.height + 0.5)*dpi);
+
+            gel
                 .attr("height", data.height*dpi)
                 .attr("width", data.width*dpi);
 
             graphElement.style("height", (data.height + 0.5)*dpi + "px");
 
-            var scale = width/(data.width*dpi + 10);
-            if (scale < 1) {
-                zoom.scale(scale);
-            } else {
-                scale = 1;
+            if (initial) {
+                    var scale = width/(data.width*dpi + 10);
+                if (scale < 1) {
+                    zoom.scale(scale);
+                } else {
+                    scale = 1;
+                }
+                zoom.event(gel);
             }
-            zoom.event(graph);
 
             /* Nodes */
-            var node = graph.selectAll("g.node")
+            var node = gel.selectAll("g.node")
                 .data(data.nodes, function(d) { return d.id; });
 
             var nodeEnter = node.enter()
@@ -538,13 +547,13 @@ function Graph () {
                         if (value === null) {
                             value = 'null';
                         }
-                        if (value != null && typeof value === 'object') {
-                          value = JSON.stringify(value);
+                        if (value !== null && typeof value === 'object') {
+                          value = templates.code({code: JSON.stringify(value)});
                         }
                         body += templates.row({key: key, value: value});
                     });
                     return {
-                        title: templates.strong({text: d.name}),
+                        title: templates.strong({text: d.fullName}),
                         content: templates.table({body: body})
                     };
                 });
@@ -552,7 +561,7 @@ function Graph () {
             node.select("circle").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("cx", function(d) { return (d.x+d.w) * dpi; })
-                .attr("cy", function(d) { return d.y * dpi; })
+                .attr("cy", function(d) { return d.y * dpi; });
 
             node.select("rect").transition().duration(animationDuration)
                 .attr("opacity", 1)
@@ -569,15 +578,16 @@ function Graph () {
                     return initial ? 1 : 0;
                 })
                 .attr("text-anchor", "middle")
-                .attr("dy", function(d) {return"0.35em";})
                 .attr("fill", "black");
 
             node.select("text")
                 .text(function(d) {
-                	if (d.type == "operator" || !_.contains(self.state.opened, d.id)) {
-                	    return d.name;
+                    return d.name;
+                }).attr("dy", function(d) {
+                    if (d.type !== "operator" && _.contains(self.state.opened, "f"+d.rawData.fragmentIndex)) {
+                        return  "0.8em";
                     }
-                    return "";
+                    return "0.35em";
                 });
 
             node.select("text").transition().duration(animationDuration)
@@ -607,7 +617,7 @@ function Graph () {
                 .y(function(d) { return d[1] * dpi; })
                 .interpolate("montone");
 
-            var link = graph.selectAll("g.link")
+            var link = gel.selectAll("g.link")
                 .data(data.links, function(d) { return d.id; });
 
             var linkEnter = link.enter().append("g");
@@ -648,7 +658,7 @@ function Graph () {
                 .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id }) });
+                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });});
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
@@ -658,14 +668,47 @@ function Graph () {
                 .attr("opacity", 0);
 
             link.exit().select("marker").transition().duration(shortDuration)
-                .attr("fill-opacity", 0)
+                .attr("fill-opacity", 0);
 
             link.exit().transition().duration(shortDuration).remove();
         }
 
-        return {
-            openFragment: openFragment,
-            closeFragment: closeFragment
-        };
+        Graph.prototype.draw = draw;
     };
-};
+
+    Graph.prototype.openFragment = function(nodeId) {
+        var self = this;
+
+        self.expandNode(nodeId);
+        self.state.focus = nodeId;
+        fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.closeFragment = function(nodeId) {
+        var self = this;
+
+        self.state.focus = "";
+        self.reduceNode(nodeId);
+        self.openOverview();
+
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.unfocus = function() {
+        var self = this;
+
+        self.state.focus = "";
+        var newD3data = self.generateD3data();
+        self.draw(newD3data, false);
+    };
+
+    Graph.prototype.openOverview = function() {
+        var self = this;
+        var allFragments = _.pluck(self.queryPlan.physicalPlan.plan.fragments, 'fragmentIndex');
+        manyLineCharts(self.chartElement, allFragments, self.queryPlan, self);
+    };
+}

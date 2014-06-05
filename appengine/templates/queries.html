@@ -15,7 +15,7 @@
 					<th>#</th>
 					<th>Logical plan</th>
 					<th>Status</th>
-					<th>Profiling</th>
+					<th></th>
 					<th>Time elapsed</th>
 					<th>Finished</th>
 				</tr>
@@ -28,14 +28,14 @@
 				<td>
 					{% if q.profilingMode %}
 						{% if q.status == 'SUCCESS' %}
-							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-tasks" title="Visualization of query profiling" data-toggle="tooltip"></a>
+							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>
 						{% elif q.status in ['RUNNING', 'ACCEPTED'] %}
 							<span class="glyphicon glyphicon-tasks" title="Visualization will be available when the query has finished" data-toggle="tooltip"></span>
 						{% else %}
 							<span class="glyphicon glyphicon-tasks" title="Visualization not available for failed queries" data-toggle="tooltip"></span>
 						{% endif %}
 					{% else %}
-						-
+						<span title="Profiling not enabled for this query" data-toggle="tooltip">-</span>
 					{% endif %}
 				</td>
 				<td class="query-elapsed">{{q.elapsedStr}}</td>
