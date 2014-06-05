@@ -62,7 +62,6 @@ function optimizeplan() {
     type : 'physical',
     language : editorLanguage,
     multiway_join: $("#multiway-join").is(':checked')
-    language : editorLanguage,
   });
   var request = $.getJSON(url).success(function(queryPlan) {
     var i = 0;
