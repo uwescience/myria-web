@@ -14,7 +14,7 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaAlgebra
+from raco.language import MyriaLDTreeAlgebra, MyriaHyperCubeAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -51,11 +51,22 @@ except:
 QUERIES_PER_PAGE = 25
 
 
-def get_plan(query, language, plan_type, connection):
+def get_plan(query, language, plan_type, connection,
+             multiway_join=False):
+    catalog = None
+    if multiway_join:
+        catalog = MyriaCatalog(connection)
+    if multiway_join:
+        assert(catalog.get_num_servers())
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
+
+    if multiway_join:
+        target_algebra = MyriaHyperCubeAlgebra(catalog)
+    else:
+        target_algebra = MyriaLDTreeAlgebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -64,17 +75,18 @@ def get_plan(query, language, plan_type, connection):
             raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
-        dlog.optimize(target=MyriaAlgebra, eliminate_common_subexpressions=False)
+        dlog.optimize(target=target_algebra)
         if plan_type == 'physical':
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
     elif language in ["myrial", "sql"]:
-        # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
-        # .. and App Engine uses multiple threads.
+        # We need a (global) lock on the Myrial parser because yacc
+        # .. is not Threadsafe and App Engine uses multiple threads.
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
-        processor = MyrialInterpreter.StatementProcessor(MyriaCatalog(connection))
+        processor = MyrialInterpreter.StatementProcessor(
+            MyriaCatalog(connection), multiway_join=multiway_join)
         processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.get_logical_plan()
@@ -92,8 +104,8 @@ def get_logical_plan(query, language, connection):
     return get_plan(query, language, 'logical', connection)
 
 
-def get_physical_plan(query, language, connection):
-    return get_plan(query, language, 'physical', connection)
+def get_physical_plan(query, language, connection, multiway_join=False):
+    return get_plan(query, language, 'physical', connection, multiway_join)
 
 
 def format_rule(expressions):
@@ -114,6 +126,15 @@ def get_datasets(connection):
 class MyriaCatalog:
     def __init__(self, connection):
         self.connection = connection
+        self.cached = {
+            "public:adhoc:actor_a_id": 1,
+            "public:adhoc:actor_film": 1000000,
+            "public:adhoc:perform_film": 1000000,
+            "public:adhoc:actor_b_id": 1,
+            "public:adhoc:perform_film": 1000000,
+            "public:adhoc:perf_actor": 1000000,
+            "public:adhoc:obj_name": 100000000
+        }
 
     def get_scheme(self, rel_key):
         relation_args = {
@@ -122,13 +143,26 @@ class MyriaCatalog:
             'relationName': rel_key.relation
         }
         if not self.connection:
-            raise ValueError("no schema for relation %s because no connection" % rel_key)
+            raise ValueError(
+                "no schema for relation %s because no connection" % rel_key)
         try:
             dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
             raise ValueError(rel_key)
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
+
+    def get_num_servers(self):
+        if not self.connection:
+            raise Exception("no connection.")
+        return len(self.connection.workers_alive())
+
+    def num_tuples(self, rel_key):
+        key = "{}:{}:{}".format(
+            rel_key.user, rel_key.program, rel_key.relation)
+        if key in self.cached:
+            return self.cached[key]
+        return 10000
 
 
 class MyriaHandler(webapp2.RequestHandler):
@@ -390,11 +424,16 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
+        multiway_join = self.request.get("multiway_join", False)
         try:
-            optimized = get_physical_plan(query, language, self.app.connection)
+            if multiway_join == 'false':
+                multiway_join = False
+            optimized = get_physical_plan(
+                query, language, self.app.connection, multiway_join)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
-            self.response.write("Error 400 (Bad Request): Relation %s not found" % str(e))
+            self.response.write(
+                "Error 400 (Bad Request): Relation %s not found" % str(e))
             self.response.status = 400
             return
 
@@ -405,26 +444,33 @@ class Optimize(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
+
 class Compile(MyriaHandler):
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
         query = self.request.get("query")
         language = self.request.get("language")
+        multiway_join = self.request.get("multiway_join", False)
 
-        cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
-
+        cached_logicalplan = str(get_logical_plan(
+            query, language, self.app.connection))
+        if multiway_join == 'false':
+            multiway_join = False
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, self.app.connection)
+        physicalplan = get_physical_plan(
+            query, language, self.app.connection, multiway_join)
 
         # Get the Catalog needed to get schemas for compiling the query
         catalog = MyriaCatalog(conn)
         try:
-            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+            compiled = compile_to_json(
+                query, cached_logicalplan, physicalplan, catalog)
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
-            self.response.write('Error 503 (Unavailable): Unable to connect to REST server')
+            self.response.write(
+                'Error 503 (Unavailable): Unable to connect to REST server')
             return
 
         self.response.headers['Content-Type'] = 'application/json'
@@ -443,17 +489,23 @@ class Execute(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         profile = self.request.get("profile", False)
+        multiway_join = self.request.get("multiway_join", False)
+        if multiway_join == 'false':
+            multiway_join = False
 
-        cached_logicalplan = str(get_logical_plan(query, language, self.app.connection))
+        cached_logicalplan = str(get_logical_plan(
+            query, language, self.app.connection))
 
         try:
             # Generate physical plan
-            physicalplan = get_physical_plan(query, language, self.app.connection)
+            physicalplan = get_physical_plan(
+                query, language, self.app.connection, multiway_join)
 
             # Get the Catalog needed to get schemas for compiling the query
             catalog = MyriaCatalog(conn)
             # .. and compile
-            compiled = compile_to_json(query, cached_logicalplan, physicalplan, catalog)
+            compiled = compile_to_json(
+                query, cached_logicalplan, physicalplan, catalog)
 
             compiled['profilingMode'] = profile
 
@@ -492,14 +544,19 @@ class Execute(MyriaHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
 
+
 class Dot(MyriaHandler):
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
+        multiway_join = self.request.get("multiway_join", False)
+        if multiway_join == 'false':
+            multiway_join = False
 
-        plan = get_plan(query, language, plan_type, self.app.connection)
+        plan = get_plan(
+            query, language, plan_type, self.app.connection, multiway_join)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
@@ -510,7 +567,7 @@ class Dot(MyriaHandler):
 
 
 class Application(webapp2.WSGIApplication):
-    def __init__(self, debug=True, hostname='vega.cs.washington.edu', port=1776):
+    def __init__(self, debug=True, hostname='dbserver02.cs.washington.edu', port=10032):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),

@@ -23,7 +23,8 @@ function getplan() {
   var query = editor.getValue();
   var request = $.post("plan", {
     query : query,
-    language : editorLanguage
+    language : editorLanguage,
+    multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
@@ -42,15 +43,23 @@ function getplan() {
 function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
+  var multiway_join_checked = false
+  if($("#multiway-join").is(':checked')){
+    multiway_join_checked = true
+  }
+
   var request = $.post("optimize", {
     query : query,
-    language : editorLanguage
+    language : editorLanguage,
+    multiway_join: multiway_join_checked
   });
+  console.log($("#multiway-join").is(':checked'));
   handleerrors(request, "#optimized");
   var request = $.post("dot", {
     query : query,
     type : 'physical',
-    language : editorLanguage
+    language : editorLanguage,
+    multiway_join: $("#multiway-join").is(':checked')
   });
   request.success(function(dot) {
     var result = Viz(dot, "svg");
@@ -65,6 +74,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
+    multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -135,7 +145,8 @@ function executeplan() {
     data : {
       query : query,
       language : editorLanguage,
-      profile: $("#profile-enabled").is(':checked')
+      profile: $("#profile-enabled").is(':checked'),
+      multiway_join: $("#multiway-join").is(':checked')
     },
     statusCode : {
       200 : displayQueryStatus,
