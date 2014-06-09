@@ -42,8 +42,8 @@ justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
 store(T2, JustX);'''
 
-phytoplankton = '''OppData = scan(armbrustlab:seaflow:all_opp_v3);
-VctData = scan(armbrustlab:seaflow:all_vct);
+phytoplankton = '''OppData = scan(public:adhoc:all_opp_v3);
+VctData = scan(public:adhoc:all_vct);
 
 OppWithPop = select opp.*, vct.pop
              from OppData as opp,
