@@ -44,10 +44,7 @@ function optimizeplan() {
   $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
-  var multiway_join_checked = false
-  if($("#multiway-join").is(':checked')){
-    multiway_join_checked = true
-  }
+  var multiway_join_checked = $("#multiway-join").is(':checked');
 
   var request = $.post("optimize", {
     query : query,
