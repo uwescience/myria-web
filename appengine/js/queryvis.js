@@ -72,6 +72,7 @@ var animationDuration = 500,
 var dpi = 96;
 
 var customTimeFormatD3 = d3.time.format.utc.multi([
+  [".%L sec", function(d) { return d.getMilliseconds() && !d.getSeconds(); }],
   ["%S.%L sec", function(d) { return d.getMilliseconds(); }],
   ["%S sec", function(d) { return d.getSeconds(); }],
   ["%M min", function(d) { return d.getMinutes(); }],
@@ -151,7 +152,7 @@ var defaultNumSteps = 1000;
 
 // if a range longer than this time is requests in the fragment visualization, then the
 // data is limited to root operators
-var maxTimeForDetails = 30 * 1e9;
+var maxTimeForDetails = 100 * 1e9;
 
 // reconstruct all data, the data from myria has missing values where no workers were active
 function reconstructFullData(incompleteData, start, end, step, nested) {

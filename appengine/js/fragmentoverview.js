@@ -83,7 +83,9 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
 
     var yAxis = d3.svg.axis()
         .scale(y)
+        .ticks(_.min([numWorkers, 5]))
         .tickFormat(d3.format("d"))
+        .tickSubdivide(0)
         .orient("left");
 
     var area = d3.svg.area()
@@ -179,7 +181,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
     function fetchData(range) {
         var start = range[0],
             end = range[1];
-        var step = Math.floor((end - start)/width);
+        var step = Math.floor((end - start) / width);
 
         var url = templates.urls.histogram({
             myria: myriaConnection,

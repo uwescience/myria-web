@@ -61,7 +61,9 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     var yAxis = d3.svg.axis()
         .scale(y)
+        .ticks(_.min([numWorkers, 10]))
         .tickFormat(d3.format("d"))
+        .tickSubdivide(0)
         .orient("left");
 
     var brush = d3.svg.brush()
@@ -492,6 +494,10 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
             minLength: Math.floor(0.5*(range[1] - range[0])/width)
         });
 
+         if (tooLarge) {
+            alert("We are only showing events for the root operators because the selected range is too long.");
+         }
+
         d3.csv(url, function(d) {
             d.workerId = +d.workerId;
             d.startTime = +d.startTime;
@@ -601,31 +607,11 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         var titleEnter = title.enter()
             .append("g")
             .style("opacity", 0)
-            .attr("transform", function(d) {
-                return "translate(0," + (y(d.workerId) + y.rangeBand()/2) + ")";
-            })
             .style("text-anchor", "begin")
             .attr("class", "title");
 
         titleEnter.append("text")
-            .attr("dx", -18)
-            .attr("font-family", "Glyphicons Halflings")
-            .attr("font-size", "16px")
-            .attr("width", 20)
-            .attr("height", 20)
-            .attr("dy", 8)
-            .attr("class", "icon")
-            .style("cursor", "pointer");
-
-        var titleTextEnter = title.append("g")
-           .attr("class", "title-text");
-
-        titleTextEnter.append("text")
             .attr("class", "title");
-
-        titleTextEnter.append("text")
-            .attr("dy", "1.2em")
-            .attr("class", "subtitle");
 
         title
             .transition()
@@ -638,12 +624,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         title.select("text.title")
             .text(function(d) {
                 return d.workerId;
-            })
-            .attr("class", "title");
-
-        //title.select("text.subtitle")
-        //    .text(function(d) { return  d.states[0].name; })
-        //    .attr("class", "subtitle");
+            });
 
         title.exit()
             .transition()
