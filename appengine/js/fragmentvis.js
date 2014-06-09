@@ -514,11 +514,18 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
     function redrawLanes(data, range) {
         x.domain(range);
 
+        y.domain(_.sortBy(_.uniq(_.pluck(data, "workerId"))));
+        y.rangeRoundBands([50 * y.domain().length, 0], 0.2, 0.1);
+
         var lane = lanes
             .selectAll(".worker")
             .data(data, function(d) { return d.workerId; });
         lane.enter().append("g").attr("class", "worker");
-        lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+
+        lane
+            .transition().duration(animationDuration)
+            .attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+
         lane.exit().remove();
 
         var box = lane.selectAll("rect")
@@ -533,11 +540,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return opToColor[d.opId]; })
-            .attr("class", "box")
-            .attr("height", getHeight)
-            .attr("y", function(d) {
-                return y.rangeBand() - getHeight(d);
-            });
+            .attr("class", "box");
 
         box.on('mouseover', function(d) {
             d3.select(this)
@@ -578,6 +581,10 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
             .style("opacity", 1)
             .attr("width", function(d) {
                 return x(d.endTime) - x(d.startTime);
+            })
+            .attr("height", getHeight)
+            .attr("y", function(d) {
+                return y.rangeBand() - getHeight(d);
             });
 
         box.exit().remove();
