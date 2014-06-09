@@ -240,26 +240,6 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
                 .datum(data)
                 .attr("d", area);
 
-            callback(data);
-        });
-    }
-
-    var wholeRange;
-
-    // initially fetch data and load minimap
-    var url = templates.urls.range({
-            myria: myriaConnection,
-            query: queryId,
-            fragment: fragmentId
-        });
-    d3.csv(url, function(d) {
-        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
-        fetchData(wholeRange, function(data) {
-            x2.domain(wholeRange);
-            y2.domain([0, numWorkers]);
-
-            plot.select(".y.axis").call(yAxis);
-
             plot.on("mousemove", function (e) {
                 ruler
                     .style("display", "block")
@@ -289,6 +269,26 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
                     .attr("x", bbox.x - 5)
                     .attr("y", bbox.y - 3);
             });
+
+            callback(data);
+        });
+    }
+
+    var wholeRange;
+
+    // initially fetch data and load minimap
+    var url = templates.urls.range({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId
+        });
+    d3.csv(url, function(d) {
+        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
+        fetchData(wholeRange, function(data) {
+            x2.domain(wholeRange);
+            y2.domain([0, numWorkers]);
+
+            plot.select(".y.axis").call(yAxis);
 
             mini_brush.select(".x.axis").call(xAxis2);
             mini_brush.select(".area")
