@@ -83,7 +83,9 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
 
     var yAxis = d3.svg.axis()
         .scale(y)
+        .ticks(_.min([numWorkers, 5]))
         .tickFormat(d3.format("d"))
+        .tickSubdivide(0)
         .orient("left");
 
     var area = d3.svg.area()
@@ -135,7 +137,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
     svg.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", 5)
-        .attr("dy", -25)
+        .attr("dy", -30)
         .style("font-size", 9)
         .attr("x", -height)
         .style("text-anchor", "start")
@@ -179,7 +181,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
     function fetchData(range) {
         var start = range[0],
             end = range[1];
-        var step = Math.floor((end - start)/width);
+        var step = Math.floor((end - start) / width);
 
         var url = templates.urls.histogram({
             myria: myriaConnection,
@@ -241,6 +243,35 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                 .attr("class", "lane")
                 .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
                 .each(multiple);
+
+            lanes.each(function(op) {
+                var lane = d3.select(this);
+                lane.on("mousemove", function (e) {
+                    var xPixels = d3.mouse(this)[0],
+                        xValue = Math.round(x.invert(xPixels));
+
+                    var i = bisectTime(op.values, xValue),
+                        d0 = op.values[i - 1];
+
+                    if (d0 === undefined) {
+                        return;
+                    }
+
+                    svg
+                        .select(".rulerInfo")
+                        .style("opacity", 1)
+                        .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
+
+                    tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+                    var bbox = tttext.node().getBBox();
+                    tooltip.select("rect")
+                        .attr("width", bbox.width + 10)
+                        .attr("height", bbox.height + 6)
+                        .attr("x", bbox.x - 5)
+                        .attr("y", bbox.y - 3);
+                });
+            });
 
             lanes.select(".area").attr("d", function(op) {
                 return area(op.values);
@@ -320,32 +351,6 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                     svg
                         .select(".rulerInfo")
                         .style("opacity", 0);
-                });
-
-                lane.on("mousemove", function (e) {
-                    var xPixels = d3.mouse(this)[0],
-                        xValue = Math.round(x.invert(xPixels));
-
-                    var i = bisectTime(op.values, xValue),
-                        d0 = op.values[i - 1];
-
-                    if (d0 === undefined) {
-                        return;
-                    }
-
-                    svg
-                        .select(".rulerInfo")
-                        .style("opacity", 1)
-                        .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
-
-                    tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
-
-                    var bbox = tttext.node().getBBox();
-                    tooltip.select("rect")
-                        .attr("width", bbox.width + 10)
-                        .attr("height", bbox.height + 6)
-                        .attr("x", bbox.x - 5)
-                        .attr("y", bbox.y - 3);
                 });
 
                 /* Area */

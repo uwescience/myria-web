@@ -71,16 +71,15 @@ var animationDuration = 500,
 
 var dpi = 96;
 
-function timeFormat(formats) {
-  return function(date) {
-    var i = formats.length - 1, f = formats[i];
-    while (!f[1](date)) f = formats[--i];
-    return f[0](date);
-  };
-}
+var customTimeFormatD3 = d3.time.format.utc.multi([
+  [".%L sec", function(d) { return d.getMilliseconds() && !d.getSeconds(); }],
+  ["%S.%L sec", function(d) { return d.getMilliseconds(); }],
+  ["%S sec", function(d) { return d.getSeconds(); }],
+  ["%M min", function(d) { return d.getMinutes(); }],
+  ["%H", function(d) { return true; }]
+]);
 
-function timeFormatNs(formats) {
-  return function(date) {
+function customTimeFormat(date) {
     if (date === 0) {
         return "0";
     }
@@ -88,16 +87,8 @@ function timeFormatNs(formats) {
         return (date % 1e6).toExponential(2) + " ns";
     }
 
-    return timeFormat(formats)(new Date(date/1e6 + new Date().getTimezoneOffset() * 6e4));
-  };
+    return customTimeFormatD3(new Date(date/1e6));
 }
-
-var customTimeFormat = timeFormatNs([
-  [d3.time.format("%H:%M"), function(d) { return true; }],
-  [d3.time.format("%H:%M:%S"), function(d) { return d.getMinutes(); }],
-  [d3.time.format("%S s"), function(d) { return d.getSeconds(); }],
-  [d3.time.format(".%L s"), function(d) { return d.getMilliseconds(); }]
-]);
 
 String.prototype.hashCode = function(){
     var hash = 0, i, char;
@@ -161,7 +152,7 @@ var defaultNumSteps = 1000;
 
 // if a range longer than this time is requests in the fragment visualization, then the
 // data is limited to root operators
-var maxTimeForDetails = 30 * 1e9;
+var maxTimeForDetails = 100 * 1e9;
 
 // reconstruct all data, the data from myria has missing values where no workers were active
 function reconstructFullData(incompleteData, start, end, step, nested) {

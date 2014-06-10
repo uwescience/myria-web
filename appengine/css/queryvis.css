@@ -31,7 +31,7 @@ html {
 }
 
 .table-responsive table tr td:nth-child(2) {
-  max-width: 500px;
+  max-width: 250px;
   word-wrap: break-word;
 }
 
