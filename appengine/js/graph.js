@@ -434,7 +434,7 @@ function Graph () {
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
         var zoom = d3.behavior.zoom()
-            .scaleExtent([0.5, 4])
+            .scaleExtent([0.3, 2])
             .on('zoom', onzoom);
 
         var svg = graphElement
