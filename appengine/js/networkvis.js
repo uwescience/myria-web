@@ -124,7 +124,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
         var initial = true;
 
-        function draw (rawData, sourceList, destinationList, orderBy) {
+        function draw(rawData, sourceList, destinationList, orderBy) {
             sourceList = _.sortBy(sourceList, function(d) {return d[orderBy];});
             destinationList = _.sortBy(destinationList, function(d) {return d[orderBy];});
             var data = _.values(rawData),
@@ -150,6 +150,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
             pixel.enter()
                 .append('rect')
+                .attr('class', 'pixel')
                 .attr('width', columnScale.rangeBand())
                 .attr('height', rowScale.rangeBand())
                 .style('fill',function(d){
