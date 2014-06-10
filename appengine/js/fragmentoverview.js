@@ -113,7 +113,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
     defs.append("clipPath")
         .attr("id", "textclip")
       .append("rect")
-        .attr("width", margin.left - 28)
+        .attr("width", margin.left - 34)
         .attr("height", height)
         .attr("y", -10);
 
@@ -285,8 +285,50 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                     .call(yAxis);
 
                 var t = lane.append("g")
-                    .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 10) + ")"; })
-                    .attr("clip-path", "url(#textclip)")
+                    .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 20) + ")"; })
+                    .attr("clip-path", "url(#textclip)");
+
+                t.append("text")
+                    .style("font-size", 12)
+                    .attr("class", "strong")
+                    .attr("x", 10)
+                    .attr("y", 8)
+                    .attr("dx", function(d) {
+                        return opIndex[d.key].level * 5;
+                    })
+                    .text(function(d) {
+                        return opIndex[d.key].opName;
+                    });
+
+                t.append("text")
+                    .style("font-size", 11)
+                    .attr("x", 10)
+                    .attr("dx", function(d) {
+                        return opIndex[d.key].level * 5;
+                    })
+                    .attr("dy", "2em")
+                    .attr("class", "muted")
+                    .text(function(d) {
+                        return opIndex[d.key].opType;
+                    });
+
+                // avoid ruler over op texts
+                t.append("rect")
+                    .attr("width", margin.left)
+                    .attr("height", 32)
+                    .attr("y", -10)
+                    .style("opacity", 0)
+                    .on("mousemove", function () {
+                        d3.select(".ruler").style("display", "none");
+                        d3.event.stopPropagation();
+                    });
+
+                t.append("circle")
+                    .attr("r", 4)
+                    .attr("cx", function(d) {
+                        return opIndex[d.key].level * 5 + 5;
+                    }).attr("cy", -5)
+                    .attr("class", "rect-info")
                     .popover(function(d) {
                         var body = '';
                         _.each(opIndex[d.key].rawData, function(value, key){
@@ -306,40 +348,10 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                             title: templates.strong({text: opIndex[d.key].opName}),
                             content: templates.table({body: body})
                         };
+                    }).on("mousemove", function () {
+                        d3.select(".ruler").style("display", "none");
+                        d3.event.stopPropagation();
                     });
-
-                t.append("text")
-                    .style("font-size", 12)
-                    .attr("class", "strong")
-                    .attr("dx", function(d) {
-                        return opIndex[d.key].level * 5;
-                    })
-                    .text(function(d) {
-                        return opIndex[d.key].opName;
-                    });
-
-                t.append("text")
-                    .style("font-size", 11)
-                    .attr("dx", function(d) {
-                        return opIndex[d.key].level * 5;
-                    })
-                    .attr("dy", "1.8em")
-                    .attr("class", "muted")
-                    .text(function(d) {
-                        return opIndex[d.key].opType;
-                    });
-
-                // for hover
-                t.append("rect")
-                    .attr("width", margin.left)
-                    .attr("height", 32)
-                    .attr("y", -10)
-                    .style("opacity", 0)
-                // avoid ruler over op texts
-                .on("mousemove", function () {
-                    d3.select(".ruler").style("display", "none");
-                    d3.event.stopPropagation();
-                });
 
                 /* Ruler */
                 lane.append("rect")

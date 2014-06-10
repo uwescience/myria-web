@@ -136,7 +136,7 @@ svg .help-text {
   cursor: pointer;
 }
 
-.interactive .cluster:hover rect, .interactive .fragment:hover rect {
+.interactive .cluster:hover .node-rect, .interactive .fragment:hover .node-rect {
   transition: stroke .1s, fill .1s;
   stroke: orange;
   fill: #ddd;
@@ -148,8 +148,12 @@ svg .help-text {
 
 .query-graph .node text {
   fill: black;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   font-size: 14px;
+}
+
+.query-graph .node .node-label rect, .map .bg-rect {
+  fill: white;
+  opacity: 0.8;
 }
 
 .query-graph .link > path {
@@ -316,8 +320,4 @@ svg .help-text {
   text-overflow: ellipsis;
   position: absolute;
   text-indent: 4px;
-}
-
-.map text {
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
