@@ -61,7 +61,9 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     var yAxis = d3.svg.axis()
         .scale(y)
+        .ticks(_.min([numWorkers, 10]))
         .tickFormat(d3.format("d"))
+        .tickSubdivide(0)
         .orient("left");
 
     var brush = d3.svg.brush()
@@ -240,26 +242,6 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
                 .datum(data)
                 .attr("d", area);
 
-            callback(data);
-        });
-    }
-
-    var wholeRange;
-
-    // initially fetch data and load minimap
-    var url = templates.urls.range({
-            myria: myriaConnection,
-            query: queryId,
-            fragment: fragmentId
-        });
-    d3.csv(url, function(d) {
-        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
-        fetchData(wholeRange, function(data) {
-            x2.domain(wholeRange);
-            y2.domain([0, numWorkers]);
-
-            plot.select(".y.axis").call(yAxis);
-
             plot.on("mousemove", function (e) {
                 ruler
                     .style("display", "block")
@@ -289,6 +271,26 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
                     .attr("x", bbox.x - 5)
                     .attr("y", bbox.y - 3);
             });
+
+            callback(data);
+        });
+    }
+
+    var wholeRange;
+
+    // initially fetch data and load minimap
+    var url = templates.urls.range({
+            myria: myriaConnection,
+            query: queryId,
+            fragment: fragmentId
+        });
+    d3.csv(url, function(d) {
+        wholeRange = [+d[0].min_startTime, +d[0].max_endTime];
+        fetchData(wholeRange, function(data) {
+            x2.domain(wholeRange);
+            y2.domain([0, numWorkers]);
+
+            plot.select(".y.axis").call(yAxis);
 
             mini_brush.select(".x.axis").call(xAxis2);
             mini_brush.select(".area")
@@ -492,6 +494,10 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
             minLength: Math.floor(0.5*(range[1] - range[0])/width)
         });
 
+         if (tooLarge) {
+            alert("We are only showing events for the root operators because the selected range is too long.");
+         }
+
         d3.csv(url, function(d) {
             d.workerId = +d.workerId;
             d.startTime = +d.startTime;
@@ -514,11 +520,18 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
     function redrawLanes(data, range) {
         x.domain(range);
 
+        y.domain(_.sortBy(_.uniq(_.pluck(data, "workerId"))));
+        y.rangeRoundBands([50 * y.domain().length, 0], 0.2, 0.1);
+
         var lane = lanes
             .selectAll(".worker")
             .data(data, function(d) { return d.workerId; });
         lane.enter().append("g").attr("class", "worker");
-        lane.attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+
+        lane
+            .transition().duration(animationDuration)
+            .attr("transform", function(d) { return "translate(0," +  y(d.workerId) + ")"; });
+
         lane.exit().remove();
 
         var box = lane.selectAll("rect")
@@ -533,11 +546,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return opToColor[d.opId]; })
-            .attr("class", "box")
-            .attr("height", getHeight)
-            .attr("y", function(d) {
-                return y.rangeBand() - getHeight(d);
-            });
+            .attr("class", "box");
 
         box.on('mouseover', function(d) {
             d3.select(this)
@@ -578,6 +587,10 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
             .style("opacity", 1)
             .attr("width", function(d) {
                 return x(d.endTime) - x(d.startTime);
+            })
+            .attr("height", getHeight)
+            .attr("y", function(d) {
+                return y.rangeBand() - getHeight(d);
             });
 
         box.exit().remove();
@@ -594,31 +607,11 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         var titleEnter = title.enter()
             .append("g")
             .style("opacity", 0)
-            .attr("transform", function(d) {
-                return "translate(0," + (y(d.workerId) + y.rangeBand()/2) + ")";
-            })
             .style("text-anchor", "begin")
             .attr("class", "title");
 
         titleEnter.append("text")
-            .attr("dx", -18)
-            .attr("font-family", "Glyphicons Halflings")
-            .attr("font-size", "16px")
-            .attr("width", 20)
-            .attr("height", 20)
-            .attr("dy", 8)
-            .attr("class", "icon")
-            .style("cursor", "pointer");
-
-        var titleTextEnter = title.append("g")
-           .attr("class", "title-text");
-
-        titleTextEnter.append("text")
             .attr("class", "title");
-
-        titleTextEnter.append("text")
-            .attr("dy", "1.2em")
-            .attr("class", "subtitle");
 
         title
             .transition()
@@ -631,12 +624,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         title.select("text.title")
             .text(function(d) {
                 return d.workerId;
-            })
-            .attr("class", "title");
-
-        //title.select("text.subtitle")
-        //    .text(function(d) { return  d.states[0].name; })
-        //    .attr("class", "subtitle");
+            });
 
         title.exit()
             .transition()

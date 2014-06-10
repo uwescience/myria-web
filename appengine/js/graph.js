@@ -434,7 +434,7 @@ function Graph () {
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
         var zoom = d3.behavior.zoom()
-            .scaleExtent([0.5, 4])
+            .scaleExtent([0.3, 2])
             .on('zoom', onzoom);
 
         var svg = graphElement
@@ -526,6 +526,7 @@ function Graph () {
                 .attr("class", function(d) { return "node " + d.type; });
 
             nodeEnter.append("rect")
+                .attr("class", "node-rect")
                 .attr("rx", 10)
                 .attr("ry", 10)
                 .attr("r", 10)
@@ -560,10 +561,10 @@ function Graph () {
 
             node.select("circle").transition().duration(animationDuration)
                 .attr("opacity", 1)
-                .attr("cx", function(d) { return (d.x+d.w) * dpi; })
+                .attr("cx", function(d) { return d.x * dpi; })
                 .attr("cy", function(d) { return d.y * dpi; });
 
-            node.select("rect").transition().duration(animationDuration)
+            node.select(".node-rect").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("x", function(d) { return d.x * dpi; })
                 .attr("y", function(d) { return d.y * dpi; })
@@ -572,36 +573,58 @@ function Graph () {
                 .attr("fill", function(d) { return d.color; })
                 .attr("stroke", function(d) { return d.stroke; });
 
-            nodeEnter
+            var nodeLabel = nodeEnter.append("g").attr("class", "node-label");
+
+            var textBackground = nodeLabel.filter(function(d) {
+                    return d.type !== "cluster";
+                }).append("rect")
+                .attr("opacity", function() {
+                    return initial ? 1 : 0;
+                })
+                .attr("height", 26)
+                .attr("y", "-1.2em")
+                .transition().duration(animationDuration)
+                .transition().duration(shortDuration)
+                .attr("opacity", 1);
+
+            nodeLabel
                 .append("text")
                 .attr("opacity", function() {
                     return initial ? 1 : 0;
                 })
                 .attr("text-anchor", "middle")
-                .attr("fill", "black");
+                .attr("fill", "black")
+                .attr("dy", "0.3em");
 
-            node.select("text")
+            node.select(".node-label text")
                 .text(function(d) {
                     return d.name;
-                }).attr("dy", function(d) {
-                    if (d.type !== "operator" && _.contains(self.state.opened, "f"+d.rawData.fragmentIndex)) {
-                        return  "0.8em";
-                    }
-                    return "0.35em";
+                })
+                .transition().duration(animationDuration)
+                .transition().duration(shortDuration)
+                .attr("opacity", 1);
+
+            textBackground
+                .attr("width", function(d) {
+                    return 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width;
+                }).attr("x", function(d) {
+                    return - 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width / 2;
                 });
 
-            node.select("text").transition().duration(animationDuration)
-                .attr("opacity", 1)
-                .attr("x", function(d) { return (d.x+d.w/2) * dpi; })
-                .attr("y", function(d) {
-                    if(d.type == "cluster") {
-                        return (d.y+padding*3/8) * dpi;
-                    } else {
-                        return (d.y+d.h/2) * dpi;
+            node.select(".node-label")
+                .transition().duration(function(d) {
+                    return initial ? 0 : animationDuration;
+                })
+                .attr("transform", function(d) {
+                    var y = (d.y+d.h/2) * dpi,
+                        x = (d.x+d.w/2) * dpi;
+                    if (d.type == "cluster") {
+                        y = (d.y+padding * 0.7) * dpi;
                     }
+                    return "translate(" + [x, y] + ")";
                 });
 
-            node.exit().select("rect").transition().duration(shortDuration)
+            node.exit().select(".node-rect").transition().duration(shortDuration)
                 .attr("opacity", 0);
 
             node.exit().select("text").remove();

@@ -15,7 +15,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
 
     var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.plan.fragments);
 
-    var margin = {top: 0, right: 0, bottom: 0, left: 0 },
+    var margin = {top: 5, right: 5, bottom: 5, left: 5 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
         height = 60 - margin.top - margin.bottom;
 
@@ -65,20 +65,27 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
 
         var op = svg.selectAll(".op").data(data)
           .enter().append("g")
-            .attr("class", "op");
+            .attr("class", "op")
+            .attr("transform", function(d) {
+                return "translate("+ [x(d.prevEnd), 0] +")"
+            });
 
         op.append("rect")
-            .attr("x", function(d) { return x(d.prevEnd); })
             .attr("width", function(d) { return x(d.share); })
             .attr("height", height)
-            .style("fill", function(d) { return opToColor[d.opId]; })
+            .style("fill", function(d) { return opToColor[d.opId]; });
 
-        op.append("text")
-            .attr("dx", 5)
-            .attr("dy", 20)
-            .attr("x", function(d) { return x(d.prevEnd); })
-            .style("fill", "black")
-            .text(function(d) { return d.name.substr(0, x(d.share)/5); })
+        var bgRect = op.append("rect")
+            .attr("class", "bg-rect")
+            .attr("height", 36)
+            .attr("x", 4)
+            .attr("y", 8);
+
+        op.append("circle")
+            .attr("r", 4)
+            .attr("cx", 4)
+            .attr("cy", 8)
+            .attr("class", "rect-info")
             .popover(function(d) {
                 var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.nanoTime)});
                 body += templates.row({key: "Time spent in this operator", value: customFullTimeFormat(d.timeWithoutChildren)});
@@ -101,11 +108,20 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
             });
 
         op.append("text")
-            .attr("dx", 5)
+            .attr("dx", 7)
+            .attr("dy", 20)
+            .style("fill", "black")
+            .text(function(d) { return d.name.substr(0, x(d.share)/5); });
+
+        op.append("text")
+            .attr("dx", 7)
             .attr("dy", 40)
-            .attr("x", function(d) { return x(d.prevEnd); })
             .style("fill", "black")
             .text(function(d) { return Math.round(100* d.timeWithoutChildren/rootTime) + " %"; });
+
+        bgRect.attr("width", function(d) {
+                return d3.select(this.parentNode).select("text").node().getBBox().width + 6;
+            });
 
         op.on('mouseover', function(d) {
             d3.select(this).select("rect")
