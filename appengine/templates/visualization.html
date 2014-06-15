@@ -33,6 +33,15 @@
 		<div class="col-md-7 col-lg-9">
 			<div class="panel panel-default">
 				<div class="panel-heading">
+		   			<h3 class="panel-title">Query Statistics</h3>
+			    </div>
+				<div class="panel-body">
+					<div class="stats">
+					</div>
+				</div>
+			</div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
 		   			<ol class="breadcrumb">
 						<li><a href="#" class="show-overview">Overview</a></li>
 						<li><span class="title-current">Fragment overview</span></li>
@@ -61,6 +70,7 @@
 	<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/operatorvis.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/querystats.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
 
@@ -83,6 +93,7 @@
 				theGraph.unfocus();
 				theGraph.openOverview();
 			});
+			updateQueryStats($('.stats'));
 		});
 	</script>
 {% endblock %}
