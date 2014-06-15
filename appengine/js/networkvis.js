@@ -321,7 +321,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
 var updateSummary = function(element, summary) {
     var items = "";
-    items += templates.defItem({key: "# Tuples", value: summary.numTuples});
+    items += templates.defItem({key: "# Tuples", value: Intl.NumberFormat().format(summary.numTuples)});
     items += templates.defItem({key: "Local tuples sent", value: summary.localTuples});
     items += templates.defItem({key: "Duration", value: customFullTimeFormat(summary.duration)});
     items += templates.defItem({key: "Tuples per second", value: (summary.numTuples / summary.duration * 1000000).toFixed(3)});
