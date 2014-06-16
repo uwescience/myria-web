@@ -10,14 +10,18 @@ var updateQueryStats = function(element){
             d.numTuples = +d.numTuples;
             return d;
         }, function (data) {
-            var totalTuple = 0;
-            for(var i=0, len=data.length; i<len; i++){
-                totalTuple += data[i].numTuples;
-            }
+            $(element.node()).empty();
+            var div = element.append("div")
+                .attr("class", "query-stats");
+            var h = div.append("h4")
+                .text("Query stats");
+            var totalTuple = data.reduce(function(a,b){
+                return a + b.numTuples;
+            }, 0);
             var items = "";
             items += templates.defItem({key: "Running time:", value: customFullTimeFormat(queryPlan.elapsedNanos)});
             items += templates.defItem({key: "# shuffled tuples:", value: Intl.NumberFormat().format(totalTuple)});
             var dl = templates.defList({items: items});
-            element.html(dl);
+            $(".query-stats").append(dl);
         });
 };
