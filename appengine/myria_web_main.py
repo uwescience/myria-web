@@ -19,7 +19,8 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco import scheme
-from examples import examples, demo3_examples
+from examples import examples
+from demo3_examples import demo3_examples
 from pagination import Pagination
 
 import myria
