@@ -1,6 +1,24 @@
 import os
 
 
+simple_sql = '''Dept = scan(public:adhoc:department);
+Emp = scan(public:adhoc:employee);
+
+Rich = select Emp.name, Dept.name as dept_name from Emp, Dept
+       where Emp.dept_id=Dept.id and Emp.salary > 500000;
+
+store(Rich, OUTPUT);'''
+
+simple_myrial = '''Dept = scan(public:adhoc:department);
+Emp = scan(public:adhoc:employee);
+
+EmpDept = [from Emp, Dept
+           where Emp.dept_id=Dept.id
+           emit Emp.*, Dept.name as dept_name];
+Rich = [from EmpDept where salary > 500000 emit name, dept_name];
+
+store(Rich, OUTPUT);'''
+
 phytoplankton = '''OppData = scan(public:adhoc:all_opp_v3);
 VctData = scan(public:adhoc:all_vct);
 
@@ -95,6 +113,8 @@ store(CoM, OUTPUT);
 """
 
 demo3_myr_examples = [
+    ('Simple SQL query', simple_sql),
+    ('Simple myrial query', simple_myrial),
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
     ('Geographic center of mass', center_of_mass),
     ('Pagerank', pagerank),
