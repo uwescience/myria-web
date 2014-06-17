@@ -87,8 +87,8 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
             .attr("cy", 8)
             .attr("class", "rect-info")
             .popover(function(d) {
-                var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.nanoTime)});
-                body += templates.row({key: "Time spent in this operator", value: customFullTimeFormat(d.timeWithoutChildren)});
+                var body = templates.row({key: "Overall runtime", value: customFullTimeFormat(d.nanoTime, false)});
+                body += templates.row({key: "Time spent in this operator", value: customFullTimeFormat(d.timeWithoutChildren, false)});
                 _.each(d.rawData, function(value, key){
                     if (key == 'operators') {
                         return;
