@@ -14,7 +14,7 @@ var updateQueryStats = function(element){
             var div = element.append("div")
                 .attr("class", "query-stats");
             var h = div.append("h4")
-                .text("Query stats");
+                .text("Query stats:");
             var totalTuple = data.reduce(function(a,b){
                 return a + b.numTuples;
             }, 0);
