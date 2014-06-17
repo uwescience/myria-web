@@ -4,7 +4,8 @@ import os
 simple_sql = '''Dept = scan(public:adhoc:department);
 Emp = scan(public:adhoc:employee);
 
-Rich = select Emp.name, Dept.name as dept_name from Emp, Dept
+Rich = select Emp.name, Dept.name as dept_name
+       from Emp, Dept
        where Emp.dept_id=Dept.id and Emp.salary > 500000;
 
 store(Rich, OUTPUT);'''
