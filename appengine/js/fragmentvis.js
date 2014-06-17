@@ -568,7 +568,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
                     }
                     content += ', ';
                 }
-                content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime) });
+                content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime, false) });
                 return content;
             });
         });
