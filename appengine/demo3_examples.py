@@ -53,6 +53,55 @@ while continue;
 store(Good, OUTPUT);
 """
 
+sigma_clipping_advanced = """Points = scan(public:adhoc:sc_points);
+
+aggs = [from Points emit sum(v) as _sum, sum(v*v) as sumsq,
+                         count(v) as cnt];
+newBad = empty(id:int, v:float);
+
+bounds = [from Points emit min(v) as lower, max(v) as upper];
+
+-- number of allowed standard deviations
+const Nstd: 2;
+
+def incremental_stdev(N, _sum, sumsq):
+  sqrt(1.0/(N*(N-1)) * (N * sumsq - _sum * _sum));
+
+do
+  -- Incrementally update aggs and stats
+  new_aggs = [from newBad emit sum(v) as _sum, sum(v*v) as sumsq,
+                               count(v) as cnt];
+  aggs = [from aggs, new_aggs
+          emit aggs._sum - new_aggs._sum as _sum,
+               aggs.sumsq - new_aggs.sumsq as sumsq,
+               aggs.cnt - new_aggs.cnt as cnt];
+
+  stats = [from aggs
+           emit _sum/cnt as mean,
+                incremental_stdev(cnt, _sum, sumsq) as std];
+
+  -- Compute the new bounds
+  newBounds = [from stats emit mean - Nstd * std as lower,
+                               mean + Nstd * std as upper];
+
+  newBad = [from Points, bounds, newBounds
+            where (newBounds.upper < v
+                   and v <= bounds.upper)
+               or (newBounds.lower > v
+                   and v >= bounds.lower)
+            emit Points.*];
+
+  bounds = newBounds;
+  continue = [from newBad emit count(v) > 0];
+while continue;
+
+output = [from Points, bounds
+          where Points.v > bounds.lower
+                and Points.v < bounds.upper
+          emit Points.*];
+store(output, OUTPUT);"""
+
+
 pagerank ="""const alpha: .85;
 const epsilon: .0001;
 
@@ -117,8 +166,9 @@ demo3_myr_examples = [
     ('Simple myrial query', simple_myrial),
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
     ('Geographic center of mass', center_of_mass),
+    ('Sigma-clipping (naive version)', sigma_clipping_naive),
+    ('Sigma-clipping (advanced version)', sigma_clipping_advanced),
     ('Pagerank', pagerank),
-    ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
 
 demo3_examples = { 'datalog' : [], 'sql': [],
