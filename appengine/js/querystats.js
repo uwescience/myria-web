@@ -19,7 +19,7 @@ var updateQueryStats = function(element){
                 return a + b.numTuples;
             }, 0);
             var items = "";
-            items += templates.defItem({key: "Running time:", value: customFullTimeFormat(queryPlan.elapsedNanos)});
+            items += templates.defItem({key: "Running time:", value: customFullTimeFormat(queryPlan.elapsedNanos, false)});
             items += templates.defItem({key: "# shuffled tuples:", value: Intl.NumberFormat().format(totalTuple)});
             var dl = templates.defList({items: items});
             $(".query-stats").append(dl);
