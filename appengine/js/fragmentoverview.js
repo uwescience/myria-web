@@ -3,6 +3,9 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
 
     $(element.node()).empty();
 
+    stats = element.append("div").attr("class", "stats");
+    updateQueryStats(stats);
+
     charts = [];
 
     function changeRange(range) {

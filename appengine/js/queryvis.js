@@ -109,11 +109,16 @@ function debug(d) {
     console.log(d);
 }
 
-function customFullTimeFormat(d) {
-    var str = "", ms, ns, s, m, h, x;
+function customFullTimeFormat(d, detail) {
+    var str = "", ns, us, ms, s, m, h, x, done=false;
+    if (detail === undefined) {
+        detail = true;
+    }
 
-    x = divmod(d, 1e6);
+    x = divmod(d, 1000);
     ns = x[1];
+    x = divmod(x[0], 1000);
+    us = x[1];
     x = divmod(x[0], 1000);
     ms = x[1];
     x = divmod(x[0], 60);
@@ -123,22 +128,41 @@ function customFullTimeFormat(d) {
     h = x[0];
 
     if (h) {
-        str += h + " H ";
+        str = h + " h ";
     }
     if (m) {
         str += m + " m ";
+        if (!detail && h) {
+            return str;
+        }
     }
     if (s) {
         str += s + " s ";
+        if (!detail && m) {
+            return str;
+        }
     }
     if (ms) {
         if (s) {
             str += d3.format("03d")(ms) + " ms ";
+            if (!detail) {
+                return str;
+            }
         } else {
-            str += ms + " ms ";
+            str = ms + " ms ";
         }
     }
-    str += d3.format("06d")(ns) + " ns ";
+    if (us) {
+        if (ms) {
+            str += d3.format("03d")(us) + " µs ";
+            if (!detail) {
+                return str;
+            }
+        } else {
+            str = us + " µs ";
+        }
+    }
+    str += d3.format("03d")(ns) + " ns ";
     return str;
 }
 
