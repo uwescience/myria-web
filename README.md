@@ -10,7 +10,7 @@ This is a Google App Engine app.
 You must have the [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) installed locally.  During setup, be sure to select the option to create symbolic links to the Python utilities so that they are available from the command line.
 
 # Initial setup
-1. This project uses the [UW eScience Datalogcompiler](https://github.com/uwescience/datalogcompiler) project. We have configured it as a submodule. After cloning this repository, you must run:
+1. This project uses the [UW eScience Raco](https://github.com/uwescience/raco) project. We have configured it as a submodule. After cloning this repository, you must run:
 
   ```sh
   git submodule init
