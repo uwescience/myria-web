@@ -69,12 +69,12 @@ function optimizeplan() {
         g.render(d3.select('#myria_svg'));
       }
 
-      rerender();
-
       // rerender when opening tab because of different space available
       $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
       $('#relational-plan').collapse('hide');
       $('#physical-plan').collapse('show');
+      rerender();
+
     } catch (err) {
       $('#myria_svg').empty();
       $('#optimized').empty();
