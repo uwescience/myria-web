@@ -25,7 +25,7 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
   scripts/myrial examples/reachable.myl
   ```
   
-  in the `datalogcompiler` subdirectory.
+  in the `raco` subdirectory.
   
 3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. From the menu select Add Existing Application, and add the `myria-web/appengine` directory.
 
