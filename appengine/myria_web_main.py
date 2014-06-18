@@ -14,10 +14,12 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaLDTreeAlgebra, MyriaHyperCubeAlgebra
+from raco.language import MyriaLeftDeepTreeAlgebra, MyriaHyperCubeAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
+from raco.catalog import MyriaCatalog
+from raco.algebra import default_cardinality
 from raco import scheme
 from examples import examples, demo3_examples
 from pagination import Pagination
@@ -58,7 +60,7 @@ def get_plan(query, language, plan_type, connection,
              multiway_join=False):
     catalog = None
     if multiway_join:
-        catalog = MyriaCatalog(connection)
+        catalog = MyriaCatalogGetter(connection)
     if multiway_join:
         assert(catalog.get_num_servers())
     # Fix up the language string
@@ -69,7 +71,7 @@ def get_plan(query, language, plan_type, connection,
     if multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
-        target_algebra = MyriaLDTreeAlgebra()
+        target_algebra = MyriaLeftDeepTreeAlgebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -90,7 +92,7 @@ def get_plan(query, language, plan_type, connection,
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor(
-            MyriaCatalog(connection), multiway_join=multiway_join)
+            MyriaCatalogGetter(connection), multiway_join=multiway_join)
         processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.get_logical_plan()
@@ -127,19 +129,11 @@ def get_datasets(connection):
         return []
 
 
-class MyriaCatalog:
+class MyriaCatalogGetter(MyriaCatalog):
 
     def __init__(self, connection):
         self.connection = connection
-        self.cached = {
-            "public:adhoc:actor_a_id": 1,
-            "public:adhoc:actor_film": 1000000,
-            "public:adhoc:perform_film": 1000000,
-            "public:adhoc:actor_b_id": 1,
-            "public:adhoc:perform_film": 1000000,
-            "public:adhoc:perf_actor": 1000000,
-            "public:adhoc:obj_name": 100000000
-        }
+        self.cached = {}
 
     def get_scheme(self, rel_key):
         relation_args = {
@@ -167,7 +161,7 @@ class MyriaCatalog:
             rel_key.user, rel_key.program, rel_key.relation)
         if key in self.cached:
             return self.cached[key]
-        return 10000
+        return default_cardinality
 
 
 class MyriaHandler(webapp2.RequestHandler):
@@ -502,7 +496,7 @@ class Compile(MyriaHandler):
             query, language, self.app.connection, multiway_join)
 
         # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalog(conn)
+        catalog = MyriaCatalogGetter(conn)
         try:
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, catalog)
@@ -543,7 +537,7 @@ class Execute(MyriaHandler):
                 query, language, self.app.connection, multiway_join)
 
             # Get the Catalog needed to get schemas for compiling the query
-            catalog = MyriaCatalog(conn)
+            catalog = MyriaCatalogGetter(conn)
             # .. and compile
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, catalog)
@@ -613,7 +607,7 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='dbserver02.cs.washington.edu', port=10032):
+                 hostname='vega.cs.washington.edu', port=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
