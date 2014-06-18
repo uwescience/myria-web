@@ -32,7 +32,7 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
   Alternatively, from the command line, you may launch:
   
   ```sh
-  dev_appserver.py AppEngine
+  dev_appserver.py /path/to/myria-web/appengine
   ```
 
   And then point your browser at `localhost:8080` to view the application.
