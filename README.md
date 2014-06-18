@@ -17,7 +17,7 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
   git submodule update
   ```
   
-    Then setup the module as described in the `datalogcompiler` README.
+    Then setup the module as described in the [Raco README](https://github.com/uwescience/raco/blob/master/README.md).
   
 2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `datalogcompiler` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
