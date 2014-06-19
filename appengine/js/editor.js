@@ -1,3 +1,24 @@
+// put all the underscore templates here
+var templates = {
+  //*/
+  urls: {
+    profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
+  },
+  query: {
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
+    time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
+    prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
+    err_msg: _.template('<p>Error message:</p><pre><%- message %></pre>')
+  },
+  dataset: {
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>'),
+    row: _.template('<tr><td><%- name %></td><td><%- type %></td></tr>'),
+    dslink: _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
+  },
+  trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
+};
+
 var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
@@ -116,27 +137,22 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
-  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>');
-  var row = _.template('<tr><td><%- name %></td><td><%- val %></td></tr>');
-  var time_row = _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>');
-  var proflink = _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>')
-  var err_msg = _.template('<p>Error message:</p><pre><%- message %></pre>');
-
+  var t = templates.query;
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
 
-  html += row({name: 'Status', val: status});
-  html += time_row({name: 'Start', val: query_status['startTime']});
-  html += time_row({name: 'End', val: query_status['finishTime']});
-  html += row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = table({myriaConnection: myriaConnection, query_id: query_id, content: html});
+  html += t.row({name: 'Status', val: status});
+  html += t.time_row({name: 'Start', val: query_status['startTime']});
+  html += t.time_row({name: 'End', val: query_status['finishTime']});
+  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+  html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
 
   if (status === 'SUCCESS' && query_status['profilingMode']) {
-    html += proflink({query_id: query_id});
+    html += t.prof_link({query_id: query_id});
   }
   if (status === 'ERROR') {
-    html += err_msg({message: query_status['message'] || '(missing)'});
+    html += t.err_msg({message: query_status['message'] || '(missing)'});
   }
   $("#query-information").html(html);
   $("abbr.timeago").timeago();
@@ -220,9 +236,8 @@ function updateExamples(language, callback) {
           tokens = allTokens.slice(0, 2),
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
-        var tmpl = _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? tmpl({remaining: allTokens.length - 2}) : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? templates.trim_example({remaining: allTokens.length - 2}) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -325,10 +340,6 @@ function initializeDatasetSearch() {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
-  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
-  var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>');
-  var dslink = _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
-
   $(".dataset-search").select2({
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
@@ -380,15 +391,16 @@ function initializeDatasetSearch() {
       return m;
     }
   }).on("change", function (e) {
+    var t = templates.dataset;
     var rel = $(".dataset-search").select2("data"),
       url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function (data) {
       var html = '';
       _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {
-        html += row({name: d[0], type: d[1]});
+        html += t.row({name: d[0], type: d[1]});
       });
-      html = table({content: html});
-      $("#dataset-information").html(dslink({url: url, user: rel.userName, program: rel.programName, name: rel.relationName}) + html);
+      html = t.table({content: html});
+      $("#dataset-information").html(t.dslink({url: url, user: rel.userName, program: rel.programName, name: rel.relationName}) + html);
     });
   });
 }
