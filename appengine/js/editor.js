@@ -149,7 +149,8 @@ function displayQueryStatus(query_status) {
 }
 
 function displayQueryError(error, query_id) {
-  multiline($("#query-information").empty().append('pre'),
+  var pre = document.createElement('pre');
+  multiline($('#query-information').empty().append(pre),
       "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
   setTimeout(function () {
     checkQueryStatus(query_id);
@@ -191,7 +192,9 @@ function executeplan() {
     }
   });
   request.error(function (jqXHR, textStatus, errorThrown) {
-    multiline($('#query-information').empty().append('pre'), jqXHR.responseText);
+    var pre = document.createElement('pre');
+    $('#query-information').empty().append(pre);
+    multiline($(pre), jqXHR.responseText);
   });
 }
 
