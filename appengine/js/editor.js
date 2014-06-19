@@ -3,6 +3,8 @@ var editorLanguage = 'MyriaL',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language';
 
+var backendProcess = 'myria';
+
 function handleerrors(request, display) {
   request.done(function(result) {
     var formatted = result.split("\n").join("<br>");
@@ -23,12 +25,14 @@ function getplan() {
   var query = editor.getValue();
   var request = $.post("plan", {
     query : query,
-    language : editorLanguage
+    language : editorLanguage,
+    backend : backendProcess
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
     query : query,
     type : 'logical',
+    backend : backendProcess,
     language : editorLanguage
   });
   request.success(function(dot) {
@@ -45,13 +49,15 @@ function optimizeplan() {
   var query = editor.getValue();
   var request = $.post("optimize", {
     query : query,
-    language : editorLanguage
+    language : editorLanguage,
+    backend : backendProcess
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
+    backend : backendProcess
   });
   var request = $.getJSON(url).success(function(queryPlan) {
     var i = 0;
@@ -82,6 +88,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
+    backend : backendProcess
   });
   window.open(url, '_blank');
 }
@@ -152,6 +159,7 @@ function executeplan() {
     data : {
       query : query,
       language : editorLanguage,
+      backend : backendProcess,
       profile: $("#profile-enabled").is(':checked')
     },
     statusCode : {
@@ -227,7 +235,6 @@ function updateExamples(language, callback) {
 function changeLanguage() {
   var language = $(".language-menu option:selected").val();
   setLanguage(language);
-
   updateExamples(language, function() {
     $(".example").first().click();
   });
@@ -252,6 +259,19 @@ function setLanguage(language) {
   }
 }
 
+function changeBackend() {
+  var backend = $(".backend-menu option:selected").val();
+  setBackend(backend);
+  backendProcess = backend;
+}
+
+function setBackend(backend) {
+  var backends = [ 'myria', 'grappa' ];
+    if (!_.contains(backends, backend)) {
+	console.log('Backend not supported: ' + backend);
+	return;
+    }
+}
 /**
  * This function populates the modal dialog box with the contents of the clicked
  * SVG.
@@ -399,6 +419,7 @@ $(function() {
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
   $(".language-menu").change(changeLanguage);
+  $(".backend-menu").change(changeBackend);
   $(".example").click(function() {
     resetResults();
     var example_query = $(this).text();

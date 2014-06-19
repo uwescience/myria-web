@@ -151,9 +151,18 @@ store(JustX, public:adhoc:JustX);'''),
 store(InDegree, public:adhoc:InDegree);'''),
 ]
 
+grappa_examples = [
+  ('Self-join', '''A(x,z) :- R(x,y), R(y,z)'''),
+  ('Triangles', '''A(x,y,z) :- R(x,y), S(y,z), T(z,x)'''),
+  ('Cross Product', '''A(x,z) :- S(x), T(z)'''),
+  ('Two cycles', 'A(x,z) :- R(x,y), S(y,a,z), T(z,b,x), W(a,b)'),
+  ('Two Chained Rules', 'A(x,z) :- R(x,y,z).\nB(w) :- A(3,w)')
+]
+
 examples = { 'datalog' : datalog_examples,
              'myrial' : myria_examples,
-             'sql' : sql_examples }
+             'sql' : sql_examples,
+             'grappa' : grappa_examples }
 
 demo3_myr_examples = [
     ('Count large phytoplankton in SeaFlow data', phytoplankton),
@@ -162,6 +171,6 @@ demo3_myr_examples = [
     ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
 
-demo3_examples = { 'datalog' : [], 'sql': [],
+demo3_examples = { 'datalog' : [], 'sql': [], 'grappa': [],
                    'myrial' : demo3_myr_examples
                  } 

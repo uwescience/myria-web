@@ -14,7 +14,7 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaAlgebra
+from raco.language import MyriaAlgebra, GrappaAlgebra, CCAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -23,6 +23,7 @@ from examples import examples, demo3_examples
 from pagination import Pagination
 
 import myria
+
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
@@ -54,11 +55,15 @@ except:
 QUERIES_PER_PAGE = 25
 
 
-def get_plan(query, language, plan_type, connection):
+def get_plan(query, language, backend, plan_type, connection):
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
+
+#    if backend is None:
+#        backend = "myria"
+    backend = backend.strip().lower()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -67,7 +72,10 @@ def get_plan(query, language, plan_type, connection):
             raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
-        dlog.optimize(target=MyriaAlgebra,
+        target = MyriaAlgebra
+        if backend == "grappa":
+            target = CCAlgebra
+        dlog.optimize(target,
                       eliminate_common_subexpressions=False)
         if plan_type == 'physical':
             return dlog.physicalplan
@@ -93,12 +101,12 @@ def get_plan(query, language, plan_type, connection):
     raise NotImplementedError('Should not be able to get here')
 
 
-def get_logical_plan(query, language, connection):
-    return get_plan(query, language, 'logical', connection)
+def get_logical_plan(query, language, backend, connection):
+    return get_plan(query, language, backend, 'logical', connection)
 
 
-def get_physical_plan(query, language, connection):
-    return get_plan(query, language, 'physical', connection)
+def get_physical_plan(query, language, backend, connection):
+    return get_plan(query, language, backend, 'physical', connection)
 
 
 def format_rule(expressions):
@@ -393,7 +401,7 @@ class Demo1(MyriaPage):
             try:
                 query_plan = conn.get_query_status(query_id)
             except myria.MyriaError:
-                pass
+                passp
         template_vars = self.base_template_vars()
         # .. query plan
         template_vars['queryPlan'] = json.dumps(query_plan)
@@ -412,8 +420,9 @@ class Plan(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
+        backend = self.request.get("backend")
         try:
-            plan = get_logical_plan(query, language, self.app.connection)
+            plan = get_logical_plan(query, language, backend, self.app.connection)
         except (MyrialCompileException,
                 MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -431,8 +440,9 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
+        backend = self.request.get("backend")
         try:
-            optimized = get_physical_plan(query, language, self.app.connection)
+            optimized = get_physical_plan(query, language, backend, self.app.connection)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(
@@ -455,12 +465,12 @@ class Compile(MyriaHandler):
         conn = self.app.connection
         query = self.request.get("query")
         language = self.request.get("language")
-
+        backend = self.request.get("backend")
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection))
+            get_logical_plan(query, language, backend, self.app.connection))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, self.app.connection)
+        physicalplan = get_physical_plan(query, language, backend,  self.app.connection)
 
         # Get the Catalog needed to get schemas for compiling the query
         catalog = MyriaCatalog(conn)
@@ -490,15 +500,16 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
+        backend = self.request.get("backend")
         profile = self.request.get("profile", False)
 
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection))
+            get_logical_plan(query, language, backend, self.app.connection))
 
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
-                query, language, self.app.connection)
+                query, language, backend, self.app.connection)
 
             # Get the Catalog needed to get schemas for compiling the query
             catalog = MyriaCatalog(conn)
@@ -554,8 +565,9 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
+        backend = self.request.get("backend")
 
-        plan = get_plan(query, language, plan_type, self.app.connection)
+        plan = get_plan(query, language, backend, plan_type, self.app.connection)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
