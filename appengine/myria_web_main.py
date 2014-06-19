@@ -11,7 +11,6 @@ import webapp2
 import jinja2
 
 from raco import RACompiler
-import raco.catalog
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
