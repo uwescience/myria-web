@@ -54,15 +54,15 @@ except:
 
 QUERIES_PER_PAGE = 25
 
-
+p
 def get_plan(query, language, backend, plan_type, connection):
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
-#    if backend is None:
-#        backend = "myria"
+    if backend is None:
+        backend = "myria"
     backend = backend.strip().lower()
 
     if language == "datalog":
