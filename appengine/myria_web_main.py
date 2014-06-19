@@ -267,7 +267,6 @@ class Queries(MyriaPage):
         template_vars.update({'queries': queries,
                               'prevUrl': None,
                               'nextUrl': None})
-        template_vars['myrialKeywords'] = get_keywords()
 
         if queries:
             page = int(math.ceil(count - max_) / limit) + 1
