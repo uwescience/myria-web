@@ -72,7 +72,6 @@ function optimizeplan() {
     language : editorLanguage,
     multiway_join: multiway_join_checked
   });
-  console.log($("#multiway-join").is(':checked'));
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
