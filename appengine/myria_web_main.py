@@ -18,7 +18,7 @@ from raco.language import MyriaLeftDeepTreeAlgebra, MyriaHyperCubeAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
-from raco.catalog import MyriaCatalog
+from raco.catalog import Catalog
 from raco.algebra import default_cardinality
 from raco import scheme
 from examples import examples, demo3_examples
@@ -129,7 +129,7 @@ def get_datasets(connection):
         return []
 
 
-class MyriaCatalogGetter(MyriaCatalog):
+class MyriaCatalogGetter(Catalog):
 
     def __init__(self, connection):
         self.connection = connection
