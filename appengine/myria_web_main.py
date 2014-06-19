@@ -11,10 +11,11 @@ import webapp2
 import jinja2
 
 from raco import RACompiler
+import raco.catalog
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaAlgebra
+from raco.language import MyriaLeftDeepTreeAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -67,7 +68,7 @@ def get_plan(query, language, plan_type, connection):
             raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
-        dlog.optimize(target=MyriaAlgebra,
+        dlog.optimize(target=MyriaLeftDeepTreeAlgebra(),
                       eliminate_common_subexpressions=False)
         if plan_type == 'physical':
             return dlog.physicalplan
@@ -116,7 +117,7 @@ def get_datasets(connection):
         return []
 
 
-class MyriaCatalog:
+class MyriaCatalog(raco.catalog.Catalog):
 
     def __init__(self, connection):
         self.connection = connection
@@ -136,6 +137,12 @@ class MyriaCatalog:
             raise ValueError(rel_key)
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
+
+    def get_num_servers(self):
+        return 1
+
+    def num_tuples(self, rel_key):
+        return 10000
 
 
 class MyriaHandler(webapp2.RequestHandler):
