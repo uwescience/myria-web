@@ -97,7 +97,7 @@
         background-color: #ffffcc;
 }
 
-.CodeMirror-selected { 
+.CodeMirror-selected {
     background-color: rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -105,6 +105,10 @@
 .CodeMirror span.cm-invalidchar {
   color: #586e75;
   border-bottom: 1px dotted #dc322f;
+}
+
+td.query-raw > .CodeMirror {
+    background-color: rgba(255, 255, 255, 0.4);
 }
 
 .cm-trailingspace {
