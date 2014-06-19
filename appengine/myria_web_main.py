@@ -458,7 +458,7 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = json.load(self.request.get("multiway_join", "false"))
+        multiway_join = json.loads(self.request.get("multiway_join", "false"))
         assert type(multiway_join) is bool
         try:
             optimized = get_physical_plan(
