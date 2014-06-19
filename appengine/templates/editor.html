@@ -49,22 +49,34 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-sm-offset-3 col-sm-9">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" id="profile-enabled"> Profile query
-                        </label>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#developer-options">
+                        <span class="glyphicon glyphicon-wrench"></span>
+                            Developer Options:
+                        </a>
+                        </h4>
                     </div>
-                    <span class="help-block">Profiling will make the query run a little bit slower but allows you to
-                    examine exactly how the query was executed.</span>
-                </div>
-                <div class="col-sm-offset-3 col-sm-9">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" id="multiway-join"> Compile to Multiway Join
-                        </label>
+                    <div id="developer-options" class="panel-collapse collapse">
+                        <div class="col-sm-offset-1">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="profile-enabled"> Profile query
+                                </label>
+                            </div>
+                            <span class="help-block">Profiling will make the query run a little bit slower but allows you to
+                            examine exactly how the query was executed.</span>
+                        </div>
+                        <div class="col-sm-offset-1" >
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="multiway-join"> Compile to Multiway Join
+                                </label>
+                            </div>
+                            <span class="help-block"> Compile to multiway join rather than binary joins.</span>
+                        </div>
                     </div>
-                    <span class="help-block"> Compile to multiway join rather than binary joins.</span>
                 </div>
             </form>
         </div>
