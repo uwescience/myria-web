@@ -92,7 +92,7 @@ def get_plan(query, language, plan_type, connection,
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor(
-            MyriaCatalogGetter(connection), multiway_join=multiway_join)
+            MyriaCatalogGetter(connection))
         processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.get_logical_plan()
