@@ -4,12 +4,12 @@ var editorLanguage = 'MyriaL',
   editorLanguageKey = 'active-language';
 
 function handleerrors(request, display) {
-  request.done(function(result) {
+  request.done(function (result) {
     var formatted = result.split("\n").join("<br>");
     $(display).html(formatted);
   });
 
-  request.fail(function(jqXHR, textStatus, errorThrown) {
+  request.fail(function (jqXHR, textStatus, errorThrown) {
     if (textStatus == 'timeout') {
       $(display).text("Server is not responding");
       return;
@@ -22,16 +22,16 @@ function handleerrors(request, display) {
 function getplan() {
   var query = editor.getValue();
   var request = $.post("plan", {
-    query : query,
-    language : editorLanguage
+    query: query,
+    language: editorLanguage
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
-    query : query,
-    type : 'logical',
-    language : editorLanguage
+    query: query,
+    type: 'logical',
+    language: editorLanguage
   });
-  request.success(function(dot) {
+  request.success(function (dot) {
     var result = Viz(dot, "svg");
     $('#relational_svg').html(result);
     $('svg').width('100%');
@@ -44,16 +44,16 @@ function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.post("optimize", {
-    query : query,
-    language : editorLanguage
+    query: query,
+    language: editorLanguage
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
-    query : query,
-    language : editorLanguage,
+    query: query,
+    language: editorLanguage
   });
-  var request = $.getJSON(url).success(function(queryPlan) {
+  var request = $.getJSON(url).success(function (queryPlan) {
     try {
       var i = 0;
       queryPlan.fragments = _.map(queryPlan.plan.fragments, function (frag) {
@@ -82,7 +82,7 @@ function optimizeplan() {
       $('#physical-plan').collapse('hide');
       throw err;
     }
-  }).fail(function(jqXHR, textStatus, errorThrown) {
+  }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#myria_svg').empty();
   });
@@ -91,8 +91,8 @@ function optimizeplan() {
 function compileplan() {
   var query = editor.getValue();
   var url = "compile?" + $.param({
-    query : query,
-    language : editorLanguage,
+    query: query,
+    language: editorLanguage
   });
   window.open(url, '_blank');
 }
@@ -116,74 +116,93 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
-  var start_time = query_status['startTime'];
-  var end_time = query_status['finishTime'];
-  var elapsed = query_status['elapsedNanos'] / 1e9;
-  var status = query_status['status'];
+  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>');
+  var row = _.template('<tr><td><%- name %></td><td><%- val %></td></tr>');
+  var time_row = _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>');
+  var proflink = _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>')
+  var err_msg = _.template('<p>Error message:</p><pre><%- message %></pre>');
+
   var query_id = query_status['queryId'];
-  $("#executed").text(
-      "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
-  if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
-    setTimeout(function() {
+  var status = query_status['status'];
+  var html = '';
+
+  html += row({name: 'Status', val: status});
+  html += time_row({name: 'Start', val: query_status['startTime']});
+  html += time_row({name: 'End', val: query_status['finishTime']});
+  html += row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+  html = table({myriaConnection: myriaConnection, query_id: query_id, content: html});
+
+  if (status === 'SUCCESS' && query_status['profilingMode']) {
+    html += proflink({query_id: query_id});
+  }
+  if (status === 'ERROR') {
+    html += err_msg({message: query_status['message'] || '(missing)'});
+  }
+  $("#query-information").html(html);
+  $("abbr.timeago").timeago();
+
+  if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
+    setTimeout(function () {
       checkQueryStatus(query_id);
     }, 1000);
   }
 }
 
 function displayQueryError(error, query_id) {
-  multiline($("#executed"), "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
-  setTimeout(function() {
+  multiline($("#query-information").empty().append('pre'),
+      "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
+  setTimeout(function () {
     checkQueryStatus(query_id);
   }, 1000);
 }
 
 function checkQueryStatus(query_id) {
-  var errFunc = function(error) {
+  var errFunc = function (error) {
     displayQueryError(error, query_id);
   };
   $.ajax("execute", {
-    type : 'GET',
-    data : {
-      queryId : query_id,
-      language : editorLanguage
+    type: 'GET',
+    data: {
+      queryId: query_id,
+      language: editorLanguage
     },
-    success : displayQueryStatus,
-    error : errFunc
+    success: displayQueryStatus,
+    error: errFunc
   });
 }
 
 function executeplan() {
   $('#editor-tabs a[href="#result"]').tab('show');
 
-  $('#executed').text('...');
+  $('#query-information').text('...');
   optimizeplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.ajax("execute", {
-    type : 'POST',
-    data : {
-      query : query,
-      language : editorLanguage,
+    type: 'POST',
+    data: {
+      query: query,
+      language: editorLanguage,
       profile: $("#profile-enabled").is(':checked')
     },
-    statusCode : {
-      200 : displayQueryStatus,
-      201 : displayQueryStatus,
-      202 : displayQueryStatus,
+    statusCode: {
+      200: displayQueryStatus,
+      201: displayQueryStatus,
+      202: displayQueryStatus
     }
   });
-  request.error(function(jqXHR, textStatus, errorThrown) {
-    $('#executed').text(jqXHR.responseText);
+  request.error(function (jqXHR, textStatus, errorThrown) {
+    multiline($('#query-information').empty().append('pre'), jqXHR.responseText);
   });
 }
 
 function resetResults() {
   $(".display").empty();
-  $("#executed").text("Run query to see results here...");
+  $("#query-information").text("Run query to see results here...");
   $("svg").empty();
 }
 
 function updateExamples(language, callback) {
-  var doUpdateExamples = function(data) {
+  var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
 
     examplesList.empty();
@@ -209,7 +228,7 @@ function updateExamples(language, callback) {
         updateExamplesHeight();
       }
       /* Restore the click functionality on the examples. */
-      $(".example").click(function(e) {
+      $(".example").click(function (e) {
         e.preventDefault();
         resetResults();
         var example_query = this.getAttribute('data-code');
@@ -226,12 +245,12 @@ function updateExamples(language, callback) {
   };
 
   $.ajax("examples", {
-    type : 'GET',
-    data : {
-      language : language,
+    type: 'GET',
+    data: {
+      language: language,
       subset: $('#examples-list').attr('subset')
     },
-    success : doUpdateExamples
+    success: doUpdateExamples
   });
 }
 
@@ -239,7 +258,7 @@ function changeLanguage() {
   var language = $(".language-menu option:selected").val();
   setLanguage(language);
 
-  updateExamples(language, function() {
+  updateExamples(language, function () {
     $(".example").first().click();
   });
 }
@@ -255,7 +274,7 @@ function setLanguage(language) {
 
   if (language === 'myrial') {
     editor.setOption('mode', {name: 'myrial',
-               singleLineStringErrors: false});
+      singleLineStringErrors: false});
   } else if (language === 'sql') {
     editor.setOption('mode', 'text/x-sql');
   } else if (language === 'datalog') {
@@ -276,11 +295,11 @@ function showSvgModal() {
   }
 
   var panzoom = $('.zoom-canvas').panzoom({
-    maxScale : 10,
-    minScale : 1,
-    contain : 'invert',
-    $zoomRange : $(".modal-header .zoom-range"),
-    $reset : $(".modal-header .zoom-reset")
+    maxScale: 10,
+    minScale: 1,
+    contain: 'invert',
+    $zoomRange: $(".modal-header .zoom-range"),
+    $reset: $(".modal-header .zoom-reset")
   }).panzoom("reset");
 }
 
@@ -299,7 +318,7 @@ function resizeEditor() {
 }
 
 function initializeDatasetSearch() {
-  var dataToRelKeyString = function(d) {
+  var dataToRelKeyString = function (d) {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
@@ -327,7 +346,7 @@ function initializeDatasetSearch() {
         };
       }
     },
-    formatResult: function(d, container, query) {
+    formatResult: function (d, container, query) {
       var stringParts = dataToRelKeyString(d).split('');
       var queryParts = query.term.toLowerCase().split('');
       var i = 0, j = 0,
@@ -354,17 +373,19 @@ function initializeDatasetSearch() {
     id: dataToRelKeyString,
     formatSelection: dataToRelKeyString,
     dropdownCssClass: "bigdrop",
-    escapeMarkup: function (m) { return m; }
-  }).on("change", function(e) {
+    escapeMarkup: function (m) {
+      return m;
+    }
+  }).on("change", function (e) {
     var rel = $(".dataset-search").select2("data"),
       url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
-    $.getJSON(url, function(data) {
+    $.getJSON(url, function (data) {
       var html = '';
-      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {
         html += row({name: d[0], type: d[1]});
       });
       html = table({content: html});
-      $("#dataset-information").html(dslink({url: url, user:rel.userName, program: rel.programName, name: rel.relationName}) + html);
+      $("#dataset-information").html(dslink({url: url, user: rel.userName, program: rel.programName, name: rel.relationName}) + html);
     });
   });
 }
@@ -382,7 +403,8 @@ function restoreState() {
   if (content) {
     $(".language-menu").val(language);
     setLanguage(language);
-    updateExamples(language, function() {});
+    updateExamples(language, function () {
+    });
 
     editor.setValue(content);
     editor.setHistory(history);
@@ -392,25 +414,25 @@ function restoreState() {
   return false;
 }
 
-updateExamplesHeight = function() {
+updateExamplesHeight = function () {
   // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
   $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
 };
 
-$(function() {
+$(function () {
   resetResults();
 
   editor.on("change", resetResults);
   editor.on("keydown", resetResults);
   editor.on("keypress", resetResults);
-  $(".planner").click(function() {
+  $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     optimizeplan();
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
   $(".language-menu").change(changeLanguage);
-  $(".example").click(function() {
+  $(".example").click(function () {
     resetResults();
     var example_query = $(this).text();
     editor.setValue(example_query);
@@ -430,7 +452,7 @@ $(function() {
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
-  $(window).resize(function() {
+  $(window).resize(function () {
     updateExamplesHeight();
   });
 });
