@@ -19,7 +19,7 @@ from raco.myrialang import compile_to_json
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.catalog import Catalog
-from raco.algebra import default_cardinality
+from raco.algebra import DEFAULT_CARDINALITY
 from raco import scheme
 from examples import examples, demo3_examples
 from pagination import Pagination
@@ -161,7 +161,7 @@ class MyriaCatalogGetter(Catalog):
             rel_key.user, rel_key.program, rel_key.relation)
         if key in self.cached:
             return self.cached[key]
-        return default_cardinality
+        return DEFAULT_CARDINALITY
 
 
 class MyriaHandler(webapp2.RequestHandler):
@@ -267,6 +267,7 @@ class Queries(MyriaPage):
         template_vars.update({'queries': queries,
                               'prevUrl': None,
                               'nextUrl': None})
+        template_vars['myrialKeywords'] = get_keywords()
 
         if queries:
             page = int(math.ceil(count - max_) / limit) + 1
@@ -457,10 +458,9 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = self.request.get("multiway_join", False)
+        multiway_join = json.load(self.request.get("multiway_join", "false"))
+        assert type(multiway_join) is bool
         try:
-            if multiway_join == 'false':
-                multiway_join = False
             optimized = get_physical_plan(
                 query, language, self.app.connection, multiway_join)
         except MyrialInterpreter.NoSuchRelationException as e:
