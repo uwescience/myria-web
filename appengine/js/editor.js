@@ -1,5 +1,5 @@
 // put all the underscore templates here
-var templates = {
+var editor_templates = {
   //*/
   urls: {
     profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
@@ -137,7 +137,7 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
-  var t = templates.query;
+  var t = editor_templates.query;
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
@@ -237,7 +237,7 @@ function updateExamples(language, callback) {
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? templates.trim_example({remaining: allTokens.length - 2}) : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -391,7 +391,7 @@ function initializeDatasetSearch() {
       return m;
     }
   }).on("change", function (e) {
-    var t = templates.dataset;
+    var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
       url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function (data) {
