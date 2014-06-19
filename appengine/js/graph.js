@@ -97,7 +97,7 @@ function Graph () {
             graph.nodes[id] = node;
         });
 
-        // If there are more than 10 fragments, do not expand
+        // If there are more than 7 fragments, do not expand
         if (graph.queryPlan.physicalPlan.plan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
