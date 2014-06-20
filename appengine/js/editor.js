@@ -16,7 +16,7 @@ var editor_templates = {
     row: _.template('<tr><td><%- name %></td><td><%- type %></td></tr>'),
     dslink: _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
   },
-  trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
+  trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
 };
 
 var editorLanguage = 'MyriaL',
@@ -44,7 +44,8 @@ function getplan() {
   var query = editor.getValue();
   var request = $.post("plan", {
     query: query,
-    language: editorLanguage
+    language: editorLanguage,
+    multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
@@ -64,15 +65,19 @@ function optimizeplan() {
   $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
+  var multiway_join_checked = $("#multiway-join").is(':checked');
+
   var request = $.post("optimize", {
     query: query,
-    language: editorLanguage
+    language: editorLanguage,
+    multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
     query: query,
-    language: editorLanguage
+    language: editorLanguage,
+    multiway_join: multiway_join_checked
   });
   var request = $.getJSON(url).success(function (queryPlan) {
     try {
@@ -113,7 +118,8 @@ function compileplan() {
   var query = editor.getValue();
   var url = "compile?" + $.param({
     query: query,
-    language: editorLanguage
+    language: editorLanguage,
+    multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -199,7 +205,8 @@ function executeplan() {
     data: {
       query: query,
       language: editorLanguage,
-      profile: $("#profile-enabled").is(':checked')
+      profile: $("#profile-enabled").is(':checked'),
+      multiway_join: $("#multiway-join").is(':checked')
     },
     statusCode: {
       200: displayQueryStatus,
@@ -237,7 +244,7 @@ function updateExamples(language, callback) {
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}): ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
