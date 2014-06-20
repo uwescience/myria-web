@@ -5,7 +5,7 @@ Emp = scan(public:adhoc:employee);
 
 Rich = select Emp.name, Dept.name as dept_name
        from Emp, Dept
-       where Emp.dept_id=Dept.id and Emp.salary > 500000;
+       where Emp.dept_id=Dept.id and Emp.salary > 6000;
 
 store(Rich, OUTPUT);'''
 
@@ -15,13 +15,14 @@ Emp = scan(public:adhoc:employee);
 EmpDept = [from Emp, Dept
            where Emp.dept_id=Dept.id
            emit Emp.*, Dept.name as dept_name];
-Rich = [from EmpDept where salary > 500000 emit name, dept_name];
+Rich = [from EmpDept where salary > 6000 emit name, dept_name];
 
 store(Rich, OUTPUT);'''
 
 simple_datalog = '''Output(emp_name, dept_name) :-
   employee(eid, dept_id, emp_name, salary),
-  department(dept_id, dept_name, manager)'''
+  department(dept_id, dept_name, manager),
+  salary > 6000'''
 
 phytoplankton = '''OppData = scan(public:adhoc:all_opp_v3);
 VctData = scan(public:adhoc:all_vct);
