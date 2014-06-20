@@ -17,13 +17,17 @@ from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra, GrappaAlgebra, CCAlgebra
 from raco.myrialang import compile_to_json
 from raco.viz import get_dot
+from raco.compile import compile
 from raco.myrial.keywords import get_keywords
 from raco import scheme
 from examples import examples, demo3_examples
 from pagination import Pagination
-
 import myria
 
+import sys
+
+sys.path.append('./examples')
+from emitcode import emitCode
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
@@ -54,16 +58,15 @@ except:
 
 QUERIES_PER_PAGE = 25
 
-p
 def get_plan(query, language, backend, plan_type, connection):
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
-    if backend is None:
-        backend = "myria"
-    backend = backend.strip().lower()
+    target = MyriaAlgebra
+    if backend == "grappa":
+        target = CCAlgebra
 
     if language == "datalog":
         dlog = RACompiler()
@@ -72,9 +75,6 @@ def get_plan(query, language, backend, plan_type, connection):
             raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
-        target = MyriaAlgebra
-        if backend == "grappa":
-            target = CCAlgebra
         dlog.optimize(target,
                       eliminate_common_subexpressions=False)
         if plan_type == 'physical':
@@ -88,6 +88,7 @@ def get_plan(query, language, backend, plan_type, connection):
             parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor(
             MyriaCatalog(connection))
+
         processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.get_logical_plan()
@@ -101,8 +102,8 @@ def get_plan(query, language, backend, plan_type, connection):
     raise NotImplementedError('Should not be able to get here')
 
 
-def get_logical_plan(query, language, backend, connection):
-    return get_plan(query, language, backend, 'logical', connection)
+def get_logical_plan(query, language, connection):
+    return get_plan(query, language, None, 'logical', connection)
 
 
 def get_physical_plan(query, language, backend, connection):
@@ -123,6 +124,15 @@ def get_datasets(connection):
     except myria.MyriaError:
         return []
 
+# Grappa code: 
+# does similar to myria's compile_to_json only for grappa
+def create_grappa_json(query, logical_plan, physical_plan):
+    return { "datalog" : query,
+             "logical" : str(logical_plan),
+             "physical" : compile(physical_plan) }
+
+def execute_grappa(filename):
+    return
 
 class MyriaCatalog:
 
@@ -144,7 +154,6 @@ class MyriaCatalog:
             raise ValueError(rel_key)
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
-
 
 class MyriaHandler(webapp2.RequestHandler):
 
@@ -401,7 +410,7 @@ class Demo1(MyriaPage):
             try:
                 query_plan = conn.get_query_status(query_id)
             except myria.MyriaError:
-                passp
+                pass
         template_vars = self.base_template_vars()
         # .. query plan
         template_vars['queryPlan'] = json.dumps(query_plan)
@@ -422,7 +431,7 @@ class Plan(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         try:
-            plan = get_logical_plan(query, language, backend, self.app.connection)
+            plan = get_logical_plan(query, language, self.app.connection)
         except (MyrialCompileException,
                 MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -467,16 +476,20 @@ class Compile(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         cached_logicalplan = str(
-            get_logical_plan(query, language, backend, self.app.connection))
+            get_logical_plan(query, language, self.app.connection))
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend,  self.app.connection)
 
         # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalog(conn)
         try:
-            compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
+            if backend == "myria":
+                catalog = MyriaCatalog(conn)
+                compiled = compile_to_json(
+                    query, cached_logicalplan, physicalplan, catalog)
+            else:
+                compiled = create_grappa_json(
+                    query, cached_logicalplan, physicalplan)
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -502,25 +515,29 @@ class Execute(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
-
         cached_logicalplan = str(
-            get_logical_plan(query, language, backend, self.app.connection))
+                get_logical_plan(query, language, self.app.connection))
 
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
                 query, language, backend, self.app.connection)
+            if backend == "myria":
+                # Get the Catalog needed to get schemas for compiling the query
+                catalog = MyriaCatalog(conn)
+                # .. and compile
+                compiled = compile_to_json(
+                    query, cached_logicalplan, physicalplan, catalog)
 
-            # Get the Catalog needed to get schemas for compiling the query
-            catalog = MyriaCatalog(conn)
-            # .. and compile
-            compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
-
-            compiled['profilingMode'] = profile
-
+                compiled['profilingMode'] = profile
+                query_status = conn.submit_query(compiled)
+            else:
+                # Grappa
+                name = "tmpcode"
+                filename = emitCode(query, name, CCAlgebra)
+                checkQuery(name, ClangRunner())
+#                execute_grappa(filename)
             # Issue the query
-            query_status = conn.submit_query(compiled)
             query_url = 'http://%s:%d/execute?query_id=%d' %\
                 (self.app.hostname, self.app.port, query_status['queryId'])
             self.response.status = 201
@@ -567,7 +584,7 @@ class Dot(MyriaHandler):
         plan_type = self.request.get("type")
         backend = self.request.get("backend")
 
-        plan = get_plan(query, language, backend, plan_type, self.app.connection)
+        plan = get_plan(query, language, CCAlgebra, plan_type, self.app.connection)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
