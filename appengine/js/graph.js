@@ -54,6 +54,9 @@ function Graph () {
         // Get query plan
         graph.queryPlan = json;
 
+        // Create fragmentIndex
+        graph.createFragmentIndex(json.physicalPlan.plan);
+
         // a nested version of op ids, not needed in here but useful for other visualizations
         graph.nested = {};
 
@@ -177,6 +180,20 @@ function Graph () {
             };
             graph.nested[fragid] = addChildren(root);
         });
+    };
+
+    // Create fragmentIndex for each SubQuery
+    Graph.prototype.createFragmentIndex = function createFragmentIndex(plan) {
+        if(plan.type == 'SubQuery') {
+            var i = 0;
+            _.each(plan.fragments, function (frag) {
+                frag.fragmentIndex = i++;
+            });
+        } else if(plan.type == 'Sequence') {
+            _.each(plan.plans, createFragmentIndex);
+        } else if(plan.type == 'DoWhile') {
+            _.each(plan.body, createFragmentIndex);
+        }
     };
 
     // Function that updates the graph edges when a fragment gets expanded
