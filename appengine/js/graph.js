@@ -56,9 +56,8 @@ function Graph () {
 
         // Create fragmentIndex
         var i = 0;
-        graph.queryPlan.fragments = _.map(json.physicalPlan.plan.fragments, function (frag) {
+        _.map(json.physicalPlan.plan.fragments, function (frag) {
             frag.fragmentIndex = i++;
-            return frag;
         });
 
         // a nested version of op ids, not needed in here but useful for other visualizations
