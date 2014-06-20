@@ -169,7 +169,7 @@ class MyriaCatalog(Catalog):
             raise ValueError(rel_key)
         num_tuples = dataset_info['numTuples']
         assert type(num_tuples) is int
-        # that's a work round. numTuples was -1 if the dataset is old
+        # that's a work round. numTuples is -1 if the dataset is old
         if num_tuples != -1:
             assert num_tuples >= 0
             return num_tuples
