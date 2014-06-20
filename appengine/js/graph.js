@@ -57,6 +57,9 @@ function Graph () {
         // Create fragmentIndex
         graph.createFragmentIndex(json.physicalPlan.plan);
 
+        // Create subQueryIndex
+        graph.createSubQueryIndex(json.physicalPlan.plan);
+
         // a nested version of op ids, not needed in here but useful for other visualizations
         graph.nested = {};
 
@@ -195,6 +198,20 @@ function Graph () {
             _.each(plan.body, createFragmentIndex);
         }
     };
+
+    // Create SubQuery index
+    Graph.prototype.createSubQueryIndex = function createSubQueryIndex(plan) {
+        var i = 0;
+        (function iterateSubQuery(plan){
+            if(plan.type == 'SubQuery') {
+                plan.subQueryIndex = i++;
+            } else if(plan.type == 'Sequence') {
+                _.each(plan.plans, iterateSubQuery);
+            } else if(plan.type == 'DoWhile') {
+                _.each(plan.body, iterateSubQuery);
+            }
+        })(plan);
+    }
 
     // Function that updates the graph edges when a fragment gets expanded
     Graph.prototype.expandNode = function(node) {
