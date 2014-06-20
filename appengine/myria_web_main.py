@@ -132,7 +132,6 @@ class MyriaCatalog(Catalog):
 
     def __init__(self, connection):
         self.connection = connection
-        self.cached = {}
 
     def get_scheme(self, rel_key):
         relation_args = {
@@ -141,7 +140,7 @@ class MyriaCatalog(Catalog):
             'relationName': rel_key.relation
         }
         if not self.connection:
-            raise ValueError(
+            raise RuntimeError(
                 "no schema for relation %s because no connection" % rel_key)
         try:
             dataset_info = self.connection.dataset(relation_args)
@@ -156,10 +155,24 @@ class MyriaCatalog(Catalog):
         return len(self.connection.workers_alive())
 
     def num_tuples(self, rel_key):
-        key = "{}:{}:{}".format(
-            rel_key.user, rel_key.program, rel_key.relation)
-        if key in self.cached:
-            return self.cached[key]
+        relation_args = {
+            'userName': rel_key.user,
+            'programName': rel_key.program,
+            'relationName': rel_key.relation
+        }
+        if not self.connection:
+            raise RuntimeError(
+                "no cardinality of %s because no connection" % rel_key)
+        try:
+            dataset_info = self.connection.dataset(relation_args)
+        except myria.MyriaError:
+            raise ValueError(rel_key)
+        num_tuples = dataset_info['numTuples']
+        assert type(num_tuples) is int
+        # that's a work round. numTuples was -1 if the dataset is old
+        if num_tuples != -1:
+            assert num_tuples >= 0
+            return num_tuples
         return DEFAULT_CARDINALITY
 
 
