@@ -99,10 +99,8 @@ def get_plan(query, language, plan_type, connection,
             return processor.get_physical_plan()
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
-    else:
-        raise NotImplementedError('Language %s is not supported' % language)
 
-    raise NotImplementedError('Should not be able to get here')
+    raise NotImplementedError('Language %s is not supported' % language)
 
 
 def get_logical_plan(query, language, connection):
@@ -145,7 +143,7 @@ class MyriaCatalog(Catalog):
         try:
             dataset_info = self.connection.dataset(relation_args)
         except myria.MyriaError:
-            raise ValueError(rel_key)
+            raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
@@ -186,7 +184,7 @@ class MyriaHandler(webapp2.RequestHandler):
             msg = '{}: {}'.format(exception.__class__.__name__, exception)
         else:
             self.response.status = 500
-            self.response.out.write("Error 500 (Internal Server Error)")
+            msg = ""
             if debug_mode:
                 self.response.out.write(": \n\n")
                 import traceback
@@ -254,15 +252,21 @@ class Queries(MyriaPage):
         conn = self.app.connection
         try:
             limit = int(self.request.get('limit', QUERIES_PER_PAGE))
-            max_ = self.request.get('max', None)
+        except (ValueError, TypeError):
+            limit = 1
+
+        try:
+            max_ = int(self.request.get('max', None))
+        except (ValueError, TypeError):
+            max_ = None
+        try:
             count, queries = conn.queries(limit, max_)
-            if max_:
-                max_ = int(max_)
-            else:
-                max_ = count
         except myria.MyriaError:
             queries = []
-            limit = 1
+            count = 0
+
+        if max_ is None:
+            max_ = count
 
         for q in queries:
             q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
