@@ -1,6 +1,5 @@
 import os
 
-
 simple_sql = '''Dept = scan(public:adhoc:department);
 Emp = scan(public:adhoc:employee);
 
@@ -19,6 +18,10 @@ EmpDept = [from Emp, Dept
 Rich = [from EmpDept where salary > 500000 emit name, dept_name];
 
 store(Rich, OUTPUT);'''
+
+simple_datalog = '''Output(emp_name, dept_name) :-
+  employee(eid, dept_id, emp_name, salary),
+  department(dept_id, dept_name, manager)'''
 
 phytoplankton = '''OppData = scan(public:adhoc:all_opp_v3);
 VctData = scan(public:adhoc:all_vct);
@@ -163,15 +166,23 @@ store(CoM, OUTPUT);
 """
 
 demo3_myr_examples = [
-    ('Simple SQL query', simple_sql),
     ('Simple myrial query', simple_myrial),
-    ('Count large phytoplankton in SeaFlow data', phytoplankton),
     ('Geographic center of mass', center_of_mass),
     ('Sigma-clipping (naive version)', sigma_clipping_naive),
     ('Sigma-clipping (advanced version)', sigma_clipping_advanced),
     ('Pagerank', pagerank),
 ]
 
-demo3_examples = { 'datalog' : [], 'sql': [],
+demo3_sql_examples = [
+    ('Simple SQL query', simple_sql),
+    ('Count large phytoplankton in SeaFlow data', phytoplankton),
+]
+
+demo3_datalog_examples = [
+  ('Simple datalog query', simple_datalog)
+]
+
+demo3_examples = { 'datalog' : demo3_datalog_examples,
+                   'sql': demo3_sql_examples,
                    'myrial' : demo3_myr_examples
                  } 
