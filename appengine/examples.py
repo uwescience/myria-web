@@ -138,7 +138,8 @@ store(CoM, OUTPUT);
 myria_examples = [
     ('JustX: A simple projection query on TwitterK', justx),
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
-#    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
+    ('Powers Of 2: Simple iteration example', get_example('iteration.myl')),
+    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
 #    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
 ]
 
@@ -164,4 +165,4 @@ demo3_myr_examples = [
 
 demo3_examples = { 'datalog' : [], 'sql': [],
                    'myrial' : demo3_myr_examples
-                 } 
+                 }
