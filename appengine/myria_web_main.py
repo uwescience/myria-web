@@ -152,7 +152,7 @@ class MyriaCatalog(Catalog):
 
     def get_num_servers(self):
         if not self.connection:
-            raise Exception("no connection.")
+            raise RuntimeError("no connection.")
         return len(self.connection.workers_alive())
 
     def num_tuples(self, rel_key):
