@@ -213,6 +213,16 @@ function Graph () {
         })(plan);
     }
 
+    // Collect graph nodes
+    Graph.prototype.collectGraphNodes = function collectGraphNodes(plan, graph){
+        if(plan.type == 'SubQuery') {
+
+        } else if(plan.type == 'Sequence') {
+        } else if(plan.type == 'DoWhile') {
+        }
+
+    }
+
     // Function that updates the graph edges when a fragment gets expanded
     Graph.prototype.expandNode = function(node) {
         this.state.opened = _.union(this.state.opened, [node]);
