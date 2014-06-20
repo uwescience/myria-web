@@ -22,7 +22,8 @@ var editor_templates = {
 var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
-  editorLanguageKey = 'active-language';
+  editorLanguageKey = 'active-language',
+  developerCollapseKey = 'developer-collapse';
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -416,12 +417,14 @@ function saveState() {
   localStorage.setItem(editorHistoryKey, JSON.stringify(editor.getHistory()));
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
+  localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
 }
 
 function restoreState() {
   var history = JSON.parse(localStorage.getItem(editorHistoryKey));
   var content = localStorage.getItem(editorContentKey);
   var language = localStorage.getItem(editorLanguageKey);
+  var developerCollapse = localStorage.getItem(developerCollapseKey);
   if (content) {
     $(".language-menu").val(language);
     setLanguage(language);
@@ -430,6 +433,9 @@ function restoreState() {
 
     editor.setValue(content);
     editor.setHistory(history);
+    if (developerCollapse === 'true') {
+      $('#developer-options').addClass('in');
+    }
     return true;
   }
 
