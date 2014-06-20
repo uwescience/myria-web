@@ -258,24 +258,25 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
 
             // average lines
-            var avg = d3.mean(destinationList, function(d) { return d.numTuples; });
+            var avgX = d3.mean(sourceList, function(d) { return d.numTuples; });
+            var avgY = d3.mean(destinationList, function(d) { return d.numTuples; });
 
             colBarChart.select("line.average").remove();
             colBarChart.append("line")
                 .attr("class", "average")
                 .attr("x1", 0)
-                .attr("y1", barHeight(avg))
+                .attr("y1", barHeight(avgY))
                 .attr("x2", matrixWidth)
-                .attr("y2", barHeight(avg))
+                .attr("y2", barHeight(avgY))
                 .tooltip("average");
 
             rowBarChart.select("line.average").remove();
             rowBarChart.append("line")
                 .attr("class", "average")
                 .attr("y1", 0)
-                .attr("x1", barHeight(avg))
-                .attr("y2", matrixWidth)
-                .attr("x2", barHeight(avg))
+                .attr("x1", barHeight(avgX))
+                .attr("y2", matrixHeight)
+                .attr("x2", barHeight(avgX))
                 .tooltip("average");
 
             /* Controls */
@@ -321,9 +322,9 @@ var networkVisualization = function (element, fragments, queryPlan) {
 
 var updateSummary = function(element, summary) {
     var items = "";
-    items += templates.defItem({key: "# Tuples", value: summary.numTuples});
+    items += templates.defItem({key: "# Tuples", value: Intl.NumberFormat().format(summary.numTuples)});
     items += templates.defItem({key: "Local tuples sent", value: summary.localTuples});
-    items += templates.defItem({key: "Duration", value: customFullTimeFormat(summary.duration)});
+    items += templates.defItem({key: "Duration", value: customFullTimeFormat(summary.duration, false)});
     items += templates.defItem({key: "Tuples per second", value: (summary.numTuples / summary.duration * 1000000).toFixed(3)});
     var dl = templates.defList({items: items});
     $(element.node()).html(dl);

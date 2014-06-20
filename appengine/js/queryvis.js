@@ -109,11 +109,19 @@ function debug(d) {
     console.log(d);
 }
 
-function customFullTimeFormat(d) {
-    var str = "", ms, ns, s, m, h, x;
+function customFullTimeFormat(d, detail) {
+    if (d === 0) {
+        return "0";
+    }
+    var str = "", ns, us, ms, s, m, h, x;
+    if (detail === undefined) {
+        detail = true;
+    }
 
-    x = divmod(d, 1e6);
+    x = divmod(d, 1000);
     ns = x[1];
+    x = divmod(x[0], 1000);
+    us = x[1];
     x = divmod(x[0], 1000);
     ms = x[1];
     x = divmod(x[0], 60);
@@ -121,24 +129,34 @@ function customFullTimeFormat(d) {
     x = divmod(x[0], 60);
     m = x[1];
     h = x[0];
+    // time_objs is an array of triples: an int constant, a unit string, and an
+    // optional function that stringifies the constant when the output string
+    // has already been prefixed by another nonzero unit.
+    var time_objs = [
+        [h, 'h', null],
+        [m, 'm', null],
+        [s, 's', null],
+        [ms, 'ms', d3.format("03d")],
+        [us, 'µs', d3.format("03d")],
+        [ns, 'ns', d3.format("03d")]
+    ];
 
-    if (h) {
-        str += h + " H ";
-    }
-    if (m) {
-        str += m + " m ";
-    }
-    if (s) {
-        str += s + " s ";
-    }
-    if (ms) {
-        if (s) {
-            str += d3.format("03d")(ms) + " ms ";
-        } else {
-            str += ms + " ms ";
+    function id(x) { return x; } // the identify function
+    var old_str = "";
+    for (var i = 0, f = id; i < time_objs.length; ++i) {
+        var to = time_objs[i];
+        if (to[0]) {
+            if (old_str) {
+                str += " ";
+                f = to[2] || f;
+            }
+            str += f(to[0]) + " " + to[1];
         }
+        if (!detail && old_str) {
+            return str;
+        }
+        old_str = str;
     }
-    str += d3.format("06d")(ns) + " ns ";
     return str;
 }
 
