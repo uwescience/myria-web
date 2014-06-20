@@ -60,9 +60,8 @@ def get_plan(query, language, plan_type, connection,
              multiway_join=False):
     catalog = None
     if multiway_join:
-        catalog = MyriaCatalogGetter(connection)
-    if multiway_join:
-        assert(catalog.get_num_servers())
+        catalog = MyriaCatalog(connection)
+        assert catalog.get_num_servers()
     # Fix up the language string
     if language is None:
         language = "datalog"
@@ -92,7 +91,7 @@ def get_plan(query, language, plan_type, connection,
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor(
-            MyriaCatalogGetter(connection))
+            MyriaCatalog(connection))
         processor.evaluate(parsed)
         if plan_type == 'logical':
             return processor.get_logical_plan()
@@ -129,7 +128,7 @@ def get_datasets(connection):
         return []
 
 
-class MyriaCatalogGetter(Catalog):
+class MyriaCatalog(Catalog):
 
     def __init__(self, connection):
         self.connection = connection
@@ -496,7 +495,7 @@ class Compile(MyriaHandler):
             query, language, self.app.connection, multiway_join)
 
         # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalogGetter(conn)
+        catalog = MyriaCatalog(conn)
         try:
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, catalog)
@@ -537,7 +536,7 @@ class Execute(MyriaHandler):
                 query, language, self.app.connection, multiway_join)
 
             # Get the Catalog needed to get schemas for compiling the query
-            catalog = MyriaCatalogGetter(conn)
+            catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, catalog)

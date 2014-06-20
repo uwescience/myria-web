@@ -68,16 +68,16 @@ function optimizeplan() {
   var multiway_join_checked = $("#multiway-join").is(':checked');
 
   var request = $.post("optimize", {
-    query : query,
-    language : editorLanguage,
+    query: query,
+    language: editorLanguage,
     multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
-    query : query,
+    query: query,
     language : editorLanguage,
-    multiway_join: $("#multiway-join").is(':checked')
+    multiway_join: multiway_join_checked
   });
   var request = $.getJSON(url).success(function (queryPlan) {
     try {
