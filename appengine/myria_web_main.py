@@ -132,7 +132,7 @@ def create_grappa_json(query, logical_plan, physical_plan):
              "physical" : compile(physical_plan) }
 
 def execute_grappa(filename):
-    return
+    return 
 
 class MyriaCatalog:
 
@@ -531,15 +531,18 @@ class Execute(MyriaHandler):
 
                 compiled['profilingMode'] = profile
                 query_status = conn.submit_query(compiled)
+                # Issue the query
+                query_url = 'http://%s:%d/execute?query_id=%d' %\
+                            (self.app.hostname, self.app.port, query_status['queryId'])
+
             else:
                 # Grappa
-                name = "tmpcode"
-                filename = emitCode(query, name, CCAlgebra)
-                checkQuery(name, ClangRunner())
-#                execute_grappa(filename)
-            # Issue the query
-            query_url = 'http://%s:%d/execute?query_id=%d' %\
-                (self.app.hostname, self.app.port, query_status['queryId'])
+                compiled = create_grappa_json(
+                    query, cached_logicalplan, physicalplan)
+                compiled['profilingMode'] = profile
+                
+#                checkQuery(name, ClangRunner())
+
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -565,7 +568,7 @@ class Execute(MyriaHandler):
         query_id = self.request.get("queryId")
 
         if not query_id:
-            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.hpeaders['Content-Type'] = 'text/plain'
             self.response.status = 400
             self.response.write("Error 400 (Bad Request): missing query_id")
             return
@@ -584,11 +587,11 @@ class Dot(MyriaHandler):
         plan_type = self.request.get("type")
         backend = self.request.get("backend")
 
-        plan = get_plan(query, language, CCAlgebra, plan_type, self.app.connection)
+        plan = get_plan(query, language, backend, plan_type, self.app.connection)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
-
+  
     def post(self):
         "The same as get(), here because there may be long programs"
         self.get()

@@ -59,24 +59,34 @@ function optimizeplan() {
     language : editorLanguage,
     backend : backendProcess
   });
+
   var request = $.getJSON(url).success(function(queryPlan) {
-    var i = 0;
-    queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
-      frag.fragmentIndex = i++;
-      return frag;
-    });
+//    if (backendProcess === "grappa") {
+  //    function rerender() {
+    //    $('#myria_svg').empty();
+        
+      //}
+//      rerender();
+  //  } else {
+     if (backendProcess === "myria") {
+      var i = 0;
+      queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
+        frag.fragmentIndex = i++;
+        return frag;
+      });
+}
+      var g = new Graph();
+      g.loadQueryPlan({ physicalPlan: queryPlan });
 
-    var g = new Graph();
-    g.loadQueryPlan({ physicalPlan: queryPlan });
+      function rerender() {
+        $('#myria_svg').empty();
+        g.render(d3.select('#myria_svg'));
+      }
+      rerender();
 
-    function rerender() {
-      $('#myria_svg').empty();
-      g.render(d3.select('#myria_svg'));
-    }
-    rerender();
-
-    // rerender when opening tab because of different space available
-    $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
+      // rerender when opening tab because of different space available
+      $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
+    //} 
   }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#myria_svg').empty();
