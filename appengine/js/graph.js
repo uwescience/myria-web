@@ -55,10 +55,13 @@ function Graph () {
         graph.queryPlan = json;
 
         // Create fragmentIndex
-        graph.createFragmentIndex(json.physicalPlan.plan);
+        graph.createFragmentIndex(graph.queryPlan.physicalPlan.plan);
 
         // Create subQueryIndex
-        graph.createSubQueryIndex(json.physicalPlan.plan);
+        graph.createSubQueryIndex(graph.queryPlan.physicalPlan.plan);
+
+        // Normalize operator ids
+        graph.normalizeOpIds(graph.queryPlan.physicalPlan.plan);
 
         // a nested version of op ids, not needed in here but useful for other visualizations
         graph.nested = {};
@@ -67,50 +70,17 @@ function Graph () {
         var links = {};
 
         // Collect graph nodes
-        graph.queryPlan.physicalPlan.plan.fragments.forEach(function(fragment) {
-            // Create fragment node object
-            var node = {};                                              // Node object
-            var id = "f"+fragment.fragmentIndex;                            // Node ID
-            node.fragmentIndex = fragment.fragmentIndex;                // Fragment ID
-            node.rawData = fragment;                                    // RAW JSON data
-            node.workers = fragment.workers;                            // List of workers
-            node.operators = fragment.operators;                        // List of operators
-            node.opNodes = {};                                          // List of graph operand nodes
-            node.opLinks = {};                                          // List of graph operand edges
-            node.name = "Fragment " + fragment.fragmentIndex.toString();// Name for fragment node
-
-            // Process each operator
-            var color_index = 0;
-            node.operators.forEach(function(op) {
-                op.opId = ""+op.opId;
-                // Create new op node(s)
-                var opNode = {};
-                opNode.rawData = op;                                    // Raw JSON data
-                opNode.opType = op.opType;                              // Operand type
-                var hasName = _.has(op, 'opName') && op.opName;
-                var name = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
-                opNode.fullName = name;
-                opNode.opName = name.substring(0, 50) + (name.length > 50 ? "...": "");
-                node.opNodes[op.opId] = opNode;
-                // Add entry to opId2fId & opId2colorvar
-                if (op.hasOwnProperty('opId')) {
-                    graph.opId2fId[op.opId] = id;
-                    graph.opId2color[op.opId] = opColors(color_index);
-                    opToColor[op.opId] = opColors(color_index);
-                    color_index ++;
-                }
-            });
-            graph.nodes[id] = node;
-        });
+        graph.collectGraphNodes(graph.queryPlan.physicalPlan.plan, graph);
 
         // If there are more than 7 fragments, do not expand
-        if (graph.queryPlan.physicalPlan.plan.fragments.length < 7) {
+        var root = graph.queryPlan.physicalPlan.plan;
+        if(root.type != "SubQuery" || root.fragments.length < 7){
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
         }
 
-        // Collect graph links
+        // Collect graph links        
         for (var id in graph.nodes) {
             var fragment = graph.nodes[id];
             links[id] = {};
@@ -120,50 +90,30 @@ function Graph () {
                     var link = {};                                      // Link object
                     link.u = {};
                     link.v = {};
-                    link.u.fID = graph.opId2fId[""+op.argOperatorId];   // Src fragment ID
-                    link.u.oID = ""+op.argOperatorId;                   // Src operand ID
+                    link.u.fID = graph.opId2fId[op.argOperatorId];      // Src fragment ID
+                    link.u.oID = op.argOperatorId;                      // Src operand ID
                     link.v.fID = id;                                    // Dst fragment ID
-                    link.v.oID = ""+op.opId;                            // Dst fragment ID
+                    link.v.oID = op.opId;                               // Dst fragment ID
                     var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
                     graph.links["link-" + linkID.hashCode()] = link;
                 }
                 // Add in-fragment links
-                for (var key in op) {
-                    op.opId = ""+op.opId;
-                    if (key == "argChildren") {
-                        op[key].forEach(function(child){
-                            child = ""+child;
-                            var link = {};                                  // Link object
-                            link.u = {};
-                            link.v = {};
-                            link.u.fID = id;                                // Src fragment ID
-                            link.u.oID = child;                             // Src operand ID
-                            link.v.fID = id;                                // Dst fragment ID
-                            link.v.oID = ""+op.opId;                        // Dst fragment ID
-                            var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
-                            fragment.opLinks["link-" + linkID.hashCode()] = link;
-
-                            if (!_.has(links[id], ""+op.opId)) {
-                                links[id][""+op.opId] = [];
-                            }
-                            links[id][""+op.opId].push(child);
-                        });
-                    } else if (key.indexOf("argChild") != -1) {
+                if(op.hasOwnProperty("children")){
+                    op.children.forEach(function(child){
                         var link = {};                                  // Link object
                         link.u = {};
                         link.v = {};
                         link.u.fID = id;                                // Src fragment ID
-                        link.u.oID = ""+op[key];                        // Src operand ID
+                        link.u.oID = child;                             // Src operand ID
                         link.v.fID = id;                                // Dst fragment ID
-                        link.v.oID = ""+op.opId;                        // Dst fragment ID
+                        link.v.oID = op.opId;                           // Dst fragment ID
                         var linkID = link.u.oID + "->" + link.v.oID;    // Link ID
                         fragment.opLinks["link-" + linkID.hashCode()] = link;
-
-                        if (!_.has(links[id], ""+op.opId)) {
-                            links[id][""+op.opId] = [];
+                        if (!_.has(links[id], op.opId)) {
+                            links[id][op.opId] = [];
                         }
-                        links[id][""+op.opId].push(""+op[key]);
-                    }
+                        links[id][op.opId].push(child);
+                    });
                 }
             });
         }
@@ -213,14 +163,87 @@ function Graph () {
         })(plan);
     }
 
+    // normalize operator id: add SubQuery prefix to operator id, unify children
+    Graph.prototype.normalizeOpIds = function normalizeOpIds(plan) {
+        if(plan.type == 'SubQuery') {
+            _.each(plan.fragments, function(fragment){
+                _.each(fragment.operators, function(op){
+                    //add subQueryIndex prefix
+                    op.opId = "s"+plan.subQueryIndex+"_op"+op.opId;
+                    //unify children
+                    for (var key in op) {
+                        if (key == "argChildren"){
+                            op.children = _.map(op.argChildren, function(id){
+                                return "s"+plan.subQueryIndex+"_op"+id;
+                            });
+                        } else if(key.indexOf("argChild") != -1) {
+                            var newid = "s"+plan.subQueryIndex+"_op"+op[key];
+                            if("children" in op){
+                                op.children.push(newid);
+                            } else {
+                                op.children = [newid];
+                            }
+                        } else if(key == "argOperatorId") {
+                            op[key] = "s"+plan.subQueryIndex+"_op"+op[key];
+                        }
+                    }
+                    
+                })
+            });
+        } else if(plan.type == 'Sequence') {
+            _.each(plan.plans, normalizeOpIds);
+        } else if(plan.type == 'DoWhile') {
+            _.each(plan.body, normalizeOpIds);
+        }
+    }
+
     // Collect graph nodes
     Graph.prototype.collectGraphNodes = function collectGraphNodes(plan, graph){
         if(plan.type == 'SubQuery') {
+            plan.fragments.forEach(function(fragment) {
+                // Create fragment node object
+                var node = {};                                              // Node object
+                var id = "s"+plan.subQueryIndex+"_f"+fragment.fragmentIndex; // Node ID
+                node.fragmentIndex = fragment.fragmentIndex;                // Fragment ID
+                node.subQueryIndex = plan.subQueryIndex;                    //SubQuery ID
+                node.rawData = fragment;                                    // RAW JSON data
+                node.workers = fragment.workers;                            // List of workers
+                node.operators = fragment.operators;                        // List of operators
+                node.opNodes = {};                                          // List of graph operand nodes
+                node.opLinks = {};                                          // List of graph operand edges
+                node.name = "Fragment " + fragment.fragmentIndex.toString();// Name for fragment node
 
+                // Process each operator
+                var color_index = 0;
+                node.operators.forEach(function(op) {
+                    // Create new op node(s)
+                    var opNode = {};
+                    opNode.rawData = op;                                    // Raw JSON data
+                    opNode.opType = op.opType;                              // Operand type
+                    var hasName = _.has(op, 'opName') && op.opName;
+                    var name = hasName ? op.opName.replace("Myria", "") : op.opId;  // Operand name
+                    opNode.fullName = name;
+                    opNode.opName = name.substring(0, 50) + (name.length > 50 ? "...": "");
+                    node.opNodes[op.opId] = opNode;
+                    // Add entry to opId2fId & opId2colorvar
+                    if (op.hasOwnProperty('opId')) {
+                        graph.opId2fId[op.opId] = id;
+                        graph.opId2color[op.opId] = opColors(color_index);
+                        opToColor[op.opId] = opColors(color_index);
+                        color_index ++;
+                    }
+                });
+                graph.nodes[id] = node;
+            });
         } else if(plan.type == 'Sequence') {
+            _.each(plan.plans, function(element){
+                collectGraphNodes(element, graph);
+            });
         } else if(plan.type == 'DoWhile') {
+            _.each(plan.body, function(element){
+                collectGraphNodes(element, graph);
+            })
         }
-
     }
 
     // Function that updates the graph edges when a fragment gets expanded
@@ -251,7 +274,7 @@ function Graph () {
         graph.state.opened.forEach(function(fragment) {
             dotStr += templates.graphViz.clusterStyle({ fragment: fragment, label:graph.nodes[fragment].name });
             for (var id in graph.nodes[fragment].opNodes) {
-                var node = graph.nodes[fragment].opNodes[+id];
+                var node = graph.nodes[fragment].opNodes[id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
             }
             for (var id in graph.nodes[fragment].opLinks) {
