@@ -16,7 +16,7 @@ from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language import MyriaAlgebra, GrappaAlgebra, CCAlgebra
 from raco.myrialang import compile_to_json
-from raco.viz import get_dot
+from raco.viz import get_dot, operator_to_dot
 from raco.compile import compile
 from raco.myrial.keywords import get_keywords
 from raco import scheme
@@ -28,6 +28,8 @@ import sys
 
 sys.path.append('./examples')
 from emitcode import emitCode
+
+import itertools
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
@@ -124,12 +126,15 @@ def get_datasets(connection):
     except myria.MyriaError:
         return []
 
+
 # Grappa code: 
 # does similar to myria's compile_to_json only for grappa
 def create_grappa_json(query, logical_plan, physical_plan):
-    return { "datalog" : query,
-             "logical" : str(logical_plan),
-             "physical" : compile(physical_plan) }
+    return { "rawDatalog" : query,
+             "logicalRa" : str(logical_plan),
+             "plan" : compile(physical_plan),
+             "dot" : operator_to_dot(physical_plan[0][1]) }
+
 
 def execute_grappa(filename):
     return 
@@ -466,6 +471,7 @@ class Optimize(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
+        
 
 class Compile(MyriaHandler):
 
@@ -540,7 +546,10 @@ class Execute(MyriaHandler):
                 compiled = create_grappa_json(
                     query, cached_logicalplan, physicalplan)
                 compiled['profilingMode'] = profile
-                
+
+                catalog = MyriaCatalog(conn)
+                query_status = conn.submit_query(compiled)
+                query_url = 'http://localhost:4444/execute?query_id=%d' %(query_status['queryId'])
 #                checkQuery(name, ClangRunner())
 
             self.response.status = 201

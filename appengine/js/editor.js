@@ -1,7 +1,8 @@
 var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
-  editorLanguageKey = 'active-language';
+  editorLanguageKey = 'active-language',
+  editorBackendKey = 'myria';
 
 var backendProcess = 'myria';
 
@@ -61,32 +62,40 @@ function optimizeplan() {
   });
 
   var request = $.getJSON(url).success(function(queryPlan) {
-//    if (backendProcess === "grappa") {
-  //    function rerender() {
-    //    $('#myria_svg').empty();
-        
-      //}
-//      rerender();
-  //  } else {
-     if (backendProcess === "myria") {
+    if (backendProcess === "grappa") {
+      function grapparerender() {
+        $('#myria_svg').empty();
+        var dot = queryPlan.dot;
+        var result = Viz(dot, "svg");
+        $('#myria_svg').html(result);
+        $('svg').width('100%');
+	$('svg').height('95%');
+      }
+      grapparerender();
+
+      // rerender when opening tab because of different space available
+      $('a[href="#queryplan"]').on('shown.bs.tab', grapparerender);
+    } else if (backendProcess === "myria") {
       var i = 0;
       queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
         frag.fragmentIndex = i++;
         return frag;
       });
-}
+
       var g = new Graph();
       g.loadQueryPlan({ physicalPlan: queryPlan });
-
-      function rerender() {
+      function myriarerender() {
         $('#myria_svg').empty();
         g.render(d3.select('#myria_svg'));
       }
-      rerender();
+      myriarerender();
 
       // rerender when opening tab because of different space available
-      $('a[href="#queryplan"]').on('shown.bs.tab', rerender);
-    //} 
+      $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
+    } else {
+	// should not get here 
+	console.log("unsupported backend");
+    }
   }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#myria_svg').empty();
@@ -272,7 +281,6 @@ function setLanguage(language) {
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
   setBackend(backend);
-  backendProcess = backend;
 }
 
 function setBackend(backend) {
@@ -281,6 +289,8 @@ function setBackend(backend) {
 	console.log('Backend not supported: ' + backend);
 	return;
     }
+
+  backendProcess = backend;
 }
 /**
  * This function populates the modal dialog box with the contents of the clicked
@@ -392,19 +402,24 @@ function saveState() {
   localStorage.setItem(editorHistoryKey, JSON.stringify(editor.getHistory()));
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
+  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
 }
 
 function restoreState() {
   var history = JSON.parse(localStorage.getItem(editorHistoryKey));
   var content = localStorage.getItem(editorContentKey);
   var language = localStorage.getItem(editorLanguageKey);
+  var backend = localStorage.getItem(editorBackendKey);
   if (content) {
     $(".language-menu").val(language);
     setLanguage(language);
     updateExamples(language, function() {});
-
+    
+    $(".backend-menu").val(backend);
+    setBackend(backend);
     editor.setValue(content);
     editor.setHistory(history);
+    
     return true;
   }
 
