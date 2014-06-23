@@ -42,6 +42,13 @@ justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
 store(T2, JustX);'''
 
+twitterjoin = '''T1 = scan(TwitterK);
+T2 = scan(TwitterK);
+Joined = [from T1, T2
+          where T1.$1 = T2.$0
+          emit T1.$0 as x0, T1.$1 as x1, T2.$1 as x2];
+store(Joined, TwitterJoined);'''
+
 phytoplankton = '''OppData = scan(armbrustlab:seaflow:all_opp_v3);
 VctData = scan(armbrustlab:seaflow:all_vct);
 
@@ -137,6 +144,7 @@ store(CoM, OUTPUT);
 
 myria_examples = [
     ('JustX: A simple projection query on TwitterK', justx),
+    ('Simple join of TwitterK relation', twitterjoin),
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
     ('Powers Of 2: Simple iteration example', get_example('iteration.myl')),
     ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
