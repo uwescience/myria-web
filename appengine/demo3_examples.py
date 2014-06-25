@@ -7,7 +7,7 @@ Rich = select Emp.name, Dept.name as dept_name
        from Emp, Dept
        where Emp.dept_id=Dept.id and Emp.salary > 6000;
 
-store(Rich, OUTPUT);'''
+store(Rich, sql_output);'''
 
 simple_myrial = '''Dept = scan(public:adhoc:department);
 Emp = scan(public:adhoc:employee);
@@ -17,9 +17,9 @@ EmpDept = [from Emp, Dept
            emit Emp.*, Dept.name as dept_name];
 Rich = [from EmpDept where salary > 6000 emit name, dept_name];
 
-store(Rich, OUTPUT);'''
+store(Rich, myrial_output);'''
 
-simple_datalog = '''Output(emp_name, dept_name) :-
+simple_datalog = '''datalog_output(emp_name, dept_name) :-
   employee(eid, dept_id, emp_name, salary),
   department(dept_id, dept_name, manager),
   salary > 6000'''
