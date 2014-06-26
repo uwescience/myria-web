@@ -67,8 +67,10 @@ def get_plan(query, language, backend, plan_type, connection):
     language = language.strip().lower()
 
     target = MyriaAlgebra
-    if backend == "grappa":
+    if backend == "clang":
         target = CCAlgebra
+    elif backend == "grappa":
+        target = GrappaAlgebra
 
     if language == "datalog":
         dlog = RACompiler()
@@ -127,9 +129,9 @@ def get_datasets(connection):
         return []
 
 
-# Grappa code: 
-# does similar to myria's compile_to_json only for grappa
-def create_grappa_json(query, logical_plan, physical_plan):
+# Grappa/CCAlgebra code: 
+# does similar to myria's compile_to_json only for grappa/clang
+def create_clang_json(query, logical_plan, physical_plan):
     return { "rawDatalog" : query,
              "logicalRa" : str(logical_plan),
              "plan" : compile(physical_plan),
@@ -493,9 +495,12 @@ class Compile(MyriaHandler):
                 catalog = MyriaCatalog(conn)
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, catalog)
-            else:
-                compiled = create_grappa_json(
+            elif backend == "clang":
+                compiled = create_clang_json(
                     query, cached_logicalplan, physicalplan)
+            else:
+                # todo grappa
+                pass
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -540,18 +545,17 @@ class Execute(MyriaHandler):
                 # Issue the query
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
                             (self.app.hostname, self.app.port, query_status['queryId'])
-
-            else:
-                # Grappa
-                compiled = create_grappa_json(
+            elif backend == "clang":
+                compiled = create_clang_json(
                     query, cached_logicalplan, physicalplan)
                 compiled['profilingMode'] = profile
+                query_status = conn.submit_clang_query(compiled)
+                query_url = 'http://localhost:4444/'
 
-                catalog = MyriaCatalog(conn)
-                query_status = conn.submit_query(compiled)
-                query_url = 'http://localhost:4444/execute?query_id=%d' %(query_status['queryId'])
-#                checkQuery(name, ClangRunner())
-
+#               checkQuery(name, ClangRunner())
+            else:
+                #TODO grappa
+                 pass
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url

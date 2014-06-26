@@ -45,7 +45,7 @@ function getplan() {
 }
 
 function optimizeplan() {
-  $('#myria_svg').empty();
+  $('#svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.post("optimize", {
@@ -62,19 +62,19 @@ function optimizeplan() {
   });
 
   var request = $.getJSON(url).success(function(queryPlan) {
-    if (backendProcess === "grappa") {
-      function grapparerender() {
-        $('#myria_svg').empty();
+    if (backendProcess === "clang") {
+      function clangrerender() {
+        $('#svg').empty();
         var dot = queryPlan.dot;
         var result = Viz(dot, "svg");
-        $('#myria_svg').html(result);
+        $('#svg').html(result);
         $('svg').width('100%');
 	$('svg').height('95%');
       }
-      grapparerender();
+      clangrerender();
 
       // rerender when opening tab because of different space available
-      $('a[href="#queryplan"]').on('shown.bs.tab', grapparerender);
+      $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
     } else if (backendProcess === "myria") {
       var i = 0;
       queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
@@ -85,8 +85,8 @@ function optimizeplan() {
       var g = new Graph();
       g.loadQueryPlan({ physicalPlan: queryPlan });
       function myriarerender() {
-        $('#myria_svg').empty();
-        g.render(d3.select('#myria_svg'));
+        $('#svg').empty();
+        g.render(d3.select('#svg'));
       }
       myriarerender();
 
@@ -98,7 +98,7 @@ function optimizeplan() {
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
-    $('#myria_svg').empty();
+    $('#svg').empty();
   });
 }
 
@@ -284,7 +284,7 @@ function changeBackend() {
 }
 
 function setBackend(backend) {
-  var backends = [ 'myria', 'grappa' ];
+  var backends = [ 'myria', 'grappa', 'clang'];
     if (!_.contains(backends, backend)) {
 	console.log('Backend not supported: ' + backend);
 	return;
