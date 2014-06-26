@@ -198,9 +198,9 @@ class RedirectToEditor(MyriaHandler):
 
     def get(self, query=None):
         if query is not None:
-            self.redirect("/demo3?query=%s" % urllib.quote(query, ''), True)
+            self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
         else:
-            self.redirect("/demo3", True)
+            self.redirect("/editor", True)
 
 
 class MyriaPage(MyriaHandler):
