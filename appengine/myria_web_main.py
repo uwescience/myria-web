@@ -26,9 +26,6 @@ import myria
 
 import sys
 
-sys.path.append('./examples')
-from emitcode import emitCode
-
 import itertools
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
