@@ -1,4 +1,3 @@
-import os
 
 simple_sql = '''Dept = scan(public:adhoc:department);
 Emp = scan(public:adhoc:employee);
@@ -107,7 +106,7 @@ output = [from Points, bounds
 store(output, OUTPUT);"""
 
 
-pagerank ="""const alpha: .85;
+pagerank = """const alpha: .85;
 const epsilon: .0001;
 
 Edge = scan(public:adhoc:edges);
@@ -180,10 +179,11 @@ demo3_sql_examples = [
 ]
 
 demo3_datalog_examples = [
-  ('Simple datalog query', simple_datalog)
+    ('Simple datalog query', simple_datalog)
 ]
 
-demo3_examples = { 'datalog' : demo3_datalog_examples,
-                   'sql': demo3_sql_examples,
-                   'myrial' : demo3_myr_examples
-                 } 
+demo3_examples = {
+    'datalog' : demo3_datalog_examples,
+    'sql': demo3_sql_examples,
+    'myrial': demo3_myr_examples
+}
