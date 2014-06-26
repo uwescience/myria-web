@@ -183,7 +183,7 @@ demo3_datalog_examples = [
 ]
 
 demo3_examples = {
-    'datalog' : demo3_datalog_examples,
+    'datalog': demo3_datalog_examples,
     'sql': demo3_sql_examples,
     'myrial': demo3_myr_examples
 }
