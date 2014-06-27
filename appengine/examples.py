@@ -49,6 +49,10 @@ Joined = [from T1, T2
           emit T1.$0 as src, T1.$1 as link, T2.$1 as dst];
 store(Joined, TwoHopsInTwitter);'''
 
+profiling = '''P = scan(public:logs:Profiling);
+Agg = [from P emit worker_id() as workerId, count(*) as numProfilings];
+store(Agg, NumProfilings);'''
+
 phytoplankton = '''OppData = scan(armbrustlab:seaflow:all_opp_v3);
 VctData = scan(armbrustlab:seaflow:all_vct);
 
@@ -89,6 +93,7 @@ myria_examples = [
     ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
     ('Powers Of 2: Simple iteration example', get_example('iteration.myl')),
     ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
+    ('Aggregate profiling data on each worker', profiling),
 #    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
 ]
 
