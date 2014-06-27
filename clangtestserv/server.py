@@ -7,10 +7,13 @@ class MyTCPServer(SocketServer.ThreadingTCPServer):
 
 class MyTCPServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
+        # TODO figure out size to read in
+        readsize = 10192
         try:
-            data = json.loads(self.request.recv(10192).strip())
+            data = json.loads(self.request.recv(readsize).strip())
             # process the data, i.e. print it:
             print data
+            # write to file qid.cpp
             filename = str(data['qid']) + ".cpp"
             if filename == "None.cpp":
                 filename = "temp.cpp"
