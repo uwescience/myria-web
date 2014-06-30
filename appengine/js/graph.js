@@ -80,11 +80,10 @@ function Graph () {
             }
         }
 
-        // Collect graph links        
-        for (var id in graph.nodes) {
-            var fragment = graph.nodes[id];
+        // Collect graph links
+        _.each(graph.nodes, function(fragment, id, nodes){
             links[id] = {};
-            fragment.operators.forEach(function(op) {
+            _.each(fragment.operators, function(op){
                 // Add cross-fragment links
                 if (op.hasOwnProperty('argOperatorId')) {
                     var link = {};                                      // Link object
@@ -116,7 +115,7 @@ function Graph () {
                     });
                 }
             });
-        }
+        });
 
         _.each(links, function(linkdict, fragid) {
             var roots = _.difference(_.keys(linkdict), _.flatten(_.values(linkdict)));
@@ -161,7 +160,7 @@ function Graph () {
                 _.each(plan.body, iterateSubQuery);
             }
         })(plan);
-    }
+    };
 
     // normalize operator id: add SubQuery prefix to operator id, unify children
     Graph.prototype.normalizeOpIds = function normalizeOpIds(plan) {
@@ -171,7 +170,7 @@ function Graph () {
                     //add subQueryIndex prefix
                     op.opId = "s"+plan.subQueryIndex+"_op"+op.opId;
                     //unify children
-                    for (var key in op) {
+                    _.each(op, function(value, key, op){
                         if (key == "argChildren"){
                             op.children = _.map(op.argChildren, function(id){
                                 return "s"+plan.subQueryIndex+"_op"+id;
@@ -184,18 +183,17 @@ function Graph () {
                                 op.children = [newid];
                             }
                         } else if(key == "argOperatorId") {
-                            op[key] = "s"+plan.subQueryIndex+"_op"+op[key];
+                            value = "s"+plan.subQueryIndex+"_op"+op[key];
                         }
-                    }
-                    
-                })
+                    });
+                });
             });
         } else if(plan.type == 'Sequence') {
             _.each(plan.plans, normalizeOpIds);
         } else if(plan.type == 'DoWhile') {
             _.each(plan.body, normalizeOpIds);
         }
-    }
+    };
 
     // Collect graph nodes
     Graph.prototype.collectGraphNodes = function collectGraphNodes(plan, graph){
@@ -204,6 +202,7 @@ function Graph () {
                 // Create fragment node object
                 var node = {};                                              // Node object
                 var id = "s"+plan.subQueryIndex+"_f"+fragment.fragmentIndex; // Node ID
+                fragment.fid = id;                                          // fid
                 node.fragmentIndex = fragment.fragmentIndex;                // Fragment ID
                 node.subQueryIndex = plan.subQueryIndex;                    //SubQuery ID
                 node.rawData = fragment;                                    // RAW JSON data
@@ -242,9 +241,9 @@ function Graph () {
         } else if(plan.type == 'DoWhile') {
             _.each(plan.body, function(element){
                 collectGraphNodes(element, graph);
-            })
+            });
         }
-    }
+    };
 
     // Function that updates the graph edges when a fragment gets expanded
     Graph.prototype.expandNode = function(node) {
@@ -277,7 +276,7 @@ function Graph () {
                 var node = graph.nodes[fragment].opNodes[id];
                 dotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
             }
-            for (var id in graph.nodes[fragment].opLinks) {
+            for (id in graph.nodes[fragment].opLinks) {
                 var link = graph.nodes[fragment].opLinks[id];
                 links += templates.graphViz.link({u: link.u.oID, v: link.v.oID});
             }
@@ -289,7 +288,23 @@ function Graph () {
             dotStr += '\t\t"' + key + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.name });
         });
         dotStr += links + "}";
+        console.log(dotStr);
         return dotStr;
+    };
+
+    // Generate subgraph dot string
+    Graph.prototype.subgraphDot = function subgraphDot(plan, dotstring) {
+        var ret = {};
+        if(plan.type == 'SubQuery'){
+
+        } else if(plan.type == 'Sequence') {
+
+        } else if(plan.type == 'DoWhile') {
+
+        } else {
+            console.warn("plan should be SubQuery or Sequence or DoWhile");
+        }
+        return ret;
     };
 
     // Returns the svg description of the graph object
@@ -359,7 +374,7 @@ function Graph () {
                     };
                 }
             } else if (cols[0]=="edge") {
-                var linkID = undefined;
+                var linkID;
                 var src = cols[1].replace(/\"/g, '');
                 var dst = cols[2].replace(/\"/g, '');
                 var points = [];
@@ -393,8 +408,9 @@ function Graph () {
                     }
                 }
                 var lid = "link-" + linkID.hashCode();
+                var link;
                 if (type == "op") {
-                    var link = graph.nodes[graph.opId2fId[src]].opLinks[lid];
+                    link = graph.nodes[graph.opId2fId[src]].opLinks[lid];
                     link.viz = {
                         type: type,
                         src: src,
@@ -404,7 +420,7 @@ function Graph () {
                         id: lid
                     };
                 } else if (type == "frag") {
-                    var link = graph.links[lid];
+                    link = graph.links[lid];
                     link.viz = {
                         type: type,
                         src: src,
@@ -430,7 +446,7 @@ function Graph () {
             var maxX = 0;
             var minY = Infinity;
             var maxY = 0;
-            for (oID in fragment.opNodes) {
+            for (var oID in fragment.opNodes) {
                 var op = fragment.opNodes[oID].viz;
                 minX = (op.x<minX) ? op.x : minX;
                 maxX = ((op.x+op.w)>maxX) ? (op.x+op.w) : maxX;
@@ -453,18 +469,18 @@ function Graph () {
             // Add cluster
             nodes.push(node);
             // Add op nodes
-            for (opId in fragment.opNodes) {
+            for (var opId in fragment.opNodes) {
                 var opNode = fragment.opNodes[opId];
                 nodes.push(opNode.viz);
             }
             // Add links
             for (opId in fragment.opLinks) {
-                var opLink = fragment.opLinks[opId]
+                var opLink = fragment.opLinks[opId];
                 links.push(opLink.viz);
             }
         });
         // Add non-exploded fragments
-        for (fragID in graph.nodes) {
+        for (var fragID in graph.nodes) {
             if (graph.state.opened.indexOf(fragID) == -1) {
                 nodes.push(graph.nodes[fragID].viz);
             }
