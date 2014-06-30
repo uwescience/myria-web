@@ -268,7 +268,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("y1", barHeight(avgY))
                 .attr("x2", matrixWidth)
                 .attr("y2", barHeight(avgY))
-                .tooltip("average");
+                .tooltip("average " + d3.round(avgY, 1));
 
             rowBarChart.select("line.average").remove();
             rowBarChart.append("line")
@@ -277,7 +277,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 .attr("x1", barHeight(avgX))
                 .attr("y2", matrixHeight)
                 .attr("x2", barHeight(avgX))
-                .tooltip("average");
+                .tooltip("average " + d3.round(avgX, 1));
 
             /* Controls */
 
