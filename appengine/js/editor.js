@@ -455,7 +455,7 @@ $(function () {
   editor.on("keypress", resetResults);
   $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
-    optimizeplan();
+    getplan();
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
@@ -464,7 +464,7 @@ $(function () {
     resetResults();
     var example_query = $(this).text();
     editor.setValue(example_query);
-    optimizeplan();
+    getplan();
   });
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
@@ -474,7 +474,7 @@ $(function () {
     changeLanguage();
   }
 
-  optimizeplan();
+  getplan();
 
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
