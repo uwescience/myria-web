@@ -21,7 +21,7 @@ from raco.myrial.keywords import get_keywords
 from raco.catalog import Catalog
 from raco.algebra import DEFAULT_CARDINALITY
 from raco import scheme
-from examples import examples
+from federated_examples import federated_examples as examples
 from demo3_examples import demo3_examples
 from pagination import Pagination
 
