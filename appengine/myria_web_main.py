@@ -14,8 +14,9 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaLeftDeepTreeAlgebra, MyriaHyperCubeAlgebra
-from raco.myrialang import compile_to_json
+from raco.federatedlang import FederatedAlgebra
+from raco.algebra import LogicalAlgebra
+from raco.compile import optimize
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.catalog import Catalog
@@ -68,10 +69,7 @@ def get_plan(query, language, plan_type, connection,
         language = "datalog"
     language = language.strip().lower()
 
-    if multiway_join:
-        target_algebra = MyriaHyperCubeAlgebra(catalog)
-    else:
-        target_algebra = MyriaLeftDeepTreeAlgebra()
+    target_algebra = FederatedAlgebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -94,10 +92,12 @@ def get_plan(query, language, plan_type, connection,
         processor = MyrialInterpreter.StatementProcessor(
             MyriaCatalog(connection))
         processor.evaluate(parsed)
+
+        lp = processor.get_logical_plan()
         if plan_type == 'logical':
-            return processor.get_logical_plan()
+            return lp
         elif plan_type == 'physical':
-            return processor.get_physical_plan()
+            return optimize(lp, target=target_algebra, source=LogicalAlgebra)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
 
