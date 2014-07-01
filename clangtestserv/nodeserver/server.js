@@ -1,45 +1,59 @@
 var http = require('http');
 var qs = require("querystring");
 var fs = require('fs');
-var url = 'http://localhost:8080/compile?query=A(x)+%3A-+R(x%2C3)&language=datalog&backend=clang';
+var cp = require('child_process');
 
-var qid = 0;
-var plan;
+var url = 'http://localhost:8080/compile?query=A(x)+%3A-+R2(x%2C3)&language=datalog&backend=clang';
+var filepath = '../../submodules/raco/c_test_environment/';
+
+var counter = 0;
+var myriares;
 http.createServer(function (req, res) {
-    accept();
+    var plan;
+    var qid = counter;
+    console.log("wait");
+    if (req.method == "POST") {
+	console.log('post');
+	var body = '';
+	req.on('data', function(chunk) {
+            body += chunk;
+	});
+	req.on('end', function() {
+	    myriares = JSON.parse(body);
+	    
+	    plan = myriares['plan'];
+	    fs.writeFile(filepath + 'q' + qid + ".cpp", plan, function(err) {
+		if (err) {
+		    console.log(err);
+		}
+	    });
+	});
+
+	runClang(qid);
+
+	counter++;
+   }
+
     res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<html><head><body><p>' + qid
-	      + ' ' + plan + '</p></body></head></html>');
+    res.write("success");
+
     res.end();
 }).listen(1337, 'localhost');
 console.log('Server running at http://localhost:1337/');
 
-
-function accept() {
-    
-    http.get(url, function(res) {
-	var body = '';
-	
-	res.on('data', function(chunk) {
-	    body += chunk;
-	});
-	
-	res.on('end', function() {
-	    var myriares = JSON.parse(body);
-	    qid++;
-	    plan = myriares['plan'];
-	    fs.writeFile(qid + ".cpp", plan, function(err) {
-		if (err) {
-		    console.log(err);
-		} else {
-		    console.log("not errr");
-		}
-	    });
-	});
-    }).on('error', function(e) {
-	console.log("error! ", e);
+function runClang(qid) {
+    var filename = 'q' + qid;
+    var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
+		    killSignal: 'SIGTERM', cwd: filepath, env: null };
+    var cmd = 'python runclang.py clang ' + filename;
+    cp.exec(cmd, options, function(error, stdout, stderr) {
+	console.log('stdout: ' + stdout);
+	console.log('stderr: ' + stderr);
+	if (error !== null) {
+	    console.log('exec error: ' + error);
+	}
+	console.log(filename + ' done');
     });
-
 }
 
 function test() {

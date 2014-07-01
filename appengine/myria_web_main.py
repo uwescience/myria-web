@@ -134,9 +134,8 @@ def create_clang_json(query, logical_plan, physical_plan):
              "plan" : compile(physical_plan),
              "dot" : operator_to_dot(physical_plan[0][1]) }
 
-
-def execute_grappa(filename):
-    return 
+def create_clang_execute_json(physical_plan, backend):
+    return {"plan" : compile(physical_plan), "backend" : backend}
 
 class MyriaCatalog:
 
@@ -523,14 +522,15 @@ class Execute(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
-        cached_logicalplan = str(
-                get_logical_plan(query, language, self.app.connection))
 
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
                 query, language, backend, self.app.connection)
             if backend == "myria":
+                cached_logicalplan = str(
+                    get_logical_plan(query, language, self.app.connection))
+            
                 # Get the Catalog needed to get schemas for compiling the query
                 catalog = MyriaCatalog(conn)
                 # .. and compile
@@ -543,13 +543,10 @@ class Execute(MyriaHandler):
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
                             (self.app.hostname, self.app.port, query_status['queryId'])
             elif backend == "clang":
-                compiled = create_clang_json(
-                    query, cached_logicalplan, physicalplan)
-                compiled['profilingMode'] = profile
+                compiled = create_clang_execute_json(
+                    physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
-                query_url = 'http://localhost:4444/'
-
-#               checkQuery(name, ClangRunner())
+                query_url = 'http://localhost:8080/execute?query_id=%d' %(query_status['queryId'])
             else:
                 #TODO grappa
                  pass

@@ -137,7 +137,7 @@ function displayQueryStatus(query_status) {
   var status = query_status['status'];
   var query_id = query_status['queryId'];
   $("#executed").text(
-      "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
+    "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
   if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
     setTimeout(function() {
       checkQueryStatus(query_id);
@@ -190,6 +190,7 @@ function executeplan() {
   request.error(function(jqXHR, textStatus, errorThrown) {
     $('#executed').text(jqXHR.responseText);
   });
+  
 }
 
 function resetResults() {
