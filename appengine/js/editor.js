@@ -456,6 +456,7 @@ $(function () {
   $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     getplan();
+    $('#relational-plan').collapse('show');
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
