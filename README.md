@@ -69,7 +69,7 @@ git submodule init
 
 
 
-Install the required nosetests plugins.
+Install the developer dependencies.
 
 ```sh
 pip install -r requirements-dev.txt
