@@ -24,8 +24,6 @@ from examples import examples, demo3_examples
 from pagination import Pagination
 import myria
 
-import sys
-
 import itertools
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
@@ -103,8 +101,8 @@ def get_plan(query, language, backend, plan_type, connection):
     raise NotImplementedError('Should not be able to get here')
 
 
-def get_logical_plan(query, language, connection):
-    return get_plan(query, language, None, 'logical', connection)
+def get_logical_plan(query, language, backend, connection):
+    return get_plan(query, language, backend, 'logical', connection)
 
 
 def get_physical_plan(query, language, backend, connection):
@@ -437,7 +435,7 @@ class Plan(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         try:
-            plan = get_logical_plan(query, language, self.app.connection)
+            plan = get_logical_plan(query, language, backend, self.app.connection)
         except (MyrialCompileException,
                 MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -483,7 +481,7 @@ class Compile(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection))
+            get_logical_plan(query, language, backend, self.app.connection))
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend,  self.app.connection)
@@ -533,7 +531,7 @@ class Execute(MyriaHandler):
                 query, language, backend, self.app.connection)
             if backend == "myria":
                 cached_logicalplan = str(
-                    get_logical_plan(query, language, self.app.connection))
+                    get_logical_plan(query, language, backend, self.app.connection))
             
                 # Get the Catalog needed to get schemas for compiling the query
                 catalog = MyriaCatalog(conn)
@@ -551,7 +549,6 @@ class Execute(MyriaHandler):
                     physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
                 query_url = 'http://localhost:1337/query?qid=%d' %(query_status['queryId'])
-#'http://localhost:8080/execute?query_id=%d' %(query_status['queryId'])
             else:
                 #TODO grappa
                  pass

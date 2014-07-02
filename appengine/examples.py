@@ -162,6 +162,6 @@ demo3_myr_examples = [
     ('Sigma-clipping (naive version)', sigma_clipping_naive)
 ]
 
-demo3_examples = { 'datalog' : [], 'sql': [], 'grappa': [],
+demo3_examples = { 'datalog' : [], 'sql': [],
                    'myrial' : demo3_myr_examples
                  } 

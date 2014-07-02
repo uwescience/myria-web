@@ -104,8 +104,8 @@ function parseQuery(req, res) {
 	    });
 	});
 
-	runClang(req, res, qid, start);
-
+	runClang(qid);
+	getJSON(req, res, qid, start);
 	counter++;
    } else {
        res.writeHead(400, {'Content-Type': 'text/html'});
@@ -115,7 +115,7 @@ function parseQuery(req, res) {
 }
 
 // runs clang on server
-function runClang(req, res, qid, start) {
+function runClang(qid) {
     var filename = 'q' + qid;
     var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
 		    killSignal: 'SIGTERM', cwd: filepath, env: null };
@@ -126,7 +126,6 @@ function runClang(req, res, qid, start) {
 	    console.log('error: ' + error);
 	} else {
 	    console.log(filename + ' done');
-	    getJSON(req, res, qid, start);
 	}
     });
 }
