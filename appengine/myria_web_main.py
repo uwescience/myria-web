@@ -187,7 +187,6 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
-
     def get_connection_string(self):
         conn = self.app.connection
         hostname = self.app.hostname
@@ -322,8 +321,11 @@ class Datasets(MyriaPage):
 
     def get(self, connection_=None):
         conn = self.app.connection
+        backend = self.request.get("backend")
+        if backend == "clang":
+            conn = 'http://localhost:1337/datasets'
         try:
-            datasets = conn.datasets()
+            datasets = get_datasets(conn)
         except:
             datasets = []
 
@@ -342,6 +344,7 @@ class Datasets(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('datasets.html')
         self.response.out.write(template.render(template_vars))
+    
 
 
 class Examples(MyriaPage):
@@ -527,6 +530,7 @@ class Execute(MyriaHandler):
             # Generate physical plan
             physicalplan = get_physical_plan(
                 query, language, backend, self.app.connection)
+            status = 201
             if backend == "myria":
                 cached_logicalplan = str(
                     get_logical_plan(query, language, self.app.connection))
@@ -543,14 +547,16 @@ class Execute(MyriaHandler):
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
                             (self.app.hostname, self.app.port, query_status['queryId'])
             elif backend == "clang":
+                status = 200
                 compiled = create_clang_execute_json(
                     physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
-                query_url = 'http://localhost:8080/execute?query_id=%d' %(query_status['queryId'])
+                query_url = 'http://localhost:1337/query?qid=%d' %(query_status['queryId'])
+#'http://localhost:8080/execute?query_id=%d' %(query_status['queryId'])
             else:
                 #TODO grappa
                  pass
-            self.response.status = 201
+            self.response.status = status
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
             self.response.write(json.dumps(query_status))

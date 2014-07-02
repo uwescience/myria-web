@@ -3,9 +3,21 @@
 {% block datasets_active %} class="active"{% endblock %}
 
 {% block content %}
+            <form class="form-horizontal" role="form">
+                <div class="form-group">
+		    <label for="backend-menu" class="col-sm-2 control-label"> Backend Datasets </label>
+		    <div class = "col-sm-9">
+		      <select class="form-control backend-menu">
+			<option value="myria" selected> Myria </option>
+			<option value="clang"> C </option>
+                      </select>
+                    </div>
+                </div>
+            </form>
+
 	<div class="panel panel-primary">
 		<div class="panel-heading">
-			<h3 class="panel-title">Datasets in Myria</h3>
+			<h3 class="panel-title">Datasets</h3>
 		</div>
 		<table class="table table-condensed">
 		<thead>
@@ -15,17 +27,14 @@
 				<th>Create time</th>
 				<th>Download</th>
 			</tr>
-			</thead>
-			{% for d in datasets %}
-			<tr>
-				<td><a href="{{d.uri}}" target="_blank" data-toggle="tooltip" title="{{d.relationKey.userName}}:{{d.relationKey.programName}}:{{d.relationKey.relationName}}">{{d.relationKey.relationName}}</a></td>
-				<td><a href="{{d.queryUrl}}" target=_blank>{{d.queryId}}</a></td>
-				<td class="query-finish">
-					<abbr class="timeago" title="{{d.created}}">{{d.created}}</abbr>
-				</td>
-				<td><a href="{{d.uri}}/data?format=json" rel="nofollow" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" rel="nofollow" class="label label-default">TSV</a></td>
-			</tr>
-			{% endfor %}
+		</thead>
+		<tbody id="datatable">
+		  
+		</tbody>
 		</table>
 	</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/dataset.js"></script>
 {% endblock %}
