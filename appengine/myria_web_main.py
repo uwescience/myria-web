@@ -323,7 +323,7 @@ class Datasets(MyriaPage):
         conn = self.app.connection
         backend = self.request.get("backend")
         if backend == "clang":
-            conn = 'http://localhost:1337/datasets'
+            conn = 'http://localhost:1337/dataset'
         try:
             datasets = get_datasets(conn)
         except:
@@ -487,6 +487,7 @@ class Compile(MyriaHandler):
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend,  self.app.connection)
+        compiled=""
 
         # Get the Catalog needed to get schemas for compiling the query
         try:
@@ -530,7 +531,6 @@ class Execute(MyriaHandler):
             # Generate physical plan
             physicalplan = get_physical_plan(
                 query, language, backend, self.app.connection)
-            status = 201
             if backend == "myria":
                 cached_logicalplan = str(
                     get_logical_plan(query, language, self.app.connection))
@@ -547,7 +547,6 @@ class Execute(MyriaHandler):
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
                             (self.app.hostname, self.app.port, query_status['queryId'])
             elif backend == "clang":
-                status = 200
                 compiled = create_clang_execute_json(
                     physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
@@ -556,7 +555,7 @@ class Execute(MyriaHandler):
             else:
                 #TODO grappa
                  pass
-            self.response.status = status
+            self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
             self.response.write(json.dumps(query_status))

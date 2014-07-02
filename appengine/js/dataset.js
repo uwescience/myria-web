@@ -23,16 +23,16 @@ function loadTable() {
   var relName = _.template('<tr><td><a href="<%- url %>" target="_blank" data-toggle="tooltip" title="<%- user %>:<%- program %><%- name %>"><%- name %></a></td>');
   var extraInfo = _.template('<td><a href="<%- url %>" target=_blank><%- queryId %></a></td><td class="query-finish"><abbr class="timeago" title="<%- created %>"><%- created %></abbr></td>');
   var download = _.template('<td><a href="<%- url %>/data?format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- url %>/data?format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- url %>/data?format=tsv" rel="nofollow" class="label label-default">TSV</a></td></tr>');
-  
   var url = 'http://vega.cs.washington.edu:1776/dataset';
   var grappaserv = ['grappa', 'clang'];
   if (_.contains(grappaserv, backendProcess)) {
       url = 'http://localhost:1337/dataset';
   }
       
-  $.getJSON(url,
+  var jqxhr = $.getJSON(url,
 	    function(data) {
 	      var html = '';
+		console.log(data[0]);
 		_.each(data, function(d) {
 		    var relation = d['relationKey'];
 		    html += relName({url: d['uri'], user: relation['userName'],
@@ -43,6 +43,10 @@ function loadTable() {
 		    html += download({url: d['uri']});
 		});
 	       $("#datatable").html(html);
+	   }).fail (function(err, n, a) { 
+	       console.log(err);
+	       console.log(n);
+	       console.log(a);
 	   });
 }
 function saveState() {

@@ -1,3 +1,4 @@
+
 var http = require('http');
 var qs = require("querystring");
 var fs = require('fs');
@@ -28,13 +29,44 @@ function accessDataset(req, res) {
     var exists = fs.existsSync(file);
     if (exists) {
 	var db = new sqlite.Database(file);
-	
+	selectTable(db, res);
     } else {
        res.writeHead(404, {'Content-Type': 'text/html'});
        res.write("database file not found");
        res.end();
     }
+}
 
+function selectTable(db, res) {
+	var jsonarr = [];
+        var ts = new Date().getTime();
+	db.each("SELECT * FROM Catalog", function(err, row) {
+	    if (err) {
+		console.log(err);
+	    } else {
+		var relName = row.relName;
+		var qid = row.queryId;
+		var jsonob = {relationKey : {relationName : relName, programName: "test", userName: "york"} , queryId: qid, created: ts, uri: 'http://localhost:1337/dataset'};
+		jsonarr.push(jsonob);
+
+	    }
+	}, function() {
+	    writeJSON(jsonarr, res);
+	    closeDB(db)
+	});
+
+}
+
+function closeDB(db) {
+    console.log("db closed");
+    db.close();
+}
+
+function writeJSON (jsonarr, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.write(JSON.stringify(jsonarr));
+    res.end();
 }
 
 function getJSON(req, res, qid, start) {
