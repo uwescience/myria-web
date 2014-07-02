@@ -24,8 +24,7 @@ from examples import examples, demo3_examples
 from pagination import Pagination
 import myria
 
-import itertools
-
+import sys
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -54,6 +53,7 @@ except:
     BRANCH = "branch file not found"
 
 QUERIES_PER_PAGE = 25
+
 
 def get_plan(query, language, backend, plan_type, connection):
     # Fix up the language string
@@ -124,16 +124,18 @@ def get_datasets(connection):
         return []
 
 
-# Grappa/CCAlgebra code: 
+# Grappa/CCAlgebra code:
 # does similar to myria's compile_to_json only for grappa/clang
 def create_clang_json(query, logical_plan, physical_plan):
-    return { "rawDatalog" : query,
-             "logicalRa" : str(logical_plan),
-             "plan" : compile(physical_plan),
-             "dot" : operator_to_dot(physical_plan[0][1]) }
+    return {"rawDatalog": query,
+            "logicalRa": str(logical_plan),
+            "plan": compile(physical_plan),
+            "dot": operator_to_dot(physical_plan[0][1])}
+
 
 def create_clang_execute_json(physical_plan, backend):
-    return {"plan" : compile(physical_plan), "backend" : backend}
+    return {"plan": compile(physical_plan), "backend": backend}
+
 
 class MyriaCatalog:
 
@@ -155,6 +157,7 @@ class MyriaCatalog:
             raise ValueError(rel_key)
         schema = dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
+
 
 class MyriaHandler(webapp2.RequestHandler):
 
@@ -320,10 +323,11 @@ class Datasets(MyriaPage):
     def get(self, connection_=None):
         conn = self.app.connection
         backend = self.request.get("backend")
+
         if backend == "clang":
             conn = 'http://localhost:1337/dataset'
         try:
-            datasets = get_datasets(conn)
+            datasets = conn.datasets()
         except:
             datasets = []
 
@@ -342,7 +346,6 @@ class Datasets(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('datasets.html')
         self.response.out.write(template.render(template_vars))
-    
 
 
 class Examples(MyriaPage):
@@ -430,12 +433,14 @@ class Plan(MyriaHandler):
         self.get()
 
     def get(self):
-        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        self.response.headers.add_header(
+            "Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
         try:
-            plan = get_logical_plan(query, language, backend, self.app.connection)
+            plan = get_logical_plan(query, language, backend,
+                                    self.app.connection)
         except (MyrialCompileException,
                 MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -450,12 +455,14 @@ class Plan(MyriaHandler):
 class Optimize(MyriaHandler):
 
     def get(self):
-        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        self.response.headers.add_header(
+            "Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
         try:
-            optimized = get_physical_plan(query, language, backend, self.app.connection)
+            optimized = get_physical_plan(query, language, backend,
+                                          self.app.connection)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(
@@ -470,7 +477,6 @@ class Optimize(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
-        
 
 class Compile(MyriaHandler):
 
@@ -480,17 +486,22 @@ class Compile(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
+        print >> sys.stderr, "something that works(%s)" % len(backend)
+        if backend == "":
+            backend = "myria"
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, self.app.connection))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend,  self.app.connection)
-        compiled=""
-
+        physicalplan = get_physical_plan(query, language, backend,
+                                         self.app.connection)
         # Get the Catalog needed to get schemas for compiling the query
+        compiled = None
         try:
             if backend == "myria":
+                print >> sys.stderr, "before catalog"
                 catalog = MyriaCatalog(conn)
+                print >> sys.stderr, "after catalog"
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, catalog)
             elif backend == "clang":
@@ -524,6 +535,8 @@ class Execute(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
+        if backend == "":
+            backend = "myria"
 
         try:
             # Generate physical plan
@@ -531,8 +544,8 @@ class Execute(MyriaHandler):
                 query, language, backend, self.app.connection)
             if backend == "myria":
                 cached_logicalplan = str(
-                    get_logical_plan(query, language, backend, self.app.connection))
-            
+                    get_logical_plan(query, language, backend,
+                                     self.app.connection))
                 # Get the Catalog needed to get schemas for compiling the query
                 catalog = MyriaCatalog(conn)
                 # .. and compile
@@ -543,15 +556,17 @@ class Execute(MyriaHandler):
                 query_status = conn.submit_query(compiled)
                 # Issue the query
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
-                            (self.app.hostname, self.app.port, query_status['queryId'])
+                            (self.app.hostname, self.app.port,
+                             query_status['queryId'])
             elif backend == "clang":
                 compiled = create_clang_execute_json(
                     physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
-                query_url = 'http://localhost:1337/query?qid=%d' %(query_status['queryId'])
+                query_url = 'http://localhost:1337/query?qid=%d' %\
+                            (query_status['queryId'])
             else:
-                #TODO grappa
-                 pass
+                # TODO grappa
+                pass
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -596,11 +611,12 @@ class Dot(MyriaHandler):
         plan_type = self.request.get("type")
         backend = self.request.get("backend")
 
-        plan = get_plan(query, language, backend, plan_type, self.app.connection)
+        plan = get_plan(query, language, backend, plan_type,
+                        self.app.connection)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
-  
+
     def post(self):
         "The same as get(), here because there may be long programs"
         self.get()

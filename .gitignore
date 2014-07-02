@@ -4,3 +4,4 @@
 appengine/VERSION
 appengine/BRANCH
 .idea
+*.log
