@@ -67,11 +67,12 @@ git submodule init
 
 # Run the tests
 
+
+
 Install the required nosetests plugins.
 
 ```sh
-pip install nosegae
-pip install nose-exclude
+pip install -r requirements-dev.txt
 ```
 
 Run
