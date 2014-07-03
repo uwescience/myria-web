@@ -24,7 +24,6 @@ from examples import examples, demo3_examples
 from pagination import Pagination
 import myria
 
-import sys
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -61,6 +60,7 @@ def get_plan(query, language, backend, plan_type, connection):
         language = "datalog"
     language = language.strip().lower()
 
+    # default to MyriaAlgebra
     target = MyriaAlgebra
     if backend == "clang":
         target = CCAlgebra
@@ -124,8 +124,7 @@ def get_datasets(connection):
         return []
 
 
-# Grappa/CCAlgebra code:
-# does similar to myria's compile_to_json only for grappa/clang
+# creates a json similar to myria json
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawDatalog": query,
             "logicalRa": str(logical_plan),
@@ -321,25 +320,7 @@ class Profile(MyriaPage):
 class Datasets(MyriaPage):
 
     def get(self, connection_=None):
-        conn = self.app.connection
-        backend = self.request.get("backend")
-
-        if backend == "clang":
-            conn = 'http://localhost:1337/dataset'
-        try:
-            datasets = conn.datasets()
-        except:
-            datasets = []
-
-        for d in datasets:
-            try:
-                d['queryUrl'] = 'http://%s:%d/query/query-%d' %\
-                    (self.app.hostname, self.app.port, d['queryId'])
-            except:
-                pass
-
         template_vars = self.base_template_vars()
-        template_vars['datasets'] = datasets
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -392,6 +373,7 @@ class Editor(MyriaPage):
 
 
 class Demo3(MyriaPage):
+
     def get(self):
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -433,8 +415,7 @@ class Plan(MyriaHandler):
         self.get()
 
     def get(self):
-        self.response.headers.add_header(
-            "Access-Control-Allow-Origin", "*")
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
@@ -455,8 +436,7 @@ class Plan(MyriaHandler):
 class Optimize(MyriaHandler):
 
     def get(self):
-        self.response.headers.add_header(
-            "Access-Control-Allow-Origin", "*")
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
@@ -486,9 +466,11 @@ class Compile(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend")
-        print >> sys.stderr, "something that works(%s)" % len(backend)
-        if backend == "":
+
+        if not backend:
+            # default to myria
             backend = "myria"
+
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, self.app.connection))
 
@@ -499,16 +481,14 @@ class Compile(MyriaHandler):
         compiled = None
         try:
             if backend == "myria":
-                print >> sys.stderr, "before catalog"
                 catalog = MyriaCatalog(conn)
-                print >> sys.stderr, "after catalog"
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, catalog)
             elif backend == "clang":
                 compiled = create_clang_json(
                     query, cached_logicalplan, physicalplan)
             else:
-                # todo grappa
+                # TODO grappa
                 pass
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -535,7 +515,8 @@ class Execute(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
-        if backend == "":
+
+        if not backend:
             backend = "myria"
 
         try:
@@ -559,11 +540,12 @@ class Execute(MyriaHandler):
                             (self.app.hostname, self.app.port,
                              query_status['queryId'])
             elif backend == "clang":
-                compiled = create_clang_execute_json(
-                    physicalplan, backend)
+                clanghost = 'localhost'
+                clangport = 1337
+                compiled = create_clang_execute_json(physicalplan, backend)
                 query_status = conn.submit_clang_query(compiled)
-                query_url = 'http://localhost:1337/query?qid=%d' %\
-                            (query_status['queryId'])
+                query_url = 'http://%s:%d/query?qid=%d' %\
+                            (clanghost, clangport, query_status['queryId'])
             else:
                 # TODO grappa
                 pass
@@ -625,7 +607,7 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
 
     def __init__(self, debug=True,
-                 hostname='vega.cs.washington.edu', port=1776):
+                 myriahostname='vega.cs.washington.edu', myriaport=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -643,9 +625,10 @@ class Application(webapp2.WSGIApplication):
         ]
 
         # Connection to Myria. Thread-safe
-        self.connection = myria.MyriaConnection(hostname=hostname, port=port)
-        self.hostname = hostname
-        self.port = port
+        self.connection = myria.MyriaConnection(hostname=myriahostname,
+                                                port=myriaport)
+        self.hostname = myriahostname
+        self.port = myriaport
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)

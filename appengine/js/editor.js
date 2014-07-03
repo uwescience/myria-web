@@ -131,18 +131,18 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
-    var start_time = query_status['startTime'];
-    var end_time = query_status['finishTime'];
-    var elapsed = query_status['elapsedNanos'] / 1e9;
-    var status = query_status['status'];
-    var query_id = query_status['queryId'];
-    $("#executed").text(
+  var start_time = query_status['startTime'];
+  var end_time = query_status['finishTime'];
+  var elapsed = query_status['elapsedNanos'] / 1e9;
+  var status = query_status['status'];
+  var query_id = query_status['queryId'];
+  $("#executed").text(
     "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
-    if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
-      setTimeout(function() {
-        checkQueryStatus(query_id);
-      }, 1000);
-    }
+  if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
+    setTimeout(function() {
+      checkQueryStatus(query_id);
+    }, 1000);
+  }
 }
 
 function displayQueryError(error, query_id) {

@@ -1,5 +1,7 @@
-editorBackendKey = 'myria';
-backendProcess = 'myria';
+var editorBackendKey = 'myria';
+var backendProcess = 'myria';
+var myriaconn = 'http://vega.cs.washington.edu:1776/dataset';
+var grappaconn = 'http://localhost:1337/dataset';
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -22,33 +24,35 @@ function setBackend(backend) {
 function loadTable() {
   var relName = _.template('<tr><td><a href="<%- url %>" target="_blank" data-toggle="tooltip" title="<%- user %>:<%- program %><%- name %>"><%- name %></a></td>');
   var extraInfo = _.template('<td><a href="<%- url %>" target=_blank><%- queryId %></a></td><td class="query-finish"><abbr class="timeago" title="<%- created %>"><%- created %></abbr></td>');
-  var download = _.template('<td><a href="<%- url %>/data?format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- url %>/data?format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- url %>/data?format=tsv" rel="nofollow" class="label label-default">TSV</a></td></tr>');
-  var url = 'http://vega.cs.washington.edu:1776/dataset';
+  var download = _.template('<td><a href="<%- url %>/data?format=json" rel="nofollow" class="label label-default">JSON</a>' +
+    '<a href="<%- url %>/data?format=csv" rel="nofollow" class="label label-default">CSV</a>' + 
+    ' <a href="<%- url %>/data?format=tsv" rel="nofollow" class="label label-default">TSV</a></td></tr>');
+
+  // default to host from myria
+  var url = myriaconn;
   var grappaserv = ['grappa', 'clang'];
   if (_.contains(grappaserv, backendProcess)) {
-      url = 'http://localhost:1337/dataset';
+    url = grappaconn;
   }
       
   var jqxhr = $.getJSON(url,
-	    function(data) {
-	      var html = '';
-		console.log(data[0]);
-		_.each(data, function(d) {
-		    var relation = d['relationKey'];
-		    html += relName({url: d['uri'], user: relation['userName'],
-				 program: relation['programName'], 
-				 name: relation['relationName'] });
-		    html += extraInfo({url: d['uri'], queryId: d['queryId'], 
-				       created: d['created']});
-		    html += download({url: d['uri']});
-		});
-	       $("#datatable").html(html);
-	   }).fail (function(err, n, a) { 
-	       console.log(err);
-	       console.log(n);
-	       console.log(a);
-	   });
+    function(data) {
+      var html = '';
+      _.each(data, function(d) {
+        var relation = d['relationKey'];
+        html += relName({url: d['uri'], user: relation['userName'],
+                program: relation['programName'], 
+                name: relation['relationName'] });
+        html += extraInfo({url: d['uri'], queryId: d['queryId'],
+                created: d['created']});
+        html += download({url: d['uri']});
+      });
+      $("#datatable").html(html);
+    }).fail (function(res, err) { 
+      console.log(err);
+  });
 }
+
 function saveState() {
   localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
 }
