@@ -607,7 +607,7 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
 
     def __init__(self, debug=True,
-                 myriahostname='vega.cs.washington.edu', myriaport=1776):
+                 hostname='vega.cs.washington.edu', port=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -625,10 +625,10 @@ class Application(webapp2.WSGIApplication):
         ]
 
         # Connection to Myria. Thread-safe
-        self.connection = myria.MyriaConnection(hostname=myriahostname,
-                                                port=myriaport)
-        self.hostname = myriahostname
-        self.port = myriaport
+        self.connection = myria.MyriaConnection(hostname=hostname,
+                                                port=port)
+        self.hostname = hostname
+        self.port = port
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
