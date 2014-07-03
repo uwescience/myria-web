@@ -494,7 +494,7 @@ class Compile(MyriaHandler):
         catalog = MyriaCatalog(conn)
         try:
             compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
+                query, cached_logicalplan, physicalplan, language)
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -535,7 +535,7 @@ class Execute(MyriaHandler):
             catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
+                query, cached_logicalplan, physicalplan, language)
 
             compiled['profilingMode'] = profile
 
