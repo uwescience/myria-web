@@ -62,7 +62,7 @@ def test_myrial():
     response = app.get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert response.json['rawQuery'] == params['query']
 
 
 def test_sql():
@@ -81,7 +81,7 @@ def test_sql():
     response = app.get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert response.json['rawQuery'] == params['query']
 
 
 def test_dot_datalog():

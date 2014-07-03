@@ -118,7 +118,7 @@ def test_datalog():
     response = mock_get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert response.json['rawQuery'] == params['query']
 
     response = mock_post('/execute', params)
     assert_equals(response.status_code, 201)
@@ -140,7 +140,7 @@ def test_myrial():
     response = mock_get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert response.json['rawQuery'] == params['query']
 
     response = mock_post('/execute', params)
     assert_equals(response.status_code, 201)
@@ -162,7 +162,7 @@ def test_sql():
     response = mock_get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert response.json['rawQuery'] == params['query']
 
     response = mock_post('/execute', params)
     assert_equals(response.status_code, 201)
