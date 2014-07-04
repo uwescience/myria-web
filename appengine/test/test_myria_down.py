@@ -44,6 +44,8 @@ def test_datalog_logical():
 
     response = app.get('/compile', params)
     assert_equals(response.status_code, 200)
+    assert_equals(params['query'], response.json['rawQuery'])
+    assert_equals(params['language'], response.json['language'])
 
 
 def test_myrial():
@@ -62,7 +64,8 @@ def test_myrial():
     response = app.get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert_equals(params['query'], response.json['rawQuery'])
+    assert_equals(params['language'], response.json['language'])
 
 
 def test_sql():
@@ -81,7 +84,8 @@ def test_sql():
     response = app.get('/compile', params)
     assert_equals(response.status_code, 200)
     assert response.json
-    assert response.json['rawDatalog'] == params['query']
+    assert_equals(params['query'], response.json['rawQuery'])
+    assert_equals(params['language'], response.json['language'])
 
 
 def test_dot_datalog():
