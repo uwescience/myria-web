@@ -14,8 +14,9 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaLeftDeepTreeAlgebra, MyriaHyperCubeAlgebra
-from raco.myrialang import compile_to_json
+from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
+                                     MyriaHyperCubeAlgebra,
+                                     compile_to_json)
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.catalog import Catalog
