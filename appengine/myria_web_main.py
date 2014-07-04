@@ -478,7 +478,6 @@ class Compile(MyriaHandler):
 
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-        conn = self.app.connection
         query = self.request.get("query")
         language = self.request.get("language")
         multiway_join = self.request.get("multiway_join", False)
@@ -491,8 +490,6 @@ class Compile(MyriaHandler):
         physicalplan = get_physical_plan(
             query, language, self.app.connection, multiway_join)
 
-        # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalog(conn)
         try:
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, language)
@@ -532,8 +529,6 @@ class Execute(MyriaHandler):
             physicalplan = get_physical_plan(
                 query, language, self.app.connection, multiway_join)
 
-            # Get the Catalog needed to get schemas for compiling the query
-            catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, language)
