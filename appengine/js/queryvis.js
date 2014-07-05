@@ -25,7 +25,7 @@ var templates = {
         nodeStyle: _.template('[style="rounded, filled",color="<%- color %>",shape=box,label="<%- label %>"];\n'),
         fragmentStyle: _.template('\n\tsubgraph cluster_<%- fragment %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tlabel="<%- label %>";\n\t\tnode [style=filled,color=white];\n'),
         subqueryStyle: _.template('\n\tsubgraph cluster_<%- subQuery %> {\n\t\tstyle="rounded, filled";\n\t\tcolor=lightgrey;\n\t\tlabel="<%- label %>";\n\t\tnode [style=filled,color=lightgrey];\n'),
-        link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n")
+        link: _.template("\t\"<%- u %>\" -> \"<%- v %>\";\n"),
     },
     nwTooltip: _.template("<%- numTuples %> tuples from <%- src %> to <%- dest %>"),
     nwPointTooltip: _.template("<%- numTuples %> tuples at time <%- time %>"),

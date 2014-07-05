@@ -23,14 +23,17 @@ function Graph () {
     /********************/
     // Public properties
     /********************/
-    this.name = "";         // Query Name
-    this.qId = 0;           // Query ID
-    this.nodes = {};        // List of graph fragment nodes
-    this.links = {};        // List of graph fragment edges
-    this.state = {};        // Describes which nodes are "expanded"
-    this.opId2color = {};   // Dictionary of opId - color
-    this.opId2fId = {};     // Dictionary of opId - fragment ID
-    this.queryPlan = {};    // Physical plan
+    this.name = "";             // Query Name
+    this.qId = 0;               // Query ID
+    this.nodes = {};            // List of graph fragment nodes
+    this.links = {};            // List of graph fragment edges
+    this.interQueryLinks = {};  // List of inter subQuery links
+    this.state = {};            // Describes which nodes are "expanded"
+    this.opId2color = {};       // Dictionary of opId - color
+    this.opId2fId = {};         // Dictionary of opId - fragment ID
+    this.queryPlan = {};        // Physical plan
+    this.fragmentColor = "";    // Fragment color
+    this.subQueryColor = "";    // SubQuery color
 
     /********************/
     // Private properties
@@ -51,6 +54,7 @@ function Graph () {
         // Get the query plan ID
         graph.qId = json.queryId;
         graph.name = "Query Plan " + graph.qId;
+
         // Get query plan
         graph.queryPlan = json;
         var root = graph.queryPlan.physicalPlan.plan;
@@ -59,7 +63,7 @@ function Graph () {
         graph.createFragmentIndex(root);
 
         // Create subQueryIndex
-        graph.createSubQueryIndex(root);
+        graph.createSubQueryIndex(root, graph);
 
         // Normalize operator ids
         graph.normalizeOpIds(root);
@@ -73,7 +77,8 @@ function Graph () {
         }
 
         // Collect graph links
-        graph.collectLinks(root, graph);
+        graph.collectIntraQueryLinks(root, graph);
+        graph.collectInterQueryLinks(root, graph);
 
     };
 
@@ -91,13 +96,13 @@ function Graph () {
         }
     };
 
-    // Create SubQuery index
-    Graph.prototype.createSubQueryIndex = function createSubQueryIndex(plan) {
+    // Create SubQuery index recursively
+    Graph.prototype.createSubQueryIndex = function createSubQueryIndex(plan, graph) {
         var i = 0;
         (function iterateSubQuery(plan){
-            if(plan.type == 'SubQuery') {
-                plan.subQueryIndex = i++;
-            } else if(plan.type == 'Sequence') {
+            plan.subQueryIndex = i++;
+            graph.interQueryLinks[plan.subQueryIndex] = {};
+            if(plan.type == 'Sequence') {
                 _.each(plan.plans, iterateSubQuery);
             } else if(plan.type == 'DoWhile') {
                 _.each(plan.body, iterateSubQuery);
@@ -126,7 +131,7 @@ function Graph () {
                                 op.children = [newid];
                             }
                         } else if(key == "argOperatorId") {
-                            value = "s"+plan.subQueryIndex+"_op"+op[key];
+                            op[key] = "s"+plan.subQueryIndex+"_op"+op[key];
                         }
                     });
                 });
@@ -189,8 +194,8 @@ function Graph () {
         }
     };
 
-    // Collect intra fragment links
-    Graph.prototype.collectLinks = function collectLinks(plan, graph){
+    // Collect intra subQuery links
+    Graph.prototype.collectIntraQueryLinks = function collectIntraQueryLinks(plan, graph){
         if(plan.type == 'SubQuery'){
             plan.links = {};
             _.each(plan.fragments, function(fragment){
@@ -204,9 +209,10 @@ function Graph () {
                         link.u.fID = graph.opId2fId[op.argOperatorId];      // Src fragment ID
                         link.u.oID = op.argOperatorId;                      // Src operand ID
                         link.v.fID = graph.opId2fId[op.opId];               // Dst fragment ID
-                        link.v.oID = op.opId;                               // Dst fragment ID
+                        link.v.oID = op.opId;                               // Dst operand ID
                         var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
-                        plan.links[linkID.hashCode()] = link;
+                        plan.links["link-"+linkID.hashCode()] = link;
+                        graph.links["link-"+linkID.hashCode()] = link;
                     }
                     // Add intra-fragment links
                     if(op.hasOwnProperty("children")){
@@ -233,13 +239,48 @@ function Graph () {
                 var leaves = _.difference(_.keys(parents), _.values(parents));
                 fragment.aLeaf = leaves[0];
             });
+            plan.root = _.first(plan.fragments).root;
+            plan.aLeaf = _.last(plan.fragments).aLeaf;
         } else if(plan.type == 'Sequence') {
             _.each(plan.plans, function(element){
-                collectLinks(element, graph);
+                collectIntraQueryLinks(element, graph);
+            });
+            plan.root = _.last(plan.plans).root;
+            plan.aLeaf = _.first(plan.plans).aLeaf;
+        } else if(plan.type == 'DoWhile') {
+            _.each(plan.body, function(element){
+                collectIntraQueryLinks(element, graph);
+            });
+            plan.root = _.last(plan.body).root;
+            plan.aLeaf = _.first(plan.body).aLeaf;
+        }
+    };
+
+
+    // Collect inter subQuery links
+    Graph.prototype.collectInterQueryLinks = function collectInterQueryLinks(plan, graph){
+        if(plan.type == 'Sequence') {
+            var lastRoot = "";
+            _.each(plan.plans, function(element){
+                // add link from a subQuery in a sequence to the next subQuery
+                if(lastRoot !== ""){
+                    var link = {};
+                    link.u = {};
+                    link.v = {};
+                    link.u.fID = graph.opId2fId[lastRoot];
+                    link.u.oID = lastRoot;
+                    link.v.fID = graph.opId2fId[element.aLeaf];
+                    link.v.oID = element.aLeaf;
+                    var linkID = link.u.fID + "->" + link.v.fID; 
+                    graph.links["link-"+linkID.hashCode()] = link;
+                    graph.interQueryLinks[plan.subQueryIndex][linkID] = link;
+                }
+                lastRoot = element.root;
+                collectInterQueryLinks(element, graph);
             });
         } else if(plan.type == 'DoWhile') {
             _.each(plan.body, function(element){
-                collectLinks(element, graph);
+                collectInterQueryLinks(element, graph);
             });
         }
     };
@@ -289,6 +330,9 @@ function Graph () {
                     subqDotStr += '\t\t"' + id + '"' + templates.graphViz.nodeStyle({ color: "white", label: node.opName });
                 }
                 _.each(graph.nodes[fragment.fid].parents, function(dst, src){
+                    if(dst === undefined || src === undefined){
+                        console.warn("null node.");
+                    }
                     subqDotStr += templates.graphViz.link({u: src, v: dst});
                 });
 
@@ -304,15 +348,28 @@ function Graph () {
             // close subQuery
             subqDotStr += "}";
 
-            ret.aLeaf = _.first(plan.fragments).aLeaf;
-            ret.root = _.last(plan.fragments).root;
+            ret.aLeaf = _.last(plan.fragments).aLeaf;
+            ret.root = _.first(plan.fragments).root;
             ret.dotStr = subqDotStr;
         } else if(plan.type == 'Sequence') {
             // add edges between children
-            var seqDotStr = "";
+            var seqDotStr = templates.graphViz.subqueryStyle({subQuery: "subQuery_"+plan.subQueryIndex, label: "subQuery "+plan.subQueryIndex});
+            var lastRoot = "";
             _.each(plan.plans, function(plan){
-               seqDotStr += subgraphDot(plan, dotstring, graph).dotStr;
+               var sgdot = subgraphDot(plan, dotstring, graph);
+               seqDotStr += sgdot.dotStr;
+               if(lastRoot !== ""){
+                    if(lastRoot === undefined || sgdot.aLeaf === undefined){
+                        console.warn("null node.");
+                    }
+                    seqDotStr += templates.graphViz.link({u: lastRoot, v: sgdot.aLeaf});
+               }
+               lastRoot = sgdot.root; 
             });
+            seqDotStr += "}\n";
+            // set aLeaf and root
+            ret.aLeaf = _.first(plan.plans).aLeaf;
+            ret.root = _.last(plan.plans).root;
             ret.dotStr = seqDotStr;
         } else if(plan.type == 'DoWhile') {
             // add while condition edge
@@ -320,6 +377,8 @@ function Graph () {
             _.each(plan.body, function(plan){
                dowhileDotStr += subgraphDot(plan, dotstring, graph).dotStr;
             });
+            ret.aLeaf = _.first(plan.body).aLeaf;
+            ret.root = _.last(plan.body).root;
             ret.dotStr = dowhileDotStr;
         } else {
             console.warn("plan should be SubQuery or Sequence or DoWhile");
@@ -428,6 +487,9 @@ function Graph () {
                         }
                     }
                 }
+                if(linkID === undefined){
+                    console.warn("linkID is undefined.");
+                }
                 var lid = "link-" + linkID.hashCode();
                 var oplinkviz = {};
                 if (type == "op") {
@@ -441,7 +503,7 @@ function Graph () {
                     };
                     graph.nodes[graph.opId2fId[src]].linkvizes[src] = oplinkviz;
                 } else if (type == "frag") {
-                    link = graph.links[lid];
+                    link = graph.links[lid];   
                     link.viz = {
                         type: type,
                         src: src,
@@ -450,7 +512,7 @@ function Graph () {
                         stroke: (graph.state.focus === lid) ? "red" : "black",
                         id: lid
                     };
-                }
+                } 
             }
         });
 
@@ -497,7 +559,7 @@ function Graph () {
             // Add links
             for (opId in fragment.parents) {
                 if (fragment.linkvizes[opId] === undefined){
-                    console.warn("I am undefined");
+                    console.warn("linkviz is undefined");
                 }
                 links.push(fragment.linkvizes[opId]);
             }
