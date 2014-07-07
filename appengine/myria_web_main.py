@@ -188,6 +188,20 @@ class MyriaCatalog(Catalog):
 
 class MyriaHandler(webapp2.RequestHandler):
 
+    def verifyuser(self):
+        user = users.get_current_user()
+        if user:
+           whitelist = [
+             "bigdogintel@gmail.com",
+             "billhowe@gmail.com",
+             "billhowe@cs.washington.edu",
+             "dhalperi@escience.washington.edu",
+             "whitaker@cs.washington.edu"
+           ]
+           if user.email() in whitelist:
+             return
+        raise users.UserNotFoundError("Unauthorized -- must login via approved Google account")
+
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
         if isinstance(exception,
@@ -202,12 +216,57 @@ class MyriaHandler(webapp2.RequestHandler):
                 import traceback
                 msg = traceback.format_exc()
 
-        self.response.out.write(msg)
+        # If not authorized, use the unauthorized template
+        if isinstance(exception, users.UserNotFoundError):
+
+           user = users.get_current_user()
+
+           if user:
+             usermsg = "User '%s' is not allowed to access this system" % user.email()
+           else:
+             usermsg = ""
+
+           template_vars = {'connectionString': self.get_connection_string(),
+                'greeting' : self.get_greeting(),
+                'myriaConnection': "{h}:{p}".format(
+                    h=self.app.hostname, p=self.app.port),
+                'version': VERSION,
+                'branch': BRANCH,
+                'usermsg': usermsg,
+                'loginurl': users.create_login_url(self.request.url)
+           }
+
+           self.response.status = 401
+           template = JINJA_ENVIRONMENT.get_template('unauthorized.html')
+           self.response.out.write(template.render(template_vars))
+
+        else:
+          self.response.headers['Content-Type'] = 'text/plain'
+          if isinstance(exception,
+                        (ValueError, SyntaxError, MyrialCompileException)):
+              self.response.status = 400
+              msg = '{}: {}'.format(exception.__class__.__name__, exception)
+          elif isinstance(exception, users.UserNotFoundError):
+              self.response.headers['Content-Type'] = 'text/html'
+              self.response.status = 401
+              return
+          else:
+              self.response.status = 500
+              self.response.out.write("Error 500 (Internal Server Error)")
+              if debug_mode:
+                  self.response.out.write(": \n\n")
+                  import traceback
+                  msg = traceback.format_exc()
+
+          self.response.out.write(msg)
 
 
 class RedirectToEditor(MyriaHandler):
 
     def get(self, query=None):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         if query is not None:
             self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
         else:
@@ -238,8 +297,8 @@ class MyriaPage(MyriaHandler):
         '''Construct an HTML fragment that displays login status and a link to either login or out'''
         user = users.get_current_user()
         if user:
-            greeting = ('Logged in as %s (<a href="%s">logout</a>)' %
-                        (user.nickname(), users.create_logout_url('/')))
+            greeting = ('<a href="%s">logout as %s</a>' %
+                        (users.create_logout_url('/'), user.nickname()))
         else:
             greeting = ('<a href="%s">Login with Google</a>' %
                         users.create_login_url('/'))
@@ -247,7 +306,6 @@ class MyriaPage(MyriaHandler):
         return greeting
 
     def base_template_vars(self):
-
         return {'connectionString': self.get_connection_string(),
                 'greeting' : self.get_greeting(),
                 'myriaConnection': "{h}:{p}".format(
@@ -276,6 +334,9 @@ def nano_to_str(elapsed):
 class Queries(MyriaPage):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         try:
             limit = int(self.request.get('limit', QUERIES_PER_PAGE))
@@ -348,6 +409,9 @@ class Queries(MyriaPage):
 class Profile(MyriaPage):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         query_id = self.request.get("queryId")
         query_plan = {}
@@ -371,6 +435,9 @@ class Profile(MyriaPage):
 class Datasets(MyriaPage):
 
     def get(self, connection_=None):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         try:
             datasets = conn.datasets()
@@ -426,7 +493,10 @@ class Examples(MyriaPage):
 class Editor(MyriaPage):
 
     def get(self):
-    
+ 
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -440,6 +510,9 @@ class Editor(MyriaPage):
 
 class Demo3(MyriaPage):
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -458,6 +531,9 @@ class Plan(MyriaHandler):
         self.get()
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -477,6 +553,9 @@ class Plan(MyriaHandler):
 class Optimize(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -503,6 +582,9 @@ class Optimize(MyriaHandler):
 class Compile(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -584,6 +666,9 @@ class Execute(MyriaHandler):
             return
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
 
@@ -603,6 +688,9 @@ class Execute(MyriaHandler):
 class Dot(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -639,6 +727,7 @@ class Application(webapp2.WSGIApplication):
             ('/examples', Examples),
             ('/demo3', Demo3)
         ]
+
 
         # Connection to Myria. Thread-safe
         self.connection = myria.MyriaConnection(hostname=hostname, port=port)
