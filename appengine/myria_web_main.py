@@ -206,9 +206,6 @@ class MyriaHandler(webapp2.RequestHandler):
 class RedirectToEditor(MyriaHandler):
 
     def get(self, query=None):
-        # Raise an exception if not logged in and whitelisted
-        self.verifyuser()
-
         if query is not None:
             self.redirect("/editor?query=%s" % urllib.quote(query, ''), True)
         else:
