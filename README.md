@@ -17,22 +17,22 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
   git submodule update
   ```
   
-    Then setup the module as described in the `datalogcompiler` README.
+    Then setup the module as described in the [Raco README](https://github.com/uwescience/raco/blob/master/README.md).
   
-2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `datalogcompiler` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
+2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `raco` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
   ```sh
   scripts/myrial examples/reachable.myl
   ```
   
-  in the `datalogcompiler` subdirectory.
+  in the `raco` subdirectory.
   
 3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. From the menu select Add Existing Application, and add the `myria-web/appengine` directory.
 
   Alternatively, from the command line, you may launch:
   
   ```sh
-  dev_appserver.py AppEngine
+  dev_appserver.py /path/to/myria-web/appengine
   ```
 
   And then point your browser at `localhost:8080` to view the application.
@@ -64,6 +64,22 @@ git submodule update --recursive --remote
 git submodule init
 ```
 )
+
+# Run the tests
+
+
+
+Install the developer dependencies.
+
+```sh
+pip install -r requirements-dev.txt
+```
+
+Run
+
+```
+nosetests -w appengine --with-gae --exclude-dir={myria,raco,ply,networkx} --without-sandbox
+```
 
 # Issues
 

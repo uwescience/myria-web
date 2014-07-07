@@ -110,7 +110,10 @@ function debug(d) {
 }
 
 function customFullTimeFormat(d, detail) {
-    var str = "", ns, us, ms, s, m, h, x, done=false;
+    if (d === 0) {
+        return "0";
+    }
+    var str = "", ns, us, ms, s, m, h, x;
     if (detail === undefined) {
         detail = true;
     }
@@ -126,43 +129,34 @@ function customFullTimeFormat(d, detail) {
     x = divmod(x[0], 60);
     m = x[1];
     h = x[0];
+    // time_objs is an array of triples: an int constant, a unit string, and an
+    // optional function that stringifies the constant when the output string
+    // has already been prefixed by another nonzero unit.
+    var time_objs = [
+        [h, 'h', null],
+        [m, 'm', null],
+        [s, 's', null],
+        [ms, 'ms', d3.format("03d")],
+        [us, 'µs', d3.format("03d")],
+        [ns, 'ns', d3.format("03d")]
+    ];
 
-    if (h) {
-        str = h + " h ";
-    }
-    if (m) {
-        str += m + " m ";
-        if (!detail && h) {
+    function id(x) { return x; } // the identify function
+    var old_str = "";
+    for (var i = 0, f = id; i < time_objs.length; ++i) {
+        var to = time_objs[i];
+        if (to[0]) {
+            if (old_str) {
+                str += " ";
+                f = to[2] || f;
+            }
+            str += f(to[0]) + " " + to[1];
+        }
+        if (!detail && old_str) {
             return str;
         }
+        old_str = str;
     }
-    if (s) {
-        str += s + " s ";
-        if (!detail && m) {
-            return str;
-        }
-    }
-    if (ms) {
-        if (s) {
-            str += d3.format("03d")(ms) + " ms ";
-            if (!detail) {
-                return str;
-            }
-        } else {
-            str = ms + " ms ";
-        }
-    }
-    if (us) {
-        if (ms) {
-            str += d3.format("03d")(us) + " µs ";
-            if (!detail) {
-                return str;
-            }
-        } else {
-            str = us + " µs ";
-        }
-    }
-    str += d3.format("03d")(ns) + " ns ";
     return str;
 }
 
