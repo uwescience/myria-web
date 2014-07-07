@@ -14,7 +14,8 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language import MyriaAlgebra, GrappaAlgebra, CCAlgebra
+from raco.language.clang import CCAlgebra
+from raco.language.grappalang import GrappaAlgebra
 from raco.viz import get_dot, operator_to_dot
 from raco.compile import compile
 from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
@@ -29,7 +30,6 @@ from demo3_examples import demo3_examples
 from pagination import Pagination
 import myria
 
-import sys
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -71,7 +71,6 @@ def get_plan(query, language, backend, plan_type, connection,
         language = "datalog"
     language = language.strip().lower()
 
-
     if backend == "clang":
         target_algebra = CCAlgebra
     elif backend == "grappa":
@@ -81,7 +80,6 @@ def get_plan(query, language, backend, plan_type, connection,
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
         target_algebra = MyriaLeftDeepTreeAlgebra()
-
 
     if language == "datalog":
         dlog = RACompiler()
@@ -120,9 +118,10 @@ def get_logical_plan(query, language, backend, connection):
     return get_plan(query, language, backend, 'logical', connection)
 
 
-def get_physical_plan(query, language, backend, connection, multiway_join=False):
-    return get_plan(query, language, backend, 'physical', connection, multiway_join)
-
+def get_physical_plan(query, language, backend, connection,
+                      multiway_join=False):
+    return get_plan(query, language, backend, 'physical', connection,
+                    multiway_join)
 
 
 def format_rule(expressions):
@@ -151,6 +150,7 @@ def create_clang_json(query, logical_plan, physical_plan):
 
 def create_clang_execute_json(physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend}
+
 
 class MyriaCatalog(Catalog):
 
@@ -520,10 +520,9 @@ class Compile(MyriaHandler):
         multiway_join = self.request.get("multiway_join", False)
 
         cached_logicalplan = str(get_logical_plan(
-            query, language, self.app.connection))
+            query, language, backend, self.app.connection))
         if multiway_join == 'false':
             multiway_join = False
-
 
         if backend == "":
             backend = "myria"
@@ -537,9 +536,8 @@ class Compile(MyriaHandler):
         compiled = None
         try:
             if backend == "myria":
-                catalog = MyriaCatalog(conn)
                 compiled = compile_to_json(
-                    query, cached_logicalplan, physicalplan, catalog)
+                    query, cached_logicalplan, physicalplan, language)
             elif backend == "clang":
                 compiled = create_clang_json(
                     query, cached_logicalplan, physicalplan)
@@ -580,8 +578,7 @@ class Execute(MyriaHandler):
             multiway_join = False
 
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection))
-
+            get_logical_plan(query, language, backend, self.app.connection))
 
         try:
             # Generate physical plan
@@ -663,8 +660,8 @@ class Dot(MyriaHandler):
             multiway_join = False
 
         plan = get_plan(
-            query, language, backend, plan_type, self.app.connection, multiway_join)
-
+            query, language, backend, plan_type, self.app.connection,
+            multiway_join)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
