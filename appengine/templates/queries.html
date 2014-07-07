@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+{% endblock %}
+
 {% block queries_active %} class="active"{% endblock %}
 
 {% block content %}
@@ -81,5 +86,35 @@
 {% endblock %}
 
 {% block footer %}
+<script>
+    {% autoescape false %}
+        var myrialKeywords = {{ myrialKeywords }};
+    {% endautoescape %}
+</script>
 <script type="text/javascript" src="js/queries.js"></script>
+<script type="text/javascript" src="js/codemirror.js"></script>
+<script type="text/javascript" src="js/runmode.js"></script>
+<script type="text/javascript" src="js/myrial.js"></script>
+<script type="text/javascript">
+$(function () {
+    $("td.query-raw").each(function (index, elt) {
+        elt = $(elt);
+        var text = elt.text();
+        /*
+         * TODO: This is a hack to detect MyriaL programs, both to distinguish
+         * them from other languages and to distinguish them from manually
+         * written "raw" queries. We should really include the query language
+         * in the Myria catalog and use it instead.
+         */
+        if (text.toLowerCase().indexOf("store") === -1) {
+            return;
+        }
+        var pre = document.createElement('pre');
+        pre.className += "CodeMirror";
+        elt.empty().append(pre);
+        CodeMirror.runMode(text, {name: 'myrial', singleLineStringErrors: false}, pre);
+    });
+});
+</script>
 {% endblock %}
+

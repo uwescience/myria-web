@@ -1,18 +1,40 @@
+// put all the underscore templates here
+var editor_templates = {
+  //*/
+  urls: {
+    profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
+  },
+  query: {
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
+    time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
+    prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
+    err_msg: _.template('<p>Error message:</p><pre><%- message %></pre>')
+  },
+  dataset: {
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>'),
+    row: _.template('<tr><td><%- name %></td><td><%- type %></td></tr>'),
+    dslink: _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
+  },
+  trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
+};
+
 var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria';
+  developerCollapseKey = 'developer-collapse';
 
 var backendProcess = 'myria';
 
 function handleerrors(request, display) {
-  request.done(function(result) {
+  request.done(function (result) {
     var formatted = result.split("\n").join("<br>");
     $(display).html(formatted);
   });
 
-  request.fail(function(jqXHR, textStatus, errorThrown) {
+  request.fail(function (jqXHR, textStatus, errorThrown) {
     if (textStatus == 'timeout') {
       $(display).text("Server is not responding");
       return;
@@ -28,6 +50,7 @@ function getplan() {
     query : query,
     language : editorLanguage,
     backend : backendProcess
+    multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
@@ -36,7 +59,7 @@ function getplan() {
     backend : backendProcess,
     language : editorLanguage
   });
-  request.success(function(dot) {
+  request.success(function (dot) {
     var result = Viz(dot, "svg");
     $('#relational_svg').html(result);
     $('svg').width('100%');
@@ -48,10 +71,13 @@ function optimizeplan() {
   $('#svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
+  var multiway_join_checked = $("#multiway-join").is(':checked');
+
   var request = $.post("optimize", {
     query : query,
     language : editorLanguage,
     backend : backendProcess
+    multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
 
@@ -59,6 +85,7 @@ function optimizeplan() {
     query : query,
     language : editorLanguage,
     backend : backendProcess
+    multiway_join: multiway_join_checked
   });
 
   var request = $.getJSON(url).success(function(queryPlan) {
@@ -76,14 +103,17 @@ function optimizeplan() {
       // rerender when opening tab because of different space available
       $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
     } else if (backendProcess === "myria") {
-      var i = 0;
-      queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
+      try {
+        var i = 0;
+        queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
+
         frag.fragmentIndex = i++;
         return frag;
       });
 
       var g = new Graph();
       g.loadQueryPlan({ physicalPlan: queryPlan });
+
       function myriarerender() {
         $('#svg').empty();
         g.render(d3.select('#svg'));
@@ -92,11 +122,23 @@ function optimizeplan() {
 
       // rerender when opening tab because of different space available
       $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
+      $('#relational-plan').collapse('hide');
+      $('#physical-plan').collapse('show');
+      myriarerender();
+    } catch (err) {
+      $('#myria_svg').empty();
+      $('#optimized').empty();
+      $('#relational-plan').collapse('show');
+      $('#physical-plan').collapse('hide');
+      throw err;
+    }
+
     } else {
 	// should not get here 
 	console.log("unsupported backend");
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
+
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
   });
@@ -108,6 +150,7 @@ function compileplan() {
     query : query,
     language : editorLanguage,
     backend : backendProcess
+    multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -131,46 +174,60 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
-    var start_time = query_status['startTime'];
-    var end_time = query_status['finishTime'];
-    var elapsed = query_status['elapsedNanos'] / 1e9;
-    var status = query_status['status'];
-    var query_id = query_status['queryId'];
-    $("#executed").text(
-    "#" + query_id + " status:" + status + " start:" + start_time + " end:" + end_time + " elapsed: " + elapsed);
-    if (status==='ACCEPTED' || status==='RUNNING' || status==='PAUSED') {
-      setTimeout(function() {
-        checkQueryStatus(query_id);
-      }, 1000);
-    }
+  var query_id = query_status['queryId'];
+  var status = query_status['status'];
+  var html = '';
+
+  html += t.row({name: 'Status', val: status});
+  html += t.time_row({name: 'Start', val: query_status['startTime']});
+  html += t.time_row({name: 'End', val: query_status['finishTime']});
+  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+  html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
+
+  if (status === 'SUCCESS' && query_status['profilingMode']) {
+    html += t.prof_link({query_id: query_id});
+  }
+  if (status === 'ERROR') {
+    html += t.err_msg({message: query_status['message'] || '(missing)'});
+  }
+  $("#query-information").html(html);
+  $("abbr.timeago").timeago();
+
+  if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
+    setTimeout(function () {
+      checkQueryStatus(query_id);
+    }, 1000);
+  }
 }
 
 function displayQueryError(error, query_id) {
-  multiline($("#executed"), "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
-  setTimeout(function() {
+  var pre = document.createElement('pre');
+  multiline($('#query-information').empty().append(pre),
+      "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
+  setTimeout(function () {
     checkQueryStatus(query_id);
   }, 1000);
 }
 
 function checkQueryStatus(query_id) {
-  var errFunc = function(error) {
+  var errFunc = function (error) {
     displayQueryError(error, query_id);
   };
   $.ajax("execute", {
-    type : 'GET',
-    data : {
-      queryId : query_id,
-      language : editorLanguage
+    type: 'GET',
+    data: {
+      queryId: query_id,
+      language: editorLanguage
     },
-    success : displayQueryStatus,
-    error : errFunc
+    success: displayQueryStatus,
+    error: errFunc
   });
 }
 
 function executeplan() {
   $('#editor-tabs a[href="#result"]').tab('show');
 
-  $('#executed').text('...');
+  $('#query-information').text('...');
   optimizeplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.ajax("execute", {
@@ -180,27 +237,30 @@ function executeplan() {
       language : editorLanguage,
       backend : backendProcess,
       profile: $("#profile-enabled").is(':checked')
+      multiway_join: $("#multiway-join").is(':checked')
     },
-    statusCode : {
-      200 : displayQueryStatus,
-      201 : displayQueryStatus,
-      202 : displayQueryStatus,
+    statusCode: {
+      200: displayQueryStatus,
+      201: displayQueryStatus,
+      202: displayQueryStatus
     }
   });
-  request.error(function(jqXHR, textStatus, errorThrown) {
-    $('#executed').text(jqXHR.responseText);
+  request.error(function (jqXHR, textStatus, errorThrown) {
+    var pre = document.createElement('pre');
+    $('#query-information').empty().append(pre);
+    multiline($(pre), jqXHR.responseText);
   });
   
 }
 
 function resetResults() {
   $(".display").empty();
-  $("#executed").text("Run query to see results here...");
+  $("#query-information").text("Run query to see results here...");
   $("svg").empty();
 }
 
 function updateExamples(language, callback) {
-  var doUpdateExamples = function(data) {
+  var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
 
     examplesList.empty();
@@ -215,9 +275,8 @@ function updateExamples(language, callback) {
           tokens = allTokens.slice(0, 2),
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
-        var tmpl = _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s" : ""); %>')
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? tmpl({remaining: allTokens.length - 2}) : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}): ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -226,7 +285,7 @@ function updateExamples(language, callback) {
         updateExamplesHeight();
       }
       /* Restore the click functionality on the examples. */
-      $(".example").click(function(e) {
+      $(".example").click(function (e) {
         e.preventDefault();
         resetResults();
         var example_query = this.getAttribute('data-code');
@@ -243,19 +302,19 @@ function updateExamples(language, callback) {
   };
 
   $.ajax("examples", {
-    type : 'GET',
-    data : {
-      language : language,
+    type: 'GET',
+    data: {
+      language: language,
       subset: $('#examples-list').attr('subset')
     },
-    success : doUpdateExamples
+    success: doUpdateExamples
   });
 }
 
 function changeLanguage() {
   var language = $(".language-menu option:selected").val();
   setLanguage(language);
-  updateExamples(language, function() {
+  updateExamples(language, function () {
     $(".example").first().click();
   });
 }
@@ -271,7 +330,7 @@ function setLanguage(language) {
 
   if (language === 'myrial') {
     editor.setOption('mode', {name: 'myrial',
-               singleLineStringErrors: false});
+      singleLineStringErrors: false});
   } else if (language === 'sql') {
     editor.setOption('mode', 'text/x-sql');
   } else if (language === 'datalog') {
@@ -306,11 +365,11 @@ function showSvgModal() {
   }
 
   var panzoom = $('.zoom-canvas').panzoom({
-    maxScale : 10,
-    minScale : 1,
-    contain : 'invert',
-    $zoomRange : $(".modal-header .zoom-range"),
-    $reset : $(".modal-header .zoom-reset")
+    maxScale: 10,
+    minScale: 1,
+    contain: 'invert',
+    $zoomRange: $(".modal-header .zoom-range"),
+    $reset: $(".modal-header .zoom-reset")
   }).panzoom("reset");
 }
 
@@ -329,13 +388,9 @@ function resizeEditor() {
 }
 
 function initializeDatasetSearch() {
-  var dataToRelKeyString = function(d) {
+  var dataToRelKeyString = function (d) {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
-
-  var table = _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>');
-  var row = _.template('<tr><td><%- name %></td><td><%- type %></td></tr>');
-  var dslink = _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
 
   $(".dataset-search").select2({
     placeholder: "Search for a dataset...",
@@ -357,7 +412,7 @@ function initializeDatasetSearch() {
         };
       }
     },
-    formatResult: function(d, container, query) {
+    formatResult: function (d, container, query) {
       var stringParts = dataToRelKeyString(d).split('');
       var queryParts = query.term.toLowerCase().split('');
       var i = 0, j = 0,
@@ -384,17 +439,20 @@ function initializeDatasetSearch() {
     id: dataToRelKeyString,
     formatSelection: dataToRelKeyString,
     dropdownCssClass: "bigdrop",
-    escapeMarkup: function (m) { return m; }
-  }).on("change", function(e) {
+    escapeMarkup: function (m) {
+      return m;
+    }
+  }).on("change", function (e) {
+    var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
       url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
-    $.getJSON(url, function(data) {
+    $.getJSON(url, function (data) {
       var html = '';
-      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
-        html += row({name: d[0], type: d[1]});
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {
+        html += t.row({name: d[0], type: d[1]});
       });
-      html = table({content: html});
-      $("#dataset-information").html(dslink({url: url, user:rel.userName, program: rel.programName, name: rel.relationName}) + html);
+      html = t.table({content: html});
+      $("#dataset-information").html(t.dslink({url: url, user: rel.userName, program: rel.programName, name: rel.relationName}) + html);
     });
   });
 }
@@ -404,6 +462,9 @@ function saveState() {
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
   localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+
+  localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
+
 }
 
 function restoreState() {
@@ -411,15 +472,21 @@ function restoreState() {
   var content = localStorage.getItem(editorContentKey);
   var language = localStorage.getItem(editorLanguageKey);
   var backend = localStorage.getItem(editorBackendKey);
+  var developerCollapse = localStorage.getItem(developerCollapseKey);
+
   if (content) {
     $(".language-menu").val(language);
     setLanguage(language);
-    updateExamples(language, function() {});
+    updateExamples(language, function() {
+    });
     
     $(".backend-menu").val(backend);
     setBackend(backend);
     editor.setValue(content);
     editor.setHistory(history);
+    if (developerCollapse === 'true') {
+      $('#developer-options').addClass('in');
+    }
     
     return true;
   }
@@ -427,18 +494,18 @@ function restoreState() {
   return false;
 }
 
-updateExamplesHeight = function() {
+updateExamplesHeight = function () {
   // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
   $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
 };
 
-$(function() {
+$(function () {
   resetResults();
 
   editor.on("change", resetResults);
   editor.on("keydown", resetResults);
   editor.on("keypress", resetResults);
-  $(".planner").click(function() {
+  $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     optimizeplan();
   });
@@ -446,7 +513,8 @@ $(function() {
   $(".executor").click(executeplan);
   $(".language-menu").change(changeLanguage);
   $(".backend-menu").change(changeBackend);
-  $(".example").click(function() {
+  $(".example").click(function () {
+
     resetResults();
     var example_query = $(this).text();
     editor.setValue(example_query);
@@ -466,7 +534,7 @@ $(function() {
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
-  $(window).resize(function() {
+  $(window).resize(function () {
     updateExamplesHeight();
   });
 });
