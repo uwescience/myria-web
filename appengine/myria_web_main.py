@@ -691,7 +691,7 @@ class RawREST(MyriaHandler):
 
         r = self.app.connection.rawmyria(path, self.request.query_string)
         self.response.headers.update(r.headers)
-        self.response.set_status(200)
+        self.response.set_status(r.status_code)
         self.response.write(r.text)
 
     def post(self):
