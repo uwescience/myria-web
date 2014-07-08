@@ -23,10 +23,9 @@ var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language',
-  editorBackendKey = 'myria';
-  developerCollapseKey = 'developer-collapse';
-
-var backendProcess = 'myria';
+  editorBackendKey = 'myria',
+  developerCollapseKey = 'developer-collapse',
+  backendProcess = 'myria';
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -49,7 +48,7 @@ function getplan() {
   var request = $.post("plan", {
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
@@ -76,7 +75,7 @@ function optimizeplan() {
   var request = $.post("optimize", {
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
@@ -84,7 +83,7 @@ function optimizeplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: multiway_join_checked
   });
 
@@ -102,6 +101,9 @@ function optimizeplan() {
 
       // rerender when opening tab because of different space available
       $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
+      $('#relational-plan').collapse('hide');
+      $('#physical-plan').collapse('show');
+      clangrerender();
     } else if (backendProcess === "myria") {
       try {
         var i = 0;
@@ -149,7 +151,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
@@ -174,6 +176,7 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
+  var t = editor_templates.query;
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
@@ -236,7 +239,7 @@ function executeplan() {
       query : query,
       language : editorLanguage,
       backend : backendProcess,
-      profile: $("#profile-enabled").is(':checked')
+      profile: $("#profile-enabled").is(':checked'),
       multiway_join: $("#multiway-join").is(':checked')
     },
     statusCode: {

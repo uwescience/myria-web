@@ -75,7 +75,6 @@ def get_plan(query, language, backend, plan_type, connection,
         target_algebra = CCAlgebra
     elif backend == "grappa":
         target_algebra = GrappaAlgebra
-
     elif multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
@@ -145,7 +144,7 @@ def create_clang_json(query, logical_plan, physical_plan):
     return {"rawDatalog": query,
             "logicalRa": str(logical_plan),
             "plan": compile(physical_plan),
-            "dot": operator_to_dot(physical_plan[0][1])}
+            "dot": operator_to_dot(physical_plan)}
 
 
 def create_clang_execute_json(physical_plan, backend):
