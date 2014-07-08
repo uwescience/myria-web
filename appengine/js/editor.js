@@ -23,10 +23,9 @@ var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language',
-  editorBackendKey = 'myria';
-  developerCollapseKey = 'developer-collapse';
-
-var backendProcess = 'myria';
+  editorBackendKey = 'myria',
+  developerCollapseKey = 'developer-collapse',
+  backendProcess = 'myria';
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -106,6 +105,7 @@ function optimizeplan() {
       $('#relational-plan').collapse('hide');
       $('#physical-plan').collapse('show');
       clangrerender();
+
     } else if (backendProcess === "myria") {
       try {
         var i = 0;
@@ -177,6 +177,7 @@ function multiline(elt, text) {
 }
 
 function displayQueryStatus(query_status) {
+  var t = editor_templates.query;
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
@@ -465,7 +466,6 @@ function saveState() {
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
   localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
-
   localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
 
 }
@@ -487,6 +487,7 @@ function restoreState() {
     setBackend(backend);
     editor.setValue(content);
     editor.setHistory(history);
+
     if (developerCollapse === 'true') {
       $('#developer-options').addClass('in');
     }
