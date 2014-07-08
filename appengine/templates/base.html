@@ -43,6 +43,7 @@
 					<li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
+					<li>{{greeting|safe}}</li>
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
 					<li>
 						<a href="http://{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
