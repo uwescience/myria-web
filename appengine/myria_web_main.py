@@ -244,6 +244,9 @@ class RedirectToEditor(MyriaHandler):
 
 class MyriaPage(MyriaHandler):
 
+    def getRESThost(self):
+      return "%s/%s" % (self.request.host, "rest")
+
     def get_connection_string(self):
         conn = self.app.connection
         hostname = self.app.hostname
@@ -254,8 +257,8 @@ class MyriaPage(MyriaHandler):
             try:
                 workers = conn.workers()
                 alive = conn.workers_alive()
-                connection_string = "%s:%d [%d/%d]" %\
-                    (hostname, port, len(alive), len(workers))
+                connection_string = "%s [%d/%d]" %\
+                    (self.getRESThost(), len(alive), len(workers))
             except:
                 connection_string = "error connecting to %s:%d" % (
                     hostname, port)
@@ -279,7 +282,7 @@ class MyriaPage(MyriaHandler):
                 'greeting' : self.get_greeting(),
                 #'myriaConnection': "{h}:{p}".format(
                 #    h=self.app.hostname, p=self.app.port),
-                'myriaConnection': "%s/%s" % (self.request.host, "rest"),
+                'myriaConnection': self.getRESThost(),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -416,8 +419,8 @@ class Datasets(MyriaPage):
 
         for d in datasets:
             try:
-                d['queryUrl'] = 'http://%s:%d/query/query-%d' %\
-                    (self.app.hostname, self.app.port, d['queryId'])
+                d['queryUrl'] = 'http://%s/query/query-%d' %\
+                    (self.base_template_vars()["myriaConnection"], d['queryId'])
             except:
                 pass
 
@@ -586,7 +589,7 @@ class Compile(MyriaHandler):
         self.get()
 
 
-class Execute(MyriaHandler):
+class Execute(MyriaPage):
 
     def post(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
@@ -615,8 +618,8 @@ class Execute(MyriaHandler):
 
             # Issue the query
             query_status = conn.submit_query(compiled)
-            query_url = 'http://%s:%d/execute?query_id=%d' %\
-                (self.app.hostname, self.app.port, query_status['queryId'])
+            query_url = 'http://%s/execute?query_id=%d' %\
+                (self.base_template_vars()["myriaConnection"], query_status['queryId'])
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
