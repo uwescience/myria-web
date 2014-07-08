@@ -6,10 +6,11 @@ var url = require('url');
 var sqlite = require("sqlite3").verbose();
 
 var filepath = '../../submodules/raco/c_test_environment/';
-var counter = 0;
 var hostname = 'localhost'
 var port = 1337;
 var datasetfile = 'dataset.db';
+var counter = 0;
+//getQid();
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
@@ -88,14 +89,36 @@ function insertDataset(qid, filename) {
     var relName = filename;
     var url = 'http://' + hostname + ':' + port + '/query?qid=' + qid;
     db.serialize(function() {
-      var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
-      stmt.run('public', 'adhoc-program', relName, qid, curTime, url);
+	var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
+      stmt.run('public', 'adhoc-program', relName, qid, curTime, url,
+	       function(err) {
+                 if (err) {
+                   console.log(err);
+		 }
+	       });
       stmt.finalize();
       closeDB(db);
     });
   }
 }
 
+function getQid() {
+  var exists = fs.existsSync(datasetfile);
+  var queryId = 0;
+    console.log
+  if (exists) {
+    var db = new sqlite.Database(datasetfile);
+    db.each('SELECT queryId FROM dataset ORDER BY queryID DESC LIMIT 1', function(err, row) {
+     if (err) {
+       console.log(err);
+     } else {
+       queryId = row.queryId;
+     }
+   }, function() {
+     counter = queryId;
+   });
+  }
+}
 // Parses the query from posted json
 function parseQuery(req, res) {
   var start = new Date().toISOString();
@@ -123,7 +146,7 @@ function parseQuery(req, res) {
     counter++;
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
-    res.write("nothing?");
+    res.write("nothing");
     res.end();
   }
 }
