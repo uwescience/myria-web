@@ -72,9 +72,9 @@ def get_plan(query, language, backend, plan_type, connection,
     language = language.strip().lower()
 
     if backend == "clang":
-        target_algebra = CCAlgebra
+        target_algebra = CCAlgebra()
     elif backend == "grappa":
-        target_algebra = GrappaAlgebra
+        target_algebra = GrappaAlgebra()
     elif multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
