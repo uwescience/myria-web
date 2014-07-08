@@ -199,22 +199,22 @@ class MyriaHandler(webapp2.RequestHandler):
         # If not authorized, use the unauthorized template
         if isinstance(exception, users.UserNotFoundError):
 
-           user = users.get_current_user()
+            user = users.get_current_user()
 
-           if user:
-             usermsg = "User '%s' is not allowed to access this system" % user.email()
-           else:
-             usermsg = ""
+            if user:
+                usermsg = "User '%s' is not allowed to access this system" % user.email()
+            else:
+                usermsg = ""
 
-           template_vars = self.base_template_vars()
-           template_vars.update({
+            template_vars = self.base_template_vars()
+            template_vars.update({
                 'usermsg': usermsg,
                 'loginurl': users.create_login_url(self.request.url)
-           })
+            })
 
-           self.response.status = 401
-           template = JINJA_ENVIRONMENT.get_template('unauthorized.html')
-           self.response.out.write(template.render(template_vars))
+            self.response.status = 401
+            template = JINJA_ENVIRONMENT.get_template('unauthorized.html')
+            self.response.out.write(template.render(template_vars))
 
         else:
 
@@ -231,6 +231,7 @@ class MyriaHandler(webapp2.RequestHandler):
                     import traceback
                     msg = traceback.format_exc()
 
+            self.response.out.write(msg)
 
 class RedirectToEditor(MyriaHandler):
 
