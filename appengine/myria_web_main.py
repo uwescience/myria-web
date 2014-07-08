@@ -75,7 +75,6 @@ def get_plan(query, language, backend, plan_type, connection,
         target_algebra = CCAlgebra
     elif backend == "grappa":
         target_algebra = GrappaAlgebra
-
     elif multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
@@ -494,9 +493,7 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-
         backend = self.request.get("backend")
-
 
         if not backend:
             # default to myria
@@ -504,8 +501,6 @@ class Compile(MyriaHandler):
 
         multiway_join = self.request.get("multiway_join", False)
 
-        cached_logicalplan = str(get_logical_plan(
-            query, language, backend, self.app.connection))
         if multiway_join == 'false':
             multiway_join = False
 

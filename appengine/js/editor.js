@@ -16,7 +16,7 @@ var editor_templates = {
     row: _.template('<tr><td><%- name %></td><td><%- type %></td></tr>'),
     dslink: _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
   },
-  trim_example: _.template('\n... <%- remaining %> more line<% print(remaivning > 1 ? "s": ""); %>')
+  trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
 };
 
 var editorLanguage = 'MyriaL',
@@ -49,7 +49,7 @@ function getplan() {
   var request = $.post("plan", {
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
@@ -76,7 +76,7 @@ function optimizeplan() {
   var request = $.post("optimize", {
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
@@ -84,7 +84,7 @@ function optimizeplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: multiway_join_checked
   });
 
@@ -98,41 +98,44 @@ function optimizeplan() {
         $('svg').width('100%');
 	$('svg').height('95%');
       }
+
       clangrerender();
 
       // rerender when opening tab because of different space available
       $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
+      $('#relational-plan').collapse('hide');
+      $('#physical-plan').collapse('show');
+      clangrerender();
     } else if (backendProcess === "myria") {
       try {
         var i = 0;
         queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
 
-        frag.fragmentIndex = i++;
-        return frag;
-      });
+          frag.fragmentIndex = i++;
+          return frag;
+        });
 
-      var g = new Graph();
-      g.loadQueryPlan({ physicalPlan: queryPlan });
+        var g = new Graph();
+        g.loadQueryPlan({ physicalPlan: queryPlan });
 
-      function myriarerender() {
+        function myriarerender() {
+          $('#svg').empty();
+          g.render(d3.select('#svg'));
+        }
+        myriarerender();
+
+        // rerender when opening tab because of different space available
+        $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
+        $('#relational-plan').collapse('hide');
+        $('#physical-plan').collapse('show');
+        myriarerender();
+      } catch (err) {
         $('#svg').empty();
-        g.render(d3.select('#svg'));
+        $('#optimized').empty();
+        $('#relational-plan').collapse('show');
+        $('#physical-plan').collapse('hide');
+        throw err;
       }
-      myriarerender();
-
-      // rerender when opening tab because of different space available
-      $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
-      $('#relational-plan').collapse('hide');
-      $('#physical-plan').collapse('show');
-      myriarerender();
-    } catch (err) {
-      $('#myria_svg').empty();
-      $('#optimized').empty();
-      $('#relational-plan').collapse('show');
-      $('#physical-plan').collapse('hide');
-      throw err;
-    }
-
     } else {
 	// should not get here 
 	console.log("unsupported backend");
@@ -149,7 +152,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query : query,
     language : editorLanguage,
-    backend : backendProcess
+    backend : backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
@@ -236,7 +239,7 @@ function executeplan() {
       query : query,
       language : editorLanguage,
       backend : backendProcess,
-      profile: $("#profile-enabled").is(':checked')
+      profile: $("#profile-enabled").is(':checked'),
       multiway_join: $("#multiway-join").is(':checked')
     },
     statusCode: {
