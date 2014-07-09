@@ -138,7 +138,7 @@ def get_datasets(connection):
         return []
 
 
-# creates a json similar to myria json
+# TODO factor following 3 functions elsewhere
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawDatalog": query,
             "logicalRa": str(logical_plan),
@@ -148,7 +148,6 @@ def create_clang_json(query, logical_plan, physical_plan):
 
 def create_clang_execute_json(physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend}
-
 
 class MyriaCatalog(Catalog):
 

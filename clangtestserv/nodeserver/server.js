@@ -131,6 +131,7 @@ function parseQuery(req, res) {
     req.on('data', function(chunk) {
       body += chunk;
     });
+    getJSON(req, res, qid, start);
     req.on('end', function() {
       var myriares = JSON.parse(body);
       plan = myriares['plan'];
@@ -141,7 +142,6 @@ function parseQuery(req, res) {
 	  }
         });
     });
-    getJSON(req, res, qid, start);
     runClang(qid);
     counter++;
   } else {
