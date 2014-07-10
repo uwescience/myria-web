@@ -119,6 +119,7 @@ function getQid() {
    });
   }
 }
+
 // Parses the query from posted json
 function parseQuery(req, res) {
   var start = new Date().toISOString();
@@ -131,9 +132,11 @@ function parseQuery(req, res) {
     req.on('data', function(chunk) {
       body += chunk;
     });
+    
     getJSON(req, res, qid, start);
     req.on('end', function() {
       var myriares = JSON.parse(body);
+      console.log(myriares);
       plan = myriares['plan'];
       fs.writeFile(filepath +'q'+ qid +".cpp", plan,
         function(err) {
