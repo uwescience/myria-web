@@ -150,8 +150,8 @@ def create_clang_execute_json(physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend}
 
 
-def submit_clang_query(compiled, clanghost, clangport):
-    url = 'http://%s:%d' %(clanghost, clangport)
+def submit_clang_query(compiled, chost, cport):
+    url = 'http://%s:%d' % (chost, cport)
     r = requests.Session().post(url, data=json.dumps(compiled))
     return r.json()
 
@@ -585,12 +585,12 @@ class Execute(MyriaHandler):
                             (self.app.hostname, self.app.port,
                              query_status['queryId'])
             elif backend == "clang":
-                clanghost = 'localhost'
-                clangport = 1337
+                chost = 'localhost'
+                cport = 1337
                 compiled = create_clang_execute_json(physicalplan, backend)
-                query_status = submit_clang_query(compiled, clanghost, clangport)
+                query_status = submit_clang_query(compiled, chost, cport)
                 query_url = 'http://%s:%d/query?qid=%d' %\
-                            (clanghost, clangport, query_status['queryId'])
+                            (chost, cport, query_status['queryId'])
             else:
                 # TODO grappa
                 pass
