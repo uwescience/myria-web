@@ -140,7 +140,7 @@ def get_datasets(connection):
 
 # TODO factor following 2 functions elsewhere
 def create_clang_json(query, logical_plan, physical_plan):
-    return {"rawDatalog": query,
+    return {"rawQuery": query,
             "logicalRa": str(logical_plan),
             "plan": compile(physical_plan),
             "dot": operator_to_dot(physical_plan)}
@@ -148,6 +148,12 @@ def create_clang_json(query, logical_plan, physical_plan):
 
 def create_clang_execute_json(physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend}
+
+
+def submit_clang_query(compiled, clanghost, clangport):
+    url = 'http://%s:%d' %(clanghost, clangport)
+    r = requests.Session().post(url, data=json.dumps(compiled))
+    return r.json()
 
 
 class MyriaCatalog(Catalog):
@@ -582,7 +588,7 @@ class Execute(MyriaHandler):
                 clanghost = 'localhost'
                 clangport = 1337
                 compiled = create_clang_execute_json(physicalplan, backend)
-                query_status = conn.submit_clang_query(compiled)
+                query_status = submit_clang_query(compiled, clanghost, clangport)
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (clanghost, clangport, query_status['queryId'])
             else:

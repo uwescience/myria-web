@@ -72,9 +72,10 @@ function writeJSON (jsonarr, res) {
 }
 
 function getJSON(req, res, qid, start) {
-  var end = new Date().toISOString();
+  var end = new Date();
   var query_status = {url:'http://' + hostname + ':'+ port +'/query?qid=' + qid,
-		       startTime: start, finishTime: end, status: "SUCCESS",
+		       startTime: start.toISOString(), status: 'SUCCESS',
+		       finishTime: end.toISOString(), elapsedNanos: end - start,
 		       queryId: qid};
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.write(JSON.stringify(query_status));
@@ -89,7 +90,7 @@ function insertDataset(qid, filename) {
     var relName = filename;
     var url = 'http://' + hostname + ':' + port + '/query?qid=' + qid;
     db.serialize(function() {
-	var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
+      var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
       stmt.run('public', 'adhoc-program', relName, qid, curTime, url,
 	       function(err) {
                  if (err) {
@@ -122,7 +123,7 @@ function getQid() {
 
 // Parses the query from posted json
 function parseQuery(req, res) {
-  var start = new Date().toISOString();
+  var start = new Date();
   var plan;
   var qid = counter;
   console.log("waiting");
@@ -132,12 +133,10 @@ function parseQuery(req, res) {
     req.on('data', function(chunk) {
       body += chunk;
     });
-    
-    getJSON(req, res, qid, start);
+
     req.on('end', function() {
-      var myriares = JSON.parse(body);
-      console.log(myriares);
-      plan = myriares['plan'];
+      var mwebres = JSON.parse(body);
+      plan = mwebres['plan'];
       fs.writeFile(filepath +'q'+ qid +".cpp", plan,
         function(err) {
 	  if (err) {
@@ -145,6 +144,7 @@ function parseQuery(req, res) {
 	  }
         });
     });
+    getJSON(req, res, qid, start);
     runClang(qid);
     counter++;
   } else {
