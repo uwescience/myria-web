@@ -5,7 +5,7 @@ var editor_templates = {
     profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
   },
   query: {
-    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- connection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- connection %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
     row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
     time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
@@ -182,9 +182,9 @@ function displayQueryStatus(query_status) {
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
-  var connection = myriaConnection
+  var connection = myriaConnection + '/query/query-' + query_id;
   if (backendProcess == 'clang') {
-      connection = clangConnection;
+      connection = clangConnection + '/query?qid=' + query_id;
   }
   html += t.row({name: 'Status', val: status});
   html += t.time_row({name: 'Start', val: query_status['startTime']});

@@ -17,10 +17,11 @@ http.createServer(function (req, res) {
     
   switch(path) {
     case '/dataset':
-     accessDataset(req, res);
+      accessDataset(req, res, qid=-1);
     break;
     case '/query':
-    
+      processQid(req, res);
+    break;
     default:
       parseQuery(req, res);
     break;
@@ -29,23 +30,46 @@ http.createServer(function (req, res) {
 }).listen(port, hostname);
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
+function processQid(req, res) {
+  var qid = -1;
+  if (req.method == "GET") {
+    console.log('query');
+    var body = '';
+    req.on('data', function(chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function() {
+      var url_parts = url.parse(req.url, true);
+      qid = url_parts.query['qid'];
+      accessDataset(req, res, qid);
+    });
+  }
+}
+
 // Examines dataset.db 
-function accessDataset(req, res) {
+function accessDataset(req, res, qid) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
-    selectTable(db, res);
-  } else {
+    selectTable(db, res, qid);
+   } else {
     res.writeHead(404, {'Content-Type': 'text/html'});
     res.write("database file not found");
     res.end();
   }
 }
 
-function selectTable(db, res) {
+function selectTable(db, res, qid) {
   var jsonarr = [];
   var ts = new Date().getTime();
-  db.each("SELECT * FROM dataset", function(err, row) {
+  var query = 'SELECT * FROM dataset';
+  if (qid != -1) {
+      query += ' WHERE queryId =' + qid;
+  }
+    console.log(qid);
+   console.log(query);
+  db.each(query, function(err, row) {
     if (err) {
       console.log(err);
     } else {
