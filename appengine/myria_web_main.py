@@ -138,7 +138,7 @@ def get_datasets(connection):
         return []
 
 
-# TODO factor following 2 functions elsewhere
+# TODO factor following 3 functions 
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawQuery": query,
             "logicalRa": str(logical_plan),
@@ -146,8 +146,9 @@ def create_clang_json(query, logical_plan, physical_plan):
             "dot": operator_to_dot(physical_plan)}
 
 
-def create_clang_execute_json(physical_plan, backend):
-    return {"plan": compile(physical_plan), "backend": backend}
+def create_clang_execute_json(logical_plan, physical_plan, backend):
+    return {"plan": compile(physical_plan), "backend": backend,
+            "logicalRa" : logical_plan}
 
 
 def submit_clang_query(compiled, chost, cport):
@@ -564,15 +565,11 @@ class Execute(MyriaHandler):
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, self.app.connection))
 
+        # Generate physical plan
+        physicalplan = get_physical_plan(
+            query, language, backend, self.app.connection, multiway_join)
         try:
-            # Generate physical plan
-            physicalplan = get_physical_plan(
-
-                query, language, backend, self.app.connection, multiway_join)
             if backend == "myria":
-                cached_logicalplan = str(
-                    get_logical_plan(query, language, backend,
-                                     self.app.connection))
                 # Get the Catalog needed to get schemas for compiling the query
                 # .. and compile
                 compiled = compile_to_json(
@@ -587,7 +584,8 @@ class Execute(MyriaHandler):
             elif backend == "clang":
                 chost = 'localhost'
                 cport = 1337
-                compiled = create_clang_execute_json(physicalplan, backend)
+                compiled = create_clang_execute_json(
+                    cached_logicalplan, physicalplan, backend)
                 query_status = submit_clang_query(compiled, chost, cport)
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (chost, cport, query_status['queryId'])

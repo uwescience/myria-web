@@ -1,6 +1,6 @@
 // dataset templates go here:
 var dataset_templates = {
-  relName: _.template('<tr><td><a href="<%- url %>" target="_blank" data-toggle="tooltip" title="<%- user %>:<%- program %><%- name %>"><%- name %></a></td>'),
+  relName: _.template('<tr><td><a href="<%- url %>" target="_blank" data-toggle="tooltip" title="<%- user %>:<%- program %>:<%- name %>"><%- name %></a></td>'),
   extraInfo: _.template('<td><a href="<%- url %>" target=_blank><%- queryId %></a></td><td class="query-finish"><abbr class="timeago" title="<%- created %>"><%- created %></abbr></td>'),
   download: _.template('<td><a href="<%- url %>/data?format=json" rel="nofollow" class="label label-default">JSON</a>' +
     '<a href="<%- url %>/data?format=csv" rel="nofollow" class="label label-default">CSV</a>' + 

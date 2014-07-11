@@ -19,6 +19,8 @@ http.createServer(function (req, res) {
     case '/dataset':
      accessDataset(req, res);
     break;
+    case '/query':
+    
     default:
       parseQuery(req, res);
     break;
@@ -82,16 +84,16 @@ function getJSON(req, res, qid, start) {
   res.end();
 }
 	
-function insertDataset(qid, filename) {
+function insertDataset(filename, qid) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     var curTime = new Date().toISOString();
-    var relName = filename;
+    var relkey = filename.split(':');
     var url = 'http://' + hostname + ':' + port + '/query?qid=' + qid;
     db.serialize(function() {
       var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
-      stmt.run('public', 'adhoc-program', relName, qid, curTime, url,
+      stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url,
 	       function(err) {
                  if (err) {
                    console.log(err);
@@ -124,8 +126,7 @@ function getQid() {
 // Parses the query from posted json
 function parseQuery(req, res) {
   var start = new Date();
-  var plan;
-  var qid = counter;
+  var plan, filename, qid = counter;
   console.log("waiting");
   if (req.method == "POST") {
     console.log('post');
@@ -137,15 +138,20 @@ function parseQuery(req, res) {
     req.on('end', function() {
       var mwebres = JSON.parse(body);
       plan = mwebres['plan'];
-      fs.writeFile(filepath +'q'+ qid +".cpp", plan,
+      var ra = mwebres['logicalRa'];
+      var startindex = ra.indexOf('(') + 1;
+      var endindex = ra.indexOf(')');
+      filename = ra.substring(startindex, endindex);
+      fs.writeFile(filepath + filename + ".cpp", plan,
         function(err) {
 	  if (err) {
 	    console.log(err);
+	  } else {
+	    runClang(filename, qid);
 	  }
         });
     });
     getJSON(req, res, qid, start);
-    runClang(qid);
     counter++;
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -155,8 +161,7 @@ function parseQuery(req, res) {
 }
 
 // runs clang on server
-function runClang(qid) {
-  var filename = 'q' + qid;
+function runClang(filename, qid) {
   var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
                   killSignal: 'SIGTERM', cwd: filepath, env: null };
   var cmd = 'python runclang.py clang ' + filename;
@@ -165,8 +170,8 @@ function runClang(qid) {
     if (error !== null) {
       console.log('error: ' + error);
     } else {
-      console.log(filename + ' done');
-      insertDataset(qid, filename);
+      console.log('job' + qid + ' ' + filename + ' done');
+      insertDataset(filename, qid);
     }
   });
 }
