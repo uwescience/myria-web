@@ -148,7 +148,7 @@ def create_clang_json(query, logical_plan, physical_plan):
 
 def create_clang_execute_json(logical_plan, physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend,
-            "logicalRa" : logical_plan}
+            "logicalRa": logical_plan}
 
 
 def submit_clang_query(compiled, chost, cport):

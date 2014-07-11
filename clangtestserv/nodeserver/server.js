@@ -5,7 +5,8 @@ var cp = require('child_process');
 var url = require('url');
 var sqlite = require("sqlite3").verbose();
 
-var filepath = '../../submodules/raco/c_test_environment/';
+var compilepath = '../../submodules/raco/c_test_environment/';
+var datasetpath = compilepath + 'datasets/';
 var hostname = 'localhost'
 var port = 1337;
 var datasetfile = 'dataset.db';
@@ -17,10 +18,13 @@ http.createServer(function (req, res) {
     
   switch(path) {
     case '/dataset':
-      accessDataset(req, res, qid=-1);
+      accessDataset(req, res, qid=-1, selectTable);
     break;
     case '/query':
       processQid(req, res);
+    break;
+    case '/data':
+      displayData(req, res);
     break;
     default:
       parseQuery(req, res);
@@ -30,10 +34,8 @@ http.createServer(function (req, res) {
 }).listen(port, hostname);
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
-function processQid(req, res) {
-  var qid = -1;
+function displayData(req, res) {
   if (req.method == "GET") {
-    console.log('query');
     var body = '';
     req.on('data', function(chunk) {
       body += chunk;
@@ -42,17 +44,33 @@ function processQid(req, res) {
     req.on('end', function() {
       var url_parts = url.parse(req.url, true);
       qid = url_parts.query['qid'];
-      accessDataset(req, res, qid);
+      accessDataset(req, res, qid, getRelKeys);
+    });
+  }
+}
+
+function processQid(req, res) {
+  var qid = -1;
+  if (req.method == "GET") {
+    var body = '';
+    req.on('data', function(chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function() {
+      var url_parts = url.parse(req.url, true);
+      qid = url_parts.query['qid'];
+      accessDataset(req, res, qid, selectTable);
     });
   }
 }
 
 // Examines dataset.db 
-function accessDataset(req, res, qid) {
+function accessDataset(req, res, qid, callfn) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
-    selectTable(db, res, qid);
+    callfn(db, res, qid);
    } else {
     res.writeHead(404, {'Content-Type': 'text/html'});
     res.write("database file not found");
@@ -60,12 +78,41 @@ function accessDataset(req, res, qid) {
   }
 }
 
+function getRelKeys(db, res, qid) {
+  var query = 'SELECT userName, programName, relationName FROM dataset ' +
+	      'WHERE queryId=' + qid;
+  var jsonarr = [];
+  db.each(query, function(err, row) {
+    if (err) {
+      console.log(err);
+    } else {
+      var filename = row.userName + ':' + row.programName + ':' +
+	    row.relationName + '.txt';
+	
+      fs.readFile(datasetpath + filename, {encoding: 'utf8'},
+	function(err, data) {
+          if (err) {
+	    console.log(err);
+	  } else {
+	   var arr = data.split('\n');
+	   for (var i = 0; i < arr.length-1; i++) {
+	     jsonarr.push({'tuple': arr[i]});
+	   }
+	    writeJSON(jsonarr, res);
+	  }
+	});
+    }
+  }, function() {
+    closeDB(db)
+  });
+}
+
 function selectTable(db, res, qid) {
   var jsonarr = [];
   var ts = new Date().getTime();
   var query = 'SELECT * FROM dataset';
   if (qid != -1) {
-      query += ' WHERE queryId =' + qid;
+      query += ' WHERE queryId=' + qid;
   }
     console.log(qid);
    console.log(query);
@@ -114,7 +161,7 @@ function insertDataset(filename, qid) {
     var db = new sqlite.Database(datasetfile);
     var curTime = new Date().toISOString();
     var relkey = filename.split(':');
-    var url = 'http://' + hostname + ':' + port + '/query?qid=' + qid;
+    var url = 'http://' + hostname + ':' + port + '/data?qid=' + qid;
     db.serialize(function() {
       var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
       stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url,
@@ -166,7 +213,7 @@ function parseQuery(req, res) {
       var startindex = ra.indexOf('(') + 1;
       var endindex = ra.indexOf(')');
       filename = ra.substring(startindex, endindex);
-      fs.writeFile(filepath + filename + ".cpp", plan,
+      fs.writeFile(compilepath + filename + ".cpp", plan,
         function(err) {
 	  if (err) {
 	    console.log(err);
@@ -187,7 +234,7 @@ function parseQuery(req, res) {
 // runs clang on server
 function runClang(filename, qid) {
   var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
-                  killSignal: 'SIGTERM', cwd: filepath, env: null };
+                  killSignal: 'SIGTERM', cwd: compilepath, env: null };
   var cmd = 'python runclang.py clang ' + filename;
   cp.exec(cmd, options, function(error, stdout, stderr) {
     console.log('stdout: ' + stdout);
