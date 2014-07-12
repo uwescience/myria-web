@@ -98,7 +98,7 @@ def get_plan(query, language, plan_type, connection,
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            return processor.get_physical_plan()
+            return processor.get_physical_plan(multiway_join)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
 
