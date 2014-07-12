@@ -138,7 +138,7 @@ def get_datasets(connection):
         return []
 
 
-# TODO factor following 3 functions 
+# TODO factor following 3 functions
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawQuery": query,
             "logicalRa": str(logical_plan),

@@ -40,21 +40,24 @@ function loadTable() {
   var t = dataset_templates;
   var jqxhr = $.getJSON(url,
     function(data) {
-      var mdload = '/data'
       var html = '';
 
       _.each(data, function(d) {
+	var qload = '';
+	if (url == clangconn) {
+	    qload = '/query?qid=' + d['queryId'];
+	}
         var relation = d['relationKey'];
-        html += t.relName({url: d['uri'], user: relation['userName'],
+        html += t.relName({url: d['uri'] + qload, user: relation['userName'],
                 program: relation['programName'], 
                 name: relation['relationName'] });
-        html += t.extraInfo({url: d['uri'], queryId: d['queryId'],
+        html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
                 created: d['created']});
 	var dload = d['uri'];
 	if (url == myriaconn) {
 	    dload += '/data?';
 	} else {
-	    dload += '&';
+	    dload += '/data?qid=' + d['queryId'] + '&';
 	}
 	html += t.download({url: dload});
       });

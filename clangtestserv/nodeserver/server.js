@@ -78,35 +78,40 @@ function accessDataset(req, res, qid, callfn) {
   }
 }
 
+// finds filename of qid
 function getRelKeys(db, res, qid) {
   var query = 'SELECT userName, programName, relationName FROM dataset ' +
 	      'WHERE queryId=' + qid;
-  var jsonarr = [];
   db.each(query, function(err, row) {
     if (err) {
       console.log(err);
     } else {
       var filename = row.userName + ':' + row.programName + ':' +
 	    row.relationName + '.txt';
-	
-      fs.readFile(datasetpath + filename, {encoding: 'utf8'},
-	function(err, data) {
-          if (err) {
-	    console.log(err);
-	  } else {
-	   var arr = data.split('\n');
-	   for (var i = 0; i < arr.length-1; i++) {
-	     jsonarr.push({'tuple': arr[i]});
-	   }
-	    writeJSON(jsonarr, res);
-	  }
-	});
+      displayResults(filename, res);	
     }
   }, function() {
     closeDB(db)
   });
 }
 
+// displays query results
+function displayResults(filename, res) {
+  var jsonarr = [];
+  fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      var arr = data.split('\n');
+      for (var i = 0; i < arr.length-1; i++) {
+        jsonarr.push({'tuple': arr[i]});
+      }
+      writeJSON(jsonarr, res);
+    }
+  });
+}
+
+// Retrieves data to populate dataset table
 function selectTable(db, res, qid) {
   var jsonarr = [];
   var ts = new Date().getTime();
@@ -114,8 +119,6 @@ function selectTable(db, res, qid) {
   if (qid != -1) {
       query += ' WHERE queryId=' + qid;
   }
-    console.log(qid);
-   console.log(query);
   db.each(query, function(err, row) {
     if (err) {
       console.log(err);
@@ -123,7 +126,7 @@ function selectTable(db, res, qid) {
       var jsonob = {relationKey :
         {relationName : row.relationName, programName: row.programName,
          userName: row.userName} , queryId: row.queryId, created: row.created, 
-        uri: row.url};
+         uri: row.url};
       jsonarr.push(jsonob);
     }
   }, function() {
@@ -132,11 +135,13 @@ function selectTable(db, res, qid) {
   });
 }
 
+// closes the db after use
 function closeDB(db) {
   console.log("db closed");
   db.close();
 }
 
+// Writes the json array 
 function writeJSON (jsonarr, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.writeHead(200, {'Content-Type': 'application/json'});
@@ -144,7 +149,8 @@ function writeJSON (jsonarr, res) {
   res.end();
 }
 
-function getJSON(req, res, qid, start) {
+// Retrieves the status of the query in json format
+function getStatus(req, res, qid, start) {
   var end = new Date();
   var query_status = {url:'http://' + hostname + ':'+ port +'/query?qid=' + qid,
 		       startTime: start.toISOString(), status: 'SUCCESS',
@@ -154,14 +160,15 @@ function getJSON(req, res, qid, start) {
   res.write(JSON.stringify(query_status));
   res.end();
 }
-	
+
+// Inserts query information into database	
 function insertDataset(filename, qid) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     var curTime = new Date().toISOString();
     var relkey = filename.split(':');
-    var url = 'http://' + hostname + ':' + port + '/data?qid=' + qid;
+    var url = 'http://' + hostname + ':' + port;
     db.serialize(function() {
       var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
       stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url,
@@ -176,21 +183,22 @@ function insertDataset(filename, qid) {
   }
 }
 
+// Retrieves the latest qid to prevent 
 function getQid() {
   var exists = fs.existsSync(datasetfile);
   var queryId = 0;
-    console.log
   if (exists) {
     var db = new sqlite.Database(datasetfile);
-    db.each('SELECT queryId FROM dataset ORDER BY queryID DESC LIMIT 1', function(err, row) {
-     if (err) {
-       console.log(err);
-     } else {
-       queryId = row.queryId;
-     }
-   }, function() {
-     counter = queryId;
-   });
+    db.each('SELECT queryId FROM dataset ORDER BY queryID DESC LIMIT 1', 
+     function(err, row) {
+       if (err) {
+	 console.log(err);
+       } else {
+         queryId = row.queryId;
+       }
+     }, function() {
+       counter = queryId;
+     });
   }
 }
 
@@ -198,9 +206,9 @@ function getQid() {
 function parseQuery(req, res) {
   var start = new Date();
   var plan, filename, qid = counter;
-  console.log("waiting");
   if (req.method == "POST") {
-    console.log('post');
+    console.log('query recieved');
+    getStatus(req, res, qid, start);
     var body = '';
     req.on('data', function(chunk) {
       body += chunk;
@@ -213,6 +221,7 @@ function parseQuery(req, res) {
       var startindex = ra.indexOf('(') + 1;
       var endindex = ra.indexOf(')');
       filename = ra.substring(startindex, endindex);
+
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function(err) {
 	  if (err) {
@@ -222,7 +231,6 @@ function parseQuery(req, res) {
 	  }
         });
     });
-    getJSON(req, res, qid, start);
     counter++;
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -231,7 +239,7 @@ function parseQuery(req, res) {
   }
 }
 
-// runs clang on server
+// compiles and runs the query on server
 function runClang(filename, qid) {
   var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
                   killSignal: 'SIGTERM', cwd: compilepath, env: null };
