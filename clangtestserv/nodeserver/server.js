@@ -26,8 +26,13 @@ http.createServer(function (req, res) {
     case '/data':
       displayData(req, res);
     break;
+    case '/status':
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end();
+    break;
     default:
-      parseQuery(req, res);
+      var start = new Date().getTime();
+      parseQuery(req, res, start);
     break;
   }
 
@@ -84,7 +89,7 @@ function getRelKeys(db, res, qid) {
 	      'WHERE queryId=' + qid;
   db.each(query, function(err, row) {
     if (err) {
-      console.log(err);
+      console.log('relKeys: ' + err);
     } else {
       var filename = row.userName + ':' + row.programName + ':' +
 	    row.relationName + '.txt';
@@ -100,7 +105,7 @@ function displayResults(filename, res) {
   var jsonarr = [];
   fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function(err, data) {
     if (err) {
-      console.log(err);
+      console.log('display results' + err);
     } else {
       var arr = data.split('\n');
       for (var i = 0; i < arr.length-1; i++) {
@@ -121,7 +126,7 @@ function selectTable(db, res, qid) {
   }
   db.each(query, function(err, row) {
     if (err) {
-      console.log(err);
+      console.log('select table: ' + err);
     } else {
       var jsonob = {relationKey :
         {relationName : row.relationName, programName: row.programName,
@@ -151,11 +156,12 @@ function writeJSON (jsonarr, res) {
 
 // Retrieves the status of the query in json format
 function getStatus(req, res, qid, start) {
-  var end = new Date();
+  var end = new Date().getTime();
   var query_status = {url:'http://' + hostname + ':'+ port +'/query?qid=' + qid,
-		       startTime: start.toISOString(), status: 'SUCCESS',
-		       finishTime: end.toISOString(), elapsedNanos: end - start,
-		       queryId: qid};
+                      status: 'ACCEPTED', queryId: qid,
+                      startTime: new Date(start).toISOString(),
+                      finishTime: 0,
+                      elapsedNanos: end - start}
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.write(JSON.stringify(query_status));
   res.end();
@@ -174,7 +180,7 @@ function insertDataset(filename, qid) {
       stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url,
 	       function(err) {
                  if (err) {
-                   console.log(err);
+                   console.log('insert dataset: ' + err);
 		 }
 	       });
       stmt.finalize();
@@ -192,7 +198,7 @@ function getQid() {
     db.each('SELECT queryId FROM dataset ORDER BY queryID DESC LIMIT 1', 
      function(err, row) {
        if (err) {
-	 console.log(err);
+	 console.log('getQid' + err);
        } else {
          queryId = row.queryId;
        }
@@ -203,12 +209,10 @@ function getQid() {
 }
 
 // Parses the query from posted json
-function parseQuery(req, res) {
-  var start = new Date();
+function parseQuery(req, res, start) {
   var plan, filename, qid = counter;
   if (req.method == "POST") {
     console.log('query recieved');
-    getStatus(req, res, qid, start);
     var body = '';
     req.on('data', function(chunk) {
       body += chunk;
@@ -225,12 +229,13 @@ function parseQuery(req, res) {
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function(err) {
 	  if (err) {
-	    console.log(err);
+	    console.log('parse query' + err);
 	  } else {
 	    runClang(filename, qid);
 	  }
         });
     });
+    getStatus(req, res, qid, start);
     counter++;
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});

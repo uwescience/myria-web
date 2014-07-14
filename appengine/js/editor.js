@@ -225,7 +225,8 @@ function checkQueryStatus(query_id) {
     type: 'GET',
     data: {
       queryId: query_id,
-      language: editorLanguage
+      language: editorLanguage,
+      backend: backendProcess
     },
     success: displayQueryStatus,
     error: errFunc

@@ -138,7 +138,7 @@ def get_datasets(connection):
         return []
 
 
-# TODO factor following 3 functions
+# TODO factor following 4 functions
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawQuery": query,
             "logicalRa": str(logical_plan),
@@ -154,6 +154,12 @@ def create_clang_execute_json(logical_plan, physical_plan, backend):
 def submit_clang_query(compiled, chost, cport):
     url = 'http://%s:%d' % (chost, cport)
     r = requests.Session().post(url, data=json.dumps(compiled))
+    return r.json()
+
+
+def check_clang_query(qid, chost, cport):
+    url = 'http://%s:%d/status?qid=%s' % (chost, cport, qid)
+    r = requests.Session().get(url)
     return r.json()
 
 
@@ -616,6 +622,7 @@ class Execute(MyriaHandler):
         conn = self.app.connection
 
         query_id = self.request.get("queryId")
+        backend = self.request.get("backend")
 
         if not query_id:
             self.response.hpeaders['Content-Type'] = 'text/plain'
@@ -623,7 +630,13 @@ class Execute(MyriaHandler):
             self.response.write("Error 400 (Bad Request): missing query_id")
             return
 
-        query_status = conn.get_query_status(query_id)
+        if backend == "myria":
+            query_status = conn.get_query_status(query_id)
+        else:
+            chost = 'localhost'
+            cport = 1337
+            query_status = check_clang_query(query_id, chost, cport)
+
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
 
