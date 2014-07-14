@@ -280,8 +280,6 @@ class MyriaPage(MyriaHandler):
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
                 'greeting' : self.get_greeting(),
-                #'myriaConnection': "{h}:{p}".format(
-                #    h=self.app.hostname, p=self.app.port),
                 'myriaConnection': self.getRESThost(),
                 'version': VERSION,
                 'branch': BRANCH}
@@ -417,10 +415,11 @@ class Datasets(MyriaPage):
         except:
             datasets = []
 
+        hostname = self.base_template_vars()["myriaConnection"]
         for d in datasets:
             try:
                 d['queryUrl'] = 'http://%s/query/query-%d' %\
-                    (self.base_template_vars()["myriaConnection"], d['queryId'])
+                    (hostname, d['queryId'])
             except:
                 pass
 
