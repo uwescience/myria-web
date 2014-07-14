@@ -450,10 +450,11 @@ class Datasets(MyriaPage):
         except:
             datasets = []
 
+        hostname = self.base_template_vars()["myriaConnection"]
         for d in datasets:
             try:
                 d['queryUrl'] = 'http://%s/query/query-%d' %\
-                    (self.base_template_vars()["myriaConnection"], d['queryId'])
+                    (hostname, d['queryId'])
             except:
                 pass
 
