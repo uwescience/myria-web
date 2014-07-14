@@ -65,6 +65,22 @@ git submodule init
 ```
 )
 
+# Run the tests
+
+
+
+Install the developer dependencies.
+
+```sh
+pip install -r requirements-dev.txt
+```
+
+Run
+
+```
+nosetests -w appengine --with-gae --exclude-dir={myria,raco,ply,networkx} --without-sandbox
+```
+
 # Issues
 
 The Google App Engine GUI has a Logs button that can be helpful for diagnosing issues with the Myria web app.

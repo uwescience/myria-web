@@ -10,6 +10,8 @@ import webapp2
 
 import jinja2
 
+from google.appengine.api import users
+
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
@@ -177,22 +179,58 @@ class MyriaCatalog(Catalog):
 
 class MyriaHandler(webapp2.RequestHandler):
 
+    def verifyuser(self):
+        user = users.get_current_user()
+        if user:
+           whitelist = [
+             "bigdogintel@gmail.com",
+             "billhowe@gmail.com",
+             "billhowe@cs.washington.edu",
+             "dhalperi@escience.washington.edu",
+             "whitaker@cs.washington.edu"
+           ]
+           if user.email() in whitelist:
+             return
+        raise users.UserNotFoundError("Unauthorized -- must login via approved Google account")
+
     def handle_exception(self, exception, debug_mode):
-        self.response.headers['Content-Type'] = 'text/plain'
-        if isinstance(exception,
-                      (ValueError, SyntaxError, MyrialCompileException)):
-            self.response.status = 400
-            msg = '{}: {}'.format(exception.__class__.__name__, exception)
+
+        # If not authorized, use the unauthorized template
+        if isinstance(exception, users.UserNotFoundError):
+
+            user = users.get_current_user()
+
+            if user:
+                usermsg = "User '%s' is not allowed to access this system" % user.email()
+            else:
+                usermsg = ""
+
+            template_vars = self.base_template_vars()
+            template_vars.update({
+                'usermsg': usermsg,
+                'loginurl': users.create_login_url(self.request.url)
+            })
+
+            self.response.status = 401
+            template = JINJA_ENVIRONMENT.get_template('unauthorized.html')
+            self.response.out.write(template.render(template_vars))
+
         else:
-            self.response.status = 500
-            msg = ""
-            if debug_mode:
-                self.response.out.write(": \n\n")
-                import traceback
-                msg = traceback.format_exc()
 
-        self.response.out.write(msg)
+            self.response.headers['Content-Type'] = 'text/plain'
+            if isinstance(exception,
+                          (ValueError, SyntaxError, MyrialCompileException)):
+                self.response.status = 400
+                msg = '{}: {}'.format(exception.__class__.__name__, exception)
+            else:
+                self.response.status = 500
+                msg = ""
+                if debug_mode:
+                    self.response.out.write(": \n\n")
+                    import traceback
+                    msg = traceback.format_exc()
 
+            self.response.out.write(msg)
 
 class RedirectToEditor(MyriaHandler):
 
@@ -205,6 +243,9 @@ class RedirectToEditor(MyriaHandler):
 
 class MyriaPage(MyriaHandler):
 
+    def getRESThost(self):
+      return "%s/%s" % (self.request.host, "rest")
+
     def get_connection_string(self):
         conn = self.app.connection
         hostname = self.app.hostname
@@ -215,17 +256,30 @@ class MyriaPage(MyriaHandler):
             try:
                 workers = conn.workers()
                 alive = conn.workers_alive()
-                connection_string = "%s:%d [%d/%d]" %\
-                    (hostname, port, len(alive), len(workers))
+                connection_string = "%s [%d/%d]" %\
+                    (self.getRESThost(), len(alive), len(workers))
             except:
                 connection_string = "error connecting to %s:%d" % (
                     hostname, port)
         return connection_string
 
+
+    def get_greeting(self):
+        '''Construct an HTML fragment that displays login status and a link to either login or out'''
+        user = users.get_current_user()
+        if user:
+            greeting = ('<a href="%s">logout as %s</a>' %
+                        (users.create_logout_url('/'), user.nickname()))
+        else:
+            greeting = ('<a href="%s">Login with Google</a>' %
+                        users.create_login_url('/'))
+
+        return greeting
+
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
-                'myriaConnection': "{h}:{p}".format(
-                    h=self.app.hostname, p=self.app.port),
+                'greeting' : self.get_greeting(),
+                'myriaConnection': self.getRESThost(),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -250,6 +304,9 @@ def nano_to_str(elapsed):
 class Queries(MyriaPage):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         try:
             limit = int(self.request.get('limit', QUERIES_PER_PAGE))
@@ -322,6 +379,9 @@ class Queries(MyriaPage):
 class Profile(MyriaPage):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         query_id = self.request.get("queryId")
         query_plan = {}
@@ -345,16 +405,20 @@ class Profile(MyriaPage):
 class Datasets(MyriaPage):
 
     def get(self, connection_=None):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         conn = self.app.connection
         try:
             datasets = conn.datasets()
         except:
             datasets = []
 
+        hostname = self.base_template_vars()["myriaConnection"]
         for d in datasets:
             try:
-                d['queryUrl'] = 'http://%s:%d/query/query-%d' %\
-                    (self.app.hostname, self.app.port, d['queryId'])
+                d['queryUrl'] = 'http://%s/query/query-%d' %\
+                    (hostname, d['queryId'])
             except:
                 pass
 
@@ -400,6 +464,10 @@ class Examples(MyriaPage):
 class Editor(MyriaPage):
 
     def get(self):
+ 
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -413,6 +481,9 @@ class Editor(MyriaPage):
 
 class Demo3(MyriaPage):
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -431,6 +502,9 @@ class Plan(MyriaHandler):
         self.get()
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -450,6 +524,9 @@ class Plan(MyriaHandler):
 class Optimize(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -476,8 +553,10 @@ class Optimize(MyriaHandler):
 class Compile(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-        conn = self.app.connection
         query = self.request.get("query")
         language = self.request.get("language")
         multiway_join = self.request.get("multiway_join", False)
@@ -490,11 +569,9 @@ class Compile(MyriaHandler):
         physicalplan = get_physical_plan(
             query, language, self.app.connection, multiway_join)
 
-        # Get the Catalog needed to get schemas for compiling the query
-        catalog = MyriaCatalog(conn)
         try:
             compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
+                query, cached_logicalplan, physicalplan, language)
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -510,7 +587,7 @@ class Compile(MyriaHandler):
         self.get()
 
 
-class Execute(MyriaHandler):
+class Execute(MyriaPage):
 
     def post(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
@@ -531,18 +608,16 @@ class Execute(MyriaHandler):
             physicalplan = get_physical_plan(
                 query, language, self.app.connection, multiway_join)
 
-            # Get the Catalog needed to get schemas for compiling the query
-            catalog = MyriaCatalog(conn)
             # .. and compile
             compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, catalog)
+                query, cached_logicalplan, physicalplan, language)
 
             compiled['profilingMode'] = profile
 
             # Issue the query
             query_status = conn.submit_query(compiled)
-            query_url = 'http://%s:%d/execute?query_id=%d' %\
-                (self.app.hostname, self.app.port, query_status['queryId'])
+            query_url = 'http://%s/execute?query_id=%d' %\
+                (self.base_template_vars()["myriaConnection"], query_status['queryId'])
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -562,6 +637,9 @@ class Execute(MyriaHandler):
             return
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
 
@@ -581,6 +659,9 @@ class Execute(MyriaHandler):
 class Dot(MyriaHandler):
 
     def get(self):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
@@ -599,6 +680,24 @@ class Dot(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
+class RawREST(MyriaHandler):
+    '''Pass through requests to the Myria back end. Several reasons:
+    * To have a single public REST API
+    * To support global services like authentication, logging, etc.
+    * To enable federation.
+    '''
+    def get(self, path):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
+        r = self.app.connection.rawmyria(path, self.request.query_string)
+        self.response.headers.update(r.headers)
+        self.response.set_status(r.status_code)
+        self.response.write(r.text)
+
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
@@ -615,6 +714,7 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
+            ('/rest(.*)', RawREST),
             ('/demo3', Demo3)
         ]
 

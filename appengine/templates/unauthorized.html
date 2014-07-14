@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block queries_active %} class="active"{% endblock %}
+
+{% block content %}
+	<div class="panel panel-primary">
+		<div class="panel-heading">
+      <h3>Unauthorized</h3>
+      {{ usermsg }}
+		</div>
+	</div>
+    <a href="{{ loginurl }}">Login with Google</a>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
