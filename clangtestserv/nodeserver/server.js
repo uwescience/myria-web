@@ -21,13 +21,13 @@ http.createServer(function (req, res) {
       accessDataset(req, res, qid=-1, selectTable);
     break;
     case '/query':
-      var qid = processQid(req, res, 'query');
+      processQid(req, res, 'query');
     break;
     case '/data':
       displayData(req, res);
     break;
     case '/status':
-      var qid = processQid(req, res, 'status');
+      processQid(req, res, 'status');
     break;
     default:
       var start = new Date().toISOString();
@@ -64,11 +64,14 @@ function processQid(req, res, path) {
     req.on('end', function() {
       var url_parts = url.parse(req.url, true);
       qid = url_parts.query['qid'];
+
+      // hack to get qid assigned before next function
       if (path == 'query') {
         accessDataset(req, res, qid, selectTable);
       } else if (path == 'status') {
         getQueryStatus(res, qid);
-      } else {}
+      } else {
+      }
     });
   }
 }
@@ -145,7 +148,6 @@ function selectTable(res, qid, db) {
 
 // closes the db after use
 function closeDB(db) {
-  console.log("db closed");
   db.close();
 }
 
@@ -163,6 +165,7 @@ function getQueryStatus(res, qid) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
+
     db.each(query, function(err, row) {
       var start = row.startTime;
       var diff = 0;
@@ -220,7 +223,8 @@ function parseQuery(req, res, start) {
       var ra = mwebres['logicalRa'];
       var startindex = ra.indexOf('(') + 1;
       var endindex = ra.indexOf(')');
-      filename = ra.substring(startindex, endindex);
+      filename = ra.substring(startindex, endindex)
+
       insertDataset(res, filename, qid, start);
 
       fs.writeFile(compilepath + filename + ".cpp", plan,
@@ -252,7 +256,7 @@ function runClang(filename, qid, start) {
       console.log('error: ' + error);
     } else {
       completeQueryUpdate(qid, start);
-      console.log('job' + qid + ' ' + filename + ' done');
+      console.log('job ' + qid + ' ' + filename + ' done');
     }
   });
 }
@@ -263,19 +267,8 @@ function completeQueryUpdate(qid, start) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     db.serialize(function() {
-      var update = true;
-      db.each('SELECT status FROM dataset WHERE queryId = ?', qid,
-	      function(err, row) {
-        if (err) {
-          console.log(err);
-        }
-        if (row.status != 'SUCCESS') {
-          db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?' +
-                 'WHERE queryId = ?', stop, qid);
-
-        }
-      });
-
+      db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?' +
+             'WHERE queryId = ?', stop, qid);
       closeDB(db);
     });
   }
@@ -286,18 +279,8 @@ function runQueryUpdate(qid) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     db.serialize(function() {
-      var update = true;
-      db.each('SELECT status FROM dataset WHERE queryId = ?', qid,
-	      function(err, row) {
-        if (err) {
-          console.log(err);
-        }
-        if (row.status != 'SUCCESS') {
-          db.run('UPDATE dataset SET status = "Running"' +
-                 'WHERE queryId = ?', qid);
-
-        }
-      });
+      db.run('UPDATE dataset SET status = "Running"' +
+             'WHERE queryId = ?', qid);
       closeDB(db);
     });
   }
