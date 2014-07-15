@@ -7,6 +7,7 @@ import requests
 from threading import Lock
 import urllib
 import webapp2
+from urlparse import urlsplit, urlunsplit
 
 import jinja2
 
@@ -131,7 +132,13 @@ def get_datasets(connection):
     if not connection:
         return []
     try:
-        return connection.datasets()
+        datasets =  connection.datasets()
+        for d in datasets:
+            # Yuck: convert Myria's absolute REST paths into paths
+            # that are relative to the appengine URL
+            url = urlsplit(d['uri'])
+            d['uri'] = urlunsplit(("", "", "/rest" + url[2], url[3], url[4]))
+        return datasets
     except myria.MyriaError:
         return []
 
@@ -416,10 +423,7 @@ class Datasets(MyriaPage):
         self.verifyuser()
 
         conn = self.app.connection
-        try:
-            datasets = conn.datasets()
-        except:
-            datasets = []
+        datasets = get_datasets(conn)
 
         hostname = self.base_template_vars()["myriaConnection"]
         for d in datasets:
