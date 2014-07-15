@@ -23,7 +23,15 @@ Rich = [from EmpDept where salary > 6000 emit name, dept_name];
 
 store(Rich, myrial_output);'''
 
+mimic_join = '''order = scan(public:adhoc:poe_order);
+med = scan(public:adhoc:poe_med);
+
+treatments = [from order, med where order.poe_id=med.poe_id
+              emit subject_id, drug_name];
+store(treatments, mimic_output);'''
+
 __myrial_examples = [
+    ('mimic join', mimic_join),
     ('Simple join', simple_join),
     ('Simple AFL query', simple_bd),
     ('AFL + Myrial query', combined_bd)
