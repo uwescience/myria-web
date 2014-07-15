@@ -101,7 +101,7 @@ function getRelKeys(res, qid, db) {
       displayResults(res, filename);	
     }
   }, function() {
-    closeDB(db)
+    db.close();
   });
 }
 
@@ -141,13 +141,8 @@ function selectTable(res, qid, db) {
     }
   }, function() {
     writeJSON(res, jsonarr);
-    closeDB(db)
+    db.close();
   });
-}
-
-// closes the db after use
-function closeDB(db) {
-  db.close();
 }
 
 // Writes the json array 
@@ -169,7 +164,7 @@ function getQueryStatus(res, qid) {
                   startTime: row.startTime, finishTime: row.endTime,
                   elapsedNanos: row.elapsed, url: row.url}
       writeJSON(res, json);
-      closeDB(db);
+      db.close();
     });
   }
 }
@@ -193,7 +188,7 @@ function insertDataset(res, filename, qid, start) {
       });
 
       stmt.finalize();
-      closeDB(db);
+      db.close();
       getQueryStatus(res, qid);
     });
   }
@@ -262,7 +257,7 @@ function completeQueryUpdate(qid, start) {
       var diff = new Date(stop) - new Date(start);
       db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
              'WHERE queryId = ?', stop, diff, qid);
-      closeDB(db);
+      db.close();
     });
   }
 }
@@ -283,7 +278,7 @@ function runQueryUpdate(qid) {
 	   db.run('UPDATE dataset SET status = "Running"' +
 		  'WHERE queryId = ?', qid);
        }
-      closeDB(db);
+      db.close();
     });
   }
 }
