@@ -13,6 +13,7 @@ import jinja2
 
 from google.appengine.api import users
 
+import raco.run_federated
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
@@ -615,23 +616,17 @@ class Execute(MyriaPage):
             get_logical_plan(query, language, self.app.connection))
 
         try:
-            # Generate physical plan
-            physicalplan = get_physical_plan(
-                query, language, self.app.connection, multiway_join)
+            logical_plan = get_logical_plan(query, language, self.app.connection)
+            query_status = raco.run_federated.run(logical_plan,
+                                                  self.app.connection)
 
-            # .. and compile
-            compiled = compile_to_json(
-                query, cached_logicalplan, physicalplan, language)
-
-            compiled['profilingMode'] = profile
-
-            # Issue the query
-            query_status = conn.submit_query(compiled)
-            query_url = 'http://%s/execute?query_id=%d' %\
-                (self.base_template_vars()["myriaConnection"], query_status['queryId'])
+            if query_status:
+                query_url = 'http://%s/execute?query_id=%d' %\
+                    (self.base_template_vars()["myriaConnection"],
+                     query_status['queryId'])
+                self.response.headers['Content-Location'] = query_url
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
-            self.response.headers['Content-Location'] = query_url
             self.response.write(json.dumps(query_status))
             return
         except myria.MyriaError as e:
