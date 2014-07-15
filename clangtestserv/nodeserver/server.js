@@ -21,17 +21,16 @@ http.createServer(function (req, res) {
       accessDataset(req, res, qid=-1, selectTable);
     break;
     case '/query':
-      processQid(req, res);
+      var qid = processQid(req, res, 'query');
     break;
     case '/data':
       displayData(req, res);
     break;
     case '/status':
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end();
+      var qid = processQid(req, res, 'status');
     break;
     default:
-      var start = new Date().getTime();
+      var start = new Date().toISOString();
       parseQuery(req, res, start);
     break;
   }
@@ -54,7 +53,7 @@ function displayData(req, res) {
   }
 }
 
-function processQid(req, res) {
+function processQid(req, res, path) {
   var qid = -1;
   if (req.method == "GET") {
     var body = '';
@@ -65,17 +64,21 @@ function processQid(req, res) {
     req.on('end', function() {
       var url_parts = url.parse(req.url, true);
       qid = url_parts.query['qid'];
-      accessDataset(req, res, qid, selectTable);
+      if (path == 'query') {
+        accessDataset(req, res, qid, selectTable);
+      } else if (path == 'status') {
+        getQueryStatus(res, qid);
+      } else {}
     });
   }
 }
 
 // Examines dataset.db 
-function accessDataset(req, res, qid, callfn) {
+function accessDataset(req, res, qid, callbackfn) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
-    callfn(db, res, qid);
+    callbackfn(res, qid, db);
    } else {
     res.writeHead(404, {'Content-Type': 'text/html'});
     res.write("database file not found");
@@ -84,7 +87,7 @@ function accessDataset(req, res, qid, callfn) {
 }
 
 // finds filename of qid
-function getRelKeys(db, res, qid) {
+function getRelKeys(res, qid, db) {
   var query = 'SELECT userName, programName, relationName FROM dataset ' +
 	      'WHERE queryId=' + qid;
   db.each(query, function(err, row) {
@@ -93,7 +96,7 @@ function getRelKeys(db, res, qid) {
     } else {
       var filename = row.userName + ':' + row.programName + ':' +
 	    row.relationName + '.txt';
-      displayResults(filename, res);	
+      displayResults(res, filename);	
     }
   }, function() {
     closeDB(db)
@@ -101,7 +104,7 @@ function getRelKeys(db, res, qid) {
 }
 
 // displays query results
-function displayResults(filename, res) {
+function displayResults(res, filename) {
   var jsonarr = [];
   fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function(err, data) {
     if (err) {
@@ -111,15 +114,14 @@ function displayResults(filename, res) {
       for (var i = 0; i < arr.length-1; i++) {
         jsonarr.push({'tuple': arr[i]});
       }
-      writeJSON(jsonarr, res);
+      writeJSON(res, jsonarr);
     }
   });
 }
 
 // Retrieves data to populate dataset table
-function selectTable(db, res, qid) {
+function selectTable(res, qid, db) {
   var jsonarr = [];
-  var ts = new Date().getTime();
   var query = 'SELECT * FROM dataset';
   if (qid != -1) {
       query += ' WHERE queryId=' + qid;
@@ -131,11 +133,12 @@ function selectTable(db, res, qid) {
       var jsonob = {relationKey :
         {relationName : row.relationName, programName: row.programName,
          userName: row.userName} , queryId: row.queryId, created: row.created, 
-         uri: row.url};
+         uri: row.url, status: row.status, startTime: row.startTime,
+         endTime: row.endTime};
       jsonarr.push(jsonob);
     }
   }, function() {
-    writeJSON(jsonarr, res);
+    writeJSON(res, jsonarr);
     closeDB(db)
   });
 }
@@ -147,7 +150,7 @@ function closeDB(db) {
 }
 
 // Writes the json array 
-function writeJSON (jsonarr, res) {
+function writeJSON (res, jsonarr) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.write(JSON.stringify(jsonarr));
@@ -155,20 +158,29 @@ function writeJSON (jsonarr, res) {
 }
 
 // Retrieves the status of the query in json format
-function getStatus(req, res, qid, start) {
-  var end = new Date().getTime();
-  var query_status = {url:'http://' + hostname + ':'+ port +'/query?qid=' + qid,
-                      status: 'ACCEPTED', queryId: qid,
-                      startTime: new Date(start).toISOString(),
-                      finishTime: 0,
-                      elapsedNanos: end - start}
-  res.writeHead(200, {'Content-Type': 'application/json'});
-  res.write(JSON.stringify(query_status));
-  res.end();
+function getQueryStatus(res, qid) {
+  var exists = fs.existsSync(datasetfile);
+  if (exists) {
+    var db = new sqlite.Database(datasetfile);
+    var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
+    db.each(query, function(err, row) {
+      var start = row.startTime;
+      var diff = 0;
+      if (row.endTime) {
+        var end = row.endTime;
+        diff = new Date(end) - new Date(start);
+      }
+      var json = {status: row.status, queryId: row.queryId, 
+                  startTime: start, finishTime: end,
+                  elapsedNanos: diff, url: row.url}
+      writeJSON(res, json);
+      closeDB(db);
+    });
+  }
 }
 
 // Inserts query information into database	
-function insertDataset(filename, qid) {
+function insertDataset(res, filename, qid, start) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
@@ -176,14 +188,116 @@ function insertDataset(filename, qid) {
     var relkey = filename.split(':');
     var url = 'http://' + hostname + ':' + port;
     db.serialize(function() {
-      var stmt = db.prepare('INSERT INTO dataset VALUES(?, ?, ?, ?, ?, ?)');
-      stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url,
-	       function(err) {
-                 if (err) {
-                   console.log('insert dataset: ' + err);
-		 }
-	       });
+      var stmt = db.prepare('INSERT INTO dataset VALUES' +
+                            '(?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
+	       start, null, function(err) {
+               if (err) {
+                 console.log('insert dataset: ' + err);
+               }
+      });
+
       stmt.finalize();
+      closeDB(db);
+      getQueryStatus(res, qid);
+    });
+  }
+}
+
+// Parses the query from posted json
+function parseQuery(req, res, start) {
+  var plan, filename, qid = counter;
+  if (req.method == "POST") {
+    console.log('query recieved');
+    var body = '';
+    req.on('data', function(chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function() {
+      var mwebres = JSON.parse(body);
+      plan = mwebres['plan'];
+      var ra = mwebres['logicalRa'];
+      var startindex = ra.indexOf('(') + 1;
+      var endindex = ra.indexOf(')');
+      filename = ra.substring(startindex, endindex);
+      insertDataset(res, filename, qid, start);
+
+      fs.writeFile(compilepath + filename + ".cpp", plan,
+        function(err) {
+	  if (err) {
+	    console.log('parse query' + err);
+	  } else {
+	    runQueryUpdate(qid);
+	    runClang(filename, qid, start);
+	  }
+        });
+    });
+    counter++;
+  } else {
+    res.writeHead(400, {'Content-Type': 'text/html'});
+    res.write("nothing");
+    res.end();
+  }
+}
+
+// compiles and runs the query on server
+function runClang(filename, qid, start) {
+  var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
+                  killSignal: 'SIGTERM', cwd: compilepath, env: null };
+  var cmd = 'python runclang.py clang ' + filename;
+  cp.exec(cmd, options, function(error, stdout, stderr) {
+    console.log('stdout: ' + stdout);
+    if (error !== null) {
+      console.log('error: ' + error);
+    } else {
+      completeQueryUpdate(qid, start);
+      console.log('job' + qid + ' ' + filename + ' done');
+    }
+  });
+}
+
+function completeQueryUpdate(qid, start) {
+  var stop = new Date().toISOString();
+  var exists = fs.existsSync(datasetfile);
+  if (exists) {
+    var db = new sqlite.Database(datasetfile);
+    db.serialize(function() {
+      var update = true;
+      db.each('SELECT status FROM dataset WHERE queryId = ?', qid,
+	      function(err, row) {
+        if (err) {
+          console.log(err);
+        }
+        if (row.status != 'SUCCESS') {
+          db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?' +
+                 'WHERE queryId = ?', stop, qid);
+
+        }
+      });
+
+      closeDB(db);
+    });
+  }
+}
+
+function runQueryUpdate(qid) {
+  var exists = fs.existsSync(datasetfile);
+  if (exists) {
+    var db = new sqlite.Database(datasetfile);
+    db.serialize(function() {
+      var update = true;
+      db.each('SELECT status FROM dataset WHERE queryId = ?', qid,
+	      function(err, row) {
+        if (err) {
+          console.log(err);
+        }
+        if (row.status != 'SUCCESS') {
+          db.run('UPDATE dataset SET status = "Running"' +
+                 'WHERE queryId = ?', qid);
+
+        }
+      });
       closeDB(db);
     });
   }
@@ -207,56 +321,3 @@ function getQid() {
      });
   }
 }
-
-// Parses the query from posted json
-function parseQuery(req, res, start) {
-  var plan, filename, qid = counter;
-  if (req.method == "POST") {
-    console.log('query recieved');
-    var body = '';
-    req.on('data', function(chunk) {
-      body += chunk;
-    });
-
-    req.on('end', function() {
-      var mwebres = JSON.parse(body);
-      plan = mwebres['plan'];
-      var ra = mwebres['logicalRa'];
-      var startindex = ra.indexOf('(') + 1;
-      var endindex = ra.indexOf(')');
-      filename = ra.substring(startindex, endindex);
-
-      fs.writeFile(compilepath + filename + ".cpp", plan,
-        function(err) {
-	  if (err) {
-	    console.log('parse query' + err);
-	  } else {
-	    runClang(filename, qid);
-	  }
-        });
-    });
-    getStatus(req, res, qid, start);
-    counter++;
-  } else {
-    res.writeHead(400, {'Content-Type': 'text/html'});
-    res.write("nothing");
-    res.end();
-  }
-}
-
-// compiles and runs the query on server
-function runClang(filename, qid) {
-  var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
-                  killSignal: 'SIGTERM', cwd: compilepath, env: null };
-  var cmd = 'python runclang.py clang ' + filename;
-  cp.exec(cmd, options, function(error, stdout, stderr) {
-    console.log('stdout: ' + stdout);
-    if (error !== null) {
-      console.log('error: ' + error);
-    } else {
-      console.log('job' + qid + ' ' + filename + ' done');
-      insertDataset(filename, qid);
-    }
-  });
-}
-
