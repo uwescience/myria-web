@@ -239,7 +239,8 @@ class MyriaHandler(webapp2.RequestHandler):
              "billhowe@gmail.com",
              "billhowe@cs.washington.edu",
              "dhalperi@escience.washington.edu",
-             "whitaker@cs.washington.edu"
+             "whitaker@cs.washington.edu",
+             "jvkepner@gmail.com"
            ]
            if user.email() in whitelist:
              return
