@@ -11,7 +11,6 @@ var hostname = 'localhost'
 var port = 1337;
 var datasetfile = 'dataset.db';
 var counter = 0;
-//getQid();
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
@@ -137,7 +136,7 @@ function selectTable(res, qid, db) {
         {relationName : row.relationName, programName: row.programName,
          userName: row.userName} , queryId: row.queryId, created: row.created, 
          uri: row.url, status: row.status, startTime: row.startTime,
-         endTime: row.endTime};
+         endTime: row.endTime, elapsed: row.elapsed};
       jsonarr.push(jsonob);
     }
   }, function() {
@@ -165,17 +164,10 @@ function getQueryStatus(res, qid) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
-
     db.each(query, function(err, row) {
-      var start = row.startTime;
-      var diff = 0;
-      if (row.endTime) {
-        var end = row.endTime;
-        diff = new Date(end) - new Date(start);
-      }
       var json = {status: row.status, queryId: row.queryId, 
-                  startTime: start, finishTime: end,
-                  elapsedNanos: diff, url: row.url}
+                  startTime: row.startTime, finishTime: row.endTime,
+                  elapsedNanos: row.elapsed, url: row.url}
       writeJSON(res, json);
       closeDB(db);
     });
@@ -192,9 +184,9 @@ function insertDataset(res, filename, qid, start) {
     var url = 'http://' + hostname + ':' + port;
     db.serialize(function() {
       var stmt = db.prepare('INSERT INTO dataset VALUES' +
-                            '(?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
       stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-	       start, null, function(err) {
+	       start, null, 0, function(err) {
                if (err) {
                  console.log('insert dataset: ' + err);
                }
@@ -267,8 +259,9 @@ function completeQueryUpdate(qid, start) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     db.serialize(function() {
-      db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?' +
-             'WHERE queryId = ?', stop, qid);
+      var diff = new Date(stop) - new Date(start);
+      db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
+             'WHERE queryId = ?', stop, diff, qid);
       closeDB(db);
     });
   }
@@ -279,8 +272,17 @@ function runQueryUpdate(qid) {
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     db.serialize(function() {
-      db.run('UPDATE dataset SET status = "Running"' +
-             'WHERE queryId = ?', qid);
+      var update = false;
+      db.each('SELECT status FROM dataset WHERE queryId = ?', qid, 
+              function(err, row) {
+                if (row.status != 'SUCCESS') {
+                  update = true;
+		}
+	      });
+       if (update) {
+	   db.run('UPDATE dataset SET status = "Running"' +
+		  'WHERE queryId = ?', qid);
+       }
       closeDB(db);
     });
   }
