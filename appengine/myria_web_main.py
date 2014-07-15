@@ -52,6 +52,7 @@ JINJA_ENVIRONMENT.tests["small_dataset"] = is_small_dataset
 
 version_file_path = os.path.join(os.path.dirname(__file__), 'VERSION')
 branch_file_path = os.path.join(os.path.dirname(__file__), 'BRANCH')
+auth_token_path = os.path.join(os.path.dirname(__file__), 'MYRIA_AUTH_TOKEN')
 
 try:
     with open(version_file_path, 'r') as version_file:
@@ -64,6 +65,12 @@ try:
         BRANCH = branch_file.read().strip()
 except:
     BRANCH = "branch file not found"
+
+try:
+    with open(auth_token_path, 'r') as auth_token_file:
+        AUTH_TOKEN = auth_token_file.read().strip()
+except:
+    AUTH_TOKEN = "AnonymousUser"
 
 QUERIES_PER_PAGE = 25
 
@@ -727,7 +734,8 @@ class RawREST(MyriaHandler):
         # Raise an exception if not logged in and whitelisted
         self.verifyuser()
 
-        r = self.app.connection.rawmyria(path, self.request.query_string)
+        r = self.app.connection.rawmyria(path, self.request.query_string,
+                                         auth=AUTH_TOKEN)
         self.response.headers.update(r.headers)
         self.response.set_status(r.status_code)
         self.response.write(r.text)
