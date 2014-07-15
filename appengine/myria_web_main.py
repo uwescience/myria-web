@@ -697,8 +697,7 @@ class RawREST(MyriaHandler):
         # Raise an exception if not logged in and whitelisted
         self.verifyuser()
 
-        r = self.app.connection.rawmyria(path, self.request.query_string,
-                                         auth=AUTH_TOKEN)
+        r = self.app.connection.rawmyria(path, self.request.query_string)
         self.response.headers.update(r.headers)
         self.response.set_status(r.status_code)
         self.response.write(r.text)
@@ -709,7 +708,8 @@ class RawREST(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='vega.cs.washington.edu', port=1776):
+                 hostname='vega.cs.washington.edu',
+                 port=3001):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -727,7 +727,8 @@ class Application(webapp2.WSGIApplication):
         ]
 
         # Connection to Myria. Thread-safe
-        self.connection = myria.MyriaConnection(hostname=hostname, port=port)
+        self.connection = myria.MyriaConnection(hostname=hostname, port=port,
+                                                auth_token=AUTH_TOKEN)
         self.hostname = hostname
         self.port = port
 
