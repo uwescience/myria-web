@@ -145,7 +145,8 @@ def create_clang_json(query, logical_plan, physical_plan):
             "plan": compile(physical_plan),
             "dot": operator_to_dot(physical_plan)}
 
-def create_clang_execute_json(logical_plan, physical_plan, backend):
+
+def create_clang_execute_json(physical_plan, backend, logical_plan):
     return {"plan": compile(physical_plan), "backend": backend,
             "logicalRa": logical_plan}
 
@@ -590,7 +591,7 @@ class Execute(MyriaHandler):
                 chost = 'localhost'
                 cport = 1337
                 compiled = create_clang_execute_json(
-                    cached_logicalplan, physicalplan, backend)
+                    physicalplan, backend, cached_logicalplan)
                 query_status = submit_clang_query(compiled, chost, cport)
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (chost, cport, query_status['queryId'])
