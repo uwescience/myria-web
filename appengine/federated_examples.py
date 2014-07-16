@@ -32,7 +32,7 @@ treatments = [from order, med where order.poe_id=med.poe_id
               emit subject_id, drug_name];
 store(treatments, mimic_output);
 
-%afl("store(filter(B1, data > 0), B21)");
+%afl("store(subarray(waveform_signal_table, 325553800041, 1, 325553800041, 100), B23)");
 '''
 
 __myrial_examples = [
