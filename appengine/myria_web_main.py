@@ -145,7 +145,6 @@ def create_clang_json(query, logical_plan, physical_plan):
             "plan": compile(physical_plan),
             "dot": operator_to_dot(physical_plan)}
 
-
 def create_clang_execute_json(logical_plan, physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend,
             "logicalRa": logical_plan}

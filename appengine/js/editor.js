@@ -106,7 +106,6 @@ function optimizeplan() {
       $('#relational-plan').collapse('hide');
       $('#physical-plan').collapse('show');
       clangrerender();
-
     } else if (backendProcess === "myria") {
       try {
         var i = 0;
