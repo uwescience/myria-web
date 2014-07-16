@@ -177,6 +177,8 @@ function insertDataset(res, filename, qid, start) {
     var curTime = new Date().toISOString();
     var relkey = filename.split(':');
     var url = 'http://' + hostname + ':' + port;
+    getQueryStatus(res, qid);
+
     db.serialize(function() {
       var stmt = db.prepare('INSERT INTO dataset VALUES' +
                             '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -189,7 +191,6 @@ function insertDataset(res, filename, qid, start) {
 
       stmt.finalize();
       db.close();
-      getQueryStatus(res, qid);
     });
   }
 }
