@@ -69,12 +69,15 @@
                             examine exactly how the query was executed.</span>
                         </div>
                         <div class="col-sm-offset-1" >
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox" id="multiway-join"> Compile to Multiway Join
-                                </label>
-                            </div>
-                            <span class="help-block"> Compile to multiway join rather than binary joins.</span>
+                            <label for="phys-algebra-menu" class="control-label">Physical Algebra</label>                          
+                                <select id="phys-algebra-menu" class="form-control phys-algebra-menu">
+                                    <option value="a0" selected>Regular Shuffle and Pipelined Join</option>
+                                    <option value="a1">HyperCube Shuffle and Piplelined Join</option>
+                                    <option value="a2">Broadcast and Pipelined Join</option>
+                                    <option value="a3">Regular Shuffle and LeapFrog Join</option>
+                                    <option value="a4">HyperCube Shuffle and LeapFrog Join</option>
+                                    <option value="a5">Broadcast and LeapFrog Join</option>
+                                </select>
                         </div>
                     </div>
                 </div>

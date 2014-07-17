@@ -16,6 +16,10 @@ from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
                                      MyriaHyperCubeAlgebra,
+                                     MyriaHyperCubeLeftDeepTreeJoinAlgebra,
+                                     MyriaRegularShuffleLeapFrogAlgebra,
+                                     MyriaBroadcastLeftDeepTreeJoinAlgebra,
+                                     MyriaBroadCastLeapFrogJoinAlgebra,
                                      compile_to_json)
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -67,20 +71,11 @@ QUERIES_PER_PAGE = 25
 
 
 def get_plan(query, language, plan_type, connection,
-             multiway_join=False):
-    catalog = None
-    if multiway_join:
-        catalog = MyriaCatalog(connection)
-        assert catalog.get_num_servers()
+             phys_algebra=MyriaLeftDeepTreeAlgebra()):
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
-
-    if multiway_join:
-        target_algebra = MyriaHyperCubeAlgebra(catalog)
-    else:
-        target_algebra = MyriaLeftDeepTreeAlgebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -89,7 +84,7 @@ def get_plan(query, language, plan_type, connection,
             raise SyntaxError("Unable to parse Datalog")
         if plan_type == 'logical':
             return dlog.logicalplan
-        dlog.optimize(target=target_algebra)
+        dlog.optimize(target=phys_algebra)
 
         if plan_type == 'physical':
             return dlog.physicalplan
@@ -106,7 +101,7 @@ def get_plan(query, language, plan_type, connection,
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            return processor.get_physical_plan(multiway_join)
+            return processor.get_physical_plan(phys_algebra)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
 
@@ -117,8 +112,27 @@ def get_logical_plan(query, language, connection):
     return get_plan(query, language, 'logical', connection)
 
 
-def get_physical_plan(query, language, connection, multiway_join=False):
-    return get_plan(query, language, 'physical', connection, multiway_join)
+def get_physical_plan(query, language, connection, physical_algebra):
+    return get_plan(query, language, 'physical', connection, physical_algebra)
+
+
+def get_physical_algebra(phys_algebra_str, connection):
+    catalog = MyriaCatalog(connection)
+    # return corresponding physical algebra
+    if(phys_algebra_str == 'a0'):
+        return MyriaLeftDeepTreeAlgebra()
+    elif(phys_algebra_str == 'a1'):
+        return MyriaHyperCubeLeftDeepTreeJoinAlgebra(catalog)
+    elif(phys_algebra_str == 'a2'):
+        return MyriaBroadcastLeftDeepTreeJoinAlgebra(catalog)
+    elif(phys_algebra_str == 'a3'):
+        return MyriaRegularShuffleLeapFrogAlgebra()
+    elif(phys_algebra_str == 'a4'):
+        return MyriaHyperCubeAlgebra(catalog)
+    elif(phys_algebra_str == 'a5'):
+        return MyriaBroadCastLeapFrogJoinAlgebra(catalog)
+    else:
+        raise ValueError("{} is not valid.".format(phys_algebra_str))
 
 
 def format_rule(expressions):
@@ -462,11 +476,12 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = json.loads(self.request.get("multiway_join", "false"))
-        assert type(multiway_join) is bool
+        phys_algebra_str = self.request.get("physical_algebra")
+        physical_algebra = get_physical_algebra(
+            phys_algebra_str, self.app.connection)
         try:
             optimized = get_physical_plan(
-                query, language, self.app.connection, multiway_join)
+                query, language, self.app.connection, physical_algebra)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(
@@ -488,15 +503,16 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = self.request.get("multiway_join", False)
+        phys_algebra_str = self.request.get("physical_algebra")
+        physical_algebra = get_physical_algebra(
+            phys_algebra_str, self.app.connection)
 
         cached_logicalplan = str(get_logical_plan(
             query, language, self.app.connection))
-        if multiway_join == 'false':
-            multiway_join = False
+
         # Generate physical plan
         physicalplan = get_physical_plan(
-            query, language, self.app.connection, multiway_join)
+            query, language, self.app.connection, physical_algebra)
 
         try:
             compiled = compile_to_json(
@@ -525,9 +541,9 @@ class Execute(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         profile = self.request.get("profile", False)
-        multiway_join = self.request.get("multiway_join", False)
-        if multiway_join == 'false':
-            multiway_join = False
+        phys_algebra_str = self.request.get("physical_algebra")
+        physical_algebra = get_physical_algebra(
+            phys_algebra_str, self.app.connection)
 
         cached_logicalplan = str(
             get_logical_plan(query, language, self.app.connection))
@@ -535,7 +551,7 @@ class Execute(MyriaHandler):
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
-                query, language, self.app.connection, multiway_join)
+                query, language, self.app.connection, physical_algebra)
 
             # .. and compile
             compiled = compile_to_json(
@@ -589,12 +605,12 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-        multiway_join = self.request.get("multiway_join", False)
-        if multiway_join == 'false':
-            multiway_join = False
+        phys_algebra_str = self.request.get("physical_algebra")
+        physical_algebra = get_physical_algebra(
+            phys_algebra_str, self.app.connection)
 
         plan = get_plan(
-            query, language, plan_type, self.app.connection, multiway_join)
+            query, language, plan_type, self.app.connection, physical_algebra)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
@@ -606,7 +622,7 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='vega.cs.washington.edu', port=1776):
+                 hostname='dbserver02.cs.washington.edu', port=10032):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),

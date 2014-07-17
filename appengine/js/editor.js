@@ -26,7 +26,8 @@ var editorLanguage = 'MyriaL',
   editorContentKey = 'code-editor-content',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language',
-  developerCollapseKey = 'developer-collapse';
+  developerCollapseKey = 'developer-collapse',
+  physicalAlgebra = 'a0';
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -49,7 +50,7 @@ function getplan() {
   var request = $.post("plan", {
     query: query,
     language: editorLanguage,
-    multiway_join: $("#multiway-join").is(':checked')
+    physical_algebra: physicalAlgebra
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
@@ -69,19 +70,18 @@ function optimizeplan() {
   $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
-  var multiway_join_checked = $("#multiway-join").is(':checked');
 
   var request = $.post("optimize", {
     query: query,
     language: editorLanguage,
-    multiway_join: multiway_join_checked
+    physical_algebra: physicalAlgebra
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
     query: query,
     language: editorLanguage,
-    multiway_join: multiway_join_checked
+    physical_algebra: physicalAlgebra
   });
   var request = $.getJSON(url).success(function (queryPlan) {
     try {
@@ -123,7 +123,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query: query,
     language: editorLanguage,
-    multiway_join: $("#multiway-join").is(':checked')
+    physical_algebra: physicalAlgebra
   });
   window.open(url, '_blank');
 }
@@ -225,7 +225,7 @@ function executeplan() {
       query: query,
       language: editorLanguage,
       profile: $("#profile-enabled").is(':checked'),
-      multiway_join: $("#multiway-join").is(':checked')
+      physical_algebra: physicalAlgebra
     },
     statusCode: {
       200: displayQueryStatus,
@@ -325,6 +325,11 @@ function setLanguage(language) {
     editor.setOption('mode', {name: 'prolog'});
   }
 }
+
+function changePhysicalAlgebra(){
+  physicalAlgebra = $(".phys-algebra-menu option:selected").val();
+}
+
 
 /**
  * This function populates the modal dialog box with the contents of the clicked
@@ -478,6 +483,7 @@ $(function () {
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
   $(".language-menu").change(changeLanguage);
+  $(".phys-algebra-menu").change(changePhysicalAlgebra);
   $(".example").click(function () {
     resetResults();
     var example_query = $(this).text();
