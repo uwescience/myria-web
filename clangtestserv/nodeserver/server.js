@@ -220,8 +220,7 @@ function parseQuery(req, res, start) {
 	  if (err) {
 	    console.log('parse query' + err);
 	  } else {
-	    runQueryUpdate(qid);
-	    runClang(filename, qid, start);
+	    runQueryUpdate(filename, qid, start);
 	  }
         });
     });
@@ -263,23 +262,27 @@ function completeQueryUpdate(qid, start) {
   }
 }
 
-function runQueryUpdate(qid) {
+function errorStatus(qid) {
   var exists = fs.existsSync(datasetfile);
   if (exists) {
     var db = new sqlite.Database(datasetfile);
     db.serialize(function() {
-      var update = false;
-      db.each('SELECT status FROM dataset WHERE queryId = ?', qid, 
-              function(err, row) {
-                if (row.status != 'SUCCESS') {
-                  update = true;
-		}
-	      });
-       if (update) {
-	   db.run('UPDATE dataset SET status = "Running"' +
+      db.run('UPDATE dataset SET status = "Error"' +
 		  'WHERE queryId = ?', qid);
-       }
       db.close();
+    });
+  }
+}
+
+function runQueryUpdate(filename, qid, start) {
+  var exists = fs.existsSync(datasetfile);
+  if (exists) {
+    var db = new sqlite.Database(datasetfile);
+    db.serialize(function() {
+	db.run('UPDATE dataset SET status = "Running"' +
+		  'WHERE queryId = ?', qid);
+	db.close();
+	runClang(filename, qid, start);
     });
   }
 }
