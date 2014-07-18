@@ -21,16 +21,14 @@ http.createServer(function (req, res) {
 
   switch(path) {
     case '/dataset':
-      accessDataset(req, res, qid = -1, selectTable);
-    break;
     case '/query':
-      processQid(req, res, 'query');
+      processQid(req, res, selectTable);
     break;
     case '/data':
       processData(req, res);
     break;
     case '/status':
-      processQid(req, res, 'status');
+      processQid(req, res, getQueryStatus);
     break;
     default:
       var start = getTime();
@@ -41,6 +39,7 @@ http.createServer(function (req, res) {
 }).listen(port, hostname);
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
+
 function processData(req, res) {
   if (req.method == "GET") {
     var body = '';
@@ -50,14 +49,14 @@ function processData(req, res) {
 
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
-      qid = url_parts.query['qid'];
-      accessDataset(req, res, qid, getRelKeys);
+      var qid = url_parts.query['qid'];
+      // TODO handle format json, csv, tsv
+      getRelKeys(res, qid);
     });
   }
 }
 
-function processQid(req, res, path) {
-  var qid = -1;
+function processQid(req, res, callbackfn) {
   if (req.method == "GET") {
     var body = '';
     req.on('data', function (chunk) {
@@ -66,34 +65,16 @@ function processQid(req, res, path) {
 
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
-      qid = url_parts.query['qid'];
-
-      // hack to get qid assigned before next function
-      // for callback w/ different params
-      if (path == 'query') {
-        accessDataset(req, res, qid, selectTable);
-      } else if (path == 'status') {
-        getQueryStatus(res, qid);
-      } else {
-      }
+      var qid = url_parts.query['qid'];
+console.log(qid);
+      callbackfn(res, qid);
     });
   }
 }
 
-// Examines dataset.db 
-function accessDataset(req, res, qid, callbackfn) {
-  if (exists(datasetfile)) {
-    var db = new sqlite.Database(datasetfile);
-    callbackfn(res, qid, db);
-   } else {
-    res.writeHead(404, {'Content-Type': 'text/html'});
-    res.write("database file not found");
-    res.end();
-  }
-}
-
 // finds filename of qid
-function getRelKeys(res, qid, db) {
+function getRelKeys(res, qid) {
+  var db = new sqlite.Database(datasetfile);
   var query = 'SELECT userName, programName, relationName FROM dataset ' +
 	      'WHERE queryId=' + qid;
   db.each(query, function (err, row) {
@@ -124,10 +105,11 @@ function getResults(res, filename) {
 }
 
 // Retrieves data to populate dataset table
-function selectTable(res, qid, db) {
+function selectTable(res, qid) {
+  var db = new sqlite.Database(datasetfile);
   var jsonarr = [];
   var query = 'SELECT * FROM dataset';
-  if (qid != -1) {
+  if (qid != undefined) {
       query += ' WHERE queryId=' + qid;
   }
 
@@ -158,42 +140,38 @@ function sendResponseJSON(res, jsonarr) {
 
 // Retrieves the status of the query in json format
 function getQueryStatus(res, qid) {
-  if (exists(datasetfile)) {
-    var db = new sqlite.Database(datasetfile);
-    var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
+  var db = new sqlite.Database(datasetfile);
+  var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
 
-    db.each(query, function (err, row) {
-      var json = {status: row.status, queryId: row.queryId, 
-              startTime: row.startTime, finishTime: row.endTime,
-              elapsedNanos: row.elapsed, url: row.url};
-      sendResponseJSON(res, json);
-      db.close();
-    });
-  }
+  db.each(query, function (err, row) {
+    var json = {status: row.status, queryId: row.queryId, 
+                startTime: row.startTime, finishTime: row.endTime,
+                elapsedNanos: row.elapsed, url: row.url};
+    sendResponseJSON(res, json);
+    db.close();
+  });
 }
 
 // Inserts query information into database	
 function insertQuery(res, filename, qid, start) {
-  if (exists(datasetfile)) {
-    var db = new sqlite.Database(datasetfile);
-    var curTime = getTime();
-    var relkey = filename.split(':');
-    var url = 'http://' + hostname + ':' + port;
-    getQueryStatus(res, qid);
+  var db = new sqlite.Database(datasetfile);
+  var curTime = getTime();
+  var relkey = filename.split(':');
+  var url = 'http://' + hostname + ':' + port;
+  getQueryStatus(res, qid);
 
-    db.serialize(function () {
-      var stmt = db.prepare('INSERT INTO dataset VALUES' +
-                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-	       start, null, 0, function (err) {
-               if (err) {
-                 console.log('insert query: ' + err);
-               }
-      });
-      stmt.finalize();
-      db.close();
+  db.serialize(function () {
+    var stmt = db.prepare('INSERT INTO dataset VALUES' +
+                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
+             start, null, 0, function (err) {
+             if (err) {
+               console.log('insert query: ' + err);
+             }
     });
-  }
+    stmt.finalize();
+    db.close();
+  });
 }
 
 // Parses the query from posted json
@@ -251,52 +229,33 @@ function runClang(filename, qid, start) {
 
 function completeQueryUpdate(qid, start) {
   var stop = getTime();
-  if (exists(datasetfile)) {
-    var db = new sqlite.Database(datasetfile);
-    db.serialize(function () {
-      var diff = new Date(stop) - new Date(start);
-      db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
-             'WHERE queryId = ?', stop, diff, qid);
-      db.close();
-    });
-  }
+  var db = new sqlite.Database(datasetfile);
+  var diff = new Date(stop) - new Date(start);
+  db.serialize(function () {
+    db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
+           'WHERE queryId = ?', stop, diff, qid);
+    db.close();
+  });
 }
 
 function errorQueryUpdate(qid) {
-  if (exists(datasetfile)) {
-    var db = new sqlite.Database(datasetfile);
-    db.serialize(function () {
-      db.run('UPDATE dataset SET status = "Error"' +
-		  'WHERE queryId = ?', qid);
-      db.close();
-    });
-  }
+  var db = new sqlite.Database(datasetfile);
+  db.serialize(function () {
+    db.run('UPDATE dataset SET status = "Error"' +
+           'WHERE queryId = ?', qid);
+    db.close();
+  });
 }
 
 function runQueryUpdate(filename, qid, start) {
-  var exists = fs.existsSync(datasetfile);
-  if (exists) {
-    var db = new sqlite.Database(datasetfile);
-    db.serialize(function () {
-	console.log(getTime() + ' running');
-	db.run('UPDATE dataset SET status = "Running"' +
-		  'WHERE queryId = ?', qid);
-	db.close();
-	runClang(filename, qid, start);
-    });
-  }
-}
-
-function getDb(filename) {
-  if (fs.existsSync(filename)) {
-    return new sqlite.Database(filename);
-  } else {
-     
-/*     db.run('CREATE TABLE dataset (userName text, programName text, 
-             relationName text, queryId int primary key, created datatime,
-             url text, status text, startTime datetime, endTime datetime,
-             elapsed int');*/
-  }
+  var db = new sqlite.Database(datasetfile);
+  db.serialize(function () {
+    console.log(getTime() + ' running');
+    db.run('UPDATE dataset SET status = "Running"' +
+           'WHERE queryId = ?', qid);
+    db.close();
+    runClang(filename, qid, start);
+  });
 }
 
 function createTable(err) {
@@ -314,10 +273,8 @@ function createTable(err) {
   });
 }
 
-function exists(filename) {
-    return fs.existsSync(filename);
-}
-
 function getTime() {
   return new Date().toISOString();
 }
+
+function exists(filename){return true;}
