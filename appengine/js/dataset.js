@@ -9,8 +9,6 @@ var dataset_templates = {
 
 var editorBackendKey = 'myria';
 var backendProcess = 'myria';
-var myriaconn = 'http://vega.cs.washington.edu:1776/dataset';
-var clangconn = 'http://localhost:1337/dataset';
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -32,10 +30,9 @@ function setBackend(backend) {
 
 function loadTable() {
   // default to host from myria
-  var url = myriaconn;
-  var grappaserv = ['grappa', 'clang'];
-  if (_.contains(grappaserv, backendProcess)) {
-    url = clangconn;
+  var url = 'http://' + myriaConnection + '/dataset';
+  if (backendProcess == 'clang') {
+    url = 'http://' + clangConnection + '/dataset';
   }
   var t = dataset_templates;
   var jqxhr = $.getJSON(url,
@@ -44,7 +41,7 @@ function loadTable() {
 
       _.each(data, function(d) {
 	var qload = '';
-	if (url == clangconn) {
+	if (backendProcess == 'clang') {
 	    qload = '/query?qid=' + d['queryId'];
 	}
         var relation = d['relationKey'];
@@ -53,14 +50,14 @@ function loadTable() {
                 name: relation['relationName'] });
         html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
                 created: d['created']});
-	var dload = d['uri'];
-	if (url == myriaconn) {
-	    dload += '/data?';
-	} else {
-	    dload += '/data?qid=' + d['queryId'] + '&';
+
+	var dload = d['uri'] + '/data?';
+	if (backendProcess == 'clang') {
+	    dload += 'qid=' + d['queryId'] + '&';
 	}
 	html += t.download({url: dload});
       });
+
       $("#datatable").html(html);
     }).fail (function(res, err) { 
       console.log(err);
@@ -68,7 +65,8 @@ function loadTable() {
 }
 
 function saveState() {
-  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+  localStorage.setItem(editorBackendKey, 
+		       $(".backend-menu").find(":selected").val());
 }
 
 function restoreState() {

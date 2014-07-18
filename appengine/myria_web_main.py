@@ -72,7 +72,7 @@ def get_plan(query, language, backend, plan_type, connection,
     language = language.strip().lower()
 
     if backend == "clang":
-        target_algebra = CCAlgebra()
+        target_algebra = CCAlgebra('file')
     elif backend == "grappa":
         target_algebra = GrappaAlgebra()
     elif multiway_join:
@@ -94,6 +94,8 @@ def get_plan(query, language, backend, plan_type, connection,
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
+    elif language == "myrial" and backend == "clang":
+        pass
     elif language in ["myrial", "sql"]:
         # We need a (global) lock on the Myrial parser because yacc
         # .. is not Threadsafe and App Engine uses multiple threads.
@@ -146,19 +148,19 @@ def create_clang_json(query, logical_plan, physical_plan):
             "dot": operator_to_dot(physical_plan)}
 
 
-def create_clang_execute_json(physical_plan, backend, logical_plan):
+def create_clang_execute_json(logical_plan, physical_plan, backend):
     return {"plan": compile(physical_plan), "backend": backend,
             "logicalRa": logical_plan}
 
 
-def submit_clang_query(compiled, chost, cport):
-    url = 'http://%s:%d' % (chost, cport)
+def submit_clang_query(compiled, host, port):
+    url = 'http://%s:%d' % (host, port)
     r = requests.Session().post(url, data=json.dumps(compiled))
     return r.json()
 
 
-def check_clang_query(qid, chost, cport):
-    url = 'http://%s:%d/status?qid=%s' % (chost, cport, qid)
+def check_clang_query(qid, host, port):
+    url = 'http://%s:%d/status?qid=%s' % (host, port, qid)
     r = requests.Session().get(url)
     return r.json()
 
@@ -242,8 +244,8 @@ class RedirectToEditor(MyriaHandler):
 class MyriaPage(MyriaHandler):
     def get_connection_string(self):
         conn = self.app.connection
-        hostname = self.app.hostname
-        port = self.app.port
+        hostname = self.app.myriahostname
+        port = self.app.myriaport
         if not conn:
             connection_string = "unable to connect to %s:%d" % (hostname, port)
         else:
@@ -260,7 +262,9 @@ class MyriaPage(MyriaHandler):
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{h}:{p}".format(
-                    h=self.app.hostname, p=self.app.port),
+                    h=self.app.myriahostname, p=self.app.myriaport),
+                'clangConnection': "{h}:{p}".format(
+                    h=self.app.clanghostname, p=self.app.clangport),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -585,16 +589,17 @@ class Execute(MyriaHandler):
                 query_status = conn.submit_query(compiled)
                 # Issue the query
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
-                            (self.app.hostname, self.app.port,
+                            (self.app.myriahostname, self.app.myriaport,
                              query_status['queryId'])
             elif backend == "clang":
-                chost = 'localhost'
-                cport = 1337
+                clanghost = self.app.clanghostname
+                clangport = self.app.clangport
                 compiled = create_clang_execute_json(
-                    physicalplan, backend, cached_logicalplan)
-                query_status = submit_clang_query(compiled, chost, cport)
+                    cached_logicalplan, physicalplan, backend)
+                query_status = submit_clang_query(
+                    compiled, clanghost, clangport)
                 query_url = 'http://%s:%d/query?qid=%d' %\
-                            (chost, cport, query_status['queryId'])
+                            (clanghost, clangport, query_status['queryId'])
             else:
                 # TODO grappa
                 pass
@@ -633,9 +638,8 @@ class Execute(MyriaHandler):
         if backend == "myria":
             query_status = conn.get_query_status(query_id)
         else:
-            chost = 'localhost'
-            cport = 1337
-            query_status = check_clang_query(query_id, chost, cport)
+            query_status = check_clang_query(
+                query_id, self.app.clanghostname, self.app.clangport)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
@@ -669,7 +673,7 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='vega.cs.washington.edu', port=1776):
+                 mhostname='vega.cs.washington.edu', mport=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -686,10 +690,13 @@ class Application(webapp2.WSGIApplication):
         ]
 
         # Connection to Myria. Thread-safe
-        self.connection = myria.MyriaConnection(hostname=hostname,
-                                                port=port)
-        self.hostname = hostname
-        self.port = port
+        self.connection = myria.MyriaConnection(hostname=mhostname,
+                                                port=mport)
+        self.myriahostname = mhostname
+        self.myriaport = mport
+
+        self.clanghostname = 'localhost'
+        self.clangport = 1337
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
@@ -698,3 +705,4 @@ class Application(webapp2.WSGIApplication):
             self, routes, debug=debug, config=None)
 
 app = Application()
+

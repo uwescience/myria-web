@@ -36,4 +36,10 @@
 
 {% block footer %}
 <script type="text/javascript" src="js/dataset.js"></script>
+<script>
+    {% autoescape false %}
+        var myriaConnection = '{{ myriaConnection }}';
+        var clangConnection = '{{ clangConnection }}';
+    {% endautoescape %}
+</script>
 {% endblock %}
