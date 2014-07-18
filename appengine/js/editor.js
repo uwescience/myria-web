@@ -5,7 +5,7 @@ var editor_templates = {
     profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
   },
   query: {
-    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- connection %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
     row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
     time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
@@ -25,7 +25,8 @@ var editorLanguage = 'MyriaL',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
-  backendProcess = 'myria';
+  backendProcess = 'myria',
+  clangConnection = 'localhost:1337'
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -97,6 +98,7 @@ function optimizeplan() {
         $('svg').width('100%');
 	$('svg').height('95%');
       }
+
       clangrerender();
 
       // rerender when opening tab because of different space available
@@ -109,32 +111,31 @@ function optimizeplan() {
         var i = 0;
         queryPlan.fragments = _.map(queryPlan.plan.fragments, function(frag) {
 
-        frag.fragmentIndex = i++;
-        return frag;
-      });
+          frag.fragmentIndex = i++;
+          return frag;
+        });
 
-      var g = new Graph();
-      g.loadQueryPlan({ physicalPlan: queryPlan });
+        var g = new Graph();
+        g.loadQueryPlan({ physicalPlan: queryPlan });
 
-      function myriarerender() {
+        function myriarerender() {
+          $('#svg').empty();
+          g.render(d3.select('#svg'));
+        }
+        myriarerender();
+
+        // rerender when opening tab because of different space available
+        $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
+        $('#relational-plan').collapse('hide');
+        $('#physical-plan').collapse('show');
+        myriarerender();
+      } catch (err) {
         $('#svg').empty();
-        g.render(d3.select('#svg'));
+        $('#optimized').empty();
+        $('#relational-plan').collapse('show');
+        $('#physical-plan').collapse('hide');
+        throw err;
       }
-      myriarerender();
-
-      // rerender when opening tab because of different space available
-      $('a[href="#queryplan"]').on('shown.bs.tab', myriarerender);
-      $('#relational-plan').collapse('hide');
-      $('#physical-plan').collapse('show');
-      myriarerender();
-    } catch (err) {
-      $('#myria_svg').empty();
-      $('#optimized').empty();
-      $('#relational-plan').collapse('show');
-      $('#physical-plan').collapse('hide');
-      throw err;
-    }
-
     } else {
 	// should not get here 
 	console.log("unsupported backend");
@@ -180,12 +181,15 @@ function displayQueryStatus(query_status) {
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
-
+  var connection = myriaConnection + '/query/query-' + query_id;
+  if (backendProcess == 'clang') {
+      connection = clangConnection + '/query?qid=' + query_id;
+  }
   html += t.row({name: 'Status', val: status});
   html += t.time_row({name: 'Start', val: query_status['startTime']});
   html += t.time_row({name: 'End', val: query_status['finishTime']});
   html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
+  html = t.table({connection: connection, query_id: query_id, content: html});
 
   if (status === 'SUCCESS' && query_status['profilingMode']) {
     html += t.prof_link({query_id: query_id});
@@ -220,7 +224,8 @@ function checkQueryStatus(query_id) {
     type: 'GET',
     data: {
       queryId: query_id,
-      language: editorLanguage
+      language: editorLanguage,
+      backend: backendProcess
     },
     success: displayQueryStatus,
     error: errFunc
@@ -465,7 +470,6 @@ function saveState() {
   localStorage.setItem(editorContentKey, editor.getValue());
   localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
   localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
-
   localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
 
 }
@@ -487,6 +491,7 @@ function restoreState() {
     setBackend(backend);
     editor.setValue(content);
     editor.setHistory(history);
+
     if (developerCollapse === 'true') {
       $('#developer-options').addClass('in');
     }
