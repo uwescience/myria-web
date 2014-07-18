@@ -1,3 +1,5 @@
+'use strict';
+
 var http = require('http');
 var qs = require("querystring");
 var fs = require('fs');
@@ -11,10 +13,12 @@ var hostname = 'localhost'
 var port = 1337;
 var datasetfile = 'dataset.db';
 var counter = 0;
+var db = new sqlite.Database(datasetfile, createTable);
+
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
-    
+
   switch(path) {
     case '/dataset':
       accessDataset(req, res, qid = -1, selectTable);
@@ -152,21 +156,16 @@ function sendResponseJSON(res, jsonarr) {
   res.end();
 }
 
-function queryErrorResponse() {
-  
-}
-
 // Retrieves the status of the query in json format
 function getQueryStatus(res, qid) {
   if (exists(datasetfile)) {
     var db = new sqlite.Database(datasetfile);
     var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
-    var json = [];
+
     db.each(query, function (err, row) {
-      json = {status: row.status, queryId: row.queryId, 
+      var json = {status: row.status, queryId: row.queryId, 
               startTime: row.startTime, finishTime: row.endTime,
               elapsedNanos: row.elapsed, url: row.url};
-    }, function () {
       sendResponseJSON(res, json);
       db.close();
     });
@@ -286,6 +285,33 @@ function runQueryUpdate(filename, qid, start) {
 	runClang(filename, qid, start);
     });
   }
+}
+
+function getDb(filename) {
+  if (fs.existsSync(filename)) {
+    return new sqlite.Database(filename);
+  } else {
+     
+/*     db.run('CREATE TABLE dataset (userName text, programName text, 
+             relationName text, queryId int primary key, created datatime,
+             url text, status text, startTime datetime, endTime datetime,
+             elapsed int');*/
+  }
+}
+
+function createTable(err) {
+  db.serialize(function () {
+    db.get('SELECT name FROM sqlite_master WHERE type="table"' +
+	   'AND name="dataset"', function (err, row) {
+	   if (row == undefined) {
+	     console.log('creating table');
+	     db.run('CREATE TABLE dataset (userName text, programName text, ' + 
+                    'relationName text, queryId int primary key,' +
+		    'created datatime, url text, status text,' +
+		    'startTime datetime, endTime datetime, elapsed int)');
+	   }
+    });
+  });
 }
 
 function exists(filename) {
