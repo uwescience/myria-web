@@ -25,8 +25,7 @@ var editorLanguage = 'MyriaL',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
-  backendProcess = 'myria',
-  clangConnection = 'localhost:1337'
+  backendProcess = 'myria';
 
 function handleerrors(request, display) {
   request.done(function (result) {
