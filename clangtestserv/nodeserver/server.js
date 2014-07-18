@@ -9,12 +9,11 @@ var sqlite = require("sqlite3").verbose();
 
 var compilepath = '../../submodules/raco/c_test_environment/';
 var datasetpath = compilepath + 'datasets/';
-var hostname = 'localhost'
+var hostname = 'localhost';
 var port = 1337;
 var datasetfile = 'dataset.db';
 var counter = 0;
 var db = new sqlite.Database(datasetfile, createTable);
-
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
@@ -66,7 +65,6 @@ function processQid(req, res, callbackfn) {
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
       var qid = url_parts.query['qid'];
-console.log(qid);
       callbackfn(res, qid);
     });
   }
@@ -104,12 +102,11 @@ function getResults(res, filename) {
   });
 }
 
-// Retrieves data to populate dataset table
 function selectTable(res, qid) {
   var db = new sqlite.Database(datasetfile);
   var jsonarr = [];
   var query = 'SELECT * FROM dataset';
-  if (qid != undefined) {
+  if (qid) {
       query += ' WHERE queryId=' + qid;
   }
 
@@ -130,7 +127,6 @@ function selectTable(res, qid) {
   });
 }
 
-// Writes the json array 
 function sendResponseJSON(res, jsonarr) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.writeHead(200, {'Content-Type': 'application/json'});
@@ -152,7 +148,6 @@ function getQueryStatus(res, qid) {
   });
 }
 
-// Inserts query information into database	
 function insertQuery(res, filename, qid, start) {
   var db = new sqlite.Database(datasetfile);
   var curTime = getTime();
@@ -262,7 +257,7 @@ function createTable(err) {
   db.serialize(function () {
     db.get('SELECT name FROM sqlite_master WHERE type="table"' +
 	   'AND name="dataset"', function (err, row) {
-	   if (row == undefined) {
+	   if (!row) {
 	     console.log('creating table');
 	     db.run('CREATE TABLE dataset (userName text, programName text, ' + 
                     'relationName text, queryId int primary key,' +
@@ -276,5 +271,3 @@ function createTable(err) {
 function getTime() {
   return new Date().toISOString();
 }
-
-function exists(filename){return true;}
