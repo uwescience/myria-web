@@ -673,7 +673,7 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 mhostname='vega.cs.washington.edu', mport=1776):
+                 hostname='vega.cs.washington.edu', port=1776):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -690,10 +690,10 @@ class Application(webapp2.WSGIApplication):
         ]
 
         # Connection to Myria. Thread-safe
-        self.connection = myria.MyriaConnection(hostname=mhostname,
-                                                port=mport)
-        self.myriahostname = mhostname
-        self.myriaport = mport
+        self.connection = myria.MyriaConnection(hostname=hostname,
+                                                port=port)
+        self.myriahostname = hostname
+        self.myriaport = port
 
         self.clanghostname = 'localhost'
         self.clangport = 1337
