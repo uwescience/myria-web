@@ -705,4 +705,3 @@ class Application(webapp2.WSGIApplication):
             self, routes, debug=debug, config=None)
 
 app = Application()
-
