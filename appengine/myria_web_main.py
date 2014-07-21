@@ -94,8 +94,6 @@ def get_plan(query, language, backend, plan_type, connection,
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
-    elif language == "myrial" and backend == "clang":
-        pass
     elif language in ["myrial", "sql"]:
         # We need a (global) lock on the Myrial parser because yacc
         # .. is not Threadsafe and App Engine uses multiple threads.
@@ -103,16 +101,22 @@ def get_plan(query, language, backend, plan_type, connection,
             parsed = myrial_parser.parse(query)
         processor = MyrialInterpreter.StatementProcessor(
             MyriaCatalog(connection))
-
         processor.evaluate(parsed)
+
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            return processor.get_physical_plan()
+            if backend == "clang":
+                cmyrial = RACompiler()
+                cmyrial.logicalplan = processor.get_logical_plan()
+                cmyrial.optimize(target=CCAlgebra('file'))
+                return cmyrial.physicalplan
+            else:
+                return processor.get_physical_plan()
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
-
-    raise NotImplementedError('Language %s is not supported' % language)
+    raise NotImplementedError('Language %s is not supported on %s'
+                              % (language, backend))
 
 
 def get_logical_plan(query, language, backend, connection):

@@ -213,7 +213,7 @@ function runClang(filename, qid, start) {
   cp.exec(cmd, options, function (error, stdout, stderr) {
     console.log('stdout: ' + stdout);
     if (error !== null) {
-      console.log(getTime + ' error: ' + error);
+      console.log(getTime() + ' ' + error);
       errorQueryUpdate(qid, error);
     } else {
       completeQueryUpdate(qid, start);
