@@ -110,6 +110,9 @@ def get_plan(query, language, backend, plan_type, connection,
                 cmyrial = RACompiler()
                 cmyrial.logicalplan = processor.get_logical_plan()
                 cmyrial.optimize(target=CCAlgebra('file'))
+                rel_keys = logical_to_rel_keys(cmyrial.logicalplan)
+                check_clang_catalog(rel_keys, self.app.clanghostname, 
+                                    self.app.clangport)
                 return cmyrial.physicalplan
             else:
                 return processor.get_physical_plan()
@@ -144,7 +147,7 @@ def get_datasets(connection):
         return []
 
 
-# TODO factor following 4 functions
+# TODO factor following 6 functions
 def create_clang_json(query, logical_plan, physical_plan):
     return {"rawQuery": query,
             "logicalRa": str(logical_plan),
@@ -167,6 +170,16 @@ def check_clang_query(qid, host, port):
     url = 'http://%s:%d/status?qid=%s' % (host, port, qid)
     r = requests.Session().get(url)
     return r.json()
+
+
+def check_clang_catalog(rel_key, host, port):
+    url = 'http://%s:%d/catalog' % (host, port)
+    r = requests.Session().post(url, data=json.dumps(rel_key))
+    return r.json()
+
+
+def logical_to_rel_keys(logical_plan):
+    pass
 
 
 class MyriaCatalog(Catalog):

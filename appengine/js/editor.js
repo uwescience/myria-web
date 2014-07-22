@@ -46,17 +46,17 @@ function handleerrors(request, display) {
 function getplan() {
   var query = editor.getValue();
   var request = $.post("plan", {
-    query : query,
-    language : editorLanguage,
-    backend : backendProcess,
+    query: query,
+    language: editorLanguage,
+    backend: backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
-    query : query,
-    type : 'logical',
-    backend : backendProcess,
-    language : editorLanguage
+    query: query,
+    type: 'logical',
+    backend: backendProcess,
+    language: editorLanguage
   });
   request.success(function (dot) {
     var result = Viz(dot, "svg");
@@ -73,17 +73,17 @@ function optimizeplan() {
   var multiway_join_checked = $("#multiway-join").is(':checked');
 
   var request = $.post("optimize", {
-    query : query,
-    language : editorLanguage,
-    backend : backendProcess,
+    query: query,
+    language: editorLanguage,
+    backend: backendProcess,
     multiway_join: multiway_join_checked
   });
   handleerrors(request, "#optimized");
 
   var url = "compile?" + $.param({
-    query : query,
-    language : editorLanguage,
-    backend : backendProcess,
+    query: query,
+    language: editorLanguage,
+    backend: backendProcess,
     multiway_join: multiway_join_checked
   });
 
@@ -149,9 +149,9 @@ function optimizeplan() {
 function compileplan() {
   var query = editor.getValue();
   var url = "compile?" + $.param({
-    query : query,
-    language : editorLanguage,
-    backend : backendProcess,
+    query: query,
+    language: editorLanguage,
+    backend: backendProcess,
     multiway_join: $("#multiway-join").is(':checked')
   });
   window.open(url, '_blank');
@@ -238,11 +238,11 @@ function executeplan() {
   optimizeplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var request = $.ajax("execute", {
-    type : 'POST',
-    data : {
-      query : query,
-      language : editorLanguage,
-      backend : backendProcess,
+    type: 'POST',
+    data: {
+      query: query,
+      language: editorLanguage,
+      backend: backendProcess,
       profile: $("#profile-enabled").is(':checked'),
       multiway_join: $("#multiway-join").is(':checked')
     },
