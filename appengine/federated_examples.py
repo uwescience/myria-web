@@ -50,9 +50,25 @@ exportMyriaToSciDB(mimic_output, "J111");
 %afl("store(filter(J111, f0 > 100), J222)");
 '''
 
+retail_join = '''txheader = scan(txheader);
+product = scan(product);
+txtype = scan(txtype);
+txdetail = scan(txdetail);
+storetable = scan(public:adhoc:"store");
+
+X = [from txheader, txtype, txdetail, product, storetable
+     where txheader.TxHeaderID=txdetail.TxHeaderID AND
+           txheader.StoreID=storetable.StoreID AND
+           txheader.TxTypeID=txtype.TxTypeID AND
+           txdetail.ProductID=product.ProductID
+     emit count(*)];
+store(X, retail_query_output);
+'''
+
 __myrial_examples = [
     ('federated mimic query', mimic_federated),
     ('Standalone mimic query', mimic_query),
+    ('Retail table join', retail_join),
     ('Simple join', simple_join),
     ('Simple AFL query', simple_bd),
     ('AFL + Myrial query', combined_bd)
