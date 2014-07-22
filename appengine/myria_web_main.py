@@ -30,6 +30,7 @@ from federated_examples import federated_examples as examples
 from demo3_examples import demo3_examples
 from pagination import Pagination
 
+import scidbpy
 import myria
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
@@ -203,7 +204,8 @@ class MyriaHandler(webapp2.RequestHandler):
              "billhowe@gmail.com",
              "billhowe@cs.washington.edu",
              "dhalperi@escience.washington.edu",
-             "whitaker@cs.washington.edu"
+             "whitaker@cs.washington.edu",
+             "jvkepner@gmail.com"
            ]
            if user.email() in whitelist:
              return
@@ -619,7 +621,8 @@ class Execute(MyriaPage):
         try:
             logical_plan = get_logical_plan(query, language, self.app.connection)
             query_status = raco.run_federated.run(logical_plan,
-                                                  self.app.connection)
+                                                  self.app.connection,
+                                                  scidbpy)
 
             if query_status:
                 query_url = 'http://%s/execute?query_id=%d' %\

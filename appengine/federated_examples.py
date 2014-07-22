@@ -1,10 +1,10 @@
 
-simple_bd = """connect(%afl, "vega.cs.washington.edu:7777");
+simple_bd = """connect(%afl, "http://vega.cs.washington.edu:8080");
 
 %afl("store(filter(B1, data > 0), B4)");
 """
 
-combined_bd = """connect(%afl, "vega.cs.washington.edu:7777");
+combined_bd = """connect(%afl, "http://vega.cs.washington.edu:8080");
 
 X = scan(public:adhoc:sc_points);
 Y = [from X where X.v > 0 emit *];
@@ -23,7 +23,20 @@ Rich = [from EmpDept where salary > 6000 emit name, dept_name];
 
 store(Rich, myrial_output);'''
 
+mimic_query = '''connect(%afl, "http://vega.cs.washington.edu:8080");
+
+order = scan(public:adhoc:poe_order);
+med = scan(public:adhoc:poe_med);
+
+treatments = [from order, med where order.poe_id=med.poe_id
+              emit subject_id, drug_name];
+store(treatments, mimic_output);
+
+%afl("store(subarray(waveform_signal_table, 325553800041, 1, 325553800041, 100), B23)");
+'''
+
 __myrial_examples = [
+    ('mimic query', mimic_query),
     ('Simple join', simple_join),
     ('Simple AFL query', simple_bd),
     ('AFL + Myrial query', combined_bd)
