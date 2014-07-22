@@ -35,8 +35,24 @@ store(treatments, mimic_output);
 %afl("store(subarray(waveform_signal_table, 325553800041, 1, 325553800041, 100), B23)");
 '''
 
+mimic_federated = '''connect(%afl, "http://vega.cs.washington.edu:8080");
+
+order = scan(public:adhoc:poe_order);
+med = scan(public:adhoc:poe_med);
+
+X = distinct([from order, med
+              where order.poe_id=med.poe_id
+                    and drug_name="Metoprolol"
+              emit subject_id]);
+store(X, mimic_output);
+
+exportMyriaToSciDB(mimic_output, "J111");
+%afl("store(filter(J111, f0 > 100), J222)");
+'''
+
 __myrial_examples = [
-    ('mimic query', mimic_query),
+    ('federated mimic query', mimic_federated),
+    ('Standalone mimic query', mimic_query),
     ('Simple join', simple_join),
     ('Simple AFL query', simple_bd),
     ('AFL + Myrial query', combined_bd)
