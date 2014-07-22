@@ -83,13 +83,13 @@ function optimizeplan() {
   var request = $.getJSON(url).success(function (queryPlan) {
     try {
       var i = 0;
-      queryPlan.fragments = _.map(queryPlan.plan.fragments, function (frag) {
+      _.map(queryPlan.plan.fragments, function (frag) {
         frag.fragmentIndex = i++;
         return frag;
       });
 
       var g = new Graph();
-      g.loadQueryPlan({ physicalPlan: queryPlan });
+      g.loadQueryPlan(queryPlan);
 
       function rerender() {
         $('#myria_svg').empty();
