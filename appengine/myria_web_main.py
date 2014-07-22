@@ -236,6 +236,7 @@ class MyriaHandler(webapp2.RequestHandler):
         if user:
            whitelist = [
              "bigdogintel@gmail.com",
+             "tgmattso@gmail.com",
              "billhowe@gmail.com",
              "billhowe@cs.washington.edu",
              "dhalperi@escience.washington.edu",
