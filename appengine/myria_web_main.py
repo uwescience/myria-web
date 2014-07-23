@@ -182,7 +182,6 @@ def logical_to_rel_keys(logical_plan):
     end = logicalplan.index(')')
     relation = logicalplan[start:end]
     relation = relation.split(':')
-    
     relation_key = {
         'userName': relation[0],
         'programName': relation[1],
