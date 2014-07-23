@@ -37,10 +37,18 @@ myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
 
 
+def is_small_dataset(d, cell_limit=0):
+    """A dataset is small if we know its size and the size is below the
+    specified cell limit. (Number of cells is # cols * # rows.)"""
+    return (d['numTuples'] >= 0 and
+            ((cell_limit == 0) or
+            (len(d['schema']['columnNames']) * d['numTuples'] <= cell_limit)))
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+JINJA_ENVIRONMENT.tests["small_dataset"] = is_small_dataset
 
 version_file_path = os.path.join(os.path.dirname(__file__), 'VERSION')
 branch_file_path = os.path.join(os.path.dirname(__file__), 'BRANCH')
@@ -112,7 +120,7 @@ def get_plan(query, language, backend, plan_type, connection,
                 cmyrial.optimize(target=CCAlgebra('file'))
                 return cmyrial.physicalplan
             else:
-                return processor.get_physical_plan()
+                return processor.get_physical_plan(multiway_join)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     raise NotImplementedError('Language %s is not supported on %s'
