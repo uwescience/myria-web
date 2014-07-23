@@ -27,7 +27,8 @@ var editorLanguage = 'MyriaL',
   editorHistoryKey = 'editor-history',
   editorLanguageKey = 'active-language',
   developerCollapseKey = 'developer-collapse',
-  physicalAlgebra = 'a0';
+  physicalAlgebra = 'a0',
+  profileMode = 'NONE';
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -123,6 +124,7 @@ function compileplan() {
   var url = "compile?" + $.param({
     query: query,
     language: editorLanguage,
+    profile: profileMode,
     physical_algebra: physicalAlgebra
   });
   window.open(url, '_blank');
@@ -168,13 +170,13 @@ function displayQueryStatus(query_status) {
     .done(function(datasets) {
         if (datasets.length > 0) {
           var d_html = "";
-          _.each(datasets, function(d) { d_html += t.dataset_row(d) });
+          _.each(datasets, function(d) { d_html += t.dataset_row(d); });
           html += t.dataset_table({content: d_html});
         }
     });
   }
 
-  if (status === 'SUCCESS' && query_status['profilingMode']) {
+  if (status === 'SUCCESS' && query_status['profilingMode']!='NONE') {
       html += t.prof_link({query_id: query_id});
   } else if (status === 'ERROR') {
     html += t.err_msg({message: query_status['message'] || '(missing)'});
@@ -224,7 +226,7 @@ function executeplan() {
     data: {
       query: query,
       language: editorLanguage,
-      profile: $("#profile-enabled").is(':checked'),
+      profile: profileMode,
       physical_algebra: physicalAlgebra
     },
     statusCode: {
@@ -330,6 +332,9 @@ function changePhysicalAlgebra(){
   physicalAlgebra = $(".phys-algebra-menu option:selected").val();
 }
 
+function changeProfileMode(){
+  profileMode = $(".profile-mode").val();
+}
 
 /**
  * This function populates the modal dialog box with the contents of the clicked
@@ -484,6 +489,7 @@ $(function () {
   $(".executor").click(executeplan);
   $(".language-menu").change(changeLanguage);
   $(".phys-algebra-menu").change(changePhysicalAlgebra);
+  $(".profile-mode").change(changeProfileMode);
   $(".example").click(function () {
     resetResults();
     var example_query = $(this).text();

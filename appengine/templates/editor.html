@@ -60,11 +60,15 @@
                     </div>
                     <div id="developer-options" class="panel-collapse collapse">
                         <div class="col-sm-offset-1">
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox" id="profile-enabled"> Profile Query
-                                </label>
-                            </div>
+                            <label for="profile-mode" class="control-label">
+                                Profile Mode
+                            </label>
+                            <select id="profile-mode" class="form-control profile-mode">
+                                <option value="NONE" selected> No Profile</option>
+                                <option value="RESOURCE">Profile Resource Only</option>
+                                <option value="QUERY">Profile Query Execution</option>
+                                <option value="ALL">Profile Query and Resource</option>
+                            </select> 
                             <span class="help-block">Profiling will make the query run a little bit slower but allows you to
                             examine exactly how the query was executed.</span>
                         </div>

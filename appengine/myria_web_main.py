@@ -540,14 +540,12 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
-        profile = self.request.get("profile", False)
+        profile = self.request.get("profile")
         phys_algebra_str = self.request.get("physical_algebra")
         physical_algebra = get_physical_algebra(
             phys_algebra_str, self.app.connection)
-
         cached_logicalplan = str(
             get_logical_plan(query, language, self.app.connection))
-
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
