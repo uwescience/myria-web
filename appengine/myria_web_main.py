@@ -110,9 +110,6 @@ def get_plan(query, language, backend, plan_type, connection,
                 cmyrial = RACompiler()
                 cmyrial.logicalplan = processor.get_logical_plan()
                 cmyrial.optimize(target=CCAlgebra('file'))
-                rel_keys = logical_to_rel_keys(cmyrial.logicalplan)
-                check_clang_catalog(rel_keys, self.app.clanghostname, 
-                                    self.app.clangport)
                 return cmyrial.physicalplan
             else:
                 return processor.get_physical_plan()
@@ -172,14 +169,26 @@ def check_clang_query(qid, host, port):
     return r.json()
 
 
-def check_clang_catalog(rel_key, host, port):
+# called before self is accessed from init
+def check_clang_catalog(rel_key, host='localhost', port=1337):
     url = 'http://%s:%d/catalog' % (host, port)
     r = requests.Session().post(url, data=json.dumps(rel_key))
-    return r.json()
+    return r.text
 
 
 def logical_to_rel_keys(logical_plan):
-    pass
+    logicalplan = str(logical_plan)
+    start = logicalplan.index('(') + 1
+    end = logicalplan.index(')')
+    relation = logicalplan[start:end]
+    relation = relation.split(':')
+    
+    relation_key = {
+        'userName': relation[0],
+        'programName': relation[1],
+        'relationName': relation[2]
+    }
+    return relation_key
 
 
 class MyriaCatalog(Catalog):
@@ -611,6 +620,8 @@ class Execute(MyriaHandler):
             elif backend == "clang":
                 clanghost = self.app.clanghostname
                 clangport = self.app.clangport
+                rel_keys = logical_to_rel_keys(cached_logicalplan)
+                check_clang_catalog(rel_keys)
                 compiled = create_clang_execute_json(
                     cached_logicalplan, physicalplan, backend)
                 query_status = submit_clang_query(
