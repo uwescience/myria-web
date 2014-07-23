@@ -13,7 +13,7 @@
 				<th>Relation name</th>
 				<th>Creating query</th>
 				<th>Create time</th>
-				<th>Download</th>
+				<th data-sorter="false">Download</th>
 			</tr>
 			</thead>
 			{% for d in datasets %}
@@ -28,4 +28,20 @@
 			{% endfor %}
 		</table>
 	</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+    $(".table").tablesorter({
+        textExtraction: {
+            2: function (node, table, cellIndex) {
+                return new Date($(node).find("abbr").attr("title"));
+            }
+        },
+        headers: {
+            2: {sorter: "isoDate"}
+        }
+    });
+</script>
 {% endblock %}
