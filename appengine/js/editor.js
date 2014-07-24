@@ -168,7 +168,7 @@ function displayQueryStatus(query_status) {
     .done(function(datasets) {
         if (datasets.length > 0) {
           var d_html = "";
-          _.each(datasets, function(d) { d_html += t.dataset_row(d) });
+          _.each(datasets, function(d) { d_html += t.dataset_row(d);});
           html += t.dataset_table({content: d_html});
         }
     });
