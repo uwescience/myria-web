@@ -9,3 +9,6 @@
 [submodule "requests"]
 	path = submodules/requests
 	url = https://github.com/kennethreitz/requests/
+[submodule "submodules/SciDB-py"]
+	path = submodules/SciDB-py
+	url = https://github.com/Paradigm4/SciDB-py.git
