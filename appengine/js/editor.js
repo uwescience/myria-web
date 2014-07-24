@@ -71,6 +71,7 @@ function getplan() {
 
 function optimizeplan() {
   $('#svg').empty();
+
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
@@ -89,36 +90,35 @@ function optimizeplan() {
     backend: backendProcess,
     multiway_join: multiway_join_checked
   });
- 
+
   var request = $.getJSON(url).success(function (queryPlan) {
-    if (backendProcess === "clang") {
-      function clangrerender() {
-        $('#svg').empty();
-        var dot = queryPlan.dot;
-        var result = Viz(dot, "svg");
-        $('#svg').html(result);
-        $('svg').width('100%');
-	$('svg').height('95%');
-      }
+    try {
+      if (backendProcess === "clang") {
+	function clangrerender() {
+          $('#svg').empty();
+          var dot = queryPlan.dot;
+          var result = Viz(dot, "svg");
+          $('#svg').html(result);
+//          $('svg').width('100%');
+//	  $('svg').height('95%');
+	}
 
-      clangrerender();
+	clangrerender();
 
-      // rerender when opening tab because of different space available
-      $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
-      $('#relational-plan').collapse('hide');
-      $('#physical-plan').collapse('show');
-      clangrerender();
-    } else if (backendProcess === "myria") {
-      try {
+	// rerender when opening tab because of different space available
+	$('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
+	$('#relational-plan').collapse('hide');
+	$('#physical-plan').collapse('show');
+	clangrerender();
+      } else if (backendProcess === "myria") {
         var i = 0;
-        queryPlan.fragments = _.map(queryPlan.plan.fragments, function (frag) {
-
+        _.map(queryPlan.plan.fragments, function (frag) {
           frag.fragmentIndex = i++;
           return frag;
         });
 
         var g = new Graph();
-        g.loadQueryPlan({ physicalPlan: queryPlan });
+        g.loadQueryPlan(queryPlan);
 
         function myriarerender() {
           $('#svg').empty();
@@ -131,19 +131,18 @@ function optimizeplan() {
         $('#relational-plan').collapse('hide');
         $('#physical-plan').collapse('show');
         myriarerender();
-      } catch (err) {
-        $('#svg').empty();
-        $('#optimized').empty();
-        $('#relational-plan').collapse('show');
-        $('#physical-plan').collapse('hide');
-        throw err;
-      }
-    } else {
+      } else {
 	// should not get here 
 	console.log("unsupported backend");
-    }
+      }
+    } catch (err) {
+      $('#svg').empty();
+      $('#optimized').empty();
+      $('#relational-plan').collapse('show');
+      $('#physical-plan').collapse('hide');
+      throw err;
+   }
   }).fail(function (jqXHR, textStatus, errorThrown) {
-
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
   });

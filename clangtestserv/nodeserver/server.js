@@ -42,6 +42,7 @@ http.createServer(function (req, res) {
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
+console.log('process relkey');
   if (req.method == "POST") {
     var body = '';
     req.on('data', function (chunk) {
@@ -50,28 +51,34 @@ function processRelKey(req, res) {
 
     req.on('end', function () {
       var relkey = JSON.parse(body);
-      checkExistence(res, relkey);
+      isInCatalog(res, relkey);
     });
   }
 }
 
-function checkExistence(res, relkey) {
+function isInCatalog(res, relkey) {
   var db = new sqlite.Database(datasetfile);
-  var query = 'SELECT queryId FROM dataset WHERE userName = ? AND ' +
+  var query = 'SELECT * FROM dataset WHERE userName = ? AND ' +
               'programName = ? AND relationName = ?';
   db.serialize(function () {
-    db.each(query, relkey.userName, relkey.programName, relkey.relationName,
+    db.get(query, relkey.userName, relkey.programName, relkey.relationName,
 	    function (err, row) {
       if (err) {
         console.log('check existence: ' + err);
       } else {
-        res.writeHead(400, {'Content-Type': 'plain/text'});
-        if (!row.queryId) {
-          res.write('False');
+	console.log(row);
+        if (!row) {
+	  var json = {};
+	  console.log(json);
+	  sendJSONResponse(res, json);
         } else {
-          res.write('True');
+	  var json = {relationKey :
+	    {relationName : row.relationName, programName: row.programName,
+            userName: row.userName} , queryId: row.queryId,
+	    created: row.created, uri: row.url};
+	  console.log(json);
+	  sendJSONResponse(res, json);
         }
-        res.end();
       }
     });
     db.close();
@@ -123,11 +130,12 @@ function parseQuery(req, res, start) {
       var mwebres = JSON.parse(body);
       plan = mwebres['plan'];
       var ra = mwebres['logicalRa'];
-      var startindex = ra.indexOf('(') + 1;
+      var startindex = ra.indexOf('(') + 1
       var endindex = ra.indexOf(')');
-      filename = ra.substring(startindex, endindex);
+      var relationkeys = ra.substring(startindex, endindex);
+      filename = relationkeys;
       insertQuery(res, filename, qid, start);
-
+      
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
 	  if (err) {
@@ -135,9 +143,9 @@ function parseQuery(req, res, start) {
 	  } else {
 	    runQueryUpdate(filename, qid, start);
 	  }
-        });
+	});
+      counter++;
     });
-    counter++;
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
     res.write("nothing");
@@ -162,13 +170,17 @@ function runClang(filename, qid, start) {
   });
 }
 
-function sendResponseJSON(res, jsonarr) {
+function sendJSONResponse(res, jsonarr) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.write(JSON.stringify(jsonarr));
   res.end();
 }
 
+//function sendNoDatasetResponse(res, relkey) {
+//  res.writeHead(400, {'Content-type': 'application/json'
+
+/* Query related functions */
 function completeQueryUpdate(qid, start) {
   var stop = getTime();
   var db = new sqlite.Database(datasetfile);
@@ -210,7 +222,7 @@ function getResults(res, filename) {
       for (var i = 0; i < arr.length-1; i++) {
         jsonarr.push({'tuple': arr[i]});
       }
-      sendResponseJSON(res, jsonarr);
+      sendJSONResponse(res, jsonarr);
     }
   });
 }
@@ -235,7 +247,7 @@ function selectTable(res, qid) {
       jsonarr.push(jsonob);
     }
   }, function () {
-    sendResponseJSON(res, jsonarr);
+    sendJSONResponse(res, jsonarr);
     db.close();
   });
 }
@@ -262,11 +274,11 @@ function getQueryStatus(res, qid) {
   var db = new sqlite.Database(datasetfile);
   var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
 
-  db.each(query, function (err, row) {
+  db.get(query, function (err, row) {
     var json = {status: row.status, queryId: row.queryId, 
                 startTime: row.startTime, finishTime: row.endTime,
                 elapsedNanos: row.elapsed, url: row.url};
-    sendResponseJSON(res, json);
+    sendJSONResponse(res, json);
     db.close();
   });
 }
