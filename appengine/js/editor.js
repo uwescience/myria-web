@@ -147,28 +147,8 @@ function displayQueryStatus(query_status) {
   var t = editor_templates.query;
   var query_id = query_status['queryId'];
   var status = query_status['status'];
-  var html = '';
-
-  html += t.row({name: 'Status', val: status});
-  html += t.time_row({name: 'Start', val: query_status['startTime']});
-  html += t.time_row({name: 'End', val: query_status['finishTime']});
-  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
-
-  if (status === 'SUCCESS' && query_status['profilingMode']) {
-    html += t.prof_link({query_id: query_id});
-  }
-  if (status === 'ERROR') {
-    html += t.err_msg({message: query_status['message'] || '(missing)'});
-  }
+  var html = '<p>Query execution in progress...</p>';
   $("#query-information").html(html);
-  $("abbr.timeago").timeago();
-
-  if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
-    setTimeout(function () {
-      checkQueryStatus(query_id);
-    }, 1000);
-  }
 }
 
 function displayQueryError(error, query_id) {
