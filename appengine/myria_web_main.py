@@ -225,14 +225,14 @@ class ClangCatalog(Catalog):
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
-        schema = dataset_info['schema']
+        schema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'], 'columnNames': ['x', 'y']} # dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def check_datasets(self, rel_args):
         url = 'http://%s/catalog' % (self.connection.get_conn_string())
         r = requests.Session().post(url, data=json.dumps(rel_args))
         ret = r.json()
-        if ret:
+        if ret['queryId']:
             return ret
         raise myria.MyriaError
 
@@ -279,10 +279,10 @@ class MyriaCatalog(Catalog):
                 "no schema for relation %s because no connection" % rel_key)
         try:
             dataset_info = self.connection.dataset(relation_args)
-            print dataset_info
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = dataset_info['schema']
+        print schema
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def get_num_servers(self):

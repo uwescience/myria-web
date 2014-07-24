@@ -92,27 +92,28 @@ function optimizeplan() {
   });
 
   var request = $.getJSON(url).success(function (queryPlan) {
-    try {
-      if (backendProcess === "clang") {
-	function clangrerender() {
-          $('#svg').empty();
-          var dot = queryPlan.dot;
-          var result = Viz(dot, "svg");
-          $('#svg').html(result);
-//          $('svg').width('100%');
-//	  $('svg').height('95%');
-	}
+    if (backendProcess === "clang") {
+      function clangrerender() {
+        $('#svg').empty();
+        var dot = queryPlan.dot;
+        var result = Viz(dot, "svg");
+        $('#svg').html(result);
+        $('svg').width('100%');
+	$('svg').height('95%');
+      }
 
-	clangrerender();
+      clangrerender();
 
-	// rerender when opening tab because of different space available
-	$('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
-	$('#relational-plan').collapse('hide');
-	$('#physical-plan').collapse('show');
-	clangrerender();
-      } else if (backendProcess === "myria") {
+      // rerender when opening tab because of different space available
+      $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
+      $('#relational-plan').collapse('hide');
+      $('#physical-plan').collapse('show');
+      clangrerender();
+    } else if (backendProcess === "myria") {
+      try {
         var i = 0;
         _.map(queryPlan.plan.fragments, function (frag) {
+
           frag.fragmentIndex = i++;
           return frag;
         });
@@ -131,18 +132,18 @@ function optimizeplan() {
         $('#relational-plan').collapse('hide');
         $('#physical-plan').collapse('show');
         myriarerender();
-      } else {
+      } catch (err) {
+        $('#svg').empty();
+        $('#optimized').empty();
+        $('#relational-plan').collapse('show');
+        $('#physical-plan').collapse('hide');
+        throw err;
+      }
+    } else {
 	// should not get here 
 	console.log("unsupported backend");
-      }
-    } catch (err) {
-      $('#svg').empty();
-      $('#optimized').empty();
-      $('#relational-plan').collapse('show');
-      $('#physical-plan').collapse('hide');
-      throw err;
-   }
-  }).fail(function (jqXHR, textStatus, errorThrown) {
+    }
+  }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
   });
@@ -193,11 +194,17 @@ function displayQueryStatus(query_status) {
   html = t.table({connection: connection, query_id: query_id, content: html});
 
   if (status === 'SUCCESS') {
+    connection = 'http://' + myriaConnection + '/dataset';
+    var data = {queryId: query_id}; 
+    if (backendProcess == 'clang') {
+      connection = 'http://' + clangConnection + '/dataset';
+      data = {qid: query_id};
+    }
     // Populate the datasets created table
     $.ajax({
       dataType: "json",
-      url: "http://" + myriaConnection + "/dataset",
-      data: {queryId: query_id},
+      url: connection,
+      data: data,
       async: false})
     .done(function (datasets) {
         if (datasets.length > 0) {

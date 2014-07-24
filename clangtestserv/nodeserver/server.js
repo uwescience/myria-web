@@ -66,17 +66,14 @@ function isInCatalog(res, relkey) {
       if (err) {
         console.log('check existence: ' + err);
       } else {
-	console.log(row);
         if (!row) {
 	  var json = {};
-	  console.log(json);
 	  sendJSONResponse(res, json);
         } else {
 	  var json = {relationKey :
 	    {relationName : row.relationName, programName: row.programName,
             userName: row.userName} , queryId: row.queryId,
 	    created: row.created, uri: row.url};
-	  console.log(json);
 	  sendJSONResponse(res, json);
         }
       }
@@ -244,6 +241,7 @@ function selectTable(res, qid) {
          userName: row.userName} , queryId: row.queryId, created: row.created, 
          uri: row.url, status: row.status, startTime: row.startTime,
          endTime: row.endTime, elapsed: row.elapsed};
+console.log(jsonob);
       jsonarr.push(jsonob);
     }
   }, function () {
