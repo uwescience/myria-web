@@ -70,9 +70,8 @@ QUERIES_PER_PAGE = 25
 
 def get_plan(query, language, backend, plan_type, connection,
              multiway_join=False):
-    catalog = None
-    if multiway_join or language == "myrial":
-        catalog = MyriaCatalog(connection)
+    
+    catalog = MyriaCatalog(connection)
 
     # Fix up the language string
     if language is None:
@@ -199,13 +198,14 @@ def logical_to_rel_keys(logical_plan):
 
 
 class ClangConnection(object):
-    
+
     def __init__(self, hostname, port):
         self.hostname = hostname
         self.port = port
-    
+
     def get_conn_string(self):
         return "%s:%d" % (self.hostname, self.port)
+
 
 class ClangCatalog(Catalog):
 
@@ -225,7 +225,8 @@ class ClangCatalog(Catalog):
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
-        schema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'], 'columnNames': ['x', 'y']} # dataset_info['schema']
+        schema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
+                  'columnNames': ['x', 'y']}  #  dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def check_datasets(self, rel_args):
@@ -252,17 +253,17 @@ class ClangCatalog(Catalog):
             raise RuntimeError(
                 "no cardinality of %s because no connection" % rel_key)
         try:
-            dataset_info = get_num_tuples(relation_args)
+            dataset_info = self.get_num_tuples(relation_args)
         except myria.MyriaError:
             raise ValueError(rel_key)
         num_tuples = dataset_info['numTuples']
         assert type(num_tuples) is int
         return num_tuples
-        
-        def get_num_tuples(relation_args):
+
+        def get_num_tuples(self, relation_args):
             return 1
 
- 
+
 class MyriaCatalog(Catalog):
 
     def __init__(self, connection):
@@ -310,7 +311,7 @@ class MyriaCatalog(Catalog):
             assert num_tuples >= 0
             return num_tuples
         return DEFAULT_CARDINALITY
- 
+
 
 class MyriaHandler(webapp2.RequestHandler):
 
@@ -801,7 +802,7 @@ class Application(webapp2.WSGIApplication):
 
         # Connection to Myria. Thread-safe
         self.myriaConnection = myria.MyriaConnection(hostname=hostname,
-                                                port=port)
+                                                     port=port)
         self.myriahostname = hostname
         self.myriaport = port
 
