@@ -38,3 +38,6 @@ libraries:
   version: latest
 - name: numpy
   version: latest
+
+builtins:
+- deferred: on
