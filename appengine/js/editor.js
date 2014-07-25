@@ -12,7 +12,7 @@ var editor_templates = {
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
     err_msg: _.template('<p>Error message:</p><pre><%- message %></pre>'),
     dataset_table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Datasets Created</th></tr></thead><trbody><%= content %></trbody></table>'),
-    dataset_row: _.template('<tr><td><%- relationKey.userName %>:<%- relationKey.programName %>:<%- relationKey.relationName %></td><td><%- numTuples %> tuples <% if (numTuples < max_dataset_size) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
+    dataset_row: _.template('<tr><td><%- userName %>:<%- programName %>:<%- relationName %></td><td><%- numTuples %> tuples <% if (numTuples < max_dataset_size) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
   },
   dataset: {
     table: _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>'),
@@ -75,6 +75,7 @@ function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
+
 
   var request = $.post("optimize", {
     query: query,
@@ -210,11 +211,15 @@ function displayQueryStatus(query_status) {
         if (datasets.length > 0) {
           var d_html = "";
           _.each(datasets, function (d) {
-            d.uri = d.uri + '/data?';
+            var relKey = d['relationKey'];
+            console.log(d.numTuples);
+            var dload = d.uri + '/data?';
 	    if (backendProcess == 'clang') {
-      	      d.uri += 'qid=' + d['queryId'] + '&';
+      	      dload += 'qid=' + d['queryId'] + '&';
             }
-            d_html += t.dataset_row(d);
+            d_html += t.dataset_row({uri : dload, userName: relKey.userName,
+                programName: relKey.programName,
+                relationName: relKey.relationName, numTuples: d.numTuples});
           });
           html += t.dataset_table({content: d_html});
         }

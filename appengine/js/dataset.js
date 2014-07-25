@@ -48,7 +48,7 @@ function loadTable() {
         var relation = d['relationKey'];
         html += t.relName({url: d['uri'] + qload, user: relation['userName'],
                 program: relation['programName'],
-                name: relation['relationName'] });
+                name: relation['relationName']});
         html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
                 created: d['created']});
 
