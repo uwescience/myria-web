@@ -70,9 +70,8 @@ QUERIES_PER_PAGE = 25
 
 def get_plan(query, language, backend, plan_type, connection,
              multiway_join=False):
-    
-    catalog = MyriaCatalog(connection)
 
+    catalog = MyriaCatalog(connection)
     # Fix up the language string
     if language is None:
         language = "datalog"
@@ -107,6 +106,7 @@ def get_plan(query, language, backend, plan_type, connection,
         # .. is not Threadsafe and App Engine uses multiple threads.
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
+        print 'cat'
         processor = MyrialInterpreter.StatementProcessor(catalog)
         processor.evaluate(parsed)
 
@@ -222,18 +222,19 @@ class ClangCatalog(Catalog):
             raise RuntimeError(
                 "no schema for relation %s because no connection" % rel_key)
         try:
+            # TODO schema numtuples
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
-                  'columnNames': ['x', 'y']}  #  dataset_info['schema']
+                  'columnNames': ['x', 'y']}  # dataset_info['schema']
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def check_datasets(self, rel_args):
         url = 'http://%s/catalog' % (self.connection.get_conn_string())
         r = requests.Session().post(url, data=json.dumps(rel_args))
         ret = r.json()
-        if ret['queryId']:
+        if ret:
             return ret
         raise myria.MyriaError
 
@@ -283,7 +284,6 @@ class MyriaCatalog(Catalog):
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = dataset_info['schema']
-        print schema
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def get_num_servers(self):
@@ -704,8 +704,6 @@ class Execute(MyriaHandler):
             elif backend == "clang":
                 clanghost = self.app.clanghostname
                 clangport = self.app.clangport
-                rel_keys = logical_to_rel_keys(cached_logicalplan)
-#                check_clang_catalog(rel_keys)
                 compiled = create_clang_execute_json(
                     cached_logicalplan, physicalplan, backend)
                 query_status = submit_clang_query(
@@ -761,12 +759,12 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-
         backend = self.request.get("backend")
-
         multiway_join = self.request.get("multiway_join", False)
+        print 'fail'
         if multiway_join == 'false':
             multiway_join = False
+
         conn = self.app.myriaConnection
         if backend == "clang":
             conn = self.app.clangConnection

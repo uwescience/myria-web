@@ -42,7 +42,6 @@ http.createServer(function (req, res) {
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
-console.log('process relkey');
   if (req.method == "POST") {
     var body = '';
     req.on('data', function (chunk) {
@@ -67,10 +66,10 @@ function isInCatalog(res, relkey) {
         console.log('check existence: ' + err);
       } else {
         if (!row) {
-	  var json = {};
+          var json = {};
 	  sendJSONResponse(res, json);
         } else {
-	  var json = {relationKey :
+	  json = {relationKey :
 	    {relationName : row.relationName, programName: row.programName,
             userName: row.userName} , queryId: row.queryId,
 	    created: row.created, uri: row.url};
@@ -127,12 +126,12 @@ function parseQuery(req, res, start) {
       var mwebres = JSON.parse(body);
       plan = mwebres['plan'];
       var ra = mwebres['logicalRa'];
-      var startindex = ra.indexOf('(') + 1
+      var startindex = ra.indexOf('(') + 1;
       var endindex = ra.indexOf(')');
       var relationkeys = ra.substring(startindex, endindex);
       filename = relationkeys;
       insertQuery(res, filename, qid, start);
-      
+
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
 	  if (err) {
@@ -173,9 +172,6 @@ function sendJSONResponse(res, jsonarr) {
   res.write(JSON.stringify(jsonarr));
   res.end();
 }
-
-//function sendNoDatasetResponse(res, relkey) {
-//  res.writeHead(400, {'Content-type': 'application/json'
 
 /* Query related functions */
 function completeQueryUpdate(qid, start) {
@@ -238,7 +234,7 @@ function selectTable(res, qid) {
     } else {
       var jsonob = {relationKey :
         {relationName : row.relationName, programName: row.programName,
-         userName: row.userName} , queryId: row.queryId, created: row.created, 
+         userName: row.userName} , queryId: row.queryId, created: row.created,
          uri: row.url, status: row.status, startTime: row.startTime,
          endTime: row.endTime, elapsed: row.elapsed};
 console.log(jsonob);
@@ -261,7 +257,7 @@ function getDbRelKeys(res, qid) {
     } else {
       var filename = row.userName + ':' + row.programName + ':' +
 	    row.relationName + '.txt';
-      getResults(res, filename);	
+      getResults(res, filename);
     }
   });
   db.close();
@@ -273,7 +269,7 @@ function getQueryStatus(res, qid) {
   var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
 
   db.get(query, function (err, row) {
-    var json = {status: row.status, queryId: row.queryId, 
+    var json = {status: row.status, queryId: row.queryId,
                 startTime: row.startTime, finishTime: row.endTime,
                 elapsedNanos: row.elapsed, url: row.url};
     sendJSONResponse(res, json);
@@ -308,7 +304,7 @@ function createTable(err) {
 	   'AND name="dataset"', function (err, row) {
 	   if (!row) {
 	     console.log('creating table');
-	     db.run('CREATE TABLE dataset (userName text, programName text, ' + 
+	     db.run('CREATE TABLE dataset (userName text, programName text, ' +
                     'relationName text, queryId int primary key,' +
 		    'created datatime, url text, status text,' +
 		    'startTime datetime, endTime datetime, elapsed int)');

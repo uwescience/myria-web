@@ -55,7 +55,7 @@ function getplan() {
     multiway_join: $("#multiway-join").is(':checked')
   });
   handleerrors(request, "#plan");
-  var request = $.post("dot", {
+  request = $.post("dot", {
     query: query,
     type: 'logical',
     backend: backendProcess,
@@ -91,7 +91,7 @@ function optimizeplan() {
     multiway_join: multiway_join_checked
   });
 
-  var request = $.getJSON(url).success(function (queryPlan) {
+  request = $.getJSON(url).success(function (queryPlan) {
     if (backendProcess === "clang") {
       function clangrerender() {
         $('#svg').empty();
@@ -140,7 +140,7 @@ function optimizeplan() {
         throw err;
       }
     } else {
-	// should not get here 
+	// should not get here
 	console.log("unsupported backend");
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -195,7 +195,7 @@ function displayQueryStatus(query_status) {
 
   if (status === 'SUCCESS') {
     connection = 'http://' + myriaConnection + '/dataset';
-    var data = {queryId: query_id}; 
+    var data = {queryId: query_id};
     if (backendProcess == 'clang') {
       connection = 'http://' + clangConnection + '/dataset';
       data = {qid: query_id};
@@ -209,7 +209,7 @@ function displayQueryStatus(query_status) {
     .done(function (datasets) {
         if (datasets.length > 0) {
           var d_html = "";
-          _.each(datasets, function (d) { d_html += t.dataset_row(d) });
+          _.each(datasets, function (d) { d_html += t.dataset_row(d); });
           html += t.dataset_table({content: d_html});
         }
     });
@@ -281,7 +281,7 @@ function executeplan() {
     $('#query-information').empty().append(pre);
     multiline($(pre), jqXHR.responseText);
   });
-  
+
 }
 
 function resetResults() {
@@ -509,7 +509,7 @@ function restoreState() {
     setLanguage(language);
     updateExamples(language, function () {
     });
-    
+
     $(".backend-menu").val(backend);
     setBackend(backend);
     editor.setValue(content);
@@ -518,7 +518,7 @@ function restoreState() {
     if (developerCollapse === 'true') {
       $('#developer-options').addClass('in');
     }
-    
+
     return true;
   }
 
