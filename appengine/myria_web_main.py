@@ -246,16 +246,11 @@ class MyriaHandler(webapp2.RequestHandler):
            else:
                usermsg = ""
 
-           template_vars = {
-                'connectionString': self.get_connection_string(),
-                'greeting' : self.get_greeting(),
-                'myriaConnection': "{h}:{p}".format(
-                    h=self.app.hostname, p=self.app.port),
-                'version': VERSION,
-                'branch': BRANCH,
-                'usermsg': usermsg,
-                'loginurl': users.create_login_url(self.request.url)
-           }
+           template_vars = self.base_template_vars()
+           template_vars.update({
+                 'usermsg': usermsg,
+                 'loginurl': users.create_login_url(self.request.url)
+                 })
 
            self.response.headers['Content-Type'] = 'text/html'
            self.response.status = 401
@@ -689,6 +684,25 @@ class Dot(MyriaHandler):
         self.get()
 
 
+class RawREST(MyriaHandler):
+    '''Pass through requests to the Myria back end. Several reasons:
+    * To have a single public REST API
+    * To support global services like authentication, logging, etc.
+    * To enable federation.
+    '''
+    def get(self, path):
+        # Raise an exception if not logged in and whitelisted
+        self.verifyuser()
+
+        r = self.app.connection.rawmyria(path, self.request.query_string)
+        self.response.headers.update(r.headers)
+        self.response.set_status(200)
+        self.response.write(r.text)
+
+    def post(self):
+        "The same as get(), here because there may be long programs"
+        self.get()
+
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='vega.cs.washington.edu', port=1776):
@@ -704,6 +718,7 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
+            ('/rest(.*)', RawREST),
             ('/demo3', Demo3)
         ]
 
