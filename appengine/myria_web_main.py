@@ -188,6 +188,35 @@ class MyriaCatalog(Catalog):
 
 class MyriaHandler(webapp2.RequestHandler):
 
+    def get_greeting(self):
+        '''Construct an HTML fragment that displays login status and a link to either login or out'''
+        user = users.get_current_user()
+        if user:
+            greeting = ('<a href="%s">logout as %s</a>' %
+                        (users.create_logout_url('/'), user.nickname()))
+        else:
+            greeting = ('<a href="%s">Login with Google</a>' %
+                        users.create_login_url('/'))
+
+        return greeting
+
+    def get_connection_string(self):
+        conn = self.app.connection
+        hostname = self.app.hostname
+        port = self.app.port
+        if not conn:
+            connection_string = "unable to connect to %s:%d" % (hostname, port)
+        else:
+            try:
+                workers = conn.workers()
+                alive = conn.workers_alive()
+                connection_string = "%s:%d [%d/%d]" %\
+                    (hostname, port, len(alive), len(workers))
+            except:
+                connection_string = "error connecting to %s:%d" % (
+                    hostname, port)
+        return connection_string
+
     def verifyuser(self):
         user = users.get_current_user()
         if user:
@@ -208,25 +237,17 @@ class MyriaHandler(webapp2.RequestHandler):
                       (ValueError, SyntaxError, MyrialCompileException)):
             self.response.status = 400
             msg = '{}: {}'.format(exception.__class__.__name__, exception)
-        else:
-            self.response.status = 500
-            msg = ""
-            if debug_mode:
-                self.response.out.write(": \n\n")
-                import traceback
-                msg = traceback.format_exc()
-
-        # If not authorized, use the unauthorized template
-        if isinstance(exception, users.UserNotFoundError):
+        elif isinstance(exception, users.UserNotFoundError):
 
            user = users.get_current_user()
 
            if user:
-             usermsg = "User '%s' is not allowed to access this system" % user.email()
+               usermsg = "User '%s' is not allowed to access this system" % user.email()
            else:
-             usermsg = ""
+               usermsg = ""
 
-           template_vars = {'connectionString': self.get_connection_string(),
+           template_vars = {
+                'connectionString': self.get_connection_string(),
                 'greeting' : self.get_greeting(),
                 'myriaConnection': "{h}:{p}".format(
                     h=self.app.hostname, p=self.app.port),
@@ -236,29 +257,20 @@ class MyriaHandler(webapp2.RequestHandler):
                 'loginurl': users.create_login_url(self.request.url)
            }
 
+           self.response.headers['Content-Type'] = 'text/html'
            self.response.status = 401
            template = JINJA_ENVIRONMENT.get_template('unauthorized.html')
-           self.response.out.write(template.render(template_vars))
-
+           self.response.out.write(template.render(template_vars))        
+           return
         else:
-          self.response.headers['Content-Type'] = 'text/plain'
-          if isinstance(exception,
-                        (ValueError, SyntaxError, MyrialCompileException)):
-              self.response.status = 400
-              msg = '{}: {}'.format(exception.__class__.__name__, exception)
-          elif isinstance(exception, users.UserNotFoundError):
-              self.response.headers['Content-Type'] = 'text/html'
-              self.response.status = 401
-              return
-          else:
-              self.response.status = 500
-              self.response.out.write("Error 500 (Internal Server Error)")
-              if debug_mode:
-                  self.response.out.write(": \n\n")
-                  import traceback
-                  msg = traceback.format_exc()
+            self.response.status = 500
+            msg = ""
+            if debug_mode:
+                self.response.out.write(": \n\n")
+                import traceback
+                msg = traceback.format_exc()
 
-          self.response.out.write(msg)
+        self.response.out.write(msg)
 
 
 class RedirectToEditor(MyriaHandler):
@@ -274,36 +286,6 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
-
-    def get_connection_string(self):
-        conn = self.app.connection
-        hostname = self.app.hostname
-        port = self.app.port
-        if not conn:
-            connection_string = "unable to connect to %s:%d" % (hostname, port)
-        else:
-            try:
-                workers = conn.workers()
-                alive = conn.workers_alive()
-                connection_string = "%s:%d [%d/%d]" %\
-                    (hostname, port, len(alive), len(workers))
-            except:
-                connection_string = "error connecting to %s:%d" % (
-                    hostname, port)
-        return connection_string
-
-
-    def get_greeting(self):
-        '''Construct an HTML fragment that displays login status and a link to either login or out'''
-        user = users.get_current_user()
-        if user:
-            greeting = ('<a href="%s">logout as %s</a>' %
-                        (users.create_logout_url('/'), user.nickname()))
-        else:
-            greeting = ('<a href="%s">Login with Google</a>' %
-                        users.create_login_url('/'))
-
-        return greeting
 
     def base_template_vars(self):
         return {'connectionString': self.get_connection_string(),
