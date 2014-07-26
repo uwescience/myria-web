@@ -212,7 +212,6 @@ function displayQueryStatus(query_status) {
           var d_html = "";
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
-            console.log(d.numTuples);
             var dload = d.uri + '/data?';
 	    if (backendProcess == 'clang') {
       	      dload += 'qid=' + d['queryId'] + '&';

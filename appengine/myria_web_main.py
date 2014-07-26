@@ -106,7 +106,6 @@ def get_plan(query, language, backend, plan_type, connection,
         # .. is not Threadsafe and App Engine uses multiple threads.
         with myrial_parser_lock:
             parsed = myrial_parser.parse(query)
-        print 'cat'
         processor = MyrialInterpreter.StatementProcessor(catalog)
         processor.evaluate(parsed)
 
@@ -226,9 +225,7 @@ class ClangCatalog(Catalog):
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
-        schema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
-                  'columnNames': ['x', 'y']}  # dataset_info['schema']
-        return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
+        return dataset_info['schema']
 
     def check_datasets(self, rel_args):
         url = 'http://%s/catalog' % (self.connection.get_conn_string())

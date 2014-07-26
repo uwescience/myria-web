@@ -72,10 +72,11 @@ function isInCatalog(res, relkey) {
           var json = {};
 	  sendJSONResponse(res, json);
         } else {
+          console.log(row.schema);
 	  json = {relationKey: {relationName: row.relationName,
              programName: row.programName, userName: row.userName},
              queryId: row.queryId, created: row.created, uri: row.url,
-             numTuples: row.numTuples};
+             numTuples: row.numTuples, schema: row.schema};
 	  sendJSONResponse(res, json);
         }
       }
@@ -132,7 +133,7 @@ function parseQuery(req, res, start) {
       var startindex = ra.indexOf('(') + 1;
       var endindex = ra.indexOf(')');
       filename = ra.substring(startindex, endindex);
-      insertQuery(res, filename, qid, start);
+      insertDataQuery(res, filename, qid, start);
 
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
@@ -151,18 +152,20 @@ function parseQuery(req, res, start) {
   }
 }
 
-function insertQuery(res, filename, qid, start) {
+function insertDataQuery(res, filename, qid, start) {
   var db = new sqlite.Database(datasetfile);
   var curTime = getTime();
   var relkey = filename.split(':');
   var url = 'http://' + hostname + ':' + port;
   getQueryStatus(res, qid);
-
+  // TODO create actual schema information
+  var fakeschema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
+                    'columnNames': ['x', 'y']};
   db.serialize(function () {
     var stmt = db.prepare('INSERT INTO dataset VALUES' +
-                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-             start, null, 0, 0, function (err) {
+             start, null, 0, 0, fakeschema.toString(), function (err) {
              if (err) { console.log('insert query: ' + err); }
     });
     stmt.finalize();
@@ -347,7 +350,7 @@ function createTable(err) {
                     'relationName text, queryId int primary key,' +
 		    'created datatime, url text, status text,' +
 		    'startTime datetime, endTime datetime, elapsed datetime,' +
-                    'numTuples int)');
+                    'numTuples int, schema text)');
 	   }
     });
   });
