@@ -222,7 +222,7 @@ class ClangCatalog(Catalog):
             raise RuntimeError(
                 "no schema for relation %s because no connection" % rel_key)
         try:
-            # TODO schema numtuples
+            # TODO schema
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
@@ -261,8 +261,10 @@ class ClangCatalog(Catalog):
         assert type(num_tuples) is int
         return num_tuples
 
-        def get_num_tuples(self, relation_args):
-            return 1
+    def get_num_tuples(self, rel_args):
+        url = 'http://%s/tuples' % (self.connection.get_conn_string())
+        r = requests.Session().post(url, data=json.dumps(rel_args))
+        return r.json()
 
 
 class MyriaCatalog(Catalog):

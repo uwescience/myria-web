@@ -32,6 +32,9 @@ http.createServer(function (req, res) {
     case '/catalog':
       processRelKey(req, res);
     break;
+    case '/tuples':
+      processQid(req, res, getTuples);
+    break;
     default:
       var start = getTime();
       parseQuery(req, res, start);
@@ -148,12 +151,39 @@ function parseQuery(req, res, start) {
   }
 }
 
+function insertQuery(res, filename, qid, start) {
+  var db = new sqlite.Database(datasetfile);
+  var curTime = getTime();
+  var relkey = filename.split(':');
+  var url = 'http://' + hostname + ':' + port;
+  getQueryStatus(res, qid);
+
+  db.serialize(function () {
+    var stmt = db.prepare('INSERT INTO dataset VALUES' +
+                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
+             start, null, 0, 0, function (err) {
+             if (err) { console.log('insert query: ' + err); }
+    });
+    stmt.finalize();
+    db.close();
+  });
+}
+
+function runQueryUpdate(filename, qid) {
+  var db = new sqlite.Database(datasetfile);
+  db.serialize(function () {
+    console.log(getTime() + ' running');
+    db.run('UPDATE dataset SET status = "RUNNING" WHERE queryId = ?', qid);
+    runClang(filename, qid);
+    db.close();
+  });
+}
+
 // compiles and runs the query on server
 function runClang(filename, qid) {
-  var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
-                  killSignal: 'SIGTERM', cwd: compilepath, env: null };
   var cmd = 'python runclang.py clang ' + filename;
-  cp.exec(cmd, options, function (error, stdout, stderr) {
+  cp.exec(cmd, {cwd: compilepath}, function (error, stdout, stderr) {
     console.log('stdout: ' + stdout);
     if (error !== null) {
       console.log(getTime() + ' ' + error);
@@ -165,16 +195,22 @@ function runClang(filename, qid) {
   });
 }
 
+function errorQueryUpdate(qid) {
+  var db = new sqlite.Database(datasetfile);
+  db.serialize(function () {
+    db.run('UPDATE dataset SET status = "Error" WHERE queryId = ?', qid);
+    db.close();
+  });
+}
+
 function updateCatalog(filename, qid) {
   filename += '.txt';
   fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function (err, data) {
     if (err) {
       console.log('update catalog ' + err);
     } else {
-      var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
-                      killSignal: 'SIGTERM', cwd: datasetpath, env: null };
       var cmd = 'wc -l < ' + filename;
-      cp.exec(cmd, options, function (error, stdout, stderr) {
+      cp.exec(cmd, {cwd: datasetpath}, function (error, stdout, stderr) {
         if (error) {
           console.log('problem with file ' + error);
         } else {
@@ -195,13 +231,6 @@ function updateNumTuples(qid, num) {
   });
 }
 
-function sendJSONResponse(res, jsonarr) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.writeHead(200, {'Content-Type': 'application/json'});
-  res.write(JSON.stringify(jsonarr));
-  res.end();
-}
-
 /* Query related functions */
 function completeQueryUpdate(qid) {
   var db = new sqlite.Database(datasetfile);
@@ -216,39 +245,6 @@ function completeQueryUpdate(qid) {
              'WHERE queryId = ?', stop, diff, qid);
       db.close();
     });
-  });
-}
-
-function errorQueryUpdate(qid) {
-  var db = new sqlite.Database(datasetfile);
-  db.serialize(function () {
-    db.run('UPDATE dataset SET status = "Error" WHERE queryId = ?', qid);
-    db.close();
-  });
-}
-
-function runQueryUpdate(filename, qid) {
-  var db = new sqlite.Database(datasetfile);
-  db.serialize(function () {
-    console.log(getTime() + ' running');
-    db.run('UPDATE dataset SET status = "RUNNING" WHERE queryId = ?', qid);
-    runClang(filename, qid);
-    db.close();
-  });
-}
-
-function getResults(res, filename) {
-  var jsonarr = [];
-  fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function (err, data) {
-    if (err) {
-      console.log('get results ' + err);
-    } else {
-      var arr = data.split('\n');
-      for (var i = 0; i < arr.length-1; i++) {
-        jsonarr.push({'tuple': arr[i]});
-      }
-      sendJSONResponse(res, jsonarr);
-    }
   });
 }
 
@@ -315,22 +311,28 @@ function getQueryStatus(res, qid) {
   });
 }
 
-function insertQuery(res, filename, qid, start) {
+function getTuples(res, qid) {
   var db = new sqlite.Database(datasetfile);
-  var curTime = getTime();
-  var relkey = filename.split(':');
-  var url = 'http://' + hostname + ':' + port;
-  getQueryStatus(res, qid);
-
-  db.serialize(function () {
-    var stmt = db.prepare('INSERT INTO dataset VALUES' +
-                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-             start, null, 0, 0, function (err) {
-             if (err) { console.log('insert query: ' + err); }
-    });
-    stmt.finalize();
+  var query = 'SELECT numTuples FROM dataset WHERE queryId=' + qid;
+  db.get(query, function (err, row) {
+    var json = {numTuples: row.numTuples};
+    sendJSONResponse(res, json);
     db.close();
+  });
+}
+
+function getResults(res, filename) {
+  var jsonarr = [];
+  fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function (err, data) {
+    if (err) {
+      console.log('get results ' + err);
+    } else {
+      var arr = data.split('\n');
+      for (var i = 0; i < arr.length-1; i++) {
+        jsonarr.push({'tuple': arr[i]});
+      }
+      sendJSONResponse(res, jsonarr);
+    }
   });
 }
 
@@ -353,4 +355,11 @@ function createTable(err) {
 
 function getTime() {
   return new Date().getTime();
+}
+
+function sendJSONResponse(res, jsonarr) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  res.write(JSON.stringify(jsonarr));
+  res.end();
 }
