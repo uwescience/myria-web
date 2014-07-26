@@ -69,10 +69,10 @@ function isInCatalog(res, relkey) {
           var json = {};
 	  sendJSONResponse(res, json);
         } else {
-	  json = {relationKey :
-	    {relationName : row.relationName, programName: row.programName,
-            userName: row.userName} , queryId: row.queryId,
-	    created: row.created, uri: row.url, numTuples: row.numTuples};
+	  json = {relationKey: {relationName: row.relationName,
+             programName: row.programName, userName: row.userName},
+             queryId: row.queryId, created: row.created, uri: row.url,
+             numTuples: row.numTuples};
 	  sendJSONResponse(res, json);
         }
       }
@@ -136,7 +136,6 @@ function parseQuery(req, res, start) {
 	  if (err) {
 	    console.log('parse query' + err);
 	  } else {
-            console.log('a');
 	    runQueryUpdate(filename, qid);
 	  }
 	});
@@ -151,8 +150,6 @@ function parseQuery(req, res, start) {
 
 // compiles and runs the query on server
 function runClang(filename, qid) {
-              console.log('c');
-
   var options = { encoding: 'utf8', timeout: 0, maxBuffer: 200*1024,
                   killSignal: 'SIGTERM', cwd: compilepath, env: null };
   var cmd = 'python runclang.py clang ' + filename;
@@ -169,7 +166,6 @@ function runClang(filename, qid) {
 }
 
 function updateCatalog(filename, qid) {
-            console.log('d');
   filename += '.txt';
   fs.readFile(datasetpath + filename, {encoding: 'utf8'}, function (err, data) {
     if (err) {
@@ -191,8 +187,6 @@ function updateCatalog(filename, qid) {
 }
 
 function updateNumTuples(qid, num) {
-              console.log('e');
-
   var db = new sqlite.Database(datasetfile);
   db.serialize(function () {
     db.run('UPDATE dataset SET numTuples = ? WHERE queryId = ?', num, qid);
@@ -211,17 +205,17 @@ function sendJSONResponse(res, jsonarr) {
 /* Query related functions */
 function completeQueryUpdate(qid) {
   var db = new sqlite.Database(datasetfile);
-  console.log('f');
   var stop = getTime();
-  var diff = new Date(stop);
+  var diff = stop;
   db.serialize(function () {
-    db.get('SELECT strftime("%s", startTime) AS start FROM dataset' +
-           ' WHERE queryID = ?', qid, function (err, row) {
-             diff -= row.start;
-           });
-    db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
-           'WHERE queryId = ?', stop, diff, qid);
-    db.close();
+    // sqlite function to convert isostring back to seconds
+    db.get('SELECT startTime FROM dataset WHERE queryId = ?', qid,
+           function (err,row){
+      diff -= row.startTime;
+      db.run('UPDATE dataset SET status = "SUCCESS", endTime = ?, elapsed = ?' +
+             'WHERE queryId = ?', stop, diff, qid);
+      db.close();
+    });
   });
 }
 
@@ -234,8 +228,6 @@ function errorQueryUpdate(qid) {
 }
 
 function runQueryUpdate(filename, qid) {
-              console.log('b');
-
   var db = new sqlite.Database(datasetfile);
   db.serialize(function () {
     console.log(getTime() + ' running');
@@ -268,12 +260,10 @@ function selectTable(res, qid) {
       query += ' WHERE queryId=' + qid;
   }
   db.serialize(function () {
-    console.log('g');
     db.each(query, function (err, row) {
       if (err) {
         console.log('select table: ' + err);
       } else {
-        console.log(row.numTuples);
         var jsonob = {relationKey :
             {relationName : row.relationName, programName: row.programName,
              userName: row.userName} , queryId: row.queryId, uri: row.url,
@@ -281,7 +271,6 @@ function selectTable(res, qid) {
              endTime: row.endTime, elapsed: row.elapsed,
              numTuples: row.numTuples};
         jsonarr.push(jsonob);
-        console.log(getTime() + ' ' + jsonob.numTuples);
       }
    }, function () {
       sendJSONResponse(res, jsonarr);
@@ -311,11 +300,16 @@ function getDbRelKeys(res, qid) {
 function getQueryStatus(res, qid) {
   var db = new sqlite.Database(datasetfile);
   var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
-
   db.get(query, function (err, row) {
-    var json = {status: row.status, queryId: row.queryId,
-                startTime: row.startTime, finishTime: row.endTime,
-                elapsedNanos: row.elapsed, url: row.url};
+    var fin = row.endTime;
+    if (!fin) {
+      fin = 'None';
+    } else {
+      fin = new Date(fin).toISOString();
+    }
+    var json = {status: row.status, queryId: row.queryId, url: row.url,
+                startTime: new Date(row.startTime).toISOString(),
+                finishTime: fin, elapsedNanos: row.elapsed };
     sendJSONResponse(res, json);
     db.close();
   });
@@ -350,7 +344,7 @@ function createTable(err) {
 	     db.run('CREATE TABLE dataset (userName text, programName text, ' +
                     'relationName text, queryId int primary key,' +
 		    'created datatime, url text, status text,' +
-		    'startTime datetime, endTime datetime, elapsed int,' +
+		    'startTime datetime, endTime datetime, elapsed datetime,' +
                     'numTuples int)');
 	   }
     });
@@ -358,5 +352,5 @@ function createTable(err) {
 }
 
 function getTime() {
-  return new Date().toISOString();
+  return new Date().getTime();
 }
