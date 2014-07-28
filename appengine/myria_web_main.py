@@ -360,6 +360,8 @@ class Queries(MyriaPage):
         self.verifyuser()
 
         conn = self.app.connection
+        rest_hostname = self.base_template_vars()["myriaConnection"]
+
         try:
             limit = int(self.request.get('limit', QUERIES_PER_PAGE))
         except (ValueError, TypeError):
@@ -371,6 +373,12 @@ class Queries(MyriaPage):
             max_ = None
         try:
             count, queries = conn.queries(limit, max_)
+
+            # re-write query URLs to point at appengine REST API
+            for q in queries:
+                q['url'] = 'http://%s/query/query-%d'% \
+                    (rest_hostname, q['queryId'])
+
         except myria.MyriaError:
             queries = []
             count = 0
