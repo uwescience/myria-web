@@ -72,7 +72,6 @@ function isInCatalog(res, relkey) {
           var json = {};
 	  sendJSONResponse(res, json);
         } else {
-          console.log(row.schema);
 	  json = {relationKey: {relationName: row.relationName,
              programName: row.programName, userName: row.userName},
              queryId: row.queryId, created: row.created, uri: row.url,
@@ -161,11 +160,11 @@ function insertDataQuery(res, filename, qid, start) {
   // TODO create actual schema information
   var fakeschema = {'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
                     'columnNames': ['x', 'y']};
-  db.serialize(function () {
+   db.serialize(function () {
     var stmt = db.prepare('INSERT INTO dataset VALUES' +
                           '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-             start, null, 0, 0, fakeschema.toString(), function (err) {
+             start, null, 0, 0, JSON.stringify(fakeschema), function (err) {
              if (err) { console.log('insert query: ' + err); }
     });
     stmt.finalize();
