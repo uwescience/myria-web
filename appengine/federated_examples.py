@@ -39,15 +39,17 @@ mimic_federated = '''connect(%afl, "http://vega.cs.washington.edu:8080");
 
 order = scan(public:adhoc:poe_order);
 med = scan(public:adhoc:poe_med);
+waveform = scan(public:adhoc:patient_to_waveform);
 
-X = distinct([from order, med
-              where order.poe_id=med.poe_id
-                    and drug_name="Metoprolol"
-              emit subject_id]);
-store(X, mimic_output);
-
-exportMyriaToSciDB(mimic_output, "J111");
-%afl("store(filter(J111, f0 > 100), J222)");
+X = distinct([from order, waveform, med
+              where
+                order.poe_id=med.poe_id
+                and drug_name="Oxazepam"
+                and order.subject_id=waveform.patient_id
+              emit waveform.waveform_id]);
+store(X, mimic_output_oxazepam);
+exportMyriaToSciDB(mimic_output_oxazepam, "J112");
+%afl("store(filter(J112, f0 > 100), K112)");
 '''
 
 retail_join = '''txheader = scan(txheader);
