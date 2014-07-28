@@ -673,7 +673,7 @@ class Dot(MyriaHandler):
         "The same as get(), here because there may be long programs"
         self.get()
 
-class RawREST(MyriaHandler):
+class RawREST(MyriaPage):
     '''Pass through requests to the Myria back end. Several reasons:
     * To have a single public REST API
     * To support global services like authentication, logging, etc.
