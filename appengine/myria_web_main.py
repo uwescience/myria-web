@@ -150,52 +150,6 @@ def get_datasets(connection):
         return []
 
 
-# TODO factor following clang functions and classes
-def create_clang_json(query, logical_plan, physical_plan):
-    return {"rawQuery": query,
-            "logicalRa": str(logical_plan),
-            "plan": compile(physical_plan),
-            "dot": operator_to_dot(physical_plan)}
-
-
-def create_clang_execute_json(logical_plan, physical_plan, backend):
-    return {"plan": compile(physical_plan), "backend": backend,
-            "logicalRa": logical_plan}
-
-
-def submit_clang_query(compiled, host, port):
-    url = 'http://%s:%d' % (host, port)
-    r = requests.Session().post(url, data=json.dumps(compiled))
-    return r.json()
-
-
-def check_clang_query(qid, host, port):
-    url = 'http://%s:%d/status?qid=%s' % (host, port, qid)
-    r = requests.Session().get(url)
-    return r.json()
-
-
-# TODO fix host , port
-def check_clang_catalog(rel_key, host='localhost', port=1337):
-    url = 'http://%s:%d/catalog' % (host, port)
-    r = requests.Session().post(url, data=json.dumps(rel_key))
-    print r
-
-
-def logical_to_rel_keys(logical_plan):
-    logicalplan = str(logical_plan)
-    start = logicalplan.index('(') + 1
-    end = logicalplan.index(')')
-    relation = logicalplan[start:end]
-    relation = relation.split(':')
-    relation_key = {
-        'userName': relation[0],
-        'programName': relation[1],
-        'relationName': relation[2]
-    }
-    return relation_key
-
-
 class ClangConnection(object):
 
     def __init__(self, hostname, port):
@@ -204,6 +158,26 @@ class ClangConnection(object):
 
     def get_conn_string(self):
         return "%s:%d" % (self.hostname, self.port)
+
+    def create_clang_json(self, query, logical_plan, physical_plan):
+        return {"rawQuery": query,
+                "logicalRa": str(logical_plan),
+                "plan": compile(physical_plan),
+                "dot": operator_to_dot(physical_plan)}
+
+    def create_clang_execute_json(self, logical_plan, physical_plan, backend):
+        return {"plan": compile(physical_plan), "backend": backend,
+                "logicalRa": logical_plan}
+
+    def submit_clang_query(self, compiled):
+        url = 'http://%s:%d' % (self.hostname, self.port)
+        r = requests.Session().post(url, data=json.dumps(compiled))
+        return r.json()
+
+    def check_clang_query(self, qid):
+        url = 'http://%s:%d/status?qid=%s' % (self.hostname, self.port, qid)
+        r = requests.Session().get(url)
+        return r.json()
 
 
 class ClangCatalog(Catalog):
@@ -652,7 +626,7 @@ class Compile(MyriaHandler):
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, language)
             elif backend == "clang":
-                compiled = create_clang_json(
+                compiled = conn.create_clang_json(
                     query, cached_logicalplan, physicalplan)
 
         except requests.ConnectionError:
@@ -711,10 +685,10 @@ class Execute(MyriaHandler):
             elif backend == "clang":
                 clanghost = self.app.clanghostname
                 clangport = self.app.clangport
-                compiled = create_clang_execute_json(
+                compiled = conn.create_clang_execute_json(
                     cached_logicalplan, physicalplan, backend)
-                query_status = submit_clang_query(
-                    compiled, clanghost, clangport)
+                query_status = conn.submit_clang_query(
+                    compiled)
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (clanghost, clangport, query_status['queryId'])
 
@@ -738,10 +712,12 @@ class Execute(MyriaHandler):
 
     def get(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-        conn = self.app.myriaConnection
 
         query_id = self.request.get("queryId")
         backend = self.request.get("backend")
+        conn = self.app.myriaConnection
+        if backend == "clang":
+            conn = self.app.clangConnection
 
         if not query_id:
             self.response.hpeaders['Content-Type'] = 'text/plain'
@@ -752,8 +728,7 @@ class Execute(MyriaHandler):
         if backend == "myria":
             query_status = conn.get_query_status(query_id)
         else:
-            query_status = check_clang_query(
-                query_id, self.app.clanghostname, self.app.clangport)
+            query_status = conn.check_clang_query(query_id)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
