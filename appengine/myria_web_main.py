@@ -7,7 +7,7 @@ import requests
 from threading import Lock
 import urllib
 import webapp2
-
+import ast
 import jinja2
 
 from raco import RACompiler
@@ -221,11 +221,18 @@ class ClangCatalog(Catalog):
             raise RuntimeError(
                 "no schema for relation %s because no connection" % rel_key)
         try:
-            # TODO schema
             dataset_info = self.check_datasets(relation_args)
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
-        schema = json.loads(dataset_info['schema'])
+
+        col_names = [item.encode('utf-8') for item in ast.literal_eval(
+            dataset_info['colNames'])]
+        col_types = [item.encode('utf-8') for item in ast.literal_eval(
+            dataset_info['colTypes'])]
+
+        schema = {"columnNames": col_names,
+                  "columnTypes": col_types}
+
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def check_datasets(self, rel_args):

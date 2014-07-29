@@ -74,7 +74,7 @@ function loadTable() {
 function is_small_dataset(d, cell_limit) {
   return (d['numTuples'] >= 0 &&
          ((cell_limit == 0) ||
-         (d['schema']['columnNames'].length * d['numTuples'] <= cell_limit)));
+         (JSON.parse(d['schema'])['columnNames'].length * d['numTuples'] <= cell_limit)));
 }
 
 function saveState() {
