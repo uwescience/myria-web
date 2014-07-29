@@ -206,6 +206,7 @@ function displayQueryStatus(query_status) {
       dataType: "json",
       url: connection,
       data: data,
+
       async: false})
     .done(function (datasets) {
         if (datasets.length > 0) {
@@ -220,7 +221,6 @@ function displayQueryStatus(query_status) {
                 programName: relKey.programName,
                 relationName: relKey.relationName, numTuples: d.numTuples});
           });
-          html += t.dataset_table({content: d_html});
         }
     });
   }
