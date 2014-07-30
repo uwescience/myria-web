@@ -28,7 +28,8 @@ var editorLanguage = 'MyriaL',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
-  backendProcess = 'myria';
+  backendProcess = 'myria',
+  grappackends = ['grappa', 'clang'];
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -93,7 +94,7 @@ function optimizeplan() {
   });
 
   request = $.getJSON(url).success(function (queryPlan) {
-    if (backendProcess === "clang") {
+    if (_.contains(grappackends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
         var dot = queryPlan.dot;
@@ -185,7 +186,7 @@ function displayQueryStatus(query_status) {
   var status = query_status['status'];
   var html = '';
   var connection = myriaConnection + '/query/query-' + query_id;
-  if (backendProcess == 'clang') {
+  if (_.contains(grappackends, backendProcess)) {
       connection = clangConnection + '/query?qid=' + query_id;
   }
   html += t.row({name: 'Status', val: status});
@@ -197,7 +198,7 @@ function displayQueryStatus(query_status) {
   if (status === 'SUCCESS') {
     connection = 'http://' + myriaConnection + '/dataset';
     var data = {queryId: query_id};
-    if (backendProcess == 'clang') {
+    if (_.contains(grappackends, backendProcess)) {
       connection = 'http://' + clangConnection + '/dataset';
       data = {qid: query_id};
     }
@@ -214,7 +215,7 @@ function displayQueryStatus(query_status) {
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
             var dload = d.uri + '/data?';
-	    if (backendProcess == 'clang') {
+	    if (_.contains(grappackends, backendProcess)) {
       	      dload += 'qid=' + d['queryId'] + '&';
             }
             d_html += t.dataset_row({uri : dload, userName: relKey.userName,

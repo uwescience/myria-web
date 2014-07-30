@@ -543,7 +543,7 @@ class Plan(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend")
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         try:
@@ -570,7 +570,7 @@ class Optimize(MyriaHandler):
         multiway_join = json.loads(self.request.get("multiway_join", "false"))
 
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         assert type(multiway_join) is bool
@@ -611,7 +611,7 @@ class Compile(MyriaHandler):
             multiway_join = False
 
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         cached_logicalplan = str(
@@ -625,7 +625,7 @@ class Compile(MyriaHandler):
             if backend == "myria":
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, language)
-            elif backend == "clang":
+            elif backend in ["clang", "grappa"]:
                 compiled = conn.create_clang_json(
                     query, cached_logicalplan, physicalplan)
 
@@ -660,7 +660,7 @@ class Execute(MyriaHandler):
         if multiway_join == 'false':
             multiway_join = False
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         cached_logicalplan = str(
@@ -682,7 +682,7 @@ class Execute(MyriaHandler):
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
                             (self.app.myriahostname, self.app.myriaport,
                              query_status['queryId'])
-            elif backend == "clang":
+            elif backend in ["clang", "grappa"]:
                 clanghost = self.app.clanghostname
                 clangport = self.app.clangport
                 compiled = conn.create_clang_execute_json(
@@ -716,7 +716,7 @@ class Execute(MyriaHandler):
         query_id = self.request.get("queryId")
         backend = self.request.get("backend")
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         if not query_id:
@@ -748,7 +748,7 @@ class Dot(MyriaHandler):
             multiway_join = False
 
         conn = self.app.myriaConnection
-        if backend == "clang":
+        if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         plan = get_plan(

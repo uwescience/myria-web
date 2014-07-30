@@ -376,6 +376,12 @@ function createTable(err) {
                     'numTuples int, schema text)');
             }
     });
+    var fakeschema = {"columnTypes": ["LONG_TYPE", "LONG_TYPE"],
+                      "columnNames": ["x", "y"]};
+    var stmt = db.prepare('INSERT INTO dataset VALUES' +
+                          '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run("public", "adhoc", "R", 0, 0, "http://localhost:1337",
+             'SUCCESS', 0, 1, 1, 30, JSON.stringify(fakeschema));
   });
 }
 
