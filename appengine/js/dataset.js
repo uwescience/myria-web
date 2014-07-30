@@ -8,8 +8,9 @@ var dataset_templates = {
   toolarge: _.template('<td><abbr title="Too large or size unknown">not available</abbr></td></tr>')
 };
 
-var editorBackendKey = 'myria';
-var backendProcess = 'myria';
+var editorBackendKey = 'myria',
+    backendProcess = 'myria',
+    grappackends = ['grappa', 'clang'];
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -32,7 +33,7 @@ function setBackend(backend) {
 function loadTable() {
   // default to host from myria
   var url = 'http://' + myriaConnection + '/dataset';
-  if (backendProcess == 'clang') {
+  if (_.contains(grappackends, backendProcess)) {
     url = 'http://' + clangConnection + '/dataset';
   }
   var t = dataset_templates;
@@ -42,7 +43,7 @@ function loadTable() {
 
       _.each(data, function (d) {
 	var qload = '';
-	if (backendProcess == 'clang') {
+        if (_.contains(grappackends, backendProcess)) {
 	    qload = '/query?qid=' + d['queryId'];
 	}
         var relation = d['relationKey'];
@@ -53,7 +54,7 @@ function loadTable() {
                 created: d['created']});
 
 	var dload = d['uri'] + '/data?';
-	if (backendProcess == 'clang') {
+        if (_.contains(grappackends, backendProcess)) {
 	    dload += 'qid=' + d['queryId'] + '&';
 	}
 	if (is_small_dataset(d, 100*1000*1000)) {
