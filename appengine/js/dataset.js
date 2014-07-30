@@ -73,10 +73,16 @@ function loadTable() {
 /* A dataset is small if we know its size and the size is below the
     specified cell limit. (Number of cells is # cols * # rows.) */
 function is_small_dataset(d, cell_limit) {
+  var col;
+  if (backendProcess === 'myria') {
+    col = d['schema']['columnNames'].length;
+  }
+  else if (_.contains(grappackends, backendProcess)) {
+    col = JSON.parse(d['schema'])['columnNames'].length;
+  }
   return (d['numTuples'] >= 0 &&
-         ((cell_limit == 0) ||
-         (JSON.parse(d['schema'])['columnNames'].length * d['numTuples'] <= cell_limit)));
-}
+         ((cell_limit == 0) || (col * d['numTuples'] <= cell_limit)));
+  }
 
 function saveState() {
   localStorage.setItem(editorBackendKey,
