@@ -29,7 +29,7 @@ var editorLanguage = 'MyriaL',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
   backendProcess = 'myria',
-  grappackends = ['grappa', 'clang'];
+  grappaends = ['grappa', 'clang'];
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -77,7 +77,6 @@ function optimizeplan() {
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
 
-
   var request = $.post("optimize", {
     query: query,
     language: editorLanguage,
@@ -94,7 +93,7 @@ function optimizeplan() {
   });
 
   request = $.getJSON(url).success(function (queryPlan) {
-    if (_.contains(grappackends, backendProcess)) {
+    if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
         var dot = queryPlan.dot;
@@ -145,7 +144,7 @@ function optimizeplan() {
 	// should not get here
 	console.log("unsupported backend");
     }
-  }).fail(function(jqXHR, textStatus, errorThrown) {
+  }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
   });
@@ -186,7 +185,7 @@ function displayQueryStatus(query_status) {
   var status = query_status['status'];
   var html = '';
   var connection = myriaConnection + '/query/query-' + query_id;
-  if (_.contains(grappackends, backendProcess)) {
+  if (_.contains(grappaends, backendProcess)) {
       connection = clangConnection + '/query?qid=' + query_id;
   }
   html += t.row({name: 'Status', val: status});
@@ -198,7 +197,7 @@ function displayQueryStatus(query_status) {
   if (status === 'SUCCESS') {
     connection = 'http://' + myriaConnection + '/dataset';
     var data = {queryId: query_id};
-    if (_.contains(grappackends, backendProcess)) {
+    if (_.contains(grappaends, backendProcess)) {
       connection = 'http://' + clangConnection + '/dataset';
       data = {qid: query_id};
     }
@@ -215,7 +214,7 @@ function displayQueryStatus(query_status) {
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
             var dload = d.uri + '/data?';
-	    if (_.contains(grappackends, backendProcess)) {
+	    if (_.contains(grappaends, backendProcess)) {
       	      dload += 'qid=' + d['queryId'] + '&';
             }
             d_html += t.dataset_row({uri : dload, userName: relKey.userName,

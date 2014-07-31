@@ -683,14 +683,12 @@ class Execute(MyriaHandler):
                             (self.app.myriahostname, self.app.myriaport,
                              query_status['queryId'])
             elif backend in ["clang", "grappa"]:
-                clanghost = self.app.clanghostname
-                clangport = self.app.clangport
                 compiled = conn.create_clang_execute_json(
                     cached_logicalplan, physicalplan, backend)
-                query_status = conn.submit_clang_query(
-                    compiled)
+                query_status = conn.submit_clang_query(compiled)
                 query_url = 'http://%s:%d/query?qid=%d' %\
-                            (clanghost, clangport, query_status['queryId'])
+                            (self.app.clanghostname, self.app.clangport,
+                             query_status['queryId'])
 
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'

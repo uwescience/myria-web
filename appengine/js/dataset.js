@@ -10,7 +10,7 @@ var dataset_templates = {
 
 var editorBackendKey = 'myria',
     backendProcess = 'myria',
-    grappackends = ['grappa', 'clang'];
+    grappaends = ['grappa', 'clang'];
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -33,7 +33,7 @@ function setBackend(backend) {
 function loadTable() {
   // default to host from myria
   var url = 'http://' + myriaConnection + '/dataset';
-  if (_.contains(grappackends, backendProcess)) {
+  if (_.contains(grappaends, backendProcess)) {
     url = 'http://' + clangConnection + '/dataset';
   }
   var t = dataset_templates;
@@ -43,20 +43,20 @@ function loadTable() {
 
       _.each(data, function (d) {
 	var qload = '';
-        if (_.contains(grappackends, backendProcess)) {
-	    qload = '/query?qid=' + d['queryId'];
+	var dload = d['uri'] + '/data?';
+        var time = d['created'];
+        if (_.contains(grappaends, backendProcess)) {
+	  qload = '/query?qid=' + d['queryId'];
+          dload += 'qid=' + d['queryId'] + '&';
+          time = new Date(time).toISOString();
 	}
         var relation = d['relationKey'];
         html += t.relName({url: d['uri'] + qload, user: relation['userName'],
                 program: relation['programName'],
                 name: relation['relationName']});
         html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
-                created: d['created']});
+                created: time});
 
-	var dload = d['uri'] + '/data?';
-        if (_.contains(grappackends, backendProcess)) {
-	    dload += 'qid=' + d['queryId'] + '&';
-	}
 	if (is_small_dataset(d, 100*1000*1000)) {
 	  html += t.download({url: dload});
 	} else {
@@ -67,7 +67,7 @@ function loadTable() {
       $("#datatable").html(html);
     }).fail (function (res, err) {
       console.log(err);
-  });
+    });
 }
 
 /* A dataset is small if we know its size and the size is below the
@@ -77,7 +77,7 @@ function is_small_dataset(d, cell_limit) {
   if (backendProcess === 'myria') {
     col = d['schema']['columnNames'].length;
   }
-  else if (_.contains(grappackends, backendProcess)) {
+  else if (_.contains(grappaends, backendProcess)) {
     col = JSON.parse(d['schema'])['columnNames'].length;
   }
   return (d['numTuples'] >= 0 &&
