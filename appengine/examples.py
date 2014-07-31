@@ -87,14 +87,36 @@ while continue;
 store(Good, OUTPUT);
 """
 
+plum_tx = '''-- find transactions involving Plum market
+TX = scan(txdetail);
+HD = scan(txheader);
+
+Plum_TX = [from TX, HD
+           where TX.TxHeaderID=HD.TxHeaderID and
+                 HD.RetailerID=114146
+           emit TX.TxHeaderID as header_id,
+                TX.ProductID as product_id];
+
+store(Plum_TX, plum_tx);
+'''
+
+frequent_pairs = '''const SUPPORT: 5;
+
+plum_tx = Scan(plum_tx);
+Pairs = [from plum_tx as b1, plum_tx as b2
+        where b1.header_id=b2.header_id
+               and b1.product_id > b2.product_id
+         emit b1.product_id as item1,
+              b2.product_id as item2,
+              count(b1.header_id) as cnt];
+FreqPairs = [from Pairs where cnt > SUPPORT emit *];
+
+Store(FreqPairs, plum_frequent_item_pairs);
+'''
+
 myria_examples = [
-    ('JustX: A simple projection query on TwitterK', justx),
-    ('Calculate all two hops in the TwitterK relation using a simple join', twohops),
-    ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
-    ('Powers Of 2: Simple iteration example', get_example('iteration.myl')),
-    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
-    ('Aggregate profiling data on each worker', profiling),
-#    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
+    ('Find transactions involving Plum Market', plum_tx),
+    ('Find frequently item pairs for Plum Market', frequent_pairs),
 ]
 
 sql_examples = [
@@ -106,6 +128,6 @@ store(JustX, public:adhoc:JustX);'''),
 store(InDegree, public:adhoc:InDegree);'''),
 ]
 
-examples = { 'datalog' : datalog_examples,
+examples = { 'datalog' : [],
              'myrial' : myria_examples,
-             'sql' : sql_examples }
+             'sql' : [] }
