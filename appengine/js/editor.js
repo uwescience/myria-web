@@ -209,7 +209,7 @@ function displayQueryStatus(query_status) {
 
       async: false})
     .done(function (datasets) {
-        if (datasets.length > 0) {
+      if (datasets.length > 0) {
           var d_html = "";
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
@@ -220,6 +220,7 @@ function displayQueryStatus(query_status) {
             d_html += t.dataset_row({uri : dload, userName: relKey.userName,
                 programName: relKey.programName,
                 relationName: relKey.relationName, numTuples: d.numTuples});
+            html += t.dataset_table({content: d_html});
           });
         }
     });

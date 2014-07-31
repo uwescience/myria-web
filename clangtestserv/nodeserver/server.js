@@ -37,8 +37,7 @@ http.createServer(function (req, res) {
       processQid(req, res, getTuples);
     break;
     default:
-      var start = getTime();
-      processQuery(req, res, start);
+    processQuery(req, res);
     break;
   }
 
@@ -60,15 +59,12 @@ function processRelKey(req, res) {
 }
 
 function isInCatalog(res, relkey) {
-  var db = new sqlite.Database(datasetfile);
   var query = 'SELECT * FROM dataset WHERE userName = ? AND ' +
               'programName = ? AND relationName = ?';
   db.serialize(function () {
     db.get(query, relkey.userName, relkey.programName, relkey.relationName,
 	    function (err, row) {
-      if (err) {
-        console.log('check existence: ' + err);
-      } else {
+      if (err) { console.log('check existence: ' + err); } else {
         if (!row) {
           var json = {};
 	  sendJSONResponse(res, json);
@@ -77,13 +73,12 @@ function isInCatalog(res, relkey) {
              programName: row.programName, userName: row.userName},
              queryId: row.queryId, created: row.created, uri: row.url,
              numTuples: row.numTuples,
-             colNames: JSON.parse(row.schema)["columnNames"],
-             colTypes: JSON.parse(row.schema)["columnTypes"]};
+             colNames: JSON.parse(row.schema).columnNames,
+             colTypes: JSON.parse(row.schema).columnTypes};
 	  sendJSONResponse(res, json);
         }
       }
     });
-    db.close();
   });
 }
 
@@ -96,7 +91,7 @@ function processData(req, res) {
 
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
-      var qid = url_parts.query['qid'];
+      var qid = url_parts.query.qid;
       // TODO handle format json, csv, tsv
       getDbRelKeys(res, qid);
     });
@@ -112,17 +107,16 @@ function processQid(req, res, callbackfn) {
 
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
-      var qid = url_parts.query['qid'];
+      var qid = url_parts.query.qid;
       callbackfn(res, qid);
     });
   }
 }
 
 // Parses the query from posted json
-function processQuery(req, res, start) {
+function processQuery(req, res) {
   var qid = counter;
   if (req.method == "POST") {
-    console.log(start + ' query recieved');
     var body = '';
     req.on('data', function (chunk) {
       body += chunk;
@@ -130,21 +124,15 @@ function processQuery(req, res, start) {
 
     req.on('end', function () {
       var mwebres = JSON.parse(body);
-      var backend = mwebres['backend'];
-      console.log(backend);
-      var plan = mwebres['plan'];
-      var ra = mwebres['logicalRa'];
-      var startindex = ra.indexOf('(') + 1;
-      var endindex = ra.indexOf(')');
-      var filename = ra.substring(startindex, endindex);
-      insertDataQuery(res, filename, qid, start);
+      var backend = mwebres.backend;
+      var plan = mwebres.plan;
+      var filename = parseFilename(mwebres.logicalRa);
+      insertDataQuery(res, filename, qid);
 
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
-	  if (err) {
-	    console.log('parse query' + err);
-	  } else {
-	    runQueryUpdate(filename, qid);
+	  if (err) { console.log('parse query' + err); } else {
+	    runQueryUpdate(filename, qid, backend);
 	  }
 	});
       counter++;
@@ -156,43 +144,42 @@ function processQuery(req, res, start) {
   }
 }
 
-function insertDataQuery(res, filename, qid, start) {
-  var db = new sqlite.Database(datasetfile);
+function parseFilename(logicalplan) {
+  var startindex = logicalplan.indexOf('(') + 1;
+  var endindex = logicalplan.indexOf(')');
+  return logicalplan.substring(startindex, endindex);
+}
+
+function insertDataQuery(res, filename, qid) {
   var curTime = getTime();
   var relkey = filename.split(':');
   var url = 'http://' + hostname + ':' + port;
   getQueryStatus(res, qid);
   var query = 'INSERT INTO dataset VALUES' +
         '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  var fakeschema = {"columnTypes": ["LONG_TYPE", "LONG_TYPE"],
-                    "columnNames": ["x", "y"]};
+  console.log(curTime + ' query recieved');
   db.serialize(function () {
     var stmt = db.prepare(query);
     stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-             start, null, 0, 0, JSON.stringify(fakeschema), function (err) {
+             curTime, null, 0, 0, "", function (err) {
                if (err) { console.log('insertDQ' + err); }
              });
     stmt.finalize();
-    db.close();
   });
 }
 
-function runQueryUpdate(filename, qid) {
-  var db = new sqlite.Database(datasetfile);
+function runQueryUpdate(filename, qid, backend) {
   var query = 'UPDATE dataset SET status = "RUNNING" WHERE queryId = ?';
-  db.serialize(function () {
     console.log(getTime() + ' running');
     db.run(query, qid, function (err) {
       if (err) { console.log('runQU' + err); }
     });
-    runClang(filename, qid);
-    db.close();
-  });
+    runClang(filename, qid, backend);
 }
 
 // compiles and runs the query on server
-function runClang(filename, qid) {
-  var cmd = 'python runclang.py clang ' + filename;
+function runClang(filename, qid, backend) {
+  var cmd = 'python runclang.py ' + backend + ' ' + filename;
   cp.exec(cmd, {cwd: compilepath}, function (error, stdout, stderr) {
     console.log('stdout: ' + stdout);
     if (error) {
@@ -207,14 +194,10 @@ function runClang(filename, qid) {
 }
 
 function updateQueryError(qid) {
-  var db = new sqlite.Database(datasetfile);
   var query = 'UPDATE dataset SET status = "Error" WHERE queryId = ?';
-  db.serialize(function () {
     db.run(query, qid, function (err) {
       if (err) { console.log('updateQE' + err); }
     });
-    db.close();
-  });
 }
 
 function updateCatalog(filename, qid) {
@@ -229,20 +212,15 @@ function updateCatalog(filename, qid) {
 }
 
 function updateNumTuples(qid, num) {
-  var db = new sqlite.Database(datasetfile);
   var query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?';
-//  db.serialize(function () {
     db.run(query, num, qid, function (err) {
       if (err) { console.log('updateNum' + err); }
     });
     updateQueryComplete(qid);
-  db.close();
-//  });
 }
 
 /* Query related functions */
 function updateQueryComplete(qid) {
-  var db = new sqlite.Database(datasetfile);
   var stop = getTime();
   var sel_query = 'SELECT startTime FROM dataset WHERE queryId = ?';
   var upd_query = 'UPDATE dataset SET status = "SUCCESS", endTime = ?,' +
@@ -255,7 +233,6 @@ function updateQueryComplete(qid) {
         db.run(upd_query, stop, diff, qid, function (err) {
           if (err) { console.log('updateQC' + err); }
         });
-        db.close();
       }
     });
   });
@@ -266,26 +243,20 @@ function updateScheme(filename, qid) {
     if (err) { console.log('error reading ' + filename + err); } else {
       var td = data.split("\n");
       var schema = {"columnNames": td[0], "columnTypes": td[1]};
-      var db = new sqlite.Database(datasetfile);
       var query = 'UPDATE dataset SET schema = ? WHERE queryId = ?';
-//      db.serialize(function () {
         db.run(query, JSON.stringify(schema), qid, function (err) {
           if (err) { console.log('updateScheme' + err);}
         });
-        db.close();
-//      });
     }
   });
 }
 
 function selectTable(res, qid) {
-  var db = new sqlite.Database(datasetfile);
   var jsonarr = [];
   var query = 'SELECT * FROM dataset';
   if (qid) {
       query += ' WHERE queryId=' + qid;
   }
-//  db.serialize(function () {
     db.each(query, function (err, row) {
       if (err) { console.log('selTable' + err); } else {
         var jsonob = {relationKey: {relationName: row.relationName,
@@ -297,17 +268,13 @@ function selectTable(res, qid) {
       }
     }, function () {
       sendJSONResponse(res, jsonarr);
-      db.close();
     });
-//  });
 }
 
 // finds filename of qid
 function getDbRelKeys(res, qid) {
-  var db = new sqlite.Database(datasetfile);
   var query = 'SELECT userName, programName, relationName FROM dataset ' +
 	      'WHERE queryId=' + qid;
-//  db.serialize(function () {
     db.each(query, function (err, row) {
       if (err) { console.log('getDBRelKeys' + err); } else {
         var filename = row.userName + ':' + row.programName + ':' +
@@ -315,8 +282,6 @@ function getDbRelKeys(res, qid) {
         getResults(res, filename);
       }
     });
-    db.close();
-//  });
 }
 
 // Retrieves the status of the query in json format
@@ -342,17 +307,14 @@ function getQueryStatus(res, qid) {
 }
 
 function getTuples(res, qid) {
-  var db = new sqlite.Database(datasetfile);
   var query = 'SELECT numTuples FROM dataset WHERE queryId=' + qid;
-//  db.serialize(function () {
     db.get(query, function (err, row) {
       if (err) { console.log('getTuples' + err); } else {
         var json = {numTuples: row.numTuples};
         sendJSONResponse(res, json);
-        db.close();
+
       }
     });
-//  });
 }
 
 function getResults(res, filename) {

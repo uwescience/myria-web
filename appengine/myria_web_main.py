@@ -265,6 +265,7 @@ class MyriaCatalog(Catalog):
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = dataset_info['schema']
+        print schema
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def get_num_servers(self):
@@ -654,11 +655,10 @@ class Execute(MyriaHandler):
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
 
-        if not backend:
-            backend = "myria"
         multiway_join = self.request.get("multiway_join", False)
         if multiway_join == 'false':
             multiway_join = False
+
         conn = self.app.myriaConnection
         if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
@@ -669,13 +669,13 @@ class Execute(MyriaHandler):
         # Generate physical plan
         physicalplan = get_physical_plan(
             query, language, backend, conn, multiway_join)
+
         try:
             if backend == "myria":
                 # Get the Catalog needed to get schemas for compiling the query
                 # .. and compile
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, language)
-
                 compiled['profilingMode'] = profile
                 query_status = conn.submit_query(compiled)
                 # Issue the query
@@ -741,7 +741,7 @@ class Dot(MyriaHandler):
         plan_type = self.request.get("type")
         backend = self.request.get("backend")
         multiway_join = self.request.get("multiway_join", False)
-        print 'fail'
+
         if multiway_join == 'false':
             multiway_join = False
 
