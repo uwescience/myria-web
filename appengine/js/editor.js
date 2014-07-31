@@ -417,12 +417,12 @@ function showSvgModal() {
 
 function resizeEditor() {
   if ($('.editor-row').hasClass("expanded")) {
-    $('.editor-row').removeClass("expanded")
+    $('.editor-row').removeClass("expanded");
     $('.editor-row>div:first').attr("class", "col-md-7");
     $('.editor-row>div:nth-child(2)').attr("class", "col-md-5");
     $('.resize-editor>span').removeClass('glyphicon-resize-small').addClass('glyphicon-resize-full');
   } else {
-    $('.editor-row').addClass("expanded")
+    $('.editor-row').addClass("expanded");
     $('.editor-row>div:first').attr("class", "col-md-12");
     $('.editor-row>div:nth-child(2)').attr("class", "col-md-12");
     $('.resize-editor>span').removeClass('glyphicon-resize-full').addClass('glyphicon-resize-small');
