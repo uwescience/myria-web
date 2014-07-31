@@ -655,7 +655,10 @@ class Execute(MyriaHandler):
         backend = self.request.get("backend")
         profile = self.request.get("profile", False)
 
-        multiway_join = self.request.get("multiway_join", False)
+        if not backend:
+            backend = "myria"
+
+            multiway_join = self.request.get("multiway_join", False)
         if multiway_join == 'false':
             multiway_join = False
 
