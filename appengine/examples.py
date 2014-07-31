@@ -116,7 +116,7 @@ Store(FreqPairs, plum_frequent_item_pairs);
 
 myria_examples = [
     ('Find transactions involving Plum Market', plum_tx),
-    ('Find frequently item pairs for Plum Market', frequent_pairs),
+    ('Find frequent item pairs for Plum Market', frequent_pairs),
 ]
 
 sql_examples = [
