@@ -24,17 +24,17 @@ http.createServer(function (req, res) {
     case '/query':
       processQid(req, res, selectTable);
     break;
-    case '/data':
-      processData(req, res);
-    break;
     case '/status':
       processQid(req, res, getQueryStatus);
     break;
-    case '/catalog':
-      processRelKey(req, res);
-    break;
     case '/tuples':
       processQid(req, res, getTuples);
+    break;
+    case '/data':
+      processData(req, res);
+    break;
+    case '/catalog':
+      processRelKey(req, res);
     break;
     default:
     processQuery(req, res);
@@ -123,10 +123,10 @@ function processQuery(req, res) {
     });
 
     req.on('end', function () {
-      var mwebres = JSON.parse(body);
-      var backend = mwebres.backend;
-      var plan = mwebres.plan;
-      var filename = parseFilename(mwebres.logicalRa);
+      var myriares = JSON.parse(body);
+      var backend = myriares.backend;
+      var plan = myriares.plan;
+      var filename = parseFilename(myriares.logicalRa);
       insertDataQuery(res, filename, qid);
 
       fs.writeFile(compilepath + filename + ".cpp", plan,
@@ -170,16 +170,16 @@ function insertDataQuery(res, filename, qid) {
 
 function runQueryUpdate(filename, qid, backend) {
   var query = 'UPDATE dataset SET status = "RUNNING" WHERE queryId = ?';
-    console.log(getTime() + ' running');
-    db.run(query, qid, function (err) {
-      if (err) { console.log('runQU' + err); }
-    });
-    runClang(filename, qid, backend);
+  console.log(getTime() + ' running');
+  db.run(query, qid, function (err) {
+    if (err) { console.log('runQU' + err); }
+  });
+  runQuery(filename, qid, backend);
 }
 
 // compiles and runs the query on server
-function runClang(filename, qid, backend) {
-  var cmd = 'python runclang.py ' + backend + ' ' + filename;
+function runQuery(filename, qid, backend) {
+  var cmd = 'python run_query.py ' + backend + ' ' + filename;
   cp.exec(cmd, {cwd: compilepath}, function (error, stdout, stderr) {
     console.log('stdout: ' + stdout);
     if (error) {
@@ -188,16 +188,16 @@ function runClang(filename, qid, backend) {
     } else {
       updateCatalog(filename, qid);
       updateScheme(filename, qid);
-      console.log(getTime() + ' job ' + qid + ' ' + filename + ' done');
+      console.log(getTime() + qid + ' ' + filename + ' done on ' + backend);
     }
   });
 }
 
 function updateQueryError(qid) {
   var query = 'UPDATE dataset SET status = "Error" WHERE queryId = ?';
-    db.run(query, qid, function (err) {
-      if (err) { console.log('updateQE' + err); }
-    });
+  db.run(query, qid, function (err) {
+    if (err) { console.log('updateQE' + err); }
+  });
 }
 
 function updateCatalog(filename, qid) {
@@ -213,10 +213,10 @@ function updateCatalog(filename, qid) {
 
 function updateNumTuples(qid, num) {
   var query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?';
-    db.run(query, num, qid, function (err) {
-      if (err) { console.log('updateNum' + err); }
-    });
-    updateQueryComplete(qid);
+  db.run(query, num, qid, function (err) {
+    if (err) { console.log('updateNum' + err); }
+  });
+  updateQueryComplete(qid);
 }
 
 /* Query related functions */
@@ -244,9 +244,9 @@ function updateScheme(filename, qid) {
       var td = data.split("\n");
       var schema = {"columnNames": td[0], "columnTypes": td[1]};
       var query = 'UPDATE dataset SET schema = ? WHERE queryId = ?';
-        db.run(query, JSON.stringify(schema), qid, function (err) {
-          if (err) { console.log('updateScheme' + err);}
-        });
+      db.run(query, JSON.stringify(schema), qid, function (err) {
+        if (err) { console.log('updateScheme' + err);}
+      });
     }
   });
 }
@@ -257,31 +257,31 @@ function selectTable(res, qid) {
   if (qid) {
       query += ' WHERE queryId=' + qid;
   }
-    db.each(query, function (err, row) {
-      if (err) { console.log('selTable' + err); } else {
-        var jsonob = {relationKey: {relationName: row.relationName,
+  db.each(query, function (err, row) {
+    if (err) { console.log('selTable' + err); } else {
+      var jsonob = {relationKey: {relationName: row.relationName,
              programName: row.programName, userName: row.userName},
              queryId: row.queryId, created: row.created, schema: row.schema,
              status: row.status, startTime: row.startTime, endTime: row.endTime,
              elapsedNanos: row.elapsed, numTuples: row.numTuples, uri: row.url};
-        jsonarr.push(jsonob);
-      }
-    }, function () {
-      sendJSONResponse(res, jsonarr);
-    });
+      jsonarr.push(jsonob);
+    }
+  }, function () {
+    sendJSONResponse(res, jsonarr);
+  });
 }
 
 // finds filename of qid
 function getDbRelKeys(res, qid) {
   var query = 'SELECT userName, programName, relationName FROM dataset ' +
 	      'WHERE queryId=' + qid;
-    db.each(query, function (err, row) {
-      if (err) { console.log('getDBRelKeys' + err); } else {
-        var filename = row.userName + ':' + row.programName + ':' +
-	      row.relationName + '.txt';
-        getResults(res, filename);
-      }
-    });
+  db.each(query, function (err, row) {
+    if (err) { console.log('getDBRelKeys' + err); } else {
+      var filename = row.userName + ':' + row.programName + ':' +
+	    row.relationName + '.txt';
+      getResults(res, filename);
+    }
+  });
 }
 
 // Retrieves the status of the query in json format
@@ -291,10 +291,9 @@ function getQueryStatus(res, qid) {
   db.serialize(function () {
     db.get(query, function (err, row) {
       if (err) { console.log('getQS' + err); } else {
-        if (!row.endTime) {
-          var fin = 'None';
-        } else {
-          var fin = new Date(row.endTime).toISOString();
+        var fin = 'None';
+        if (row.endTime) {
+          fin = new Date(row.endTime).toISOString();
         }
         var json = {status: row.status, queryId: row.queryId, url: row.url,
                     startTime: new Date(row.startTime).toISOString(),
@@ -308,13 +307,12 @@ function getQueryStatus(res, qid) {
 
 function getTuples(res, qid) {
   var query = 'SELECT numTuples FROM dataset WHERE queryId=' + qid;
-    db.get(query, function (err, row) {
-      if (err) { console.log('getTuples' + err); } else {
-        var json = {numTuples: row.numTuples};
-        sendJSONResponse(res, json);
-
-      }
-    });
+  db.get(query, function (err, row) {
+    if (err) { console.log('getTuples' + err); } else {
+      var json = {numTuples: row.numTuples};
+      sendJSONResponse(res, json);
+    }
+  });
 }
 
 function getResults(res, filename) {
@@ -354,8 +352,8 @@ function createTable() {
              stmt.run("public", "adhoc", "R", 0, 0, "http://localhost:1337",
                       'SUCCESS', 0, 1, 1, 30, JSON.stringify(fakeschema));
              });
-            }
            }
+         }
     });
   });
 }
