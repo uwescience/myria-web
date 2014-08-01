@@ -179,7 +179,11 @@ function runQueryUpdate(filename, qid, backend) {
 
 // compiles and runs the query on server
 function runQuery(filename, qid, backend) {
-  var cmd = 'python run_query.py ' + backend + ' ' + filename;
+  var cmd = 'python run_query.py ' + backend + ' ';
+  if (backend == 'grappa') {
+    cmd += 'grappa_';
+  }
+  cmd += filename;
   cp.exec(cmd, {cwd: compilepath}, function (error, stdout, stderr) {
     console.log('stdout: ' + stdout);
     if (error) {
@@ -188,7 +192,8 @@ function runQuery(filename, qid, backend) {
     } else {
       updateCatalog(filename, qid);
       updateScheme(filename, qid);
-      console.log(getTime() + qid + ' ' + filename + ' done on ' + backend);
+      console.log(getTime() + ' ' +  qid + ' ' + filename + ' done on '
+                  + backend);
     }
   });
 }
@@ -201,7 +206,6 @@ function updateQueryError(qid) {
 }
 
 function updateCatalog(filename, qid) {
-  filename += '.txt';
   var cmd = 'wc -l < ' + filename;
   cp.exec(cmd, {cwd: datasetpath}, function (error, stdout, stderr) {
     if (error) { console.log('problem with file ' + error); } else {
@@ -278,7 +282,7 @@ function getDbRelKeys(res, qid) {
   db.each(query, function (err, row) {
     if (err) { console.log('getDBRelKeys' + err); } else {
       var filename = row.userName + ':' + row.programName + ':' +
-	    row.relationName + '.txt';
+	    row.relationName;
       getResults(res, filename);
     }
   });
@@ -292,7 +296,7 @@ function getQueryStatus(res, qid) {
     db.get(query, function (err, row) {
       if (err) { console.log('getQS' + err); } else {
         var fin = 'None';
-        if (row.endTime) {
+        if (row && row.endTime) {
           fin = new Date(row.endTime).toISOString();
         }
         var json = {status: row.status, queryId: row.queryId, url: row.url,
