@@ -109,7 +109,3 @@ input[type=range].zoom-range {
 .tablesorter-header[aria-disabled=false] {
   cursor: pointer;
 }
-
-.jumbotron {
-  background-color: #f2dede;
-}
