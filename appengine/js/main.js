@@ -1,4 +1,9 @@
 $(function() {
+  //warn if not in Chrome
+  if (!window.chrome) {
+    $("#page-body").prepend('<div class="jumbotron"><p><strong>Warning: The Myria demo only works properly in Google Chrome.</strong></p></div>');
+  }
+
   //back to top button
   var offset = 220;
   var duration = 300;
