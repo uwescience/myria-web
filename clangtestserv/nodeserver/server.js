@@ -128,7 +128,12 @@ function processQuery(req, res) {
       var plan = myriares.plan;
       var filename = parseFilename(myriares.logicalRa);
       insertDataQuery(res, filename, qid);
-
+      var url = 'http://' + hostname + ':' + port;
+      var params = '-p ' + filename + ' ' + url + ' ' + qid + ' ' + plan;
+      cp.exec('python metastore.py process_query ' + params,
+              function (error, stdout, stderr) {
+                if (error) { console.log(error);  }
+              });
       fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
 	  if (err) { console.log('parse query' + err); } else {
@@ -151,7 +156,8 @@ function parseFilename(logicalplan) {
 }
 
 function insertDataQuery(res, filename, qid) {
-  var curTime = getTime();
+  getQueryStatus(res, qid);
+/*  var curTime = getTime();
   var relkey = filename.split(':');
   var url = 'http://' + hostname + ':' + port;
   getQueryStatus(res, qid);
@@ -165,7 +171,7 @@ function insertDataQuery(res, filename, qid) {
                if (err) { console.log('insertDQ' + err); }
              });
     stmt.finalize();
-  });
+  });*/
 }
 
 function runQueryUpdate(filename, qid, backend) {
