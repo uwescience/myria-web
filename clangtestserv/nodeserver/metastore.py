@@ -12,6 +12,7 @@ compile_path = '../../submodules/raco/c_test_environment/'
 dataset_path = compile_path + 'datasets/'
 scheme_path = compile_path + 'schema/'
 
+
 def parse_options(args):
     parser = argparse.ArgumentParser()
 
@@ -40,6 +41,11 @@ def process_query(params):
 
 
 def write_file(filename, qid, plan):
+    print compile_path + filename + '.cpp'
+    f = open(compile_path + filename + '.cpp', 'w')
+    f.write(plan)
+    print plan
+    f.close()
     pass
 
 

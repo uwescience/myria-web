@@ -134,12 +134,12 @@ function processQuery(req, res) {
               function (error, stdout, stderr) {
                 if (error) { console.log(error);  }
               });
-      fs.writeFile(compilepath + filename + ".cpp", plan,
+/*      fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
-	  if (err) { console.log('parse query' + err); } else {
+	  if (err) { console.log('parse query' + err); } else { */
 	    runQueryUpdate(filename, qid, backend);
-	  }
-	});
+/*	  }
+	});*/
       counter++;
     });
   } else {
