@@ -13,7 +13,7 @@ var schemepath = compilepath + 'schema/';
 var hostname = 'localhost';
 var port = 1337;
 var datasetfile = 'dataset.db';
-var counter = 0;
+var counter = 1;
 var db = new sqlite.Database(datasetfile, createTable);
 
 http.createServer(function (req, res) {
@@ -127,19 +127,22 @@ function processQuery(req, res) {
       var backend = myriares.backend;
       var plan = myriares.plan;
       var filename = parseFilename(myriares.logicalRa);
-      insertDataQuery(res, filename, qid);
       var url = 'http://' + hostname + ':' + port;
-      var params = '-p ' + filename + ' ' + url + ' ' + qid + ' ' + plan;
+      var params = '-p ' + filename + ' ' + url + ' ' + qid;
+
       cp.exec('python metastore.py process_query ' + params,
               function (error, stdout, stderr) {
-                if (error) { console.log(error);  }
+                if (error) { console.log(error); }
+                console.log(stdout);
+                getQueryStatus(res, qid);
               });
-/*      fs.writeFile(compilepath + filename + ".cpp", plan,
+
+      fs.writeFile(compilepath + filename + ".cpp", plan,
         function (err) {
-	  if (err) { console.log('parse query' + err); } else { */
+	  if (err) { console.log('writing query source' + err); } else {
 	    runQueryUpdate(filename, qid, backend);
-/*	  }
-	});*/
+	  }
+	});
       counter++;
     });
   } else {
@@ -156,7 +159,6 @@ function parseFilename(logicalplan) {
 }
 
 function insertDataQuery(res, filename, qid) {
-  getQueryStatus(res, qid);
 /*  var curTime = getTime();
   var relkey = filename.split(':');
   var url = 'http://' + hostname + ':' + port;
@@ -175,11 +177,12 @@ function insertDataQuery(res, filename, qid) {
 }
 
 function runQueryUpdate(filename, qid, backend) {
-  var query = 'UPDATE dataset SET status = "RUNNING" WHERE queryId = ?';
-  console.log(getTime() + ' running');
-  db.run(query, qid, function (err) {
-    if (err) { console.log('runQU' + err); }
-  });
+  cp.exec('python metastore.py update_query_run -p ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+            console.log(stdout);
+          });
+  console.log('running');
   runQuery(filename, qid, backend);
 }
 
@@ -231,21 +234,10 @@ function updateNumTuples(qid, num) {
 
 /* Query related functions */
 function updateQueryComplete(qid) {
-  var stop = getTime();
-  var sel_query = 'SELECT startTime FROM dataset WHERE queryId = ?';
-  var upd_query = 'UPDATE dataset SET status = "SUCCESS", endTime = ?,' +
-        ' elapsed = ? WHERE queryId = ?';
-  db.serialize(function () {
-    // sqlite function to convert isostring back to milliseconds
-    db.get(sel_query, qid, function (err, row) {
-      if (err) { console.log('selQC' + err); } else {
-        var diff = (stop - row.startTime) * 1000000; //turn to nanoseconds
-        db.run(upd_query, stop, diff, qid, function (err) {
-          if (err) { console.log('updateQC' + err); }
-        });
-      }
-    });
-  });
+  cp.exec('python metastore.py update_query_success -p ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+          });
 }
 
 function updateScheme(filename, qid) {
@@ -296,23 +288,15 @@ function getDbRelKeys(res, qid) {
 
 // Retrieves the status of the query in json format
 function getQueryStatus(res, qid) {
-  var db = new sqlite.Database(datasetfile);
-  var query = 'SELECT * FROM dataset WHERE queryId=' + qid;
-  db.serialize(function () {
-    db.get(query, function (err, row) {
-      if (err) { console.log('getQS' + err); } else {
-        var fin = 'None';
-        if (row && row.endTime) {
-          fin = new Date(row.endTime).toISOString();
-        }
-        var json = {status: row.status, queryId: row.queryId, url: row.url,
-                    startTime: new Date(row.startTime).toISOString(),
-                    finishTime: fin, elapsedNanos: row.elapsed };
-        sendJSONResponse(res, json);
-        db.close();
-      }
-    });
-  });
+  cp.exec('python metastore.py get_query_status -p ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); } else {
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.writeHead(200, {'Content-Type': 'application/json'});
+              res.write(stdout);
+              res.end();
+            }
+          });
 }
 
 function getTuples(res, qid) {

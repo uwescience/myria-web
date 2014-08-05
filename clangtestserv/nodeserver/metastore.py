@@ -7,6 +7,8 @@ import sys
 import sqlite3
 import time
 import json
+import datetime
+#from datetime import date
 conn = sqlite3.connect('dataset.db')
 compile_path = '../../submodules/raco/c_test_environment/'
 dataset_path = compile_path + 'datasets/'
@@ -26,6 +28,7 @@ def parse_options(args):
     return ns
 
 
+# params: filename url qid
 def process_query(params):
     relkey = params[0].split(':')
     qid = params[2]
@@ -37,16 +40,58 @@ def process_query(params):
     c.execute(query, param_list)
     conn.commit()
     conn.close()
-    write_file(params[0], qid, params[3])
 
 
-def write_file(filename, qid, plan):
-    print compile_path + filename + '.cpp'
-    f = open(compile_path + filename + '.cpp', 'w')
-    f.write(plan)
-    print plan
+# params: filename qid plan
+def write_file(params):
+    f = open(compile_path + params[0] + '.cpp', 'w')
+    f.write(params[2])
     f.close()
-    pass
+
+
+# params: qid
+def update_query_run(params):
+    query = 'UPDATE dataset SET status = "RUNNING" WHERE queryId = ?'
+    c = conn.cursor()
+    c.execute(query, (params[0],))
+    conn.commit()
+    conn.close()
+
+
+# params: qid
+def update_query_success(params):
+    qid = params[0]
+    stop = time.time()
+    sel_query = 'SELECT startTime FROM dataset WHERE queryId = ?'
+    upd_query = 'UPDATE dataset SET status = "SUCCESS", endTime = ?,' + \
+                'elapsed = ? WHERE queryId = ?'
+    c = conn.cursor()
+    c.execute(sel_query, (qid,))
+    start = c.fetchone()[0]
+    elapsed = (stop - start) * 1000000000  # turn to nanoseconds
+    params_list = (stop, elapsed, qid)
+    c.execute(upd_query, params_list)
+    conn.commit()
+    conn.close()
+
+
+# params qid
+def get_query_status(params):
+    c = conn.cursor()
+    query = 'SELECT * FROM dataset WHERE queryId= ?'
+    c.execute(query, (params[0],))
+    row = c.fetchone()
+    if not row[8]:
+        fin = 'None'
+        elapsed = time.time()
+    else:
+        fin = datetime.datetime.fromtimestamp(row[8]).isoformat()
+        elapsed = row[9]
+    res = {"status": row[6], "queryId": row[3], "url": row[5],
+           "startTime": datetime.datetime.fromtimestamp(row[7]).isoformat(),
+           "finishTime": fin, "elapsedNanos": elapsed}
+    conn.close()
+    print json.dumps(res)
 
 
 def main(args):
@@ -55,8 +100,14 @@ def main(args):
     params = opt.p
     if func == 'process_query':
         process_query(params)
-    elif func == 'clang':
-        pass
+    elif func == 'get_query_status':
+        get_query_status(params)
+    elif func == 'update_query_run':
+        update_query_run(params)
+    elif func == 'update_query_success':
+        update_query_success(params)
+    elif func == 'write_file':
+        write_file(params)
 
 
 if __name__ == "__main__":

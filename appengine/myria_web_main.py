@@ -204,8 +204,7 @@ class ClangCatalog(Catalog):
         col_types = [item.encode('utf-8') for item in ast.literal_eval(
             dataset_info['colTypes'])]
 
-        schema = {"columnNames": col_names,
-                  "columnTypes": col_types}
+        schema = {'columnNames': col_names, 'columnTypes': col_types}
 
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
