@@ -21,8 +21,10 @@ http.createServer(function (req, res) {
 
   switch(path) {
     case '/dataset':
+      selectTable(res);
+    break;
     case '/query':
-      processQid(req, res, selectTable);
+      processQid(req, res, selectRow);
     break;
     case '/status':
       processQid(req, res, getQueryStatus);
@@ -58,29 +60,16 @@ function processRelKey(req, res) {
   }
 }
 
-function isInCatalog(res, relkey) {
-  var query = 'SELECT * FROM dataset WHERE userName = ? AND ' +
-              'programName = ? AND relationName = ?';
-  db.serialize(function () {
-    db.get(query, relkey.userName, relkey.programName, relkey.relationName,
-	    function (err, row) {
-      if (err) { console.log('check existence: ' + err); } else {
-        if (!row) {
-          var json = {};
-	  sendJSONResponse(res, json);
-        } else {
-	  json = {relationKey: {relationName: row.relationName,
-             programName: row.programName, userName: row.userName},
-             queryId: row.queryId, created: row.created, uri: row.url,
-             numTuples: row.numTuples,
-             colNames: JSON.parse(row.schema).columnNames,
-             colTypes: JSON.parse(row.schema).columnTypes};
-	  sendJSONResponse(res, json);
-        }
-      }
-    });
-  });
+function isInCatalog(res, rkey) {
+  var params = rkey.userName + ' ' + rkey.programName + ' ' + rkey.relationName;
+  cp.exec('python metastore.py check_catalog -p ' + params,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+            console.log(stdout);
+            sendJSONResponse(res, JSON.parse(stdout));
+          });
 }
+
 
 function processData(req, res) {
   if (req.method == "GET") {
@@ -128,13 +117,13 @@ function processQuery(req, res) {
       var plan = myriares.plan;
       var filename = parseFilename(myriares.logicalRa);
       var url = 'http://' + hostname + ':' + port;
-      var params = '-p ' + filename + ' ' + url + ' ' + qid;
-
-      cp.exec('python metastore.py process_query ' + params,
+      var params = filename + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
+      cp.exec('python metastore.py process_query -p ' + params,
               function (error, stdout, stderr) {
-                if (error) { console.log(error); }
-                console.log(stdout);
-                getQueryStatus(res, qid);
+                if (error) { console.log(error); } else {
+                  console.log(stdout);
+                  getQueryStatus(res, qid);
+                }
               });
 
       fs.writeFile(compilepath + filename + ".cpp", plan,
@@ -159,70 +148,43 @@ function parseFilename(logicalplan) {
 }
 
 function runQueryUpdate(filename, qid, backend) {
-  cp.exec('python metastore.py update_query_run -p ' + qid,
+  var params = qid + ' ' + filename + ' ' + backend;
+  cp.exec('python metastore.py update_query_run -p ' + params,
           function (error, stdout, stderr) {
             if (error) { console.log(error); }
             console.log(stdout);
           });
-  console.log('running');
-  runQuery(filename, qid, backend);
 }
 
-// compiles and runs the query on server
-function runQuery(filename, qid, backend) {
-  var cmd = 'python run_query.py ' + backend + ' ';
-  if (backend == 'grappa') {
-    cmd += 'grappa_';
-  }
-  cmd += filename;
-  cp.exec(cmd, {cwd: compilepath}, function (error, stdout, stderr) {
-    console.log('stdout: ' + stdout);
-    if (error) {
-      console.log(getTime() + ' ' + error);
-      updateQueryError(qid, error);
-    } else {
-      updateCatalog(filename, qid);
-      updateScheme(filename, qid);
-      console.log(getTime() + ' ' +  qid + ' ' + filename + ' done on '
-                  + backend);
-    }
+function selectTable(res) {
+  cp.exec('python metastore.py select_table', function (error, stdout, stderr) {
+            if (error) { console.log(error); } else {
+              console.log(JSON.parse(stdout));
+              sendJSONResponse(res, stdout);
+            }
   });
 }
-
-function updateQueryError(qid) {
-  cp.exec('python metastore.py update_query_error -p ' + qid,
-          function (error, stdout, stderr) {
-            if (error) { console.log(error); }
-          });
+/*
+var jsonarr = [];
+  var query = 'SELECT * FROM dataset';
+  db.each(query, function (err, row) {
+    if (err) { console.log('selTable' + err); } else {
+      var jsonob = {relationKey: {relationName: row.relationName,
+             programName: row.programName, userName: row.userName},
+             queryId: row.queryId, created: row.created, schema: row.schema,
+             status: row.status, startTime: row.startTime, endTime: row.endTime,
+             elapsedNanos: row.elapsed, numTuples: row.numTuples, uri: row.url};
+      jsonarr.push(jsonob);
+    }
+  }, function () {
+    console.log('sel');
+    sendJSONResponse(res, jsonarr);
+  });
 }
+ */
 
-function updateCatalog(filename, qid) {
-  cp.exec('python metastore.py update_catalog -p ' + filename + ' ' + qid,
-          function (error, stdout, stderr) {
-            if (error) { console.log(error); }
-            updateQueryComplete(qid);
-          });
-
-}
-
-function updateScheme(filename, qid) {
-  cp.exec('python metastore.py update_scheme -p ' + filename + ' ' + qid,
-          function (error, stdout, stderr) {
-            if (error) { console.log(error); }
-          });
-}
-
-/* Query related functions */
-function updateQueryComplete(qid) {
-  cp.exec('python metastore.py update_query_success -p ' + qid,
-          function (error, stdout, stderr) {
-            if (error) { console.log(error); }
-          });
-}
-
-
-function selectTable(res, qid) {
-  var jsonarr = [];
+function selectRow(res, qid) {
+ var jsonarr = [];
   var query = 'SELECT * FROM dataset';
   if (qid) {
       query += ' WHERE queryId=' + qid;
@@ -237,9 +199,18 @@ function selectTable(res, qid) {
       jsonarr.push(jsonob);
     }
   }, function () {
+    console.log('qid');
     sendJSONResponse(res, jsonarr);
   });
 }
+/*cp.exec('python metastore.py select_row -p ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); } else {
+              console.log(stdout);
+              sendJSONResponse(res, stdout);
+            }
+          });
+}*/
 
 // finds filename of qid
 function getDbRelKeys(res, qid) {

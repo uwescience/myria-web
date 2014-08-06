@@ -32,7 +32,9 @@ def parse_options(args):
 
 # params: filename url qid
 def process_query(params):
-    relkey = params[0].split(':')
+    conn = sqlite3.connect('dataset.db')
+    filename = params[0]
+    relkey = filename.split(':')
     qid = params[2]
     c = conn.cursor()
     cur_time = time.time()
@@ -42,49 +44,70 @@ def process_query(params):
     c.execute(query, param_list)
     conn.commit()
     conn.close()
+    print str(cur_time) + ' ' + qid + ' started'
 
 
-# params: filename qid plan
-def write_file(params):
-    f = open(compile_path + params[0] + '.cpp', 'w')
-    f.write(params[2])
-    f.close()
-
-
-# params: qid
+# params: qid filename backend
 def update_query_run(params):
+    conn = sqlite3.connect('dataset.db')
     query = 'UPDATE dataset SET status = "RUNNING" WHERE queryId = ?'
     c = conn.cursor()
     c.execute(query, (params[0],))
     conn.commit()
-    conn.close()
+    run_query(params)
 
 
+# params: qid filename backend
 def run_query(params):
-    backend = params[0]
+    qid = params[0]
     filename = params[1]
-    cmd = 'python run_query.py ' + backend + ' '
+    backend = params[2]
+    cmd = ['python', 'run_query.py']
+    cmd.append(backend)
     if backend == 'grappa':
-        cmd += 'grappa_'
-    cmd += filename
+        filename = 'grappa_' + filename
+    cmd.append(filename)
     try:
-        p = subprocess.check_call(cmd, cwd=compile_path)
-    except Exception as e:
-        print e
+        subprocess.check_call(cmd, cwd=compile_path)
+        update_catalog(filename, qid)
+        update_scheme(filename, qid)
+    except subprocess.CalledProcessError as e:
+        update_query_error(qid, e)
 
 
-# params: qid
-def update_query_error(params):
+def update_query_error(qid, e):
     query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
     c = conn.cursor()
-    c.execute(query, (params[0],))
+    c.execute(query, (qid,))
     conn.commit()
     conn.close()
+    print 'error' + e
 
 
-# params: qid
-def update_query_success(params):
-    qid = params[0]
+def update_catalog(filename, qid):
+    filename = dataset_path + filename
+    p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
+    p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+    output = p2.communicate()[0]
+    c = conn.cursor()
+    query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
+    c.execute(query, (output, qid))
+    conn.commit()
+
+
+def update_scheme(filename, qid):
+    f = open(scheme_path + filename, 'r')
+    data = f.read().split('\n')
+    schema = {'columnNames': data[0], 'columnTypes': data[1]}
+    query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+    c = conn.cursor()
+    c.execute(query, (json.dumps(schema), qid))
+    conn.commit()
+    update_query_success(qid)
+
+
+def update_query_success(qid):
     stop = time.time()
     sel_query = 'SELECT startTime FROM dataset WHERE queryId = ?'
     upd_query = 'UPDATE dataset SET status = "SUCCESS", endTime = ?,' + \
@@ -97,32 +120,7 @@ def update_query_success(params):
     c.execute(upd_query, params_list)
     conn.commit()
     conn.close()
-
-
-# params: filename qid
-def update_catalog(params):
-    filename = dataset_path + params[0]
-    p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
-    p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    output = p2.communicate()[0]
-    c = conn.cursor()
-    query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
-    c.execute(query, (output, params[1]))
-    conn.commit()
-    conn.close()
-
-
-# params: filename qid
-def update_scheme(params):
-    f = open(scheme_path + params[0], 'r')
-    data = f.read().split('\n')
-    schema = {'columnNames': data[0], 'columnTypes': data[1]}
-    query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-    c = conn.cursor()
-    c.execute(query, (json.dumps(schema), params[1]))
-    conn.commit()
-    conn.close()
+    print str(stop) + ' ' + qid + ' done'
 
 
 # params: qid
@@ -137,11 +135,65 @@ def get_query_status(params):
     else:
         fin = datetime.datetime.fromtimestamp(row[8]).isoformat()
         elapsed = row[9]
-    res = {"status": row[6], "queryId": row[3], "url": row[5],
-           "startTime": datetime.datetime.fromtimestamp(row[7]).isoformat(),
-           "finishTime": fin, "elapsedNanos": elapsed}
+    res = {'status': row[6], 'queryId': row[3], 'url': row[5],
+           'startTime': datetime.datetime.fromtimestamp(row[7]).isoformat(),
+           'finishTime': fin, 'elapsedNanos': elapsed}
     conn.close()
     print json.dumps(res)
+
+
+# params: userName programName relationName
+def check_catalog(params):
+    c = conn.cursor()
+    query = 'SELECT * FROM dataset WHERE userName = ? AND ' + \
+            'programName = ? AND relationName = ?'
+    c.execute(query, (params[0], params[1], params[2],))
+    row = c.fetchone()
+    res = {}
+    if not row:
+        print json.dumps(res)
+    else:
+        res = {'relationKey': {'userName': params[0], 'programName': params[1],
+                               'relationName': params[2]}, 'queryId': row[3],
+               'created': row[4], 'url': row[5], 'numTuples': row[10],
+               'colNames': json.dumps(row[11])['columnNames'],
+               'colTypes': json.dumps(row[11])['columnTypes']}
+        print json.dumps(res)
+
+
+def select_table():
+    conn = sqlite3.connect('dataset.db')
+    res = []
+    query = 'SELECT * FROM dataset'
+    c = conn.cursor()
+    for row in c.execute(query):
+        scheme = json.loads(row[11])
+        val = {'relationKey': {'userName': row[0], 'programName': row[1],
+                               'relationName': row[2]}, 'queryId': row[3],
+               'created': row[4], 'uri': row[5], 'status': row[6],
+               'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
+               'numTuples': row[10], 'schema': scheme}
+        res.append(val)
+    conn.close()
+    print res
+
+
+# params: qid
+def select_row(params):
+    conn = sqlite3.connect('dataset.db')
+    res = []
+    query = 'SELECT * FROM dataset WHERE queryId = ?'
+    c = conn.cursor()
+    for row in c.execute(query, (params[0],)):
+        scheme = json.loads(row[11])
+        val = {'relationKey': {'userName': row[0], 'programName': row[1],
+                               'relationName': row[2]}, 'queryId': row[3],
+               'created': row[4], 'uri': row[5], 'status': row[6],
+               'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
+               'numTuples': row[10], 'schema': scheme}
+        res.append(val)
+    conn.close()
+    print res
 
 
 def main(args):
@@ -154,19 +206,12 @@ def main(args):
         get_query_status(params)
     elif func == 'update_query_run':
         update_query_run(params)
-    elif func == 'run_query':
-        run_query(params)
-    elif func == 'update_query_error':
-        update_query_error(params)
-    elif func == 'update_query_success':
-        update_query_success(params)
-    elif func == 'update_catalog':
-        update_catalog(params)
-    elif func == 'update_scheme':
-        update_scheme(params)
-    elif func == 'write_file':
-        write_file(params)
-
+    elif func == 'check_catalog':
+        check_catalog(params)
+    elif func == 'select_table':
+        select_table()
+    elif func == 'select_row':
+        select_row(params)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
