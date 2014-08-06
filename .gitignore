@@ -3,4 +3,6 @@
 .*.swp
 appengine/VERSION
 appengine/BRANCH
+/google_appengine
+/google_appengine*.zip
 .idea

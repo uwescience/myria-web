@@ -1,4 +1,9 @@
 $(function() {
+  //warn if not in Chrome
+  if (!window.chrome) {
+    $("#page-body").prepend('<div class="alert alert-danger" role="alert"><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
+  }
+
   //back to top button
   var offset = 220;
   var duration = 300;
