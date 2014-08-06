@@ -8,7 +8,9 @@ import sqlite3
 import time
 import json
 import datetime
-#from datetime import date
+import subprocess
+from subprocess import Popen
+
 conn = sqlite3.connect('dataset.db')
 compile_path = '../../submodules/raco/c_test_environment/'
 dataset_path = compile_path + 'datasets/'
@@ -59,6 +61,15 @@ def update_query_run(params):
 
 
 # params: qid
+def update_query_error(params):
+    query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
+    c = conn.cursor()
+    c.execute(query, (params[0],))
+    conn.commit()
+    conn.close()
+
+
+# params: qid
 def update_query_success(params):
     qid = params[0]
     stop = time.time()
@@ -75,7 +86,33 @@ def update_query_success(params):
     conn.close()
 
 
-# params qid
+# params: filename qid
+def update_catalog(params):
+    filename = dataset_path + params[0]
+    p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
+    p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+    output = p2.communicate()[0]
+    c = conn.cursor()
+    query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
+    c.execute(query, (output, params[1]))
+    conn.commit()
+    conn.close()
+
+
+# params: filename qid
+def update_scheme(params):
+    f = open(scheme_path + params[0], 'r')
+    data = f.read().split('\n')
+    schema = {'columnNames': data[0], 'columnTypes': data[1]}
+    query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+    c = conn.cursor()
+    c.execute(query, (json.dumps(schema), params[1]))
+    conn.commit()
+    conn.close()
+
+
+# params: qid
 def get_query_status(params):
     c = conn.cursor()
     query = 'SELECT * FROM dataset WHERE queryId= ?'
@@ -104,8 +141,14 @@ def main(args):
         get_query_status(params)
     elif func == 'update_query_run':
         update_query_run(params)
+    elif func == 'update_query_error':
+        update_query_error(params)
     elif func == 'update_query_success':
         update_query_success(params)
+    elif func == 'update_catalog':
+        update_catalog(params)
+    elif func == 'update_scheme':
+        update_scheme(params)
     elif func == 'write_file':
         write_file(params)
 

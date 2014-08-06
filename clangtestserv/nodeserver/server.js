@@ -158,24 +158,6 @@ function parseFilename(logicalplan) {
   return logicalplan.substring(startindex, endindex);
 }
 
-function insertDataQuery(res, filename, qid) {
-/*  var curTime = getTime();
-  var relkey = filename.split(':');
-  var url = 'http://' + hostname + ':' + port;
-  getQueryStatus(res, qid);
-  var query = 'INSERT INTO dataset VALUES' +
-        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  console.log(curTime + ' query recieved');
-  db.serialize(function () {
-    var stmt = db.prepare(query);
-    stmt.run(relkey[0], relkey[1], relkey[2], qid, curTime, url, 'ACCEPTED',
-             curTime, null, 0, 0, "", function (err) {
-               if (err) { console.log('insertDQ' + err); }
-             });
-    stmt.finalize();
-  });*/
-}
-
 function runQueryUpdate(filename, qid, backend) {
   cp.exec('python metastore.py update_query_run -p ' + qid,
           function (error, stdout, stderr) {
@@ -208,28 +190,26 @@ function runQuery(filename, qid, backend) {
 }
 
 function updateQueryError(qid) {
-  var query = 'UPDATE dataset SET status = "Error" WHERE queryId = ?';
-  db.run(query, qid, function (err) {
-    if (err) { console.log('updateQE' + err); }
-  });
+  cp.exec('python metastore.py update_query_error -p ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+          });
 }
 
 function updateCatalog(filename, qid) {
-  var cmd = 'wc -l < ' + filename;
-  cp.exec(cmd, {cwd: datasetpath}, function (error, stdout, stderr) {
-    if (error) { console.log('problem with file ' + error); } else {
-      var num = parseInt(stdout);
-      updateNumTuples(qid, num);
-    }
-  });
+  cp.exec('python metastore.py update_catalog -p ' + filename + ' ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+            updateQueryComplete(qid);
+          });
+
 }
 
-function updateNumTuples(qid, num) {
-  var query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?';
-  db.run(query, num, qid, function (err) {
-    if (err) { console.log('updateNum' + err); }
-  });
-  updateQueryComplete(qid);
+function updateScheme(filename, qid) {
+  cp.exec('python metastore.py update_scheme -p ' + filename + ' ' + qid,
+          function (error, stdout, stderr) {
+            if (error) { console.log(error); }
+          });
 }
 
 /* Query related functions */
@@ -240,18 +220,6 @@ function updateQueryComplete(qid) {
           });
 }
 
-function updateScheme(filename, qid) {
-  fs.readFile(schemepath + filename, {encoding: 'utf8'}, function (err, data) {
-    if (err) { console.log('error reading ' + filename + err); } else {
-      var td = data.split("\n");
-      var schema = {"columnNames": td[0], "columnTypes": td[1]};
-      var query = 'UPDATE dataset SET schema = ? WHERE queryId = ?';
-      db.run(query, JSON.stringify(schema), qid, function (err) {
-        if (err) { console.log('updateScheme' + err);}
-      });
-    }
-  });
-}
 
 function selectTable(res, qid) {
   var jsonarr = [];
