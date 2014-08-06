@@ -60,6 +60,19 @@ def update_query_run(params):
     conn.close()
 
 
+def run_query(params):
+    backend = params[0]
+    filename = params[1]
+    cmd = 'python run_query.py ' + backend + ' '
+    if backend == 'grappa':
+        cmd += 'grappa_'
+    cmd += filename
+    try:
+        p = subprocess.check_call(cmd, cwd=compile_path)
+    except Exception as e:
+        print e
+
+
 # params: qid
 def update_query_error(params):
     query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
@@ -141,6 +154,8 @@ def main(args):
         get_query_status(params)
     elif func == 'update_query_run':
         update_query_run(params)
+    elif func == 'run_query':
+        run_query(params)
     elif func == 'update_query_error':
         update_query_error(params)
     elif func == 'update_query_success':

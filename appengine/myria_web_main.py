@@ -160,14 +160,13 @@ class ClangConnection(object):
         return "%s:%d" % (self.hostname, self.port)
 
     def create_clang_json(self, query, logical_plan, physical_plan):
-        return {"rawQuery": query,
-                "logicalRa": str(logical_plan),
-                "plan": compile(physical_plan),
-                "dot": operator_to_dot(physical_plan)}
+        return {'rawQuery': query, 'logicalRa': str(logical_plan),
+                'plan': compile(physical_plan),
+                'dot': operator_to_dot(physical_plan)}
 
     def create_clang_execute_json(self, logical_plan, physical_plan, backend):
-        return {"plan": compile(physical_plan), "backend": backend,
-                "logicalRa": logical_plan}
+        return {'plan': compile(physical_plan), 'backend': backend,
+                'logicalRa': logical_plan}
 
     def submit_clang_query(self, compiled):
         url = 'http://%s:%d' % (self.hostname, self.port)
