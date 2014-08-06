@@ -198,7 +198,7 @@ function displayQueryStatus(query_status) {
     connection = 'http://' + myriaConnection + '/dataset';
     var data = {queryId: query_id};
     if (_.contains(grappaends, backendProcess)) {
-      connection = 'http://' + clangConnection + '/dataset';
+      connection = 'http://' + clangConnection + '/query';
       data = {qid: query_id};
     }
     // Populate the datasets created table
@@ -206,7 +206,6 @@ function displayQueryStatus(query_status) {
       dataType: "json",
       url: connection,
       data: data,
-
       async: false})
     .done(function (datasets) {
       if (datasets.length > 0) {
