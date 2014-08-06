@@ -153,11 +153,12 @@ def check_catalog(params):
     if not row:
         print json.dumps(res)
     else:
+        colN = json.loads(row[11])['columnNames']
+        colT = json.loads(row[11])['columnTypes']
         res = {'relationKey': {'userName': params[0], 'programName': params[1],
                                'relationName': params[2]}, 'queryId': row[3],
                'created': row[4], 'url': row[5], 'numTuples': row[10],
-               'colNames': json.dumps(row[11])['columnNames'],
-               'colTypes': json.dumps(row[11])['columnTypes']}
+               'colNames': colN, 'colTypes': colT}
         print json.dumps(res)
 
 
@@ -175,7 +176,7 @@ def select_table():
                'numTuples': row[10], 'schema': scheme}
         res.append(val)
     conn.close()
-    print res
+    print json.dumps(res)
 
 
 # params: qid
@@ -193,7 +194,7 @@ def select_row(params):
                'numTuples': row[10], 'schema': scheme}
         res.append(val)
     conn.close()
-    print res
+    print json.dumps(res)
 
 
 def main(args):

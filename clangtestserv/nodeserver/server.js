@@ -159,32 +159,13 @@ function runQueryUpdate(filename, qid, backend) {
 function selectTable(res) {
   cp.exec('python metastore.py select_table', function (error, stdout, stderr) {
             if (error) { console.log(error); } else {
-              console.log(JSON.parse(stdout));
-              sendJSONResponse(res, stdout);
+              sendJSONResponse(res, JSON.parse(stdout));
             }
   });
 }
-/*
-var jsonarr = [];
-  var query = 'SELECT * FROM dataset';
-  db.each(query, function (err, row) {
-    if (err) { console.log('selTable' + err); } else {
-      var jsonob = {relationKey: {relationName: row.relationName,
-             programName: row.programName, userName: row.userName},
-             queryId: row.queryId, created: row.created, schema: row.schema,
-             status: row.status, startTime: row.startTime, endTime: row.endTime,
-             elapsedNanos: row.elapsed, numTuples: row.numTuples, uri: row.url};
-      jsonarr.push(jsonob);
-    }
-  }, function () {
-    console.log('sel');
-    sendJSONResponse(res, jsonarr);
-  });
-}
- */
 
 function selectRow(res, qid) {
- var jsonarr = [];
+/* var jsonarr = [];
   var query = 'SELECT * FROM dataset';
   if (qid) {
       query += ' WHERE queryId=' + qid;
@@ -197,20 +178,19 @@ function selectRow(res, qid) {
              status: row.status, startTime: row.startTime, endTime: row.endTime,
              elapsedNanos: row.elapsed, numTuples: row.numTuples, uri: row.url};
       jsonarr.push(jsonob);
-    }
+ }
   }, function () {
     console.log('qid');
     sendJSONResponse(res, jsonarr);
   });
-}
-/*cp.exec('python metastore.py select_row -p ' + qid,
+}*/
+cp.exec('python metastore.py select_row -p ' + qid,
           function (error, stdout, stderr) {
             if (error) { console.log(error); } else {
-              console.log(stdout);
-              sendJSONResponse(res, stdout);
+              sendJSONResponse(res, JSON.parse(stdout));
             }
           });
-}*/
+}
 
 // finds filename of qid
 function getDbRelKeys(res, qid) {
