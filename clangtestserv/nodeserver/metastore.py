@@ -43,7 +43,6 @@ def process_query(params):
                   'ACCEPTED', cur_time, None, 0, 0, "")
     c.execute(query, param_list)
     conn.commit()
-    conn.close()
     print str(cur_time) + ' ' + qid + ' started'
 
 
@@ -97,8 +96,8 @@ def update_catalog(filename, qid):
 
 
 def update_scheme(filename, qid):
-    f = open(scheme_path + filename, 'r')
-    data = f.read().split('\n')
+    with open(scheme_path + filename, 'r') as f:
+        data = f.read().split('\n')
     schema = {'columnNames': data[0], 'columnTypes': data[1]}
     query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
     c = conn.cursor()
@@ -197,10 +196,57 @@ def select_row(params):
     print json.dumps(res)
 
 
+# params: qid
+def get_rel_keys(params):
+    query = 'SELECT userName, programName, relationName FROM dataset ' + \
+            'WHERE queryId= ?'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query, params[0])
+    row = c.fetchone()
+    filename = '%s:%s:%s' % (row[0], row[1], row[2])
+    conn.close()
+    get_query_results(filename)
+
+
+def get_query_results(filename):
+    res = []
+    with open(dataset_path + filename, 'r') as f:
+        data = f.read().split('\n')
+        for row in data:
+            if row:
+                val = {'tuple': row}
+                res.append(val)
+    print json.dumps(res)
+
+
+def get_num_tuples(params):
+    query = 'SELECT numTuples FROM dataset WHERE queryId= ?'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query, params[0])
+    row = c.fetchone()
+    res = {'numTuples': row[0]}
+    conn.close()
+    print json.dumps(res)
+
+
+def check_db():
+    create = 'CREATE TABLE IF NOT EXISTS dataset (userName text,' + \
+             ' programName text, relationName text, queryId int ' + \
+             ' primary key, created datatime, url text, status text,' + \
+             ' startTime datetime, endTime datetime, elapsed datetime,' + \
+             ' numTuples int, schema text)'
+    c = conn.cursor()
+    c.execute(create)
+    conn.commit()
+
+
 def main(args):
     opt = parse_options(args)
     func = opt.function
     params = opt.p
+    check_db()
     if func == 'process_query':
         process_query(params)
     elif func == 'get_query_status':
@@ -213,6 +259,10 @@ def main(args):
         select_table()
     elif func == 'select_row':
         select_row(params)
+    elif func == 'get_rel_keys':
+        get_rel_keys(params)
+    elif func == 'num_tuples':
+        get_num_tuples(params)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
