@@ -462,6 +462,8 @@ function restoreState() {
   // Language & Editor state
   editorLanguage = localStorage.getItem(editorLanguageKey) || editorLanguage;
   editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
+  $('.language-menu').val(editorLanguage);
+  resetEditor(editorLanguage, false);
 }
 
 updateExamplesHeight = function () {
@@ -494,7 +496,6 @@ $(function () {
   initializeDatasetSearch();
 
   restoreState();
-  resetEditor(editorLanguage, false);
 
   optimizeplan();
 
