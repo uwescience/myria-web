@@ -1,1 +1,2 @@
-This tells you what to do
+# Run the clang/grappa server
+node server.js
