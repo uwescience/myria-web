@@ -5,11 +5,8 @@ var qs = require("querystring");
 var fs = require('fs');
 var cp = require('child_process');
 var url = require('url');
-var sqlite = require("sqlite3").verbose();
 
 var compilepath = '../../submodules/raco/c_test_environment/';
-var datasetpath = compilepath + 'datasets/';
-var schemepath = compilepath + 'schema/';
 var hostname = 'localhost';
 var port = 1337;
 var py = 'python metastore.py';
@@ -69,6 +66,7 @@ function processData(req, res) {
     req.on('end', function () {
       var url_parts = url.parse(req.url, true);
       var qid = url_parts.query.qid;
+      // var format = url_parts.query.format;
       // TODO handle format json, csv, tsv
       getResults(res, qid);
     });
@@ -145,8 +143,9 @@ function runQueryUpdate(filename, qid, backend) {
 function isInCatalog(res, rkey) {
   var params = rkey.userName + ' ' + rkey.programName + ' ' + rkey.relationName;
   cp.exec(py + ' check_catalog -p ' + params, function (err, stdout) {
-    if (err) { console.log(err); }
-    sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
+    if (err) { console.log(err); } else {
+      sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
+    }
   });
 }
 

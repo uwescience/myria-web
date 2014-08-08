@@ -79,7 +79,6 @@ def update_query_error(qid, e):
     c = conn.cursor()
     c.execute(query, (qid,))
     conn.commit()
-    conn.close()
     print 'error' + e
 
 
@@ -118,7 +117,6 @@ def update_query_success(qid):
     params_list = (stop, elapsed, qid)
     c.execute(upd_query, params_list)
     conn.commit()
-    conn.close()
     print str(stop) + ' ' + qid + ' done'
 
 
@@ -202,7 +200,7 @@ def get_rel_keys(params):
             'WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
-    c.execute(query, params[0])
+    c.execute(query, (params[0],))
     row = c.fetchone()
     filename = '%s:%s:%s' % (row[0], row[1], row[2])
     conn.close()
@@ -232,14 +230,26 @@ def get_num_tuples(params):
 
 
 def check_db():
-    create = 'CREATE TABLE IF NOT EXISTS dataset (userName text,' + \
-             ' programName text, relationName text, queryId int ' + \
-             ' primary key, created datatime, url text, status text,' + \
-             ' startTime datetime, endTime datetime, elapsed datetime,' + \
-             ' numTuples int, schema text)'
+    check = 'SELECT name FROM sqlite_master WHERE type="table"' + \
+            'AND name="dataset"'
     c = conn.cursor()
-    c.execute(create)
-    conn.commit()
+    c.execute(check)
+    row = c.fetchone()
+    if row is None:
+        create = 'CREATE TABLE IF NOT EXISTS dataset (userName text,' + \
+                 ' programName text, relationName text, queryId int ' + \
+                 ' primary key, created datatime, url text, status text,' + \
+                 ' startTime datetime, endTime datetime, elapsed datetime,' + \
+                 ' numTuples int, schema text)'
+        c.execute(create)
+        schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
+                             'columnNames': ['x', 'y']})
+        query = 'INSERT INTO dataset VALUES' + \
+                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
+                  'SUCCESS', 0, 1, 1, 30, schema)
+        c.execute(query, tuples)
+        conn.commit()
 
 
 def main(args):
