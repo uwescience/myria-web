@@ -247,6 +247,7 @@ function resetResults() {
 }
 
 function updateExamples(language, callback) {
+  callback = callback || function() {};
   var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
 
@@ -263,7 +264,7 @@ function updateExamples(language, callback) {
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}): ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -280,11 +281,6 @@ function updateExamples(language, callback) {
         optimizeplan();
       });
     }
-    /*
-     * Finally, set the global variable editorLanguage to the new language. This
-     * makes all the API calls back use this query parameter.
-     */
-    editorLanguage = language;
     callback();
   };
 
@@ -299,15 +295,26 @@ function updateExamples(language, callback) {
 }
 
 function changeLanguage() {
-  var language = $(".language-menu option:selected").val();
-  setLanguage(language);
+  // First, save the current editor state to the language we were using
+  saveEditor(editorLanguage);
 
-  updateExamples(language, function () {
-    $(".example").first().click();
-  });
+  // Get the new language and change UI to it
+  var language = $(".language-menu option:selected").val();
+
+  // Try to restore content/history for the new language. If restore fails,
+  // click the first example after it loads.
+  var exampleCallback = function() {};
+  if (!restoreEditor(language)) {
+    exampleCallback = function() {
+      $(".example").first().click();
+    };
+  }
+
+  // Update the examples for the new language
+  setLanguage(language, exampleCallback);
 }
 
-function setLanguage(language) {
+function setLanguage(language, exampleCallback) {
   var languages = [ 'datalog', 'myrial', 'sql' ];
   if (!_.contains(languages, language)) {
     console.log('Language not supported: ' + language);
@@ -324,6 +331,15 @@ function setLanguage(language) {
   } else if (language === 'datalog') {
     editor.setOption('mode', {name: 'prolog'});
   }
+
+  /*
+   * Set the global variable editorLanguage to the new language. This
+   * makes all the API calls back use this query parameter.
+   */
+  editorLanguage = language;
+  localStorage.setItem(editorLanguageKey, language);
+
+  updateExamples(language, exampleCallback);
 }
 
 /**
@@ -431,30 +447,91 @@ function initializeDatasetSearch() {
   });
 }
 
+function getHistory() {
+  var history;
+  try {
+    history = JSON.parse(localStorage.getItem(editorHistoryKey));
+  } catch (err) {
+    console.log(err);
+    history = {};
+  }
+  if (!history) {
+    // No history present
+    history = {};
+  }
+  if (history.done || history.undone) {
+    // Old school history
+    history = {};
+  }
+  return history;
+}
+
+function getContent() {
+  var content;
+  try {
+    content = JSON.parse(localStorage.getItem(editorContentKey));
+  } catch (err) {
+    console.log(err);
+    content = {};
+  }
+  if (!content) {
+    // No content present
+    content = {};
+  }
+  if (typeof content != "object") {
+    content = {};
+  }
+  return content;
+}
+
 function saveState() {
-  localStorage.setItem(editorHistoryKey, JSON.stringify(editor.getHistory()));
-  localStorage.setItem(editorContentKey, editor.getValue());
-  localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
+  // UI State
   localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
+
+  // Language and editor state
+  var language = $(".language-menu").find(":selected").val();
+  localStorage.setItem(editorLanguageKey, language);
+  saveEditor(language);
+}
+
+function restoreEditor(language) {
+  if (!language || (typeof language != "string")) {
+    return false;
+  }
+  language = language.toLowerCase();
+  var history = getHistory();
+  var content = getContent();
+  if (language && content[language] && history[language]) {
+    editor.setValue(content[language]);
+    editor.setHistory(history[language]);
+    return true;
+  }
+  return false;
+}
+
+function saveEditor(language) {
+  language = language.toLowerCase();
+  var content = getContent();
+  var history = getHistory();
+  content[language] = editor.getValue();
+  history[language] = editor.getHistory();
+  localStorage.setItem(editorContentKey, JSON.stringify(content));
+  localStorage.setItem(editorHistoryKey, JSON.stringify(history));
 }
 
 function restoreState() {
-  var history = JSON.parse(localStorage.getItem(editorHistoryKey));
-  var content = localStorage.getItem(editorContentKey);
-  var language = localStorage.getItem(editorLanguageKey);
+  // UI state
   var developerCollapse = localStorage.getItem(developerCollapseKey);
-  if (content) {
+  if (developerCollapse === 'true') {
+    $('#developer-options').addClass('in');
+  }
+
+  // Language & Editor state
+  var language = localStorage.getItem(editorLanguageKey);
+  if (language) {
     $(".language-menu").val(language);
     setLanguage(language);
-    updateExamples(language, function () {
-    });
-
-    editor.setValue(content);
-    editor.setHistory(history);
-    if (developerCollapse === 'true') {
-      $('#developer-options').addClass('in');
-    }
-    return true;
+    return restoreEditor(language);
   }
 
   return false;
@@ -489,7 +566,9 @@ $(function () {
   initializeDatasetSearch();
 
   if (!restoreState()) {
-    changeLanguage();
+    setLanguage(editorLanguage.toLowerCase(), function() {
+      $(".example").first().click();
+    });
   }
 
   optimizeplan();
