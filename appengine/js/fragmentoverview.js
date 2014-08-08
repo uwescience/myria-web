@@ -25,7 +25,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
             graph.openFragment("f"+fragmentId);
             d3.event.preventDefault();
         });
-        var workers = queryPlan.physicalPlan.plan.fragments[fragmentId].workers;
+        var workers = queryPlan.plan.fragments[fragmentId].workers;
         var numWorkers = workers.length;
 
         var hierarchy = graph.nested["f"+fragmentId],

@@ -13,7 +13,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
     }
     addLevels(hierarchy, 0);
 
-    var idNameMapping = nameMappingFromFragments(queryPlan.physicalPlan.plan.fragments);
+    var idNameMapping = nameMappingFromFragments(queryPlan.plan.fragments);
 
     var margin = {top: 5, right: 5, bottom: 5, left: 5 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,

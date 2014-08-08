@@ -109,3 +109,7 @@ input[type=range].zoom-range {
 #myria_svg {
   width: 100%;
 }
+
+.tablesorter-header[aria-disabled=false] {
+  cursor: pointer;
+}

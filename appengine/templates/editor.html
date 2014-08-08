@@ -188,6 +188,7 @@
     {% autoescape false %}
         var myriaConnection = '{{ myriaConnection }}';
         var myrialKeywords = {{ myrialKeywords }};
+        var clangConnection = '{{ clangConnection }}';
     {% endautoescape %}
     var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
         indentUnit: 2,
