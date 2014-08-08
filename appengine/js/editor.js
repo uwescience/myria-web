@@ -22,11 +22,11 @@ var editor_templates = {
   trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
 };
 
-var editorLanguage = 'MyriaL',
-  editorContentKey = 'code-editor-content',
-  editorHistoryKey = 'editor-history',
+var editorLanguage = 'myrial',
+  editorStateKey = 'code-editor-state',
   editorLanguageKey = 'active-language',
-  developerCollapseKey = 'developer-collapse';
+  developerCollapseKey = 'developer-collapse',
+  editorState = {};
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -248,8 +248,8 @@ function resetResults() {
   $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
-function updateExamples(language, callback) {
-  callback = callback || function() {};
+function updateExamples(restored) {
+  var language = editorLanguage;
   var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
 
@@ -283,7 +283,10 @@ function updateExamples(language, callback) {
         optimizeplan();
       });
     }
-    callback();
+    $('#editor-tabs a[href="#examples"]').tab('show');
+    if (!restored) {
+      $(".example").first().click();
+    }
   };
 
   $.ajax("examples", {
@@ -296,52 +299,42 @@ function updateExamples(language, callback) {
   });
 }
 
-function changeLanguage() {
-  // First, save the current editor state to the language we were using
-  saveEditor(editorLanguage);
-
-  // Get the new language and change UI to it
-  var language = $(".language-menu option:selected").val();
-
-  // Try to restore content/history for the new language. If restore fails,
-  // click the first example after it loads.
-  var exampleCallback = function() {};
-  if (!restoreEditor(language)) {
-    exampleCallback = function() {
-      $(".example").first().click();
-    };
-  }
-
-  // Update the examples for the new language
-  setLanguage(language, exampleCallback);
-}
-
-function setLanguage(language, exampleCallback) {
+function resetEditor(newLanguage, saveOld) {
+  saveOld = saveOld || false;
   var languages = [ 'datalog', 'myrial', 'sql' ];
-  if (!_.contains(languages, language)) {
-    console.log('Language not supported: ' + language);
+  if (!newLanguage || !_.contains(languages, newLanguage)) {
+    console.log("Unable to reset editor to new language " + newLanguage);
     return;
   }
 
-  $('#editor-tabs a[href="#examples"]').tab('show');
-
-  if (language === 'myrial') {
-    editor.setOption('mode', {name: 'myrial',
-      singleLineStringErrors: false});
-  } else if (language === 'sql') {
-    editor.setOption('mode', 'text/x-sql');
-  } else if (language === 'datalog') {
-    editor.setOption('mode', {name: 'prolog'});
+  if (saveOld) {
+    editorState[editorLanguage] = {
+      content: editor.getValue(),
+      history: editor.getHistory()
+    };
   }
 
-  /*
-   * Set the global variable editorLanguage to the new language. This
-   * makes all the API calls back use this query parameter.
-   */
-  editorLanguage = language;
-  localStorage.setItem(editorLanguageKey, language);
+  var restored;
+  var state = editorState[newLanguage];
+  if (editorState[newLanguage]) {
+    editor.setValue(state.content);
+    editor.setHistory(state.history)
+    restored = true;
+  } else {
+    restored = false;
+    editor.setValue('loading examples...');
+    editor.clearHistory();
+  }
 
-  updateExamples(language, exampleCallback);
+  editorLanguage = newLanguage;
+  var modes = {
+    'datalog': 'prolog',
+    'myrial': {name: 'myrial', singleLineStringErrors: false},
+    'sql': 'text/x-sql'
+  };
+  editor.setOption('mode', modes[newLanguage]);
+
+  updateExamples(restored);
 }
 
 /**
@@ -449,76 +442,14 @@ function initializeDatasetSearch() {
   });
 }
 
-function getHistory() {
-  var history;
-  try {
-    history = JSON.parse(localStorage.getItem(editorHistoryKey));
-  } catch (err) {
-    console.log(err);
-    history = {};
-  }
-  if (!history) {
-    // No history present
-    history = {};
-  }
-  if (history.done || history.undone) {
-    // Old school history
-    history = {};
-  }
-  return history;
-}
-
-function getContent() {
-  var content;
-  try {
-    content = JSON.parse(localStorage.getItem(editorContentKey));
-  } catch (err) {
-    console.log(err);
-    content = {};
-  }
-  if (!content) {
-    // No content present
-    content = {};
-  }
-  if (typeof content != "object") {
-    content = {};
-  }
-  return content;
-}
-
 function saveState() {
-  // UI State
   localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
-
-  // Language and editor state
-  var language = $(".language-menu").find(":selected").val();
-  localStorage.setItem(editorLanguageKey, language);
-  saveEditor(language);
-}
-
-function restoreEditor(language) {
-  if (!language || (typeof language != "string")) {
-    return false;
-  }
-  language = language.toLowerCase();
-  var history = getHistory();
-  var content = getContent();
-  if (language && content[language] && history[language]) {
-    editor.setValue(content[language]);
-    editor.setHistory(history[language]);
-    return true;
-  }
-  return false;
-}
-
-function saveEditor(language) {
-  language = language.toLowerCase();
-  var content = getContent();
-  var history = getHistory();
-  content[language] = editor.getValue();
-  history[language] = editor.getHistory();
-  localStorage.setItem(editorContentKey, JSON.stringify(content));
-  localStorage.setItem(editorHistoryKey, JSON.stringify(history));
+  localStorage.setItem(editorLanguageKey, editorLanguage);
+  editorState[editorLanguage] = {
+    content: editor.getValue(),
+    history: editor.getHistory()
+  };
+  localStorage.setItem(editorStateKey, JSON.stringify(editorState));
 }
 
 function restoreState() {
@@ -529,14 +460,8 @@ function restoreState() {
   }
 
   // Language & Editor state
-  var language = localStorage.getItem(editorLanguageKey);
-  if (language) {
-    $(".language-menu").val(language);
-    setLanguage(language);
-    return restoreEditor(language);
-  }
-
-  return false;
+  editorLanguage = localStorage.getItem(editorLanguageKey) || editorLanguage;
+  editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
 }
 
 updateExamplesHeight = function () {
@@ -555,7 +480,9 @@ $(function () {
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
-  $(".language-menu").change(changeLanguage);
+  $(".language-menu").change(function () {
+    resetEditor($(".language-menu option:selected").val(), true);
+  });
   $(".example").click(function () {
     resetResults();
     var example_query = $(this).text();
@@ -566,11 +493,8 @@ $(function () {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
 
-  if (!restoreState()) {
-    setLanguage(editorLanguage.toLowerCase(), function() {
-      $(".example").first().click();
-    });
-  }
+  restoreState();
+  resetEditor(editorLanguage, false);
 
   optimizeplan();
 
