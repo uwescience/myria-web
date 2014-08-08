@@ -66,7 +66,6 @@ function getplan() {
 }
 
 function optimizeplan() {
-  $('#myria_svg').empty();
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
@@ -107,6 +106,7 @@ function optimizeplan() {
 
     } catch (err) {
       $('#myria_svg').empty();
+      $('a[href="#queryplan"]').off('shown.bs.tab');
       $('#optimized').empty();
       $('#relational-plan').collapse('show');
       $('#physical-plan').collapse('hide');
@@ -115,6 +115,7 @@ function optimizeplan() {
   }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#myria_svg').empty();
+    $('a[href="#queryplan"]').off('shown.bs.tab');
   });
 }
 
@@ -244,6 +245,7 @@ function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
   $("svg").empty();
+  $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
 function updateExamples(language, callback) {
