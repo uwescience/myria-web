@@ -548,8 +548,7 @@ $(function () {
   resetResults();
 
   editor.on("change", resetResults);
-  editor.on("keydown", resetResults);
-  editor.on("keypress", resetResults);
+
   $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     optimizeplan();
