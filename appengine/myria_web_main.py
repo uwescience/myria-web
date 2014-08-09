@@ -605,6 +605,7 @@ class Compile(MyriaHandler):
 class Execute(MyriaPage):
 
     def post(self):
+        self.verifyuser()
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
 
