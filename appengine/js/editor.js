@@ -78,12 +78,12 @@ function optimizeplan() {
   });
   handleerrors(request, "#optimized");
 
-  var url = "compile?" + $.param({
-    query: query,
-    language: editorLanguage,
-    multiway_join: multiway_join_checked
+  var request = $.post("compile", {
+      query: query,
+      language: editorLanguage,
+      multiway_join: multiway_join_checked
   });
-  var request = $.getJSON(url).success(function (queryPlan) {
+  request.success(function (queryPlan) {
     try {
       var i = 0;
       _.map(queryPlan.plan.fragments, function (frag) {
