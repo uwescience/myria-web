@@ -12,7 +12,6 @@ from urlparse import urlsplit, urlunsplit
 import jinja2
 
 from google.appengine.api import users
-from google.appengine.ext import deferred
 
 import raco.run_federated
 from raco import RACompiler
@@ -33,12 +32,6 @@ from pagination import Pagination
 
 import scidbpy
 import myria
-
-# Increase various socket/url timeouts
-import socket
-socket.setdefaulttimeout(60)
-from google.appengine.api import urlfetch
-urlfetch.set_default_fetch_deadline(60)
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
@@ -609,30 +602,54 @@ class Compile(MyriaHandler):
         self.get()
 
 
-def run_the_query(query, host, port):
-    logging.info("Received deferred query: %s" % query)
-    conn = myria.MyriaConnection(hostname=host, port=port,
-                                 auth_token=AUTH_TOKEN)
-
-    logical_plan = get_logical_plan(query, "myrial", conn)
-    query_status = raco.run_federated.run(logical_plan,
-                                          conn,
-                                          scidbpy)
-
 class Execute(MyriaPage):
 
     def post(self):
-        self.verifyuser()
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-        query = self.request.get("query")
+        conn = self.app.connection
 
-        deferred.defer(run_the_query, query, self.app.hostname, self.app.port)
-        self.response.status = 201
-        self.response.write("Created query")
+        query = self.request.get("query")
+        language = self.request.get("language")
+        profile = self.request.get("profile", False)
+        multiway_join = self.request.get("multiway_join", False)
+        if multiway_join == 'false':
+            multiway_join = False
+
+        cached_logicalplan = str(
+            get_logical_plan(query, language, self.app.connection))
+
+        try:
+            logical_plan = get_logical_plan(query, language, self.app.connection)
+            query_status = raco.run_federated.run(logical_plan,
+                                                  self.app.connection,
+                                                  scidbpy)
+
+            if query_status:
+                query_url = 'http://%s/execute?query_id=%d' %\
+                    (self.base_template_vars()["myriaConnection"],
+                     query_status['queryId'])
+                self.response.headers['Content-Location'] = query_url
+            self.response.status = 201
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(query_status))
+            return
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            return
+        except requests.ConnectionError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write(
+                'Error 503 (Unavailable): \
+                 Unable to connect to REST server to issue query')
+            return
 
     def get(self):
         # Raise an exception if not logged in and whitelisted
         self.verifyuser()
+
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
 
@@ -719,7 +736,7 @@ class Application(webapp2.WSGIApplication):
         self.port = port
 
         # Quiet logging for production
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.WARN)
 
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
