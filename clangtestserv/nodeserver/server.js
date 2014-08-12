@@ -6,8 +6,8 @@ var fs = require('fs');
 var cp = require('child_process');
 var url = require('url');
 
-var compilepath = '../../submodules/raco/c_test_environment/';
-var hostname = 'localhost';
+var compilepath = 'raco/c_test_environment/';
+var hostname = 'n03';
 var port = 1337;
 var py = 'python metastore.py';
 var counter = 1;
@@ -90,7 +90,7 @@ function processQid(req, res, callbackfn) {
 
 // Parses the query from posted json
 function processQuery(req, res) {
-  var qid = counter;
+  var qid = counter++;
   if (req.method == "POST") {
     var body = '';
     req.on('data', function (chunk) {
@@ -101,7 +101,7 @@ function processQuery(req, res) {
       var myriares = JSON.parse(body);
       var backend = myriares.backend;
       var plan = myriares.plan;
-      var filename = parseFilename(myriares.logicalRa);
+      var filename = myriares.filename;
       var url = 'http://' + hostname + ':' + port;
       var params = filename + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
       cp.exec(py + ' process_query -p ' + params, function (err, stdout) {
@@ -117,7 +117,6 @@ function processQuery(req, res) {
 	    runQueryUpdate(filename, qid, backend);
 	  }
 	});
-      counter++;
     });
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -126,11 +125,6 @@ function processQuery(req, res) {
   }
 }
 
-function parseFilename(logicalplan) {
-  var startindex = logicalplan.indexOf('(') + 1;
-  var endindex = logicalplan.indexOf(')');
-  return logicalplan.substring(startindex, endindex);
-}
 
 function runQueryUpdate(filename, qid, backend) {
   var params = qid + ' ' + filename + ' ' + backend;

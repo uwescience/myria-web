@@ -12,7 +12,7 @@ import subprocess
 from subprocess import Popen
 
 conn = sqlite3.connect('dataset.db')
-compile_path = '../../submodules/raco/c_test_environment/'
+compile_path = 'submodules/raco/c_test_environment/'
 dataset_path = compile_path + 'datasets/'
 scheme_path = compile_path + 'schema/'
 
@@ -34,7 +34,7 @@ def parse_options(args):
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
     filename = params[0]
-    relkey = filename.split(':')
+    relkey = filename.split('_')
     qid = params[2]
     c = conn.cursor()
     cur_time = time.time()
@@ -64,14 +64,16 @@ def run_query(params):
     cmd = ['python', 'run_query.py']
     cmd.append(backend)
     if backend == 'grappa':
-        filename = 'grappa_' + filename
+        grappa_name = 'grappa_' + filename
+        cmd_grappa = ['cp', filename + '.cpp', grappa_name + '.cpp']
+        subprocess.check_call(cmd_grappa, cwd=compile_path)
     cmd.append(filename)
     try:
-        subprocess.check_call(cmd, cwd=compile_path)
+        subprocess.check_output(cmd, cwd=compile_path)
         update_catalog(filename, qid)
         update_scheme(filename, qid)
     except subprocess.CalledProcessError as e:
-        update_query_error(qid, e)
+        update_query_error(qid, e.output)
 
 
 def update_query_error(qid, e):
@@ -79,7 +81,7 @@ def update_query_error(qid, e):
     c = conn.cursor()
     c.execute(query, (qid,))
     conn.commit()
-    print 'error' + e
+    print 'error' + str(e)
 
 
 def update_catalog(filename, qid):
@@ -126,12 +128,13 @@ def get_query_status(params):
     query = 'SELECT * FROM dataset WHERE queryId= ?'
     c.execute(query, (params[0],))
     row = c.fetchone()
-    if not row[8]:
-        fin = 'None'
-        elapsed = time.time()
-    else:
+    if row[6] == 'SUCCESS':
         fin = datetime.datetime.fromtimestamp(row[8]).isoformat()
         elapsed = row[9]
+    else:
+        fin = 'None'
+        elapsed = (time.time() - row[7]) * 1000000000
+
     res = {'status': row[6], 'queryId': row[3], 'url': row[5],
            'startTime': datetime.datetime.fromtimestamp(row[7]).isoformat(),
            'finishTime': fin, 'elapsedNanos': elapsed}
