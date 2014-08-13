@@ -7,7 +7,7 @@ var cp = require('child_process');
 var url = require('url');
 
 var compilepath = 'raco/c_test_environment/';
-var hostname = 'n03';
+var hostname = 'hostname';
 var port = 1337;
 var py = 'python metastore.py';
 var counter = 1;
@@ -39,7 +39,7 @@ http.createServer(function (req, res) {
     break;
   }
 
-}).listen(port, hostname);
+}).listen(port, 'n03');
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
