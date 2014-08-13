@@ -63,11 +63,12 @@ def run_query(params):
     backend = params[2]
     cmd = ['python', 'run_query.py']
     cmd.append(backend)
+    cmd.append(filename)
     if backend == 'grappa':
         grappa_name = 'grappa_' + filename
         cmd_grappa = ['cp', filename + '.cpp', grappa_name + '.cpp']
         subprocess.check_call(cmd_grappa, cwd=compile_path)
-    cmd.append(filename)
+        filename = grappa_name
     try:
         subprocess.check_output(cmd, cwd=compile_path)
         update_catalog(filename, qid)
@@ -245,13 +246,15 @@ def check_db():
                  ' startTime datetime, endTime datetime, elapsed datetime,' + \
                  ' numTuples int, schema text)'
         c.execute(create)
-        schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
-                             'columnNames': ['x', 'y']})
-        query = 'INSERT INTO dataset VALUES' + \
-                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
-                  'SUCCESS', 0, 1, 1, 30, schema)
-        c.execute(query, tuples)
+        conn.commit()
+        if c.rowcount < 1:
+            schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
+                                 'columnNames': ['x', 'y']})
+            query = 'INSERT INTO dataset VALUES' + \
+                    '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
+                      'SUCCESS', 0, 1, 1, 30, schema)
+            c.execute(query, tuples)
         conn.commit()
 
 

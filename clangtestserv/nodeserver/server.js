@@ -107,16 +107,10 @@ function processQuery(req, res) {
       cp.exec(py + ' process_query -p ' + params, function (err, stdout) {
         if (err) { console.log(err); } else {
           console.log(stdout);
-          getQueryStatus(res, qid);
+          writeFile(filename, qid, backend, plan);
         }
       });
-
-      fs.writeFile(compilepath + filename + ".cpp", plan,
-        function (err) {
-	  if (err) { console.log('writing query source' + err); } else {
-	    runQueryUpdate(filename, qid, backend);
-	  }
-	});
+      getQueryStatus(res, qid);
     });
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -125,6 +119,13 @@ function processQuery(req, res) {
   }
 }
 
+function writeFile(filename, qid, backend, plan) {
+  fs.writeFile(compilepath + filename + ".cpp", plan, function (err) {
+    if (err) { console.log('writing query source' + err); } else {
+      runQueryUpdate(filename, qid, backend);
+    }
+  });
+}
 
 function runQueryUpdate(filename, qid, backend) {
   var params = qid + ' ' + filename + ' ' + backend;
