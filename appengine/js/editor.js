@@ -6,7 +6,7 @@ var editor_templates = {
     profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
   },
   query: {
-    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="<%- myriaConnection %>/query/query-<%- query_id %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
     row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
     time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
@@ -163,7 +163,7 @@ function displayQueryStatus(query_status) {
     // Populate the datasets created table
     $.ajax({
       dataType: "json",
-      url: "http://" + myriaConnection + "/dataset",
+      url: myriaConnection + "/dataset",
       data: {queryId: query_id},
       async: false})
     .done(function(datasets) {
@@ -381,7 +381,7 @@ function initializeDatasetSearch() {
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
     ajax: {
-      url: "http://" + myriaConnection + "/dataset/search/",
+      url: myriaConnection + "/dataset/search/",
       dataType: 'json',
       quietMillis: 100,
       cache: true,
@@ -430,7 +430,7 @@ function initializeDatasetSearch() {
   }).on("change", function (e) {
     var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
-      url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+      url = myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function (data) {
       var html = '';
       _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {

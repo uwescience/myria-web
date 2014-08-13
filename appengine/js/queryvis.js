@@ -2,11 +2,11 @@
 var templates = {
     //*/
     urls: {
-        sentData: _.template("http://<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
-        range: _.template("http://<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        contribution: _.template("http://<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
-        histogram: _.template("http://<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&step=<%- step %>&onlyRootOp=<%- onlyRootOp %>")
+        sentData: _.template("<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        profiling: _.template("<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
+        range: _.template("<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        contribution: _.template("<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        histogram: _.template("<%- myria %>/logs/histogram?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&step=<%- step %>&onlyRootOp=<%- onlyRootOp %>")
     },
     /*/
     urls: {
