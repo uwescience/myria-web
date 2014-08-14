@@ -177,7 +177,6 @@
 
 <script>
     {% autoescape false %}
-        var myriaConnection = '{{ myriaConnection }}';
         var myrialKeywords = {{ myrialKeywords }};
     {% endautoescape %}
     var editor = CodeMirror.fromTextArea(document.getElementById('query'), {
