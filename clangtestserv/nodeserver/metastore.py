@@ -12,10 +12,9 @@ import subprocess
 from subprocess import Popen
 
 conn = sqlite3.connect('dataset.db')
-compile_path = 'submodules/raco/c_test_environment/'
-dataset_path = compile_path + 'datasets/'
+compile_path = 'raco/c_test_environment/'
 scheme_path = compile_path + 'schema/'
-
+dataset_path = compile_path + 'datasets/'
 
 def parse_options(args):
     parser = argparse.ArgumentParser()
@@ -70,9 +69,10 @@ def run_query(params):
         subprocess.check_call(cmd_grappa, cwd=compile_path)
         filename = grappa_name
     try:
-        subprocess.check_output(cmd, cwd=compile_path)
-        update_catalog(filename, qid)
+        subprocess.check_call(cmd, cwd=compile_path)
+#        update_query_success(qid)
         update_scheme(filename, qid)
+        update_catalog(filename, qid)
     except subprocess.CalledProcessError as e:
         update_query_error(qid, e.output)
 
@@ -82,7 +82,7 @@ def update_query_error(qid, e):
     c = conn.cursor()
     c.execute(query, (qid,))
     conn.commit()
-    print 'error' + str(e)
+    print 'error:' + str(e)
 
 
 def update_catalog(filename, qid):
@@ -135,11 +135,10 @@ def get_query_status(params):
     else:
         fin = 'None'
         elapsed = (time.time() - row[7]) * 1000000000
-
+    conn.close()
     res = {'status': row[6], 'queryId': row[3], 'url': row[5],
            'startTime': datetime.datetime.fromtimestamp(row[7]).isoformat(),
            'finishTime': fin, 'elapsedNanos': elapsed}
-    conn.close()
     print json.dumps(res)
 
 
@@ -206,7 +205,7 @@ def get_rel_keys(params):
     c = conn.cursor()
     c.execute(query, (params[0],))
     row = c.fetchone()
-    filename = '%s:%s:%s' % (row[0], row[1], row[2])
+    filename = '%s_%s_%s' % (row[0], row[1], row[2])
     conn.close()
     get_query_results(filename)
 
@@ -222,6 +221,7 @@ def get_query_results(filename):
     print json.dumps(res)
 
 
+# params qid
 def get_num_tuples(params):
     query = 'SELECT numTuples FROM dataset WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
@@ -251,11 +251,12 @@ def check_db():
             schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
                                  'columnNames': ['x', 'y']})
             query = 'INSERT INTO dataset VALUES' + \
-                    '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
                       'SUCCESS', 0, 1, 1, 30, schema)
             c.execute(query, tuples)
         conn.commit()
+        
 
 
 def main(args):
@@ -279,6 +280,8 @@ def main(args):
         get_rel_keys(params)
     elif func == 'num_tuples':
         get_num_tuples(params)
+    elif func == 'run_query':
+        run_query(params)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

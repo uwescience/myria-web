@@ -7,9 +7,11 @@ var cp = require('child_process');
 var url = require('url');
 
 var compilepath = 'raco/c_test_environment/';
-var hostname = 'hostname';
+var datasetpath = compilepath + 'datasets/';
+var schemepath = compilepath + 'schema/';
+var hostname = 'localhost';
 var port = 1337;
-var py = 'python metastore.py';
+var py = './metastore.py';
 var counter = 1;
 
 http.createServer(function (req, res) {
@@ -105,12 +107,16 @@ function processQuery(req, res) {
       var url = 'http://' + hostname + ':' + port;
       var params = filename + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
       cp.exec(py + ' process_query -p ' + params, function (err, stdout) {
-        if (err) { console.log(err); } else {
+        if (err) { console.log('process' + err); } else {
           console.log(stdout);
-          writeFile(filename, qid, backend, plan);
+	  getQueryStatus(res, qid);
         }
       });
-      getQueryStatus(res, qid);
+      fs.writeFile(compilepath + filename + ".cpp", plan, function (err) {
+        if (err) { console.log('writing query source' + err); } else {
+	  runQueryUpdate(filename, qid, backend);
+	}
+      });    
     });
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -124,13 +130,13 @@ function writeFile(filename, qid, backend, plan) {
     if (err) { console.log('writing query source' + err); } else {
       runQueryUpdate(filename, qid, backend);
     }
-  });
+  });    
 }
 
 function runQueryUpdate(filename, qid, backend) {
   var params = qid + ' ' + filename + ' ' + backend;
   cp.exec(py + ' update_query_run -p ' + params, function (err, stdout) {
-    if (err) { console.log(err); }
+    if (err) { console.log('runupdate' +err); }
     console.log(stdout);
   });
 }
@@ -138,7 +144,7 @@ function runQueryUpdate(filename, qid, backend) {
 function isInCatalog(res, rkey) {
   var params = rkey.userName + ' ' + rkey.programName + ' ' + rkey.relationName;
   cp.exec(py + ' check_catalog -p ' + params, function (err, stdout) {
-    if (err) { console.log(err); } else {
+    if (err) { console.log('check cat' + err); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
@@ -154,7 +160,7 @@ function selectTable(res) {
 
 function selectRow(res, qid) {
   cp.exec(py + ' select_row -p ' + qid, function (err, stdout) {
-    if (err) { console.log(err); } else {
+    if (err) { console.log('selrow' + err); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
@@ -162,15 +168,16 @@ function selectRow(res, qid) {
 
 function getResults(res, qid) {
   cp.exec(py + ' get_rel_keys -p ' + qid, function (err, stdout) {
-    if (err) { console.log(err); } else {
+    if (err) { console.log(' relkeys ' + err); } else {
       sendJSONResponse(res, stdout);
     }
   });
 }
 
 function getQueryStatus(res, qid) {
+  console.log('QS');
   cp.exec(py + ' get_query_status -p ' + qid, function (err, stdout) {
-    if (err) { console.log(err); } else {
+    if (err) { console.log('qs' + err); } else {
       sendJSONResponse(res, stdout);
     }
   });
@@ -178,7 +185,7 @@ function getQueryStatus(res, qid) {
 
 function getTuples(res, qid) {
   cp.exec(py + ' get_num_tuples -p ' + qid, function (err, stdout) {
-    if (err) { console.log(err); } else {
+    if (err) { console.log( 'numtuples ' + err); } else {
       sendJSONResponse(res, stdout);
     }
   });
