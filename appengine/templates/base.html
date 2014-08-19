@@ -15,6 +15,13 @@
 <link rel="apple-touch-icon-precomposed" sizes="72x72" href="apple-touch-icon-72x72-precomposed.png">
 <link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png">
 <!-- END mobile bookmark icons -->
+
+<script type="text/javascript">
+    {% autoescape false %}
+    var myriaConnection = '{{ myriaConnection }}';
+    var connectionString = '{{ connectionString }}';
+    {% endautoescape %}
+</script>
 {% block extra_head %}{% endblock %}
 
 <link href="css/layout.css" type="text/css" rel="stylesheet" />
@@ -45,7 +52,7 @@
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
 					<li>
-						<a href="http://{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
+						<a href="{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
 					</li>
 				</ul>
 			</div>

@@ -1,7 +1,12 @@
 $(function() {
   //warn if not in Chrome
   if (!window.chrome) {
-    $("#page-body").prepend('<div class="alert alert-danger" role="alert"><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
+    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
+  }
+
+  //warn if backend is not available
+  if (connectionString.indexOf('error') === 0) {
+    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to Myria. Most functionality will not work.</div>');
   }
 
   //back to top button
