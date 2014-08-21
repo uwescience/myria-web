@@ -41,7 +41,7 @@ http.createServer(function (req, res) {
     break;
   }
 
-}).listen(port, 'n03');
+}).listen(port, 'localhost');
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
@@ -116,7 +116,7 @@ function processQuery(req, res) {
         if (err) { console.log('writing query source' + err); } else {
 	  runQueryUpdate(filename, qid, backend);
 	}
-      });    
+      });
     });
   } else {
     res.writeHead(400, {'Content-Type': 'text/html'});
@@ -130,7 +130,7 @@ function writeFile(filename, qid, backend, plan) {
     if (err) { console.log('writing query source' + err); } else {
       runQueryUpdate(filename, qid, backend);
     }
-  });    
+  });
 }
 
 function runQueryUpdate(filename, qid, backend) {

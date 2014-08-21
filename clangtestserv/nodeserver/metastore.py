@@ -10,11 +10,15 @@ import json
 import datetime
 import subprocess
 from subprocess import Popen
+import os
 
 conn = sqlite3.connect('dataset.db')
-compile_path = 'raco/c_test_environment/'
+raco_path = os.environ["RACO_HOME"] + '/'
+grappa_path = os.environ["GRAPPA_HOME"] + '/'
+compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
 dataset_path = compile_path + 'datasets/'
+grappa_data_path = grappa_path + 'build/Make+Release/applications/join/'
 
 def parse_options(args):
     parser = argparse.ArgumentParser()
@@ -35,11 +39,12 @@ def process_query(params):
     filename = params[0]
     relkey = filename.split('_')
     qid = params[2]
+    backend = params[3]
     c = conn.cursor()
     cur_time = time.time()
-    query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
-                  'ACCEPTED', cur_time, None, 0, 0, "")
+                  'ACCEPTED', cur_time, None, 0, 0, "", backend)
     c.execute(query, param_list)
     conn.commit()
     print str(cur_time) + ' ' + qid + ' started'
@@ -67,12 +72,10 @@ def run_query(params):
         grappa_name = 'grappa_' + filename
         cmd_grappa = ['cp', filename + '.cpp', grappa_name + '.cpp']
         subprocess.check_call(cmd_grappa, cwd=compile_path)
-        filename = grappa_name
     try:
-        subprocess.check_call(cmd, cwd=compile_path)
-#        update_query_success(qid)
-        update_scheme(filename, qid)
-        update_catalog(filename, qid)
+        subprocess.check_output(cmd, cwd=compile_path)
+        update_scheme(filename, qid, backend)
+        update_catalog(filename, qid, backend)
     except subprocess.CalledProcessError as e:
         update_query_error(qid, e.output)
 
@@ -85,26 +88,37 @@ def update_query_error(qid, e):
     print 'error:' + str(e)
 
 
-def update_catalog(filename, qid):
-    filename = dataset_path + filename
-    p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
+def update_catalog(filename, qid, backend):
+    if backend == 'grappa':
+        print filename
+        filename = grappa_data_path + filename + '.bin';
+        p1 = Popen(['hexdump', filename], stdout=subprocess.PIPE)
+    else:
+        filename = dataset_path + filename
+        p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
     p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    output = p2.communicate()[0]
+    output = int(p2.communicate()[0])
+    if backend == 'grappa':
+        output = output - 1
     c = conn.cursor()
     query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
     c.execute(query, (output, qid))
     conn.commit()
 
 
-def update_scheme(filename, qid):
-    with open(scheme_path + filename, 'r') as f:
+def update_scheme(filename, qid, backend):
+    if backend == 'grappa':
+        filename = grappa_data_path + filename
+    else:
+        filename = scheme_path + filename
+    with open(filename, 'r') as f:
         data = f.read().split('\n')
-    schema = {'columnNames': data[0], 'columnTypes': data[1]}
-    query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-    c = conn.cursor()
-    c.execute(query, (json.dumps(schema), qid))
-    conn.commit()
+        schema = {'columnNames': data[0], 'columnTypes': data[1]}
+        query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+        c = conn.cursor()
+        c.execute(query, (json.dumps(schema), qid))
+        conn.commit()
     update_query_success(qid)
 
 
@@ -172,8 +186,8 @@ def select_table():
         val = {'relationKey': {'userName': row[0], 'programName': row[1],
                                'relationName': row[2]}, 'queryId': row[3],
                'created': row[4], 'uri': row[5], 'status': row[6],
-               'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
-               'numTuples': row[10], 'schema': scheme}
+               'startTxime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
+               'numTuples': row[10], 'schema': scheme, 'backend': row[12]}
         res.append(val)
     conn.close()
     print json.dumps(res)
@@ -199,25 +213,45 @@ def select_row(params):
 
 # params: qid
 def get_rel_keys(params):
+    qid = params[0]
     query = 'SELECT userName, programName, relationName FROM dataset ' + \
             'WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
-    c.execute(query, (params[0],))
+    c.execute(query, (qid,))
     row = c.fetchone()
     filename = '%s_%s_%s' % (row[0], row[1], row[2])
     conn.close()
-    get_query_results(filename)
+    get_query_results(filename, qid)
 
 
-def get_query_results(filename):
+def get_query_results(filename, qid):
+    query = 'SELECT backend, schema FROM dataset WHERE queryId= ?'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query, (qid,))
+    row = c.fetchone()
+    backend = row[0]
     res = []
-    with open(dataset_path + filename, 'r') as f:
-        data = f.read().split('\n')
-        for row in data:
-            if row:
-                val = {'tuple': row}
+    if backend == 'grappa':
+        filename = grappa_data_path + filename + '.bin'
+        res.append(json.loads(row[1]))
+        with open(filename, 'rb') as f:
+            data = f.read(4)
+            while data:
+                val = {'tuple': data}
                 res.append(val)
+                data = f.read(4)
+    else:
+        filename = dataset_path + filename
+        res.append(json.loads(row[1]))
+        with open(filename, 'r') as f:
+            data = f.read().split('\n')
+            for row in data:
+                if row:
+                    val = {'tuple': row}
+                    res.append(val)
+
     print json.dumps(res)
 
 
@@ -244,19 +278,18 @@ def check_db():
                  ' programName text, relationName text, queryId int ' + \
                  ' primary key, created datatime, url text, status text,' + \
                  ' startTime datetime, endTime datetime, elapsed datetime,' + \
-                 ' numTuples int, schema text)'
+                 ' numTuples int, schema text, backend text)'
         c.execute(create)
         conn.commit()
         if c.rowcount < 1:
             schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
                                  'columnNames': ['x', 'y']})
             query = 'INSERT INTO dataset VALUES' + \
-                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
-                      'SUCCESS', 0, 1, 1, 30, schema)
+                      'SUCCESS', 0, 1, 1, 30, schema, 'clang')
             c.execute(query, tuples)
         conn.commit()
-        
 
 
 def main(args):
