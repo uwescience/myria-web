@@ -32,23 +32,27 @@ function setBackend(backend) {
 
 function loadTable() {
   // default to host from myria
-  var url = 'http://' + myriaConnection + '/dataset';
-  if (_.contains(grappaends, backendProcess)) {
-    url = 'http://' + clangConnection + '/dataset';
+  var url;
+  if (backendProcess == 'clang') {
+    url = 'http://' + clangConnection + '/dataset?backend=clang';
+  }
+  else if (backendProcess == 'grappa') {
+    url = 'http://' + clangConnection + '/dataset?backend=grappa';
+  } else {
+    url = 'http://' + myriaConnection + '/dataset';
   }
   var t = dataset_templates;
   var jqxhr = $.getJSON(url,
     function (data) {
       var html = '';
-
       _.each(data, function (d) {
 	var qload = '';
 	var dload = d['uri'] + '/data?';
-        var time = d['created'] * 1000;
+        var time = d['created'];
         if (_.contains(grappaends, backendProcess)) {
 	  qload = '/query?qid=' + d['queryId'];
           dload += 'qid=' + d['queryId'] + '&';
-          time = new Date(time).toISOString();
+          time = new Date(time * 1000).toISOString();
 	}
         var relation = d['relationKey'];
         html += t.relName({url: d['uri'] + qload, user: relation['userName'],
@@ -73,9 +77,15 @@ function loadTable() {
 /* A dataset is small if we know its size and the size is below the
     specified cell limit. (Number of cells is # cols * # rows.) */
 function is_small_dataset(d, cell_limit) {
+  var len = 0;
+  if (backendProcess == 'myria') {
+    len = d['schema']['columnNames'].length;
+  } else {
+    len = JSON.parse(d['schema'])['columnNames'].length;
+  }
   return (d['numTuples'] >= 0 &&
          ((cell_limit == 0) ||
-          (d['schema']['columnNames'].length * d['numTuples'] <= cell_limit)));
+         (len * d['numTuples'] <= cell_limit)));
 }
 
 function saveState() {

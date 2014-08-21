@@ -17,7 +17,7 @@ http.createServer(function (req, res) {
 
   switch(path) {
     case '/dataset':
-      selectTable(res);
+      processBackend(req, res, selectTable);
     break;
     case '/query':
       processQid(req, res, selectRow);
@@ -88,6 +88,22 @@ function processQid(req, res, callbackfn) {
   }
 }
 
+function processBackend(req, res, callbackfn) {
+  if (req.method == "GET") {
+    var body = '';
+    req.on('data', function (chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function () {
+      var url_parts = url.parse(req.url, true);
+      var backend = url_parts.query.backend;
+      callbackfn(res, backend);
+    });
+  }
+
+}
+
 // Parses the query from posted json
 function processQuery(req, res) {
   var qid = counter++;
@@ -148,9 +164,9 @@ function isInCatalog(res, rkey) {
   });
 }
 
-function selectTable(res) {
-  cp.exec(py + ' select_table', function (err, stdout) {
-    if (err) { console.log(err); } else {
+function selectTable(res, backend) {
+  cp.exec(py + ' select_table -p' + backend, function (err, stdout) {
+    if (err) { console.log('seltab ' +err); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
