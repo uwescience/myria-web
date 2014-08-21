@@ -81,7 +81,7 @@ def get_plan(query, language, backend, plan_type, connection,
         target_algebra = CCAlgebra('file')
         catalog = ClangCatalog(connection)
     elif backend == "grappa":
-        target_algebra = GrappaAlgebra('file')
+        target_algebra = GrappaAlgebra()
     elif multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
