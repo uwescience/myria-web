@@ -17,8 +17,8 @@ raco_path = os.environ["RACO_HOME"] + '/'
 grappa_path = os.environ["GRAPPA_HOME"] + '/'
 compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
-dataset_path = compile_path + 'datasets/'
 grappa_data_path = grappa_path + 'build/Make+Release/applications/join/'
+
 
 def parse_options(args):
     parser = argparse.ArgumentParser()
@@ -90,11 +90,10 @@ def update_query_error(qid, e):
 
 def update_catalog(filename, qid, backend):
     if backend == 'grappa':
-        print filename
-        filename = grappa_data_path + filename + '.bin';
+        filename = grappa_data_path + filename + '.bin'
         p1 = Popen(['hexdump', filename], stdout=subprocess.PIPE)
     else:
-        filename = dataset_path + filename
+        filename = compile_path + filename
         p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
     p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
@@ -243,7 +242,7 @@ def get_query_results(filename, qid):
                 res.append(val)
                 data = f.read(4)
     else:
-        filename = dataset_path + filename
+        filename = compile_path + filename
         res.append(json.loads(row[1]))
         with open(filename, 'r') as f:
             data = f.read().split('\n')
@@ -313,8 +312,6 @@ def main(args):
         get_rel_keys(params)
     elif func == 'num_tuples':
         get_num_tuples(params)
-    elif func == 'run_query':
-        run_query(params)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

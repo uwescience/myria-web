@@ -6,9 +6,7 @@ var fs = require('fs');
 var cp = require('child_process');
 var url = require('url');
 
-var compilepath = 'raco/c_test_environment/';
-var datasetpath = compilepath + 'datasets/';
-var schemepath = compilepath + 'schema/';
+var compilepath = process.env["RACO_HOME"] + '/c_test_environment/';
 var hostname = 'localhost';
 var port = 1337;
 var py = './metastore.py';
