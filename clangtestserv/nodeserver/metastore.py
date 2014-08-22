@@ -42,9 +42,10 @@ def process_query(params):
     backend = params[3]
     c = conn.cursor()
     cur_time = time.time()
+    default_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
-                  'ACCEPTED', cur_time, None, 0, 0, "", backend)
+                  'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
     c.execute(query, param_list)
     conn.commit()
     print str(cur_time) + ' ' + qid + ' started'
@@ -83,12 +84,9 @@ def run_query(params):
 def update_query_error(qid, e):
     stat_query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
     cat_query = 'UPDATE dataset SET numTuples = 0 WHERE queryId = ?'
-    schema_query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-    error_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     c = conn.cursor()
     c.execute(stat_query, (qid,))
     c.execute(cat_query, (qid,))
-    c.execute(schema_query, (error_schema, qid,))
     conn.commit()
     print 'error:' + str(e)
 
