@@ -531,8 +531,8 @@ function restoreState() {
   editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
-  $(".backend-menu").val(backend);
-  setBackend(backend);
+  $(".backend-menu").val(backendProcess);
+  setBackend(backendProcess);
 
 }
 

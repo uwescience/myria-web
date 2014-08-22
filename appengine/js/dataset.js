@@ -31,7 +31,7 @@ function setBackend(backend) {
 
 function loadTable() {
   // default to host from myria
-  var url = 'http://' + myriaConnection + '/dataset';
+  var url = myriaConnection + '/dataset';
   if (backendProcess == 'clang') {
     url = 'http://' + clangConnection + '/dataset';
   }
@@ -72,9 +72,15 @@ function loadTable() {
 /* A dataset is small if we know its size and the size is below the
     specified cell limit. (Number of cells is # cols * # rows.) */
 function is_small_dataset(d, cell_limit) {
+  var len = 0;
+  if (backendProcess == 'clang') {
+    len = JSON.parse(d['schema'])['columnNames'].length;
+  } else {
+    len = d['schema']['columnNames'].length;
+  }
   return (d['numTuples'] >= 0 &&
          ((cell_limit == 0) ||
-         (JSON.parse(d['schema'])['columnNames'].length * d['numTuples'] <= cell_limit)));
+         (len * d['numTuples'] <= cell_limit)));
 }
 
 function saveState() {
