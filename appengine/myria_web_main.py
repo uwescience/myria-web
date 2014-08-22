@@ -341,9 +341,14 @@ class MyriaPage(MyriaHandler):
         return connection_string
 
     def base_template_vars(self):
+        if self.app.ssl:
+            uri_scheme = "https"
+        else:
+            uri_scheme = "http"
         return {'connectionString': self.get_connection_string(),
-                'myriaConnection': "{h}:{p}".format(
-                    h=self.app.myriahostname, p=self.app.myriaport),
+                'myriaConnection': "{s}://{h}:{p}".format(
+                    s=uri_scheme, h=self.app.myriahostname,
+                    p=self.app.myriaport),
                 'clangConnection': "{h}:{p}".format(
                     h=self.app.clanghostname, p=self.app.clangport),
                 'version': VERSION,
@@ -764,7 +769,8 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='vega.cs.washington.edu', port=1776):
+                 hostname='rest.myria.cs.washington.edu',
+                 port=1776, ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -790,6 +796,7 @@ class Application(webapp2.WSGIApplication):
         self.clangport = 1337
         self.clangConnection = ClangConnection(self.clanghostname,
                                                self.clangport)
+        self.ssl = ssl
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)

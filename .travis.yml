@@ -2,5 +2,6 @@ language: python
 python:
   - "2.7"
 install:
+  - curl -O http://googleappengine.googlecode.com/files/google_appengine_1.8.1.zip && unzip -q google_appengine_1.8.1.zip
   - pip install -r requirements-dev.txt
-script: nosetests -w appengine --with-gae --exclude-dir={myria,raco,ply,networkx} --without-sandbox
+script: nosetests -w appengine --with-gae --exclude-dir={myria,raco,ply,networkx} --without-sandbox --gae-lib-root=google_appengine

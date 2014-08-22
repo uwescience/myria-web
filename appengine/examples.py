@@ -53,8 +53,8 @@ profiling = '''P = scan(public:logs:Profiling);
 Agg = [from P emit worker_id() as workerId, count(*) as numProfilings];
 store(Agg, NumProfilings);'''
 
-phytoplankton = '''OppData = scan(armbrustlab:seaflow:all_opp_v3);
-VctData = scan(armbrustlab:seaflow:all_vct);
+phytoplankton = '''OppData = scan(all_opp_v3);
+VctData = scan(all_vct);
 
 OppWithPop = select opp.*, vct.pop
              from OppData as opp,
