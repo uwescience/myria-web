@@ -22,14 +22,14 @@ var editor_templates = {
   trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
 };
 
-var editorLanguage = 'MyriaL',
-  editorContentKey = 'code-editor-content',
-  editorHistoryKey = 'editor-history',
+var editorLanguage = 'myrial',
+  editorStateKey = 'code-editor-state',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
   backendProcess = 'myria',
-  grappaends = ['grappa', 'clang'];
+  grappaends = ['grappa', 'clang'],
+  editorState = {};
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -72,7 +72,6 @@ function getplan() {
 
 function optimizeplan() {
   $('#svg').empty();
-
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
@@ -85,14 +84,15 @@ function optimizeplan() {
   });
   handleerrors(request, "#optimized");
 
-  var url = "compile?" + $.param({
+
+  var request = $.post("compile", {
     query: query,
     language: editorLanguage,
     backend: backendProcess,
     multiway_join: multiway_join_checked
   });
 
-  request = $.getJSON(url).success(function (queryPlan) {
+  request.success(function (queryPlan) {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
@@ -147,6 +147,7 @@ function optimizeplan() {
   }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
+    $('a[href="#queryplan"]').off('shown.bs.tab');
   });
 }
 
@@ -298,9 +299,11 @@ function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
   $("svg").empty();
+  $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
-function updateExamples(language, callback) {
+function updateExamples(restored) {
+  var language = editorLanguage;
   var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
 
@@ -317,7 +320,7 @@ function updateExamples(language, callback) {
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}): ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -334,12 +337,10 @@ function updateExamples(language, callback) {
         optimizeplan();
       });
     }
-    /*
-     * Finally, set the global variable editorLanguage to the new language. This
-     * makes all the API calls back use this query parameter.
-     */
-    editorLanguage = language;
-    callback();
+    $('#editor-tabs a[href="#examples"]').tab('show');
+    if (!restored) {
+      $(".example").first().click();
+    }
   };
 
   $.ajax("examples", {
@@ -352,31 +353,42 @@ function updateExamples(language, callback) {
   });
 }
 
-function changeLanguage() {
-  var language = $(".language-menu option:selected").val();
-  setLanguage(language);
-  updateExamples(language, function () {
-    $(".example").first().click();
-  });
-}
-
-function setLanguage(language) {
+function resetEditor(newLanguage, saveOld) {
+  saveOld = saveOld || false;
   var languages = [ 'datalog', 'myrial', 'sql' ];
-  if (!_.contains(languages, language)) {
-    console.log('Language not supported: ' + language);
+  if (!newLanguage || !_.contains(languages, newLanguage)) {
+    console.log("Unable to reset editor to new language " + newLanguage);
     return;
   }
 
-  $('#editor-tabs a[href="#examples"]').tab('show');
-
-  if (language === 'myrial') {
-    editor.setOption('mode', {name: 'myrial',
-      singleLineStringErrors: false});
-  } else if (language === 'sql') {
-    editor.setOption('mode', 'text/x-sql');
-  } else if (language === 'datalog') {
-    editor.setOption('mode', {name: 'prolog'});
+  if (saveOld) {
+    editorState[editorLanguage] = {
+      content: editor.getValue(),
+      history: editor.getHistory()
+    };
   }
+
+  var restored;
+  var state = editorState[newLanguage];
+  if (editorState[newLanguage]) {
+    editor.setValue(state.content);
+    editor.setHistory(state.history);
+    restored = true;
+  } else {
+    restored = false;
+    editor.setValue('loading examples...');
+    editor.clearHistory();
+  }
+
+  editorLanguage = newLanguage;
+  var modes = {
+    'datalog': 'prolog',
+    'myrial': {name: 'myrial', singleLineStringErrors: false},
+    'sql': 'text/x-sql'
+  };
+  editor.setOption('mode', modes[newLanguage]);
+
+  updateExamples(restored);
 }
 
 function changeBackend() {
@@ -437,7 +449,7 @@ function initializeDatasetSearch() {
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
     ajax: {
-      url: "http://" + myriaConnection + "/dataset/search/",
+      url: myriaConnection + "/dataset/search/",
       dataType: 'json',
       quietMillis: 100,
       cache: true,
@@ -486,7 +498,7 @@ function initializeDatasetSearch() {
   }).on("change", function (e) {
     var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
-      url = "http://" + myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+      url = myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function (data) {
       var html = '';
       _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {
@@ -499,40 +511,31 @@ function initializeDatasetSearch() {
 }
 
 function saveState() {
-  localStorage.setItem(editorHistoryKey, JSON.stringify(editor.getHistory()));
-  localStorage.setItem(editorContentKey, editor.getValue());
-  localStorage.setItem(editorLanguageKey, $(".language-menu").find(":selected").val());
-  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
   localStorage.setItem(developerCollapseKey, $("#developer-options").hasClass('collapse in'));
-
+  localStorage.setItem(editorLanguageKey, editorLanguage);
+  editorState[editorLanguage] = {
+    content: editor.getValue(),
+    history: editor.getHistory()
+  };
+  localStorage.setItem(editorStateKey, JSON.stringify(editorState));
+  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
 }
 
 function restoreState() {
-  var history = JSON.parse(localStorage.getItem(editorHistoryKey));
-  var content = localStorage.getItem(editorContentKey);
-  var language = localStorage.getItem(editorLanguageKey);
-  var backend = localStorage.getItem(editorBackendKey);
+  // UI state
   var developerCollapse = localStorage.getItem(developerCollapseKey);
-
-  if (content) {
-    $(".language-menu").val(language);
-    setLanguage(language);
-    updateExamples(language, function () {
-    });
-
-    $(".backend-menu").val(backend);
-    setBackend(backend);
-    editor.setValue(content);
-    editor.setHistory(history);
-
-    if (developerCollapse === 'true') {
-      $('#developer-options').addClass('in');
-    }
-
-    return true;
+  if (developerCollapse === 'true') {
+    $('#developer-options').addClass('in');
   }
 
-  return false;
+  // Language & Editor state
+  editorLanguage = localStorage.getItem(editorLanguageKey) || editorLanguage;
+  editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
+  $('.language-menu').val(editorLanguage);
+  resetEditor(editorLanguage, false);
+  $(".backend-menu").val(backendProcess);
+  setBackend(backendProcess);
+
 }
 
 updateExamplesHeight = function () {
@@ -544,15 +547,17 @@ $(function () {
   resetResults();
 
   editor.on("change", resetResults);
-  editor.on("keydown", resetResults);
-  editor.on("keypress", resetResults);
+
   $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     optimizeplan();
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
-  $(".language-menu").change(changeLanguage);
+
+  $(".language-menu").change(function () {
+    resetEditor($(".language-menu option:selected").val(), true);
+  });
   $(".backend-menu").change(changeBackend);
   $(".example").click(function () {
 
@@ -565,9 +570,7 @@ $(function () {
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
 
-  if (!restoreState()) {
-    changeLanguage();
-  }
+  restoreState();
 
   optimizeplan();
 

@@ -39,7 +39,7 @@ function loadTable() {
   else if (backendProcess == 'grappa') {
     url = 'http://' + clangConnection + '/dataset?backend=grappa';
   } else {
-    url = 'http://' + myriaConnection + '/dataset';
+    url = myriaConnection + '/dataset';
   }
   var t = dataset_templates;
   var jqxhr = $.getJSON(url,
