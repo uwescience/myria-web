@@ -78,10 +78,10 @@ function loadTable() {
     specified cell limit. (Number of cells is # cols * # rows.) */
 function is_small_dataset(d, cell_limit) {
   var len = 0;
-  if (backendProcess == 'myria') {
-    len = d['schema']['columnNames'].length;
-  } else {
+  if (_.contains(grappaends, backendProcess)) {
     len = JSON.parse(d['schema'])['columnNames'].length;
+  } else {
+    len = d['schema']['columnNames'].length;
   }
   return (d['numTuples'] >= 0 &&
          ((cell_limit == 0) ||
