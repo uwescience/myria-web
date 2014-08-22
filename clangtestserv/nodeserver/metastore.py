@@ -81,9 +81,14 @@ def run_query(params):
 
 
 def update_query_error(qid, e):
-    query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
+    stat_query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
+    cat_query = 'UPDATE dataset SET numTuples = 0 WHERE queryId = ?'
+    schema_query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+    error_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     c = conn.cursor()
-    c.execute(query, (qid,))
+    c.execute(stat_query, (qid,))
+    c.execute(cat_query, (qid,))
+    c.execute(schema_query, (error_schema, qid,))
     conn.commit()
     print 'error:' + str(e)
 
@@ -166,12 +171,12 @@ def check_catalog(params):
     if not row:
         print json.dumps(res)
     else:
-        colN = json.loads(row[11])['columnNames']
-        colT = json.loads(row[11])['columnTypes']
+        col_names = json.loads(row[11])['columnNames']
+        col_types = json.loads(row[11])['columnTypes']
         res = {'relationKey': {'userName': params[0], 'programName': params[1],
                                'relationName': params[2]}, 'queryId': row[3],
                'created': row[4], 'url': row[5], 'numTuples': row[10],
-               'colNames': colN, 'colTypes': colT}
+               'colNames': col_names, 'colTypes': col_types}
         print json.dumps(res)
 
 
