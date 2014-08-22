@@ -97,7 +97,6 @@ function restoreState() {
   var backend = localStorage.getItem(editorBackendKey);
   $(".backend-menu").val(backend);
   setBackend(backend);
-  return true;
 }
 
 $(function() {

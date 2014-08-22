@@ -518,7 +518,8 @@ function saveState() {
     history: editor.getHistory()
   };
   localStorage.setItem(editorStateKey, JSON.stringify(editorState));
-  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+  localStorage.setItem(editorBackendKey, backendProcess);
+
 }
 
 function restoreState() {
@@ -533,9 +534,9 @@ function restoreState() {
   editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
+  backendProcess = localStorage.getItem(editorBackendKey);
   $(".backend-menu").val(backendProcess);
   setBackend(backendProcess);
-
 }
 
 updateExamplesHeight = function () {
