@@ -117,9 +117,10 @@ function processQuery(req, res) {
       var myriares = JSON.parse(body);
       var backend = myriares.backend;
       var plan = myriares.plan;
-      var filename = myriares.filename;
+      var relkey = myriares.relkey;
       var url = 'http://' + hostname + ':' + port;
-      var params = filename + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
+      var filename = relkey.split('_')[2];
+      var params = relkey + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
       cp.exec(py + ' process_query -p ' + params, function (err, stdout) {
         if (err) { console.log('process' + err); } else {
           console.log(stdout);

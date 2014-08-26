@@ -33,11 +33,10 @@ def parse_options(args):
     return ns
 
 
-# params: filename url qid
+# params: relkey url qid
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
-    filename = params[0]
-    relkey = filename.split('_')
+    relkey = params[0].split('_')
     qid = params[2]
     backend = params[3]
     c = conn.cursor()

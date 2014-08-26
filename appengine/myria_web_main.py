@@ -167,9 +167,9 @@ class ClangConnection(object):
     def create_clang_execute_json(self, logical_plan, physical_plan, backend):
         start_index = logical_plan.find("(") + 1
         end_index = logical_plan.find(")")
-        filename = logical_plan[start_index:end_index].replace(":", "_")
+        relkey = logical_plan[start_index:end_index].replace(":", "_")
         return {'plan': compile(physical_plan), 'backend': backend,
-                'filename': filename}
+                'relkey': relkey}
 
     def submit_clang_query(self, compiled):
         url = 'http://%s:%d' % (self.hostname, self.port)
