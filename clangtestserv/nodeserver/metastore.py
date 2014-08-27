@@ -213,15 +213,15 @@ def select_row(params):
 
 
 # params: qid
-def get_rel_keys(params):
+def get_filename(params):
     qid = params[0]
-    query = 'SELECT userName, programName, relationName FROM dataset ' + \
+    query = 'SELECT relationName FROM dataset ' + \
             'WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
     c.execute(query, (qid,))
     row = c.fetchone()
-    filename = '%s_%s_%s' % (row[0], row[1], row[2])
+    filename = row[0]
     conn.close()
     get_query_results(filename, qid)
 
@@ -310,8 +310,8 @@ def main(args):
         select_table(params)
     elif func == 'select_row':
         select_row(params)
-    elif func == 'get_rel_keys':
-        get_rel_keys(params)
+    elif func == 'get_filename':
+        get_filename(params)
     elif func == 'num_tuples':
         get_num_tuples(params)
 

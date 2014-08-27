@@ -182,7 +182,7 @@ function selectRow(res, qid) {
 }
 
 function getResults(res, qid) {
-  cp.exec(py + ' get_rel_keys -p ' + qid, function (err, stdout) {
+  cp.exec(py + ' get_filename -p ' + qid, function (err, stdout) {
     if (err) { console.log(' relkeys ' + err); } else {
       sendJSONResponse(res, stdout);
     }
