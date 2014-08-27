@@ -7,7 +7,7 @@ var cp = require('child_process');
 var url = require('url');
 
 var compilepath = process.env["RACO_HOME"] + '/c_test_environment/';
-var hostname = 'localhost';
+var hostname = 'n03';
 var port = 1337;
 var py = './metastore.py';
 var counter = 1;
@@ -39,7 +39,7 @@ http.createServer(function (req, res) {
     break;
   }
 
-}).listen(port, 'n03');
+}).listen(port, hostname);
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
