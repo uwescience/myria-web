@@ -39,7 +39,7 @@ http.createServer(function (req, res) {
     break;
   }
 
-}).listen(port, 'localhost');
+}).listen(port, 'n03');
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
 function processRelKey(req, res) {
@@ -190,7 +190,6 @@ function getResults(res, qid) {
 }
 
 function getQueryStatus(res, qid) {
-  console.log('QS');
   cp.exec(py + ' get_query_status -p ' + qid, function (err, stdout) {
     if (err) { console.log('qs' + err); } else {
       sendJSONResponse(res, stdout);
