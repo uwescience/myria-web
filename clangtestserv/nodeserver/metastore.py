@@ -33,15 +33,15 @@ def parse_options(args):
     return ns
 
 
-# params: relkey url qid
+# params: rel_keys url qid backend
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
     relkey = params[0].split('_')
+    default_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     qid = params[2]
     backend = params[3]
     c = conn.cursor()
     cur_time = time.time()
-    default_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
@@ -75,7 +75,6 @@ def run_query(params):
     try:
         subprocess.check_output(cmd, cwd=compile_path)
         update_scheme(filename, qid, backend)
-        update_catalog(filename, qid, backend)
     except subprocess.CalledProcessError as e:
         update_query_error(qid, e.output)
 
@@ -90,7 +89,23 @@ def update_query_error(qid, e):
     print 'error:' + str(e)
 
 
-def update_catalog(filename, qid, backend):
+def update_scheme(filename, qid, backend):
+    if backend == 'grappa':
+        openfile = grappa_data_path + filename
+    else:
+        openfile = scheme_path + filename
+    with open(openfile, 'r') as f:
+        data = f.read().split('\n')
+        schema = {'columnNames': data[0], 'columnTypes': data[1]}
+        query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+        c = conn.cursor()
+        c.execute(query, (json.dumps(schema), qid))
+        conn.commit()
+    update_catalog(filename, qid, backend, data[0])
+    update_query_success(qid)
+
+
+def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
         filename = grappa_data_path + filename
         p1 = Popen(['hexdump', filename + '.bin'], stdout=subprocess.PIPE)
@@ -101,26 +116,12 @@ def update_catalog(filename, qid, backend):
     p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
     output = int(p2.communicate()[0])
     if backend == 'grappa':
-        output = output - 1
+        col_size = len(eval(col_names))
+        output = ((output - 1) * 2) / col_size
     c = conn.cursor()
     query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
     c.execute(query, (output, qid))
     conn.commit()
-
-
-def update_scheme(filename, qid, backend):
-    if backend == 'grappa':
-        filename = grappa_data_path + filename
-    else:
-        filename = scheme_path + filename
-    with open(filename, 'r') as f:
-        data = f.read().split('\n')
-        schema = {'columnNames': data[0], 'columnTypes': data[1]}
-        query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-        c = conn.cursor()
-        c.execute(query, (json.dumps(schema), qid))
-        conn.commit()
-    update_query_success(qid)
 
 
 def update_query_success(qid):
@@ -281,15 +282,6 @@ def check_db():
                  ' startTime datetime, endTime datetime, elapsed datetime,' + \
                  ' numTuples int, schema text, backend text)'
         c.execute(create)
-        conn.commit()
-        if c.rowcount < 1:
-            schema = json.dumps({'columnTypes': ['LONG_TYPE', 'LONG_TYPE'],
-                                 'columnNames': ['x', 'y']})
-            query = 'INSERT INTO dataset VALUES' + \
-                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            tuples = ('public', 'adhoc', 'R', 0, 0, 'http://localhost:1337',
-                      'SUCCESS', 0, 1, 1, 30, schema, 'clang')
-            c.execute(query, tuples)
         conn.commit()
 
 
