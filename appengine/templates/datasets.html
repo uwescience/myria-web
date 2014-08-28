@@ -8,8 +8,9 @@
 		    <label for="backend-menu" class="col-sm-2 control-label"> Backend Datasets </label>
 		    <div class = "col-sm-9">
 		      <select class="form-control backend-menu">
+			<option value="grappa"> Grappa </option>
 			<option value="myria" selected> Myria </option>
-			<option value="clang"> C </option>
+                        <option value="clang"> C </option>
                       </select>
                     </div>
                 </div>
@@ -45,8 +46,8 @@
 </script>
 <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-    $(".table").tablesorter({
-        textExtraction: {
+  $(".table").tablesorter({
+    textExtraction: {
             2: function (node, table, cellIndex) {
                 return new Date($(node).find("abbr").attr("title"));
             }
@@ -56,6 +57,7 @@
         },
         headerTemplate: '{content} <small><span></span>'
     });
+
     var resetSortIcons = function() {
         $("th[aria-sort=ascending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes");
         $("th[aria-sort=descending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes-alt");

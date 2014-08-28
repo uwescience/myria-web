@@ -26,8 +26,9 @@ var editorLanguage = 'myrial',
   editorStateKey = 'code-editor-state',
   editorLanguageKey = 'active-language',
   editorBackendKey = 'myria',
-  backendProcess = 'myria';
   developerCollapseKey = 'developer-collapse',
+  backendProcess = 'myria',
+  grappaends = ['grappa', 'clang'],
   editorState = {};
 
 function handleerrors(request, display) {
@@ -75,7 +76,6 @@ function optimizeplan() {
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
 
-
   var request = $.post("optimize", {
     query: query,
     language: editorLanguage,
@@ -91,8 +91,9 @@ function optimizeplan() {
     backend: backendProcess,
     multiway_join: multiway_join_checked
   });
+
   request.success(function (queryPlan) {
-    if (backendProcess === "clang") {
+    if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
         var dot = queryPlan.dot;
@@ -143,7 +144,7 @@ function optimizeplan() {
 	// should not get here
 	console.log("unsupported backend");
     }
-  }).fail(function(jqXHR, textStatus, errorThrown) {
+  }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#svg').empty();
     $('a[href="#queryplan"]').off('shown.bs.tab');
@@ -185,7 +186,7 @@ function displayQueryStatus(query_status) {
   var status = query_status['status'];
   var html = '';
   var connection = myriaConnection + '/query/query-' + query_id;
-  if (backendProcess == 'clang') {
+  if (_.contains(grappaends, backendProcess)) {
       connection = clangConnection + '/query?qid=' + query_id;
   }
   html += t.row({name: 'Status', val: status});
@@ -197,8 +198,8 @@ function displayQueryStatus(query_status) {
   if (status === 'SUCCESS') {
     connection = 'http://' + myriaConnection + '/dataset';
     var data = {queryId: query_id};
-    if (backendProcess == 'clang') {
-      connection = 'http://' + clangConnection + '/dataset';
+    if (_.contains(grappaends, backendProcess)) {
+      connection = 'http://' + clangConnection + '/query';
       data = {qid: query_id};
     }
     // Populate the datasets created table
@@ -208,17 +209,18 @@ function displayQueryStatus(query_status) {
       data: data,
       async: false})
     .done(function (datasets) {
-        if (datasets.length > 0) {
+      if (datasets.length > 0) {
           var d_html = "";
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
             var dload = d.uri + '/data?';
-	    if (backendProcess == 'clang') {
+	    if (_.contains(grappaends, backendProcess)) {
       	      dload += 'qid=' + d['queryId'] + '&';
             }
             d_html += t.dataset_row({uri : dload, userName: relKey.userName,
                 programName: relKey.programName,
                 relationName: relKey.relationName, numTuples: d.numTuples});
+            html += t.dataset_table({content: d_html});
           });
         }
     });
@@ -516,7 +518,8 @@ function saveState() {
     history: editor.getHistory()
   };
   localStorage.setItem(editorStateKey, JSON.stringify(editorState));
-  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+  localStorage.setItem(editorBackendKey, backendProcess);
+
 }
 
 function restoreState() {
@@ -531,9 +534,9 @@ function restoreState() {
   editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
+  backendProcess = localStorage.getItem(editorBackendKey);
   $(".backend-menu").val(backendProcess);
   setBackend(backendProcess);
-
 }
 
 updateExamplesHeight = function () {
