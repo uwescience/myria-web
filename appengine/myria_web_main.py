@@ -82,6 +82,7 @@ def get_plan(query, language, backend, plan_type, connection,
         catalog = ClangCatalog(connection)
     elif backend == "grappa":
         target_algebra = GrappaAlgebra()
+        catalog = ClangCatalog(connection)
     elif multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
@@ -112,10 +113,10 @@ def get_plan(query, language, backend, plan_type, connection,
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            if backend == "clang":
+            if backend in ["clang", "grappa"]:
                 cmyrial = RACompiler()
                 cmyrial.logicalplan = processor.get_logical_plan()
-                cmyrial.optimize(target=CCAlgebra('file'))
+                cmyrial.optimize(target=target_algebra)
                 return cmyrial.physicalplan
             else:
                 return processor.get_physical_plan(multiway_join)
