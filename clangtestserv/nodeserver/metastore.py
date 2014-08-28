@@ -45,9 +45,12 @@ def process_query(params):
     query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
-    c.execute(query, param_list)
-    conn.commit()
-    print str(cur_time) + ' ' + qid + ' started'
+    try:
+        c.execute(query, param_list)
+        conn.commit()
+        print str(cur_time) + ' ' + qid + ' started'
+    except sqlite3.IntegrityError as e:
+        update_query_error(qid, e.output)
 
 
 # params: qid filename backend
@@ -94,30 +97,33 @@ def update_scheme(filename, qid, backend):
         openfile = grappa_data_path + filename
     else:
         openfile = scheme_path + filename
-    with open(openfile, 'r') as f:
-        data = f.read().split('\n')
-        schema = {'columnNames': data[0], 'columnTypes': data[1]}
-        query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-        c = conn.cursor()
-        c.execute(query, (json.dumps(schema), qid))
-        conn.commit()
-    update_catalog(filename, qid, backend, data[0])
-    update_query_success(qid)
+    try:
+        with open(openfile, 'r') as f:
+            data = f.read().split('\n')
+            schema = {'columnNames': data[0], 'columnTypes': data[1]}
+            query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+            c = conn.cursor()
+            c.execute(query, (json.dumps(schema), qid))
+            conn.commit()
+            update_catalog(filename, qid, backend, data[0])
+            update_query_success(qid)
+    except IOError as e:
+        update_query_error(qid, e.output)
 
 
 def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
-        filename = grappa_data_path + filename
-        p1 = Popen(['hexdump', filename + '.bin'], stdout=subprocess.PIPE)
+        filename = grappa_data_path + filename + '.bin'
     else:
         filename = compile_path + filename
         p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
-    p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    output = int(p2.communicate()[0])
+        p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+        output = int(p2.communicate()[0])
     if backend == 'grappa':
         col_size = len(eval(col_names))
-        output = ((output - 1) * 2) / col_size
+        file_size = os.stat(filename).st_size
+        output = file_size / 8 / col_size
     c = conn.cursor()
     query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
     c.execute(query, (output, qid))
@@ -162,7 +168,7 @@ def get_query_status(params):
 def check_catalog(params):
     c = conn.cursor()
     query = 'SELECT * FROM dataset WHERE userName = ? AND ' + \
-            'programName = ? AND relationName = ?'
+            'programName = ? AND relationName = ? ORDER BY queryId DESC'
     c.execute(query, (params[0], params[1], params[2],))
     row = c.fetchone()
     res = {}

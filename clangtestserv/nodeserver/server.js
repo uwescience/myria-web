@@ -122,13 +122,13 @@ function processQuery(req, res) {
       var filename = relkey.split('_')[2];
       var params = relkey + ' ' + url + ' ' + ' ' + qid + ' ' + backend;
       cp.exec(py + ' process_query -p ' + params, function (err, stdout) {
-        if (err) { console.log('process' + err); } else {
+        if (err) { console.log('process' + err.stack); } else {
           console.log(stdout);
 	  getQueryStatus(res, qid);
         }
       });
       fs.writeFile(compilepath + filename + ".cpp", plan, function (err) {
-        if (err) { console.log('writing query source' + err); } else {
+        if (err) { console.log('writing query source' + err.stack); } else {
 	  runQueryUpdate(filename, qid, backend);
 	}
       });
@@ -142,7 +142,7 @@ function processQuery(req, res) {
 
 function writeFile(filename, qid, backend, plan) {
   fs.writeFile(compilepath + filename + ".cpp", plan, function (err) {
-    if (err) { console.log('writing query source' + err); } else {
+    if (err) { console.log('writing query source' + err.stack); } else {
       runQueryUpdate(filename, qid, backend);
     }
   });
@@ -151,7 +151,7 @@ function writeFile(filename, qid, backend, plan) {
 function runQueryUpdate(filename, qid, backend) {
   var params = qid + ' ' + filename + ' ' + backend;
   cp.exec(py + ' update_query_run -p ' + params, function (err, stdout) {
-    if (err) { console.log('runupdate' +err); }
+    if (err) { console.log('runupdate' + err.stack); }
     console.log(stdout);
   });
 }
@@ -159,7 +159,7 @@ function runQueryUpdate(filename, qid, backend) {
 function isInCatalog(res, rkey) {
   var params = rkey.userName + ' ' + rkey.programName + ' ' + rkey.relationName;
   cp.exec(py + ' check_catalog -p ' + params, function (err, stdout) {
-    if (err) { console.log('check cat' + err); } else {
+    if (err) { console.log('check cat' + err.stack); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
@@ -167,7 +167,7 @@ function isInCatalog(res, rkey) {
 
 function selectTable(res, backend) {
   cp.exec(py + ' select_table -p' + backend, function (err, stdout) {
-    if (err) { console.log('seltab ' +err); } else {
+    if (err) { console.log('seltab ' + err.stack); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
@@ -175,7 +175,7 @@ function selectTable(res, backend) {
 
 function selectRow(res, qid) {
   cp.exec(py + ' select_row -p ' + qid, function (err, stdout) {
-    if (err) { console.log('selrow' + err); } else {
+    if (err) { console.log('selrow' + err.stack); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
     }
   });
@@ -183,7 +183,7 @@ function selectRow(res, qid) {
 
 function getResults(res, qid) {
   cp.exec(py + ' get_filename -p ' + qid, function (err, stdout) {
-    if (err) { console.log(' relkeys ' + err); } else {
+    if (err) { console.log(' relkeys ' + err.stack); } else {
       sendJSONResponse(res, stdout);
     }
   });
@@ -191,7 +191,7 @@ function getResults(res, qid) {
 
 function getQueryStatus(res, qid) {
   cp.exec(py + ' get_query_status -p ' + qid, function (err, stdout) {
-    if (err) { console.log('qs' + err); } else {
+    if (err) { console.log('qs' + err.stack); } else {
       sendJSONResponse(res, stdout);
     }
   });
@@ -199,7 +199,7 @@ function getQueryStatus(res, qid) {
 
 function getTuples(res, qid) {
   cp.exec(py + ' get_num_tuples -p ' + qid, function (err, stdout) {
-    if (err) { console.log( 'numtuples ' + err); } else {
+    if (err) { console.log( 'numtuples ' + err.stack); } else {
       sendJSONResponse(res, stdout);
     }
   });
