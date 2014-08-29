@@ -98,7 +98,7 @@ def update_scheme(filename, qid, backend):
     else:
         openfile = scheme_path + filename
     try:
-        with open(openfile, 'r') as f:
+        with open(openfile + '.schema', 'r') as f:
             data = f.read().split('\n')
             schema = {'columnNames': data[0], 'columnTypes': data[1]}
             query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
