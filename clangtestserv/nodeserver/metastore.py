@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Does database storage for node.js server """
+""" Does database storage for node.js clang/grappa server """
 
 import argparse
 import sys
@@ -17,7 +17,7 @@ raco_path = os.environ["RACO_HOME"] + '/'
 grappa_path = os.environ["GRAPPA_HOME"] + '/'
 compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
-grappa_data_path = grappa_path + 'build/Make+Release/applications/join/'
+grappa_data_path = '/shared/'
 
 
 def parse_options(args):
@@ -248,7 +248,7 @@ def get_query_results(filename, qid):
         filename = grappa_data_path + filename + '.bin'
         res.append(json.loads(row[1]))
         with open(filename, 'rb') as f:
-            # TODO properly print out bytes as ints
+            # TODO properly print out bytess as ints
             data = f.read(4)
             while data:
                 val = {'tuple': data}
@@ -279,7 +279,7 @@ def get_num_tuples(params):
     print json.dumps(res)
 
 
-# checks if table exists, otherwise creates the schema for it
+# checks if table exists, otherwise creates the s
 def check_db():
     check = 'SELECT name FROM sqlite_master WHERE type="table"' + \
             'AND name="dataset"'
