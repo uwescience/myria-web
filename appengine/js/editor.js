@@ -94,7 +94,7 @@ function optimizeplan() {
       g.loadQueryPlan(queryPlan);
 
       function rerender() {
-        $('#myria_svg').empty();
+        $('#myria_svg').empty().height('auto');
         g.render(d3.select('#myria_svg'));
       }
 
@@ -105,7 +105,7 @@ function optimizeplan() {
       rerender();
 
     } catch (err) {
-      $('#myria_svg').empty();
+      $('#myria_svg').empty().height('auto');
       $('a[href="#queryplan"]').off('shown.bs.tab');
       $('#optimized').empty();
       $('#relational-plan').collapse('show');
@@ -114,7 +114,7 @@ function optimizeplan() {
     }
   }).fail(function (jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
-    $('#myria_svg').empty();
+    $('#myria_svg').empty().height('auto');
     $('a[href="#queryplan"]').off('shown.bs.tab');
   });
 }
@@ -244,7 +244,8 @@ function executeplan() {
 function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
-  $("svg").empty();
+  $("#relational_svg").empty();
+  $("#myria_svg").empty().height('auto');
   $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
