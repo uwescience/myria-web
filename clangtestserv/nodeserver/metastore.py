@@ -34,6 +34,7 @@ def parse_options(args):
 
 
 # params: rel_keys url qid backend
+# retrieves query, inserts into db
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
     relkey = params[0].split('_')
@@ -42,7 +43,8 @@ def process_query(params):
     backend = params[3]
     c = conn.cursor()
     cur_time = time.time()
-    query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    query = 'INSERT INTO dataset VALUES' + \
+            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
     try:
@@ -73,7 +75,7 @@ def run_query(params):
     cmd.append(filename)
     if backend == 'grappa':
         grappa_name = 'grappa_' + filename
-        cmd_grappa = ['cp', filename + '.cpp', grappa_name + '.cpp']
+        cmd_grappa = ['mv', filename + '.cpp', grappa_name + '.cpp']
         subprocess.check_call(cmd_grappa, cwd=compile_path)
     try:
         subprocess.check_output(cmd, cwd=compile_path)
@@ -123,7 +125,8 @@ def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
         col_size = len(eval(col_names))
         file_size = os.stat(filename).st_size
-        output = file_size / 8 / col_size
+        tuple_size = 8
+        output = file_size / tuple_size / col_size
     c = conn.cursor()
     query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
     c.execute(query, (output, qid))
@@ -173,7 +176,7 @@ def check_catalog(params):
     row = c.fetchone()
     res = {}
     if not row:
-        print json.dumps(res)
+        print json.dumps(res)  # returns empty json
     else:
         col_names = json.loads(row[11])['columnNames']
         col_types = json.loads(row[11])['columnTypes']
@@ -245,6 +248,7 @@ def get_query_results(filename, qid):
         filename = grappa_data_path + filename + '.bin'
         res.append(json.loads(row[1]))
         with open(filename, 'rb') as f:
+            # TODO properly print out bytes as ints
             data = f.read(4)
             while data:
                 val = {'tuple': data}
@@ -263,7 +267,7 @@ def get_query_results(filename, qid):
     print json.dumps(res)
 
 
-# params qid
+# params: qid
 def get_num_tuples(params):
     query = 'SELECT numTuples FROM dataset WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
@@ -275,6 +279,7 @@ def get_num_tuples(params):
     print json.dumps(res)
 
 
+# checks if table exists, otherwise creates the schema for it
 def check_db():
     check = 'SELECT name FROM sqlite_master WHERE type="table"' + \
             'AND name="dataset"'

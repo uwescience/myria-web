@@ -182,7 +182,7 @@ class ClangConnection(object):
         r = requests.Session().get(url)
         return r.json()
 
-
+# for clang and grappa
 class ClangCatalog(Catalog):
 
     def __init__(self, connection):
@@ -219,6 +219,7 @@ class ClangCatalog(Catalog):
             return ret
         raise myria.MyriaError
 
+    # TODO: return real values
     def get_num_servers(self):
         if not self.connection:
             raise RuntimeError("no connection.")

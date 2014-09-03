@@ -1,3 +1,4 @@
+// Used to handle http request and parsing fields, actual work done in python
 'use strict';
 
 var http = require('http');
@@ -140,14 +141,6 @@ function processQuery(req, res) {
   }
 }
 
-function writeFile(filename, qid, backend, plan) {
-  fs.writeFile(compilepath + filename + ".cpp", plan, function (err) {
-    if (err) { console.log('writing query source' + err.stack); } else {
-      runQueryUpdate(filename, qid, backend);
-    }
-  });
-}
-
 function runQueryUpdate(filename, qid, backend) {
   var params = qid + ' ' + filename + ' ' + backend;
   cp.exec(py + ' update_query_run -p ' + params, function (err, stdout) {
@@ -157,7 +150,8 @@ function runQueryUpdate(filename, qid, backend) {
 }
 
 function isInCatalog(res, rkey) {
-  var params = rkey.userName + ' ' + rkey.programName + ' ' + rkey.relationName;
+  var params = rkey.userName + ' ' + rkey.programName + ' '
+        + rkey.relationName;
   cp.exec(py + ' check_catalog -p ' + params, function (err, stdout) {
     if (err) { console.log('check cat' + err.stack); } else {
       sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
