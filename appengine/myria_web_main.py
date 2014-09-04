@@ -114,13 +114,7 @@ def get_plan(query, language, backend, plan_type, connection,
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            if backend in ["clang", "grappa"]:
-                cmyrial = RACompiler()
-                cmyrial.logicalplan = processor.get_logical_plan()
-                cmyrial.optimize(target=target_algebra)
-                return cmyrial.physicalplan
-            else:
-                return processor.get_physical_plan(multiway_join)
+            return processor.get_physical_plan(target_alg=target_algebra)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     raise NotImplementedError('Language %s is not supported on %s'
