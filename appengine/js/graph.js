@@ -496,18 +496,26 @@ function Graph () {
         }
 
         function draw(data, initial) {
-            var scale = (width/(data.width*dpi + 10) > 1) ? 1 : width/(data.width*dpi + 10);
-
+            /*
+             * Axiom 1: we want the SVG viewport to be constant size. Resizing the SVG as we change zoom is distracting for users.
+             *
+             * Axiom 2: the entire SVG should be visible in the default view and zoom.
+             *
+             * Axiom 3: the width of the SVG viewport is fixed and determined by bootstrap.
+             *
+             * Consequence: we need to set the height based on the bootstrap width and the aspect ratio.
+             */
             svg
-                .style("height", (data.height + 0.5)*dpi*scale);
+                .style("height", (width * data.height / data.width) + "px");
 
             gel
-                .attr("height", data.height*dpi*scale)
-                .attr("width", data.width*dpi*scale);
+                .attr("height", data.height*dpi)
+                .attr("width", data.width*dpi);
 
-            graphElement.style("height", (data.height + 0.5)*dpi*scale + "px");
+            graphElement.style("height", (width * data.height / data.width + 15) + "px");
 
             if (initial) {
+                var scale = width/(data.width*dpi + 10);
                 if (scale < 1) {
                     zoom.scale(scale);
                 }
