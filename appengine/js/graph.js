@@ -505,17 +505,14 @@ function Graph () {
              *
              * Consequence: we need to set the height based on the bootstrap width and the aspect ratio.
              */
-            var outer_height = width * (data.height + 0.5) / data.width;
-            var inner_height = width * data.height / data.width;
-
             svg
-                .style("height", outer_height);
+                .style("height", (width * data.height / data.width) + "px");
 
             gel
-                .attr("height", inner_height)
-                .attr("width", width);
+                .attr("height", data.height*dpi)
+                .attr("width", data.width*dpi);
 
-            graphElement.style("height", inner_height + "px");
+            graphElement.style("height", (width * data.height / data.width + 15) + "px");
 
             if (initial) {
                 var scale = width/(data.width*dpi + 10);
