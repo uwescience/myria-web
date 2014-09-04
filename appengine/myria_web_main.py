@@ -407,9 +407,11 @@ class Plan(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend")
-        conn = self.app.myriaConnection
-        if backend in ["clang", "grappa"]:
+        backend = self.request.get("backend", "myria")
+
+        if backend == "myria":
+            conn = self.app.myriaConnection
+        elif backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         try:
@@ -431,12 +433,13 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend")
+        backend = self.request.get("backend", "myria")
 
         multiway_join = json.loads(self.request.get("multiway_join", "false"))
 
-        conn = self.app.myriaConnection
-        if backend in ["clang", "grappa"]:
+        if backend == "myria":
+            conn = self.app.myriaConnection
+        elif backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         assert type(multiway_join) is bool
@@ -601,14 +604,15 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-        backend = self.request.get("backend")
+        backend = self.request.get("backend", "myria")
         multiway_join = self.request.get("multiway_join", False)
 
         if multiway_join == 'false':
             multiway_join = False
 
-        conn = self.app.myriaConnection
-        if backend in ["clang", "grappa"]:
+        if backend == "myria":
+            conn = self.app.myriaConnection
+        elif backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         plan = get_plan(
