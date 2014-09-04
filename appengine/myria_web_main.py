@@ -3,13 +3,16 @@ import json
 import logging
 import math
 import os
-import requests
 from threading import Lock
 import urllib
-import webapp2
-import ast
+
 import jinja2
 
+from appengine.clang_catalog import ClangCatalog
+
+from appengine.myria_catalog import MyriaCatalog
+import requests
+import webapp2
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
@@ -22,13 +25,12 @@ from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
                                      MyriaHyperCubeAlgebra,
                                      compile_to_json)
 from raco.myrial.keywords import get_keywords
-from raco.catalog import Catalog
-from raco.algebra import DEFAULT_CARDINALITY
-from raco import scheme
 from examples import examples
 from demo3_examples import demo3_examples
 from pagination import Pagination
 import myria
+
+
 
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
@@ -71,21 +73,22 @@ QUERIES_PER_PAGE = 25
 def get_plan(query, language, backend, plan_type, connection,
              multiway_join=False):
 
-    catalog = MyriaCatalog(connection)
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
     if backend == "clang":
+        catalog = ClangCatalog(connection)
         target_algebra = CCAlgebra('file')
-        catalog = ClangCatalog(connection)
     elif backend == "grappa":
-        target_algebra = GrappaAlgebra()
         catalog = ClangCatalog(connection)
+        target_algebra = GrappaAlgebra()
     elif multiway_join:
+        catalog = MyriaCatalog(connection)
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
+        catalog = MyriaCatalog(connection)
         target_algebra = MyriaLeftDeepTreeAlgebra()
 
     if language == "datalog":
@@ -181,120 +184,6 @@ class ClangConnection(object):
         url = 'http://%s:%d/status?qid=%s' % (self.hostname, self.port, qid)
         r = requests.Session().get(url)
         return r.json()
-
-
-class ClangCatalog(Catalog):
-
-    def __init__(self, connection):
-        self.connection = connection
-
-    def get_scheme(self, rel_key):
-        relation_args = {
-            'userName': rel_key.user,
-            'programName': rel_key.program,
-            'relationName': rel_key.relation
-        }
-        if not self.connection:
-            raise RuntimeError(
-                "no schema for relation %s because no connection" % rel_key)
-        try:
-            dataset_info = self.check_datasets(relation_args)
-        except myria.MyriaError:
-            raise ValueError('No relation {} in the catalog'.format(rel_key))
-
-        col_names = [item.encode('utf-8') for item in ast.literal_eval(
-            dataset_info['colNames'])]
-        col_types = [item.encode('utf-8') for item in ast.literal_eval(
-            dataset_info['colTypes'])]
-
-        schema = {'columnNames': col_names, 'columnTypes': col_types}
-
-        return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
-
-    def check_datasets(self, rel_args):
-        url = 'http://%s/catalog' % (self.connection.get_conn_string())
-        r = requests.Session().post(url, data=json.dumps(rel_args))
-        ret = r.json()
-        if ret:
-            return ret
-        raise myria.MyriaError
-
-    def get_num_servers(self):
-        if not self.connection:
-            raise RuntimeError("no connection.")
-        return 1
-
-    def num_tuples(self, rel_key):
-        relation_args = {
-            'userName': rel_key.user,
-            'programName': rel_key.program,
-            'relationName': rel_key.relation
-        }
-
-        if not self.connection:
-            raise RuntimeError(
-                "no cardinality of %s because no connection" % rel_key)
-        try:
-            dataset_info = self.get_num_tuples(relation_args)
-        except myria.MyriaError:
-            raise ValueError(rel_key)
-        num_tuples = dataset_info['numTuples']
-        assert type(num_tuples) is int
-        return num_tuples
-
-    def get_num_tuples(self, rel_args):
-        url = 'http://%s/tuples' % (self.connection.get_conn_string())
-        r = requests.Session().post(url, data=json.dumps(rel_args))
-        return r.json()
-
-
-class MyriaCatalog(Catalog):
-
-    def __init__(self, connection):
-        self.connection = connection
-
-    def get_scheme(self, rel_key):
-        relation_args = {
-            'userName': rel_key.user,
-            'programName': rel_key.program,
-            'relationName': rel_key.relation
-        }
-        if not self.connection:
-            raise RuntimeError(
-                "no schema for relation %s because no connection" % rel_key)
-        try:
-            dataset_info = self.connection.dataset(relation_args)
-        except myria.MyriaError:
-            raise ValueError('No relation {} in the catalog'.format(rel_key))
-        schema = dataset_info['schema']
-        print schema
-        return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
-
-    def get_num_servers(self):
-        if not self.connection:
-            raise RuntimeError("no connection.")
-        return len(self.connection.workers_alive())
-
-    def num_tuples(self, rel_key):
-        relation_args = {
-            'userName': rel_key.user,
-            'programName': rel_key.program,
-            'relationName': rel_key.relation
-        }
-        if not self.connection:
-            raise RuntimeError(
-                "no cardinality of %s because no connection" % rel_key)
-        try:
-            dataset_info = self.connection.dataset(relation_args)
-        except myria.MyriaError:
-            raise ValueError(rel_key)
-        num_tuples = dataset_info['numTuples']
-        assert type(num_tuples) is int
-        # that's a work round. numTuples is -1 if the dataset is old
-        if num_tuples != -1:
-            assert num_tuples >= 0
-            return num_tuples
-        return DEFAULT_CARDINALITY
 
 
 class MyriaHandler(webapp2.RequestHandler):
