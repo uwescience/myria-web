@@ -8,10 +8,9 @@ import urllib
 
 import jinja2
 
-from appengine.clang_catalog import ClangCatalog
-from appengine.clang_connection import ClangConnection
-
-from appengine.myria_catalog import MyriaCatalog
+from clang_catalog import ClangCatalog
+from clang_connection import ClangConnection
+from myria_catalog import MyriaCatalog
 import requests
 import webapp2
 from raco import RACompiler
