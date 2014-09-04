@@ -11,6 +11,7 @@ import datetime
 import subprocess
 from subprocess import Popen
 import os
+import struct
 
 conn = sqlite3.connect('dataset.db')
 raco_path = os.environ["RACO_HOME"] + '/'
@@ -46,7 +47,7 @@ def process_query(params):
     query = 'INSERT INTO dataset VALUES' + \
             '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
-                  'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
+                  'ACCEPTED', cur_time, None, 0, -1, default_schema, backend)
     try:
         c.execute(query, param_list)
         conn.commit()
@@ -248,12 +249,19 @@ def get_query_results(filename, qid):
     if backend == 'grappa':
         filename = grappa_data_path + filename + '.bin'
         res.append(schema)
-        cols = len(schema['columnNames'])
+        col_size = len(eval(schema['columnNames']))
         with open(filename, 'rb') as f:
             # TODO properly print out bytes as int
-            data = f.read(4)
+            data = f.read(8)
             while data:
-                val = {'tuple': data}
+                tuples = ""
+                i = 0
+                while i < col_size - 1:
+                    tuples = tuples + str(struct.unpack('<q', data)[0]) + " "
+                    data = f.read(8)
+                    i = i + 1
+                tuples = tuples + str(struct.unpack('<q', data)[0])
+                val = {'tuple': tuples}
                 res.append(val)
                 data = f.read()
     else:
