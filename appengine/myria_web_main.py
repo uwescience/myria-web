@@ -465,19 +465,16 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend")
-
-        if not backend:
-            # default to myria
-            backend = "myria"
+        backend = self.request.get("backend", "myria")
 
         multiway_join = self.request.get("multiway_join", False)
 
         if multiway_join == 'false':
             multiway_join = False
 
-        conn = self.app.myriaConnection
-        if backend in ["clang", "grappa"]:
+        if backend == "myria":
+            conn = self.app.myriaConnection
+        elif backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
         cached_logicalplan = str(
@@ -492,7 +489,7 @@ class Compile(MyriaHandler):
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, language)
             elif backend in ["clang", "grappa"]:
-                compiled = conn.create_clang_json(
+                compiled = conn.create_json(
                     query, cached_logicalplan, physicalplan)
 
         except requests.ConnectionError:
@@ -517,11 +514,8 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend")
+        backend = self.request.get("backend", "myria")
         profile = self.request.get("profile", False)
-
-        if not backend:
-            backend = "myria"
 
         multiway_join = self.request.get("multiway_join", False)
         if multiway_join == 'false':
@@ -551,9 +545,9 @@ class Execute(MyriaHandler):
                             (self.app.myriahostname, self.app.myriaport,
                              query_status['queryId'])
             elif backend in ["clang", "grappa"]:
-                compiled = conn.create_clang_execute_json(
+                compiled = conn.create_execute_json(
                     cached_logicalplan, physicalplan, backend)
-                query_status = conn.submit_clang_query(compiled)
+                query_status = conn.submit_query(compiled)
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (self.app.clanghostname, self.app.clangport,
                              query_status['queryId'])
@@ -594,7 +588,7 @@ class Execute(MyriaHandler):
         if backend == "myria":
             query_status = conn.get_query_status(query_id)
         else:
-            query_status = conn.check_clang_query(query_id)
+            query_status = conn.check_query(query_id)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
