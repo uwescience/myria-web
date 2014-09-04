@@ -1,10 +1,8 @@
 import ast
 import json
-from appengine import myria, requests
-from appengine.raco import scheme
-from appengine.raco.catalog import Catalog
-
-__author__ = 'brandon'
+import myria, requests
+from raco import scheme
+from raco.catalog import Catalog
 
 
 class ClangCatalog(Catalog):

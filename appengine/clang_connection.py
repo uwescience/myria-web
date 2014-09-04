@@ -1,7 +1,7 @@
 import json
-from appengine import requests
-from appengine.raco.compile import compile
-from appengine.raco.viz import operator_to_dot
+import requests
+from raco.compile import compile
+from raco.viz import operator_to_dot
 
 
 class ClangConnection(object):

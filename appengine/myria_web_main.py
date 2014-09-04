@@ -30,8 +30,6 @@ from pagination import Pagination
 import myria
 
 
-
-
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)

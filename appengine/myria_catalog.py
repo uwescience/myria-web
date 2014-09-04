@@ -1,7 +1,7 @@
-from appengine import myria
-from appengine.raco import scheme
-from appengine.raco.algebra import DEFAULT_CARDINALITY
-from appengine.raco.catalog import Catalog
+import myria
+from raco import scheme
+from raco.algebra import DEFAULT_CARDINALITY
+from raco.catalog import Catalog
 
 
 class MyriaCatalog(Catalog):
