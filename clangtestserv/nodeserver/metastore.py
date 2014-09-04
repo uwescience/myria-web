@@ -243,20 +243,22 @@ def get_query_results(filename, qid):
     c.execute(query, (qid,))
     row = c.fetchone()
     backend = row[0]
+    schema = json.loads(row[1])
     res = []
     if backend == 'grappa':
         filename = grappa_data_path + filename + '.bin'
-        res.append(json.loads(row[1]))
+        res.append(schema)
+        cols = len(schema['columnNames'])
         with open(filename, 'rb') as f:
-            # TODO properly print out bytess as ints
+            # TODO properly print out bytes as int
             data = f.read(4)
             while data:
                 val = {'tuple': data}
                 res.append(val)
-                data = f.read(4)
+                data = f.read()
     else:
         filename = compile_path + filename
-        res.append(json.loads(row[1]))
+        res.append(schema)
         with open(filename, 'r') as f:
             data = f.read().split('\n')
             for row in data:
