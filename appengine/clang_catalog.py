@@ -1,6 +1,7 @@
 import ast
 import json
-import myria, requests
+import myria
+import requests
 from raco import scheme
 from raco.catalog import Catalog
 
