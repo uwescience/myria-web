@@ -17,6 +17,8 @@ from raco.myrial import interpreter as MyrialInterpreter
 from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
                                      MyriaHyperCubeAlgebra,
                                      compile_to_json)
+from raco.language.logical import OptLogicalAlgebra
+
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.catalog import Catalog
@@ -104,7 +106,7 @@ def get_plan(query, language, plan_type, connection,
             MyriaCatalog(connection))
         processor.evaluate(parsed)
         if plan_type == 'logical':
-            return processor.get_logical_plan()
+            return processor.get_physical_plan(target_alg=OptLogicalAlgebra())
         elif plan_type == 'physical':
             return processor.get_physical_plan(multiway_join=multiway_join)
         else:
