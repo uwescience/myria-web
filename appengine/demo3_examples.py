@@ -165,12 +165,42 @@ CoM = [from CoMr emit radians_to_degrees(latr) as lat,
 store(CoM, OUTPUT);
 """
 
+richness = """
+-- Load the existing dataset
+AllData = scan(armbrustlab:seaflow:all_data);
+
+-- Convert raw cytometry from native log scale to linear scale
+def to_linear(x): pow(10, x/pow(2, 16)*3.5);
+-- Assign a linear value into one of 16 bins 0..15
+-- N.B.: // is integer division
+def makebins(x): to_linear(x)//(pow(10, 3.5)/16);
+
+-- For each cruise & sample (day + file _id)
+-- break the 3-D cytogram given by forward scatter,
+-- chlorophyll, and phycoerythrin into a 16x16x16
+-- bin space and count the number of cells in each bin.
+AllDataBinned = select Cruise, Day, File_Id,
+                       makebins(fsc_small) as fsc_bin,
+                       makebins(chl_small) as chl_bin,
+                       makebins(pe) as pe_bin,
+                       count(*) as num_particles
+                from AllData;
+
+-- Compute the Richness N0 as the number of full bins
+Richness = select Cruise, Day, File_Id,
+                  count(*) as richness
+           from AllDataBinned;
+
+store(Richness, richness);
+""".strip()
+
 demo3_myr_examples = [
     ('Simple myrial query', simple_myrial),
     ('Geographic center of mass', center_of_mass),
     ('Sigma-clipping (naive version)', sigma_clipping_naive),
     ('Sigma-clipping (advanced version)', sigma_clipping_advanced),
     ('Pagerank', pagerank),
+    ('Richness of SeaFlow samples', richness)
 ]
 
 demo3_sql_examples = [
