@@ -18,12 +18,12 @@ class ClangConnection(object):
                 'plan': compile(physical_plan),
                 'dot': operator_to_dot(physical_plan)}
 
-    def create_execute_json(self, logical_plan, physical_plan, backend):
+    def create_execute_json(self, query, logical_plan, physical_plan, backend):
         start_index = logical_plan.find("(") + 1
         end_index = logical_plan.find(")")
         relkey = logical_plan[start_index:end_index].replace(":", "_")
         return {'plan': compile(physical_plan), 'backend': backend,
-                'relkey': relkey}
+                'relkey': relkey, 'rawQuery': query}
 
     def submit_query(self, compiled):
         url = 'http://%s:%d' % (self.hostname, self.port)
