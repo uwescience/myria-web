@@ -86,12 +86,12 @@ class Backend(object):
         """Returns connection corresponding target algebra"""
 
     @abstractmethod
-    def compile(self, query, logical_plan, physical_plan):
+    def compile_query(self, query, logical_plan, physical_plan):
         """Takes the raw query, logical,b and physical plan
            Returns JSON of compiled query"""
 
     @abstractmethod
-    def execute(self, logical_plan, physical_plan):
+    def execute_query(self, logical_plan, physical_plan):
         """Executes the query, using raw query, logical, and physical plans
            returns the status and corresponding url"""
 
@@ -108,17 +108,49 @@ class CBackend(Backend):
     def catalog(self):
         return ClangCatalog(self.connection())
 
-    def algebra(self, backend="clang"):
+    def algebra(self):
         return CCAlgebra('file')
 
     def connection(self):
         return ClangConnection(self.clanghostname, self.clangport)
 
-    def compile(self, query, logical_plan, physical_plan):
+    def compile_query(self, query, logical_plan, physical_plan):
         return self.connection().create_json(
             query, logical_plan, physical_plan)
 
-    def execute(self, query, logical_plan, physical_plan):
+    def execute_query(self, query, logical_plan, physical_plan):
+        compiled = self.connection().create_execute_json(
+            query, logical_plan, physical_plan, "clang")
+        query_status = self.connection().submit_query(compiled)
+        query_url = 'http://%s:%d/query?qid=%d' %\
+                    (self.clanghostname, self.clangport,
+                     query_status['queryId'])
+        return {'query_status': query_status, 'query_url': query_url}
+
+    def get_query_status(self, query_id):
+        return self.connection().check_query(query_id)
+
+
+class GrappaBackend(Backend):
+    # might use a grappa catalog if clang and grappa are on different servers
+    def __init__(self, hostname, port):
+        self.clanghostname = hostname
+        self.clangport = port
+
+    def catalog(self):
+        return ClangCatalog(self.connection())
+
+    def algebra(self):
+        return GrappaAlgebra()
+
+    def connection(self):
+        return ClangConnection(self.clanghostname, self.clangport)
+
+    def compile_query(self, query, logical_plan, physical_plan):
+        return self.connection().create_json(
+            query, logical_plan, physical_plan)
+
+    def execute_query(self, query, logical_plan, physical_plan):
         compiled = self.connection().create_execute_json(
             query, logical_plan, physical_plan, "clang")
         query_status = self.connection().submit_query(compiled)
@@ -140,8 +172,8 @@ def get_plan(query, language, backend, plan_type, connection,
     language = language.strip().lower()
 
     if backend == "clang":
-        catalog = backend.catalog()
-        target_algebra = backend.algebra()
+        catalog = connection.catalog()
+        target_algebra = connection.algebra()
     elif backend == "grappa":
         catalog = ClangCatalog(connection)
         target_algebra = GrappaAlgebra()
@@ -184,11 +216,11 @@ def get_plan(query, language, backend, plan_type, connection,
                               % (language, backend))
 
 
-def get_logical_plan(query, language, backend, connection=""):
+def get_logical_plan(query, language, backend, connection):
     return get_plan(query, language, backend, 'logical', connection)
 
 
-def get_physical_plan(query, language, backend, connection="",
+def get_physical_plan(query, language, backend, connection,
                       multiway_join=False):
     return get_plan(query, language, backend, 'physical', connection,
                     multiway_join)
@@ -468,8 +500,7 @@ class Plan(MyriaHandler):
         elif backend == "grappa":
             conn = self.app.clangConnection
         elif backend == "clang":
-            backend = self.app.cbackend
-            conn = ""
+            conn = self.app.cbackend
 
         try:
             plan = get_logical_plan(query, language, backend, conn)
@@ -499,7 +530,7 @@ class Optimize(MyriaHandler):
         elif backend == "grappa":
             conn = self.app.clangConnection
         elif backend == "clang":
-            backend = self.app.cbackend
+            conn = self.app.cbackend
 
         assert type(multiway_join) is bool
         try:
@@ -539,8 +570,7 @@ class Compile(MyriaHandler):
         elif backend == "grappa":
             conn = self.app.clangConnection
         elif backend == "clang":
-            backend = self.app.cbackend
-            conn = ""
+            conn = self.app.cbackend
 
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, conn))
@@ -557,7 +587,7 @@ class Compile(MyriaHandler):
                 compiled = conn.create_json(
                     query, cached_logicalplan, physicalplan)
             elif backend == "clang":
-                compiled = self.app.cbackend.compile(
+                compiled = self.app.cbackend.compile_query(
                     query, cached_logicalplan, physicalplan)
 
         except requests.ConnectionError:
@@ -590,8 +620,10 @@ class Execute(MyriaHandler):
             multiway_join = False
 
         conn = self.app.myriaConnection
-        if backend in ["clang", "grappa"]:
+        if backend == "grappa":
             conn = self.app.clangConnection
+        elif backend == "clang":
+            conn = self.app.cbackend
 
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, conn))
@@ -620,7 +652,7 @@ class Execute(MyriaHandler):
                             (self.app.clanghostname, self.app.clangport,
                              query_status['queryId'])
             elif backend == "clang":
-                execute = self.app.cbackend.execute(
+                execute = self.app.cbackend.execute_query(
                     query, cached_logicalplan, physicalplan)
                 query_status = execute['query_status']
                 query_url = execute['query_url']
@@ -683,8 +715,10 @@ class Dot(MyriaHandler):
 
         if backend == "myria":
             conn = self.app.myriaConnection
-        elif backend in ["clang", "grappa"]:
+        elif backend == "grappa":
             conn = self.app.clangConnection
+        elif backend == "clang":
+            conn = self.app.cbackend
 
         plan = get_plan(
             query, language, backend, plan_type, conn, multiway_join)
@@ -723,6 +757,7 @@ class Application(webapp2.WSGIApplication):
         self.myriaport = port
 
         self.cbackend = CBackend('localhost', 1337)
+        self.gbackend = GrappaBackend('localhost', 1337)
         self.clanghostname = 'localhost'
         self.clangport = 1337
         self.clangConnection = ClangConnection(self.clanghostname,
