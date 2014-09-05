@@ -33,7 +33,7 @@ def parse_options(args):
     return ns
 
 
-# params: rel_keys url qid backend
+# params: rel_keys url qid backend query
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
     relkey = params[0].split('_')
@@ -42,9 +42,11 @@ def process_query(params):
     backend = params[3]
     c = conn.cursor()
     cur_time = time.time()
-    query = 'INSERT INTO dataset VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    query = 'INSERT INTO dataset VALUES' + \
+            ' (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
-                  'ACCEPTED', cur_time, None, 0, 0, default_schema, backend)
+                  'ACCEPTED', cur_time, None, 0, 0, default_schema, backend,
+                  params[4])
     c.execute(query, param_list)
     conn.commit()
     print str(cur_time) + ' ' + qid + ' started'
@@ -189,7 +191,8 @@ def select_table(params):
                                'relationName': row[2]}, 'queryId': row[3],
                'created': row[4], 'uri': row[5], 'status': row[6],
                'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
-               'numTuples': row[10], 'schema': row[11], 'backend': row[12]}
+               'numTuples': row[10], 'schema': row[11], 'backend': row[12],
+               'rawQuery': row[13]}
         res.append(val)
     conn.close()
     print json.dumps(res)
@@ -207,7 +210,7 @@ def select_row(params):
                                'relationName': row[2]}, 'queryId': row[3],
                'created': row[4], 'uri': row[5], 'status': row[6],
                'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
-               'numTuples': row[10], 'schema': scheme}
+               'numTuples': row[10], 'schema': scheme, 'rawQuery': row[13]}
         res.append(val)
     conn.close()
     print json.dumps(res)
@@ -280,7 +283,7 @@ def check_db():
                  ' programName text, relationName text, queryId int ' + \
                  ' primary key, created datatime, url text, status text,' + \
                  ' startTime datetime, endTime datetime, elapsed datetime,' + \
-                 ' numTuples int, schema text, backend text)'
+                 ' numTuples int, schema text, backend text, query text)'
         c.execute(create)
         conn.commit()
 
