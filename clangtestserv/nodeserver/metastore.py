@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Does database storage for node.js server """
+""" Does database storage for node.js clang/grappa server """
 
 import argparse
 import sys
@@ -18,7 +18,7 @@ raco_path = 'raco/'
 grappa_path = 'grappa/'
 compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
-grappa_data_path = grappa_path + 'build/Make+Release/applications/join/'
+grappa_data_path = '/shared/'
 
 
 def parse_options(args):
@@ -34,7 +34,8 @@ def parse_options(args):
     return ns
 
 
-# params: rel_keys url qid backend query
+# params: rel_keys url qid backend
+# retrieves query, inserts into db
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
     relkey = params[0].split('_')
@@ -48,9 +49,12 @@ def process_query(params):
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend,
                   '')
-    c.execute(query, param_list)
-    conn.commit()
-    print str(cur_time) + ' ' + qid + ' started'
+    try:
+        c.execute(query, param_list)
+        conn.commit()
+        print str(cur_time) + ' ' + qid + ' started'
+    except sqlite3.IntegrityError as e:
+        update_query_error(qid, e.output)
 
 
 # params: qid filename backend
@@ -96,7 +100,7 @@ def update_scheme(filename, qid, backend):
     else:
         openfile = scheme_path + filename
     try:
-        with open(openfile, 'r') as f:
+        with open(openfile + '.schema', 'r') as f:
             data = f.read().split('\n')
             schema = {'columnNames': data[0], 'columnTypes': data[1]}
             query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
@@ -111,7 +115,7 @@ def update_scheme(filename, qid, backend):
 
 def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
-        filename = grappa_data_path + filename
+        filename = grappa_data_path + filename + '.bin'
         col_size = len(eval(col_names))
         file_size = os.stat(filename + '.bin').st_size
         output = file_size / 8 / col_size
@@ -165,12 +169,12 @@ def get_query_status(params):
 def check_catalog(params):
     c = conn.cursor()
     query = 'SELECT * FROM dataset WHERE userName = ? AND ' + \
-            'programName = ? AND relationName = ?'
+            'programName = ? AND relationName = ? ORDER BY queryId DESC'
     c.execute(query, (params[0], params[1], params[2],))
     row = c.fetchone()
     res = {}
     if not row:
-        print json.dumps(res)
+        print json.dumps(res)  # returns empty json
     else:
         col_names = json.loads(row[11])['columnNames']
         col_types = json.loads(row[11])['columnTypes']
@@ -238,12 +242,14 @@ def get_query_results(filename, qid):
     c.execute(query, (qid,))
     row = c.fetchone()
     backend = row[0]
+    schema = json.loads(row[1])
     res = []
     if backend == 'grappa':
         filename = grappa_data_path + filename + '.bin'
-        res.append(json.loads(row[1]))
-        col_size = len(eval(json.loads(row[1])['columnNames']))
+        res.append(schema)
+        col_size = len(eval(schema['columnNames']))
         with open(filename, 'rb') as f:
+            # TODO properly print out bytes as int
             data = f.read(8)
             while data:
                 tuples = ""
@@ -258,7 +264,7 @@ def get_query_results(filename, qid):
                 data = f.read(8)
     else:
         filename = compile_path + filename
-        res.append(json.loads(row[1]))
+        res.append(schema)
         with open(filename, 'r') as f:
             data = f.read().split('\n')
             for row in data:
@@ -269,7 +275,7 @@ def get_query_results(filename, qid):
     print json.dumps(res)
 
 
-# params qid
+# params: qid
 def get_num_tuples(params):
     query = 'SELECT numTuples FROM dataset WHERE queryId= ?'
     conn = sqlite3.connect('dataset.db')
@@ -281,6 +287,7 @@ def get_num_tuples(params):
     print json.dumps(res)
 
 
+# checks if table exists, otherwise creates the s
 def check_db():
     check = 'SELECT name FROM sqlite_master WHERE type="table"' + \
             'AND name="dataset"'
