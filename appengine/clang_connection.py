@@ -14,7 +14,7 @@ class ClangConnection(object):
         return "%s:%d" % (self.hostname, self.port)
 
     def create_json(self, query, logical_plan, physical_plan):
-        return {'rawQuery': query, 'logicalRa': str(logical_plan),
+        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
                 'plan': compile(physical_plan),
                 'dot': operator_to_dot(physical_plan)}
 
@@ -23,7 +23,7 @@ class ClangConnection(object):
         end_index = logical_plan.find(")")
         relkey = logical_plan[start_index:end_index].replace(":", "_")
         return {'plan': compile(physical_plan), 'backend': backend,
-                'relkey': relkey, 'rawQuery': query}
+                'relkey': relkey, 'rawQuery': str(query)}
 
     def submit_query(self, compiled):
         url = 'http://%s:%d' % (self.hostname, self.port)

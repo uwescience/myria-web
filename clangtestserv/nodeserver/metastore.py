@@ -11,10 +11,11 @@ import datetime
 import subprocess
 from subprocess import Popen
 import os
+import struct
 
 conn = sqlite3.connect('dataset.db')
-raco_path = os.environ["RACO_HOME"] + '/'
-grappa_path = os.environ["GRAPPA_HOME"] + '/'
+raco_path = 'raco/'
+grappa_path = 'grappa/'
 compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
 grappa_data_path = grappa_path + 'build/Make+Release/applications/join/'
@@ -46,7 +47,7 @@ def process_query(params):
             ' (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend,
-                  params[4])
+                  '')
     c.execute(query, param_list)
     conn.commit()
     print str(cur_time) + ' ' + qid + ' started'
@@ -72,7 +73,7 @@ def run_query(params):
     cmd.append(filename)
     if backend == 'grappa':
         grappa_name = 'grappa_' + filename
-        cmd_grappa = ['cp', filename + '.cpp', grappa_name + '.cpp']
+        cmd_grappa = ['mv', filename + '.cpp', grappa_name + '.cpp']
         subprocess.check_call(cmd_grappa, cwd=compile_path)
     try:
         subprocess.check_output(cmd, cwd=compile_path)
@@ -82,11 +83,9 @@ def run_query(params):
 
 
 def update_query_error(qid, e):
-    stat_query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
-    cat_query = 'UPDATE dataset SET numTuples = 0 WHERE queryId = ?'
+    query = 'UPDATE dataset SET status = "ERROR" WHERE queryId = ?'
     c = conn.cursor()
-    c.execute(stat_query, (qid,))
-    c.execute(cat_query, (qid,))
+    c.execute(query, (qid,))
     conn.commit()
     print 'error:' + str(e)
 
@@ -96,30 +95,32 @@ def update_scheme(filename, qid, backend):
         openfile = grappa_data_path + filename
     else:
         openfile = scheme_path + filename
-    with open(openfile, 'r') as f:
-        data = f.read().split('\n')
-        schema = {'columnNames': data[0], 'columnTypes': data[1]}
-        query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
-        c = conn.cursor()
-        c.execute(query, (json.dumps(schema), qid))
-        conn.commit()
-    update_catalog(filename, qid, backend, data[0])
-    update_query_success(qid)
+    try:
+        with open(openfile, 'r') as f:
+            data = f.read().split('\n')
+            schema = {'columnNames': data[0], 'columnTypes': data[1]}
+            query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
+            c = conn.cursor()
+            c.execute(query, (json.dumps(schema), qid))
+            conn.commit()
+            update_catalog(filename, qid, backend, data[0])
+        update_query_success(qid)
+    except:
+        update_query_error(qid, "schema error")
 
 
 def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
         filename = grappa_data_path + filename
-        p1 = Popen(['hexdump', filename + '.bin'], stdout=subprocess.PIPE)
+        col_size = len(eval(col_names))
+        file_size = os.stat(filename + '.bin').st_size
+        output = file_size / 8 / col_size
     else:
         filename = compile_path + filename
         p1 = Popen(['cat', filename], stdout=subprocess.PIPE)
-    p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-    output = int(p2.communicate()[0])
-    if backend == 'grappa':
-        col_size = len(eval(col_names))
-        output = ((output - 1) * 2) / col_size
+        p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+        output = int(p2.communicate()[0])
     c = conn.cursor()
     query = 'UPDATE dataset SET numTuples = ? WHERE queryId = ?'
     c.execute(query, (output, qid))
@@ -241,12 +242,20 @@ def get_query_results(filename, qid):
     if backend == 'grappa':
         filename = grappa_data_path + filename + '.bin'
         res.append(json.loads(row[1]))
+        col_size = len(eval(json.loads(row[1])['columnNames']))
         with open(filename, 'rb') as f:
-            data = f.read(4)
+            data = f.read(8)
             while data:
-                val = {'tuple': data}
+                tuples = ""
+                i = 0
+                while i < col_size - 1:
+                    tuples = tuples + str(struct.unpack('<q', data[0])) + " "
+                    data = f.read(8)
+                    i = i + 1
+                tuples = tuples + str(struct.unpack('<q', data[0]))
+                val = {'tuple': tuples}
                 res.append(val)
-                data = f.read(4)
+                data = f.read(8)
     else:
         filename = compile_path + filename
         res.append(json.loads(row[1]))
