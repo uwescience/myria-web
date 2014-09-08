@@ -28,6 +28,7 @@ var editorLanguage = 'myrial',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
   backendProcess = 'myria',
+  myriaends = ['myria', 'myriamultijoin'],
   grappaends = ['grappa', 'clang'],
   editorState = {};
 
@@ -110,7 +111,7 @@ function optimizeplan() {
       $('#relational-plan').collapse('hide');
       $('#physical-plan').collapse('show');
       clangrerender();
-    } else if (backendProcess === "myria") {
+    } else if (_.contains(myriaends, backendProcess)) {
       try {
         var i = 0;
         _.map(queryPlan.plan.fragments, function (frag) {
@@ -397,7 +398,7 @@ function changeBackend() {
 }
 
 function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang'];
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
     if (!_.contains(backends, backend)) {
 	console.log('Backend not supported: ' + backend);
 	return;
