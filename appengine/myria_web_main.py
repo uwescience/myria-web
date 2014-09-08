@@ -205,15 +205,15 @@ class MyriaMultiJoinBackend(MyriaBackend):
         return MyriaHyperCubeAlgebra(self.catalog())
 
 
-def get_plan(query, language, backend, plan_type, conn):
+def get_plan(query, language, backend, plan_type):
 
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
-    catalog = conn.catalog()
-    target_algebra = conn.algebra()
+    catalog = backend.catalog()
+    target_algebra = backend.algebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -247,12 +247,12 @@ def get_plan(query, language, backend, plan_type, conn):
                               % (language, backend))
 
 
-def get_logical_plan(query, language, backend, conn):
-    return get_plan(query, language, backend, 'logical', conn)
+def get_logical_plan(query, language, backend):
+    return get_plan(query, language, backend, 'logical')
 
 
-def get_physical_plan(query, language, backend, conn):
-    return get_plan(query, language, backend, 'physical', conn)
+def get_physical_plan(query, language, backend):
+    return get_plan(query, language, backend, 'physical')
 
 
 def format_rule(expressions):
@@ -522,11 +522,10 @@ class Plan(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend", "myria")
-        conn = self.app.backends[backend]
+        backend = self.app.backends[self.request.get("backend", "myria")]
 
         try:
-            plan = get_logical_plan(query, language, backend, conn)
+            plan = get_logical_plan(query, language, backend)
         except (MyrialCompileException,
                 MyrialInterpreter.NoSuchRelationException) as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -544,13 +543,10 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend", "myria")
-
-        conn = self.app.backends[backend]
+        backend = self.app.backends[self.request.get("backend", "myria")]
 
         try:
-            optimized = get_physical_plan(
-                query, language, backend, conn)
+            optimized = get_physical_plan(query, language, backend)
 
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -573,18 +569,15 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend", "myria")
+        backend = self.app.backends[self.request.get("backend", "myria")]
 
-        conn = self.app.backends[backend]
-
-        cached_logicalplan = str(
-            get_logical_plan(query, language, backend, conn))
+        cached_logicalplan = str(get_logical_plan(query, language, backend))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend, conn)
+        physicalplan = get_physical_plan(query, language, backend)
 
         try:
-            compiled = self.app.backends[backend].compile_query(
+            compiled = backend.compile_query(
                 query, cached_logicalplan, physicalplan, language)
 
         except requests.ConnectionError:
@@ -609,19 +602,16 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
-        backend = self.request.get("backend", "myria")
         profile = self.request.get("profile", False)
+        backend = self.app.backends[self.request.get("backend", "myria")]
 
-        conn = self.app.backends[backend]
-
-        cached_logicalplan = str(
-            get_logical_plan(query, language, backend, conn))
+        cached_logicalplan = str(get_logical_plan(query, language, backend))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend, conn)
+        physicalplan = get_physical_plan(query, language, backend)
 
         try:
-            execute = self.app.backends[backend].execute_query(
+            execute = backend.execute_query(
                 query, cached_logicalplan, physicalplan, language, profile)
             query_status = execute['query_status']
             query_url = execute['query_url']
@@ -669,12 +659,9 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-        backend = self.request.get("backend", "myria")
+        backend = self.app.backends[self.request.get("backend", "myria")]
 
-        conn = self.app.backends[backend]
-
-        plan = get_plan(
-            query, language, backend, plan_type, conn)
+        plan = get_plan(query, language, backend, plan_type)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
