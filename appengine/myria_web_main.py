@@ -205,15 +205,15 @@ class MyriaMultiJoinBackend(MyriaBackend):
         return MyriaHyperCubeAlgebra(self.catalog())
 
 
-def get_plan(query, language, backend, plan_type, connection):
+def get_plan(query, language, backend, plan_type, conn):
 
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
-    catalog = connection.catalog()
-    target_algebra = connection.algebra()
+    catalog = conn.catalog()
+    target_algebra = conn.algebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -247,12 +247,12 @@ def get_plan(query, language, backend, plan_type, connection):
                               % (language, backend))
 
 
-def get_logical_plan(query, language, backend, connection):
-    return get_plan(query, language, backend, 'logical', connection)
+def get_logical_plan(query, language, backend, conn):
+    return get_plan(query, language, backend, 'logical', conn)
 
 
-def get_physical_plan(query, language, backend, connection):
-    return get_plan(query, language, backend, 'physical', connection)
+def get_physical_plan(query, language, backend, conn):
+    return get_plan(query, language, backend, 'physical', conn)
 
 
 def format_rule(expressions):
@@ -423,12 +423,12 @@ class Queries(MyriaPage):
 class Profile(MyriaPage):
 
     def get(self):
-        conn = self.app.myriaConnection
         query_id = self.request.get("queryId")
         query_plan = {}
         if query_id != '':
             try:
-                query_plan = conn.get_query_status(query_id)
+                query_plan = self.app.backends["myria"].get_query_status(
+                    query_id)
             except myria.MyriaError:
                 pass
 
