@@ -701,8 +701,6 @@ class Application(webapp2.WSGIApplication):
                                                1776),
                          "myriamultijoin": MyriaMultiJoinBackend(
                              'rest.myria.cs.washington.edu', 1776)}
-        self.cbackend = CBackend('localhost', 1337)
-        self.gbackend = GrappaBackend('localhost', 1337)
         self.ssl = ssl
 
         # Quiet logging for production
