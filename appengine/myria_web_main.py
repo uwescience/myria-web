@@ -86,12 +86,13 @@ class Backend(object):
         """Returns connection corresponding target algebra"""
 
     @abstractmethod
-    def compile_query(self, query, logical_plan, physical_plan):
+    def compile_query(self, query, logical_plan, physical_plan, language=None):
         """Takes the raw query, logical,b and physical plan
            Returns JSON of compiled query"""
 
     @abstractmethod
-    def execute_query(self, logical_plan, physical_plan):
+    def execute_query(self, logical_plan, physical_plan, language=None,
+                      profile=False):
         """Executes the query, using raw query, logical, and physical plans
            returns the status and corresponding url"""
 
@@ -102,8 +103,8 @@ class Backend(object):
 
 class CBackend(Backend):
     def __init__(self, hostname, port):
-        self.clanghostname = hostname
-        self.clangport = port
+        self.hostname = hostname
+        self.port = port
 
     def catalog(self):
         return ClangCatalog(self.connection())
@@ -112,19 +113,19 @@ class CBackend(Backend):
         return CCAlgebra('file')
 
     def connection(self):
-        return ClangConnection(self.clanghostname, self.clangport)
+        return ClangConnection(self.hostname, self.port)
 
-    def compile_query(self, query, logical_plan, physical_plan):
+    def compile_query(self, query, logical_plan, physical_plan, language=None):
         return self.connection().create_json(
             query, logical_plan, physical_plan)
 
-    def execute_query(self, query, logical_plan, physical_plan):
+    def execute_query(self, query, logical_plan, physical_plan, language=None,
+                      profile=False):
         compiled = self.connection().create_execute_json(
             query, logical_plan, physical_plan, "clang")
         query_status = self.connection().submit_query(compiled)
         query_url = 'http://%s:%d/query?qid=%d' %\
-                    (self.clanghostname, self.clangport,
-                     query_status['queryId'])
+                    (self.hostname, self.port, query_status['queryId'])
         return {'query_status': query_status, 'query_url': query_url}
 
     def get_query_status(self, query_id):
@@ -146,11 +147,12 @@ class GrappaBackend(Backend):
     def connection(self):
         return ClangConnection(self.clanghostname, self.clangport)
 
-    def compile_query(self, query, logical_plan, physical_plan):
+    def compile_query(self, query, logical_plan, physical_plan, language=None):
         return self.connection().create_json(
             query, logical_plan, physical_plan)
 
-    def execute_query(self, query, logical_plan, physical_plan):
+    def execute_query(self, query, logical_plan, physical_plan, language=None,
+                      profile=False):
         compiled = self.connection().create_execute_json(
             query, logical_plan, physical_plan, "grappa")
         query_status = self.connection().submit_query(compiled)
@@ -163,23 +165,55 @@ class GrappaBackend(Backend):
         return self.connection().check_query(query_id)
 
 
-def get_plan(query, language, backend, plan_type, connection,
-             multiway_join=False):
+class MyriaBackend(Backend):
+    def __init__(self, hostname, port):
+        self.hostname = hostname
+        self.port = port
+
+    def catalog(self):
+        return MyriaCatalog(self.connection())
+
+    def algebra(self):
+        return MyriaLeftDeepTreeAlgebra()
+
+    def connection(self):
+        return myria.MyriaConnection(hostname=self.hostname, port=self.port)
+
+    def compile_query(self, query, logical_plan, physical_plan, language):
+        return compile_to_json(
+            query, logical_plan, physical_plan, language)
+
+    def execute_query(self, query, logical_plan, physical_plan, language,
+                      profile):
+        # Get the Catalog needed to get schemas for compiling the query
+        # .. and compile
+        compiled = compile_to_json(
+            query, logical_plan, physical_plan, language)
+        compiled['profilingMode'] = profile
+        query_status = self.connection().submit_query(compiled)
+        # Issue the query
+        query_url = 'http://%s:%d/execute?query_id=%d' %\
+                    (self.hostname, self.port, query_status['queryId'])
+        return {'query_status': query_status, 'query_url': query_url}
+
+    def get_query_status(self, query_id):
+        return self.connection().get_query_status(query_id)
+
+
+class MyriaMultiJoinBackend(MyriaBackend):
+    def algebra(self):
+        return MyriaHyperCubeAlgebra(self.catalog())
+
+
+def get_plan(query, language, backend, plan_type, connection):
 
     # Fix up the language string
     if language is None:
         language = "datalog"
     language = language.strip().lower()
 
-    if backend in ["clang", "grappa"]:
-        catalog = connection.catalog()
-        target_algebra = connection.algebra()
-    elif multiway_join:
-        catalog = MyriaCatalog(connection)
-        target_algebra = MyriaHyperCubeAlgebra(catalog)
-    else:
-        catalog = MyriaCatalog(connection)
-        target_algebra = MyriaLeftDeepTreeAlgebra()
+    catalog = connection.catalog()
+    target_algebra = connection.algebra()
 
     if language == "datalog":
         dlog = RACompiler()
@@ -217,10 +251,8 @@ def get_logical_plan(query, language, backend, connection):
     return get_plan(query, language, backend, 'logical', connection)
 
 
-def get_physical_plan(query, language, backend, connection,
-                      multiway_join=False):
-    return get_plan(query, language, backend, 'physical', connection,
-                    multiway_join)
+def get_physical_plan(query, language, backend, connection):
+    return get_plan(query, language, backend, 'physical', connection)
 
 
 def format_rule(expressions):
@@ -491,11 +523,7 @@ class Plan(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend", "myria")
-
-        if backend == "myria":
-            conn = self.app.myriaConnection
-        else:
-            conn = self.app.backends[backend]
+        conn = self.app.backends[backend]
 
         try:
             plan = get_logical_plan(query, language, backend, conn)
@@ -518,17 +546,11 @@ class Optimize(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend", "myria")
 
-        multiway_join = json.loads(self.request.get("multiway_join", "false"))
+        conn = self.app.backends[backend]
 
-        if backend == "myria":
-            conn = self.app.myriaConnection
-        else:
-            conn = self.app.backends[backend]
-
-        assert type(multiway_join) is bool
         try:
             optimized = get_physical_plan(
-                query, language, backend, conn, multiway_join)
+                query, language, backend, conn)
 
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -553,32 +575,17 @@ class Compile(MyriaHandler):
         language = self.request.get("language")
         backend = self.request.get("backend", "myria")
 
-        multiway_join = self.request.get("multiway_join", False)
-
-        if multiway_join == 'false':
-            multiway_join = False
-
-        if backend == "myria":
-            conn = self.app.myriaConnection
-        elif backend == "grappa":
-            conn = self.app.gbackend
-        elif backend == "clang":
-            conn = self.app.cbackend
+        conn = self.app.backends[backend]
 
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, conn))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend, conn,
-                                         multiway_join)
+        physicalplan = get_physical_plan(query, language, backend, conn)
 
         try:
-            if backend == "myria":
-                compiled = compile_to_json(
-                    query, cached_logicalplan, physicalplan, language)
-            else:
-                compiled = self.app.backends[backend].compile_query(
-                    query, cached_logicalplan, physicalplan)
+            compiled = self.app.backends[backend].compile_query(
+                query, cached_logicalplan, physicalplan, language)
 
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
@@ -605,39 +612,19 @@ class Execute(MyriaHandler):
         backend = self.request.get("backend", "myria")
         profile = self.request.get("profile", False)
 
-        multiway_join = self.request.get("multiway_join", False)
-        if multiway_join == 'false':
-            multiway_join = False
-
-        if backend == "myria":
-            conn = self.app.myriaConnection
-        else:
-            conn = self.app.backends[backend]
+        conn = self.app.backends[backend]
 
         cached_logicalplan = str(
             get_logical_plan(query, language, backend, conn))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(
-            query, language, backend, conn, multiway_join)
+        physicalplan = get_physical_plan(query, language, backend, conn)
 
         try:
-            if backend == "myria":
-                # Get the Catalog needed to get schemas for compiling the query
-                # .. and compile
-                compiled = compile_to_json(
-                    query, cached_logicalplan, physicalplan, language)
-                compiled['profilingMode'] = profile
-                query_status = conn.submit_query(compiled)
-                # Issue the query
-                query_url = 'http://%s:%d/execute?query_id=%d' %\
-                            (self.app.myriahostname, self.app.myriaport,
-                             query_status['queryId'])
-            else:
-                execute = self.app.backends[backend].execute_query(
-                    query, cached_logicalplan, physicalplan)
-                query_status = execute['query_status']
-                query_url = execute['query_url']
+            execute = self.app.backends[backend].execute_query(
+                query, cached_logicalplan, physicalplan, language, profile)
+            query_status = execute['query_status']
+            query_url = execute['query_url']
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -662,19 +649,14 @@ class Execute(MyriaHandler):
         query_id = self.request.get("queryId")
         backend = self.request.get("backend", "myria")
 
-        conn = self.app.myriaConnection
-
         if not query_id:
             self.response.hpeaders['Content-Type'] = 'text/plain'
             self.response.status = 400
             self.response.write("Error 400 (Bad Request): missing query_id")
             return
 
-        if backend == "myria":
-            query_status = conn.get_query_status(query_id)
-        else:
-            query_status = self.app.backends[backend].get_query_status(
-                query_id)
+        query_status = self.app.backends[backend].get_query_status(
+            query_id)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
@@ -688,18 +670,11 @@ class Dot(MyriaHandler):
         language = self.request.get("language")
         plan_type = self.request.get("type")
         backend = self.request.get("backend", "myria")
-        multiway_join = self.request.get("multiway_join", False)
 
-        if multiway_join == 'false':
-            multiway_join = False
-
-        if backend == "myria":
-            conn = self.app.myriaConnection
-        else:
-            conn = self.app.backends[backend]
+        conn = self.app.backends[backend]
 
         plan = get_plan(
-            query, language, backend, plan_type, conn, multiway_join)
+            query, language, backend, plan_type, conn)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
@@ -734,7 +709,11 @@ class Application(webapp2.WSGIApplication):
         self.myriahostname = hostname
         self.myriaport = port
         self.backends = {"clang": CBackend('localhost', 1337),
-                         "grappa": GrappaBackend('localhost', 1337)}
+                         "grappa": GrappaBackend('localhost', 1337),
+                         "myria": MyriaBackend('rest.myria.cs.washington.edu',
+                                               1776),
+                         "myriamultijoin": MyriaMultiJoinBackend(
+                             'rest.myria.cs.washington.edu', 1776)}
         self.cbackend = CBackend('localhost', 1337)
         self.gbackend = GrappaBackend('localhost', 1337)
         self.ssl = ssl
