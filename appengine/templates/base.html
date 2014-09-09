@@ -45,9 +45,9 @@
 			<!-- Collect the nav links, forms, and other content for toggling -->
 			<div class="navbar-collapse collapse">
 				<ul class="nav navbar-nav">
-					<li{% block editor_active %}{% endblock %}><a href="/editor?{{ backend }}">Editor</a></li>
-					<li{% block queries_active %}{% endblock %}><a href="/queries?{{ backend }}">Queries</a></li>
-					<li{% block datasets_active %}{% endblock %}><a href="/datasets?{{ backend }}">Datasets</a></li>
+					<li{% block editor_active %}{% endblock %}><a class="backends" id="editor" href="/editor">Editor</a></li>
+					<li{% block queries_active %}{% endblock %}><a class="backends" id="queries" href="/queries">Queries</a></li>
+					<li{% block datasets_active %}{% endblock %}><a class="backends" id="datasets" href="/datasets">Datasets</a></li>
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
@@ -83,6 +83,7 @@
 	<script src="js/jquery.panzoom.min.js"></script>
 	<script src="js/jquery.timeago.js"></script>
 	<script src="js/lodash.min.js"></script>
+
 	<script src="js/main.js"></script>
 
 	{% block footer %}{% endblock %}
