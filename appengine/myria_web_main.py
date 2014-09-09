@@ -100,6 +100,10 @@ class Backend(object):
     def get_query_status(self, query_id):
         """Returns the query status of query_id"""
 
+    @abstractmethod
+    def connection_string(self):
+        """Returns the status of the connection of the backend"""
+
 
 class CBackend(Backend):
     def __init__(self, hostname, port):
@@ -130,6 +134,9 @@ class CBackend(Backend):
 
     def get_query_status(self, query_id):
         return self.connection().check_query(query_id)
+
+    def connection_string(self):
+        return "clang"
 
 
 class GrappaBackend(Backend):
@@ -163,6 +170,9 @@ class GrappaBackend(Backend):
 
     def get_query_status(self, query_id):
         return self.connection().check_query(query_id)
+
+    def connection_string(self):
+        return "grappa"
 
 
 class MyriaBackend(Backend):
@@ -198,6 +208,19 @@ class MyriaBackend(Backend):
 
     def get_query_status(self, query_id):
         return self.connection().get_query_status(query_id)
+
+    def connection_string(self):
+        conn = self.connection()
+        if not conn:
+            return "unable to connect to %s:%d" % (self.hostname, self.port)
+        else:
+            try:
+                workers = conn.workers()
+                alive = conn.workers_alive()
+                return "%s:%d [%d/%d]" % (self.hostname, self.port, len(alive),
+                                          len(workers))
+            except:
+                return "error connecting to %s:%d" % (self.hostname, self.port)
 
 
 class MyriaMultiJoinBackend(MyriaBackend):
@@ -299,34 +322,19 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
-    def get_connection_string(self):
-        conn = self.app.myriaConnection
-        hostname = self.app.myriahostname
-        port = self.app.myriaport
-        if not conn:
-            connection_string = "unable to connect to %s:%d" % (hostname, port)
-        else:
-            try:
-                workers = conn.workers()
-                alive = conn.workers_alive()
-                connection_string = "%s:%d [%d/%d]" %\
-                    (hostname, port, len(alive), len(workers))
-            except:
-                connection_string = "error connecting to %s:%d" % (
-                    hostname, port)
-        return connection_string
-
-    def base_template_vars(self):
+    def base_template_vars(self, backend="myria"):
         if self.app.ssl:
             uri_scheme = "https"
         else:
             uri_scheme = "http"
-        return {'connectionString': self.get_connection_string(),
+        return {'connectionString':
+                self.app.backends[backend].connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.myriahostname,
                     p=self.app.myriaport),
                 'clangConnection': "{h}:{p}".format(
                     h='localhost', p=1337),
+                'backend': backend,
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -446,7 +454,8 @@ class Profile(MyriaPage):
 class Datasets(MyriaPage):
 
     def get(self, connection_=None):
-        template_vars = self.base_template_vars()
+        backend = self.request.get("backend", "myria")
+        template_vars = self.base_template_vars(backend)
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -488,8 +497,9 @@ class Editor(MyriaPage):
 
     def get(self):
         # Actually render the page: HTML content
+        backend = self.request.get("backend", "myria")
         self.response.headers['Content-Type'] = 'text/html'
-        template_vars = self.base_template_vars()
+        template_vars = self.base_template_vars(backend)
         template_vars['myrialKeywords'] = get_keywords()
         template_vars['subset'] = 'default'
 
