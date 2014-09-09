@@ -7,11 +7,12 @@ var fs = require('fs');
 var cp = require('child_process');
 var url = require('url');
 
-var compilepath = process.env["RACO_HOME"] + '/c_test_environment/';
+var compilepath = 'raco/c_test_environment/';
 var hostname = 'n03';
 var port = 1337;
-var py = './metastore.py';
-var counter = 1;
+
+var py = './datastore.py';
+var counter = getQid();
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
@@ -195,6 +196,17 @@ function getTuples(res, qid) {
   cp.exec(py + ' get_num_tuples -p ' + qid, function (err, stdout) {
     if (err) { console.log( 'numtuples ' + err.stack); } else {
       sendJSONResponse(res, stdout);
+    }
+  });
+}
+
+function getQid() {
+  cp.exec(py + ' get_latest_qid', function (err, stdout) {
+    if (err) {
+      console.log( 'getQid ' + err.stack);
+      return 0;
+    } else {
+      return stdout;
     }
   });
 }
