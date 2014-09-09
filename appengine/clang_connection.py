@@ -1,3 +1,4 @@
+import myria
 import json
 import requests
 from raco.compile import compile
@@ -33,4 +34,17 @@ class ClangConnection(object):
     def check_query(self, qid):
         url = 'http://%s:%d/status?qid=%s' % (self.hostname, self.port, qid)
         r = requests.Session().get(url)
+        return r.json()
+
+    def check_datasets(self, rel_args):
+        url = 'http://%s/catalog' % (self.get_conn_string())
+        r = requests.Session().post(url, data=json.dumps(rel_args))
+        ret = r.json()
+        if ret:
+            return ret
+        raise myria.MyriaError
+
+    def get_num_tuples(self, rel_args):
+        url = 'http://%s/tuples' % (self.get_conn_string())
+        r = requests.Session().post(url, data=json.dumps(rel_args))
         return r.json()
