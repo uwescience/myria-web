@@ -8,7 +8,7 @@ In datastore.js:
 
 Inserting datasets:
 * Create a csv file (1 dataset entry per line)
-* File format for csv should be: user name, program name, relation name, uri (for clang it is http:\\hostname:port), number of tuples, list of column names, list of column types, backend the data can be used on
+* File format for csv should be: user name, program name, relation name, uri (for clang it is http:\\hostname:port), number of tuples, backend the data can be used on, the number column names, a comma separated list of column names followed by column types
 * Run the command:
 ```./datastore.py insert_new_data -p ``` (filename.csv)
 

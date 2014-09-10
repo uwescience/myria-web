@@ -1,7 +1,5 @@
 import ast
-import json
 import myria
-import requests
 from raco import scheme
 from raco.catalog import Catalog
 
@@ -22,6 +20,7 @@ class ClangCatalog(Catalog):
                 "no schema for relation %s because no connection" % rel_key)
         try:
             dataset_info = self.connection.check_datasets(relation_args)
+
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
 
@@ -29,7 +28,6 @@ class ClangCatalog(Catalog):
             dataset_info['colNames'])]
         col_types = [item.encode('utf-8') for item in ast.literal_eval(
             dataset_info['colTypes'])]
-
         schema = {'columnNames': col_names, 'columnTypes': col_types}
 
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))

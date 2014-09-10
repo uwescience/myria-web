@@ -325,15 +325,20 @@ def insert_new_dataset(params):
         for row in data:
             cur_time = time.time()
             qid = latest_qid() + 1
-            print str(cur_time) + ' ' + qid + ' started'
             val = row.split(',')
-            schema = json.dumps({'columnNames': val[5], 'columnTypes': val[6]})
+            num_cols = int(val[6])
+            col_names = []
+            col_types = []
+            for i in range(num_cols):
+                col_names.append(val[7+i])
+                col_types.append(val[7+i+num_cols])
+            schema = json.dumps({'columnNames': str(col_names),
+                                 'columnTypes': str(col_types)})
             param_list = (val[0], val[1], val[2], qid, cur_time, val[3],
-                          'ACCEPTED', cur_time, None, 0, val[4], schema,
-                          val[7], 'Insert query')
+                          'SUCCESS', cur_time, cur_time, 0, val[4], schema,
+                          val[5], 'Insert query')
             c.execute(query, param_list)
             conn.commit()
-            update_query_success()
     conn.close()
 
 
