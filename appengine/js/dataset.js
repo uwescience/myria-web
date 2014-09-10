@@ -12,7 +12,7 @@ var editorBackendKey = 'myria',
     backendProcess = 'myria',
     grappaends = ['grappa', 'clang'],
     myriaCellLimit = 100*1000*1000,
-    clangCellLimit = 70*1000*1000;
+    clangCellLimit = 10*1000;
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();

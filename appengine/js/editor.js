@@ -1,5 +1,6 @@
 // put all the underscore templates here
-var max_dataset_size = 10*1000*1000;
+var myria_max_size = 10*1000*1000;
+var clang_max_size = 10*1000;
 var editor_templates = {
   //*/
   urls: {
@@ -12,7 +13,7 @@ var editor_templates = {
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
     err_msg: _.template('<p>Error message:</p><pre><%- message %></pre>'),
     dataset_table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Datasets Created</th></tr></thead><trbody><%= content %></trbody></table>'),
-    dataset_row: _.template('<tr><td><%- userName %>:<%- programName %>:<%- relationName %></td><td><%- numTuples %> tuples <% if (numTuples < max_dataset_size) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
+    dataset_row: _.template('<tr><td><%- userName %>:<%- programName %>:<%- relationName %></td><td><%- numTuples %> tuples <% if (numTuples < maxSize) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
   },
   dataset: {
     table: _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>'),
@@ -215,11 +216,13 @@ function displayQueryStatus(query_status) {
           _.each(datasets, function (d) {
             var relKey = d['relationKey'];
             var dload = d.uri + '/data?';
+            var limit = myria_max_size;
 	    if (_.contains(grappaends, backendProcess)) {
       	      dload += 'qid=' + d['queryId'] + '&';
+              limit = clang_max_size;
             }
             d_html += t.dataset_row({uri : dload, userName: relKey.userName,
-                programName: relKey.programName,
+                programName: relKey.programName, maxSize: limit,
                 relationName: relKey.relationName, numTuples: d.numTuples});
             html += t.dataset_table({content: d_html});
           });
