@@ -10,7 +10,9 @@ var dataset_templates = {
 
 var editorBackendKey = 'myria',
     backendProcess = 'myria',
-    grappaends = ['grappa', 'clang'];
+    grappaends = ['grappa', 'clang'],
+    myriaCellLimit = 100*1000*1000,
+    clangCellLimit = 70*1000*1000;
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -61,7 +63,11 @@ function loadTable() {
         html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
                 created: time});
 
-	if (is_small_dataset(d, 100*1000*1000)) {
+        var limit = myriaCellLimit;
+        if (_.contains(grappaends, backendProcess)) {
+          limit = clangCellLimit;
+        }
+	if (is_small_dataset(d, limit)) {
 	  html += t.download({url: dload});
 	} else {
 	  html += t.toolarge;
