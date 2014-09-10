@@ -356,10 +356,11 @@ def check_db():
 def create_db():
     c = conn.cursor()
     create = 'CREATE TABLE IF NOT EXISTS dataset (userName text,' + \
-             ' programName text, relationName text, queryId int ' + \
-             ' primary key, created datetime, url text, status text,' + \
+             ' programName text, relationName text, queryId int,' + \
+             ' created datetime, url text, status text,' + \
              ' startTime datetime, endTime datetime, elapsed datetime,' + \
-             ' numTuples int, schema text, backend text, query text)'
+             ' numTuples int, schema text, backend text, query text,' + \
+             'PRIMARY KEY (userName, programName, relationName, backend)'
     c.execute(create)
     conn.commit()
 
