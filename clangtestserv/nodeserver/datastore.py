@@ -110,8 +110,8 @@ def update_scheme(filename, qid, backend):
             conn.commit()
             update_catalog(filename, qid, backend, data[0])
         update_query_success(qid)
-    except:
-        update_query_error(qid, "schema error")
+    except sqlite3.Error as e:
+        update_query_error(qid, e.output)
 
 
 def update_catalog(filename, qid, backend, col_names):
@@ -360,7 +360,7 @@ def create_db():
              ' created datetime, url text, status text,' + \
              ' startTime datetime, endTime datetime, elapsed datetime,' + \
              ' numTuples int, schema text, backend text, query text,' + \
-             'PRIMARY KEY (userName, programName, relationName, backend)'
+             'PRIMARY KEY (queryId))'
     c.execute(create)
     conn.commit()
 

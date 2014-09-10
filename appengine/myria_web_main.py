@@ -8,23 +8,16 @@ import urllib
 
 import jinja2
 
-
-from abc import abstractmethod, ABCMeta
-from clang_catalog import ClangCatalog
-from clang_connection import ClangConnection
-from myria_catalog import MyriaCatalog
+from clang_backend import ClangBackend
+from grappa_backend import GrappaBackend
+from myria_backend import MyriaBackend, MyriaMultiJoinBackend
 import requests
 import webapp2
 from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language.clang import CCAlgebra
-from raco.language.grappalang import GrappaAlgebra
 from raco.viz import get_dot
-from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
-                                     MyriaHyperCubeAlgebra,
-                                     compile_to_json)
 from raco.myrial.keywords import get_keywords
 from examples import examples
 from demo3_examples import demo3_examples
@@ -68,188 +61,6 @@ except:
     BRANCH = "branch file not found"
 
 QUERIES_PER_PAGE = 25
-
-
-class Backend(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def catalog(self):
-        """Returns the catalog to use for dataset checking"""
-
-    @abstractmethod
-    def algebra(self):
-        """Returns corresponding target algebra"""
-
-    @abstractmethod
-    def connection(self):
-        """Returns connection corresponding target algebra"""
-
-    @abstractmethod
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        """Takes the raw query, logical,b and physical plan
-           Returns JSON of compiled query"""
-
-    @abstractmethod
-    def execute_query(self, logical_plan, physical_plan, language=None,
-                      profile=False):
-        """Executes the query, using raw query, logical, and physical plans
-           returns the status and corresponding url"""
-
-    @abstractmethod
-    def get_query_status(self, query_id):
-        """Returns the query status of query_id"""
-
-    @abstractmethod
-    def connection_string(self):
-        """Returns the status of the connection of the backend"""
-
-
-class CBackend(Backend):
-    def __init__(self, hostname, port):
-        self.hostname = hostname
-        self.port = port
-
-    def catalog(self):
-        return ClangCatalog(self.connection())
-
-    def algebra(self):
-        return CCAlgebra('file')
-
-    def connection(self):
-        return ClangConnection(self.hostname, self.port)
-
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        return self.connection().create_json(
-            query, logical_plan, physical_plan)
-
-    def execute_query(self, query, logical_plan, physical_plan, language=None,
-                      profile=False):
-        try:
-            compiled = self.connection().create_execute_json(
-                query, logical_plan, physical_plan, "clang")
-            query_status = self.connection().submit_query(compiled)
-            query_url = 'http://%s:%d/query?qid=%d' %\
-                        (self.hostname, self.port, query_status['queryId'])
-            return {'query_status': query_status, 'query_url': query_url}
-        except myria.MyriaError as e:
-            raise e
-        except requests.ConnectionError as e:
-            raise e
-
-    def get_query_status(self, query_id):
-        return self.connection().check_query(query_id)
-
-    def connection_string(self):
-        conn = self.connection()
-        if not conn:
-            return "unable to connect to %s:%d" % (self.hostname, self.port)
-        else:
-            return "%s:%d" % (self.hostname, self.port)
-
-
-class GrappaBackend(Backend):
-    # might use a grappa catalog if clang and grappa are on different servers
-    def __init__(self, hostname, port):
-        self.clanghostname = hostname
-        self.clangport = port
-
-    def catalog(self):
-        return ClangCatalog(self.connection())
-
-    def algebra(self):
-        return GrappaAlgebra()
-
-    def connection(self):
-        return ClangConnection(self.clanghostname, self.clangport)
-
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        return self.connection().create_json(
-            query, logical_plan, physical_plan)
-
-    def execute_query(self, query, logical_plan, physical_plan, language=None,
-                      profile=False):
-        try:
-            compiled = self.connection().create_execute_json(
-                query, logical_plan, physical_plan, "grappa")
-            query_status = self.connection().submit_query(compiled)
-            query_url = 'http://%s:%d/query?qid=%d' %\
-                        (self.clanghostname, self.clangport,
-                         query_status['queryId'])
-            return {'query_status': query_status, 'query_url': query_url}
-        except myria.MyriaError as e:
-            raise e
-        except requests.ConnectionError as e:
-            raise e
-
-    def get_query_status(self, query_id):
-        return self.connection().check_query(query_id)
-
-    def connection_string(self):
-        conn = self.connection()
-        if not conn:
-            return "unable to connect to %s:%d" % (self.clanghostname,
-                                                   self.clangport)
-        else:
-            return "%s:%d" % (self.clanghostname, self.clangport)
-
-
-class MyriaBackend(Backend):
-    def __init__(self, hostname, port):
-        self.hostname = hostname
-        self.port = port
-
-    def catalog(self):
-        return MyriaCatalog(self.connection())
-
-    def algebra(self):
-        return MyriaLeftDeepTreeAlgebra()
-
-    def connection(self):
-        return myria.MyriaConnection(hostname=self.hostname, port=self.port)
-
-    def compile_query(self, query, logical_plan, physical_plan, language):
-        return compile_to_json(
-            query, logical_plan, physical_plan, language)
-
-    def execute_query(self, query, logical_plan, physical_plan, language,
-                      profile):
-        try:
-            # Get the Catalog needed to get schemas for compiling the query
-            # .. and compile
-            compiled = compile_to_json(
-                query, logical_plan, physical_plan, language)
-            compiled['profilingMode'] = profile
-            query_status = self.connection().submit_query(compiled)
-            # Issue the query
-            query_url = 'http://%s:%d/execute?query_id=%d' %\
-                        (self.hostname, self.port, query_status['queryId'])
-            return {'query_status': query_status, 'query_url': query_url}
-        except myria.MyriaError as e:
-            raise e
-        except requests.ConnectionError as e:
-            raise e
-
-    def get_query_status(self, query_id):
-        return self.connection().get_query_status(query_id)
-
-    def connection_string(self):
-        conn = self.connection()
-        if not conn:
-            return "unable to connect to %s:%d" % (self.hostname, self.port)
-        else:
-            try:
-                workers = conn.workers()
-                alive = conn.workers_alive()
-                return "%s:%d [%d/%d]" % (self.hostname, self.port, len(alive),
-                                          len(workers))
-            except:
-                return "error connecting to %s:%d" % (self.hostname, self.port)
-
-
-class MyriaMultiJoinBackend(MyriaBackend):
-    def algebra(self):
-        return MyriaHyperCubeAlgebra(self.catalog())
 
 
 def get_plan(query, language, backend, plan_type):
@@ -645,12 +456,10 @@ class Execute(MyriaHandler):
         physicalplan = get_physical_plan(query, language, backend)
 
         try:
-            print backend
             execute = backend.execute_query(
                 query, cached_logicalplan, physicalplan, language, profile)
             query_status = execute['query_status']
             query_url = execute['query_url']
-            print execute
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -734,7 +543,8 @@ class Application(webapp2.WSGIApplication):
         self.clanghostname = 'localhost'
         self.clangport = 1337
 
-        self.backends = {"clang": CBackend(self.clanghostname, self.clangport),
+        self.backends = {"clang": ClangBackend(self.clanghostname,
+                                               self.clangport),
                          "grappa": GrappaBackend(self.clanghostname,
                                                  self.clangport),
                          "myria": MyriaBackend(self.myriahostname,
