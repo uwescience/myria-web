@@ -12,11 +12,12 @@ var hostname = 'n03';
 var port = 1337;
 
 var py = './datastore.py';
-var counter = getQid();
+var counter;
+getQid();
 
 http.createServer(function (req, res) {
   var path = url.parse(req.url).pathname;
-
+  getQid();
   switch(path) {
     case '/dataset':
       processBackend(req, res, selectTable);
@@ -69,7 +70,7 @@ function processData(req, res) {
       var url_parts = url.parse(req.url, true);
       var qid = url_parts.query.qid;
       // var format = url_parts.query.format;
-      // TODO handle format json, csv, tsv
+      // TODO handle format csv, tsv
       getResults(res, qid);
     });
   }
@@ -204,9 +205,9 @@ function getQid() {
   cp.exec(py + ' get_latest_qid', function (err, stdout) {
     if (err) {
       console.log( 'getQid ' + err.stack);
-      return 0;
+      counter = 0;
     } else {
-      return stdout;
+      counter = parseInt(stdout) + 1;
     }
   });
 }

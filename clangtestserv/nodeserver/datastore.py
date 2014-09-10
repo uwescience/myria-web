@@ -288,6 +288,7 @@ def get_num_tuples(params):
     print json.dumps(res)
 
 
+# node doesnt like returning values
 def get_latest_qid():
     query = 'SELECT queryId FROM dataset ORDER BY queryId DESC LIMIT 1'
     conn = sqlite3.connect('dataset.db')
@@ -295,7 +296,23 @@ def get_latest_qid():
     c.execute(query)
     row = c.fetchone()
     conn.close()
-    return row
+    if row is None:
+        print 0
+    else:
+        print row[0]
+
+
+def latest_qid():
+    query = 'SELECT queryId FROM dataset ORDER BY queryId DESC LIMIT 1'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query)
+    row = c.fetchone()
+    conn.close()
+    if row is None:
+        return 0
+    else:
+        return row[0]
 
 
 # params: filename of csv to import new dataset(s)
@@ -307,23 +324,20 @@ def insert_new_dataset(params):
                 '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         for row in data:
             cur_time = time.time()
-            qid = get_latest_qid() + 1
+            qid = latest_qid() + 1
             print str(cur_time) + ' ' + qid + ' started'
             val = row.split(',')
-            schema = {'columnNames': val[5], 'columnTypes': val[6]}
+            schema = json.dumps({'columnNames': val[5], 'columnTypes': val[6]})
             param_list = (val[0], val[1], val[2], qid, cur_time, val[3],
                           'ACCEPTED', cur_time, None, 0, val[4], schema,
                           val[7], 'Insert query')
             c.execute(query, param_list)
-
-#            vals: relkeys(user,relname,programe), numtuples, schema, backend, url
- #           i add: starttime,success, qid, query, endtime, timeelapsed
             conn.commit()
             update_query_success()
     conn.close()
 
 
-# checks if table exists, otherwise creates the s
+# checks if table exists, otherwise creates the db
 def check_db():
     check = 'SELECT name FROM sqlite_master WHERE type="table"' + \
             'AND name="dataset"'
