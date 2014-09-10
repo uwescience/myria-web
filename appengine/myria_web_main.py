@@ -125,18 +125,27 @@ class CBackend(Backend):
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        compiled = self.connection().create_execute_json(
-            query, logical_plan, physical_plan, "clang")
-        query_status = self.connection().submit_query(compiled)
-        query_url = 'http://%s:%d/query?qid=%d' %\
-                    (self.hostname, self.port, query_status['queryId'])
-        return {'query_status': query_status, 'query_url': query_url}
+        try:
+            compiled = self.connection().create_execute_json(
+                query, logical_plan, physical_plan, "clang")
+            query_status = self.connection().submit_query(compiled)
+            query_url = 'http://%s:%d/query?qid=%d' %\
+                        (self.hostname, self.port, query_status['queryId'])
+            return {'query_status': query_status, 'query_url': query_url}
+        except myria.MyriaError as e:
+            raise e
+        except requests.ConnectionError as e:
+            raise e
 
     def get_query_status(self, query_id):
         return self.connection().check_query(query_id)
 
     def connection_string(self):
-        return "clang"
+        conn = self.connection()
+        if not conn:
+            return "unable to connect to %s:%d" % (self.hostname, self.port)
+        else:
+            return "%s:%d" % (self.hostname, self.port)
 
 
 class GrappaBackend(Backend):
@@ -160,19 +169,29 @@ class GrappaBackend(Backend):
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        compiled = self.connection().create_execute_json(
-            query, logical_plan, physical_plan, "grappa")
-        query_status = self.connection().submit_query(compiled)
-        query_url = 'http://%s:%d/query?qid=%d' %\
-                    (self.clanghostname, self.clangport,
-                     query_status['queryId'])
-        return {'query_status': query_status, 'query_url': query_url}
+        try:
+            compiled = self.connection().create_execute_json(
+                query, logical_plan, physical_plan, "grappa")
+            query_status = self.connection().submit_query(compiled)
+            query_url = 'http://%s:%d/query?qid=%d' %\
+                        (self.clanghostname, self.clangport,
+                         query_status['queryId'])
+            return {'query_status': query_status, 'query_url': query_url}
+        except myria.MyriaError as e:
+            raise e
+        except requests.ConnectionError as e:
+            raise e
 
     def get_query_status(self, query_id):
         return self.connection().check_query(query_id)
 
     def connection_string(self):
-        return "grappa"
+        conn = self.connection()
+        if not conn:
+            return "unable to connect to %s:%d" % (self.clanghostname,
+                                                   self.clangport)
+        else:
+            return "%s:%d" % (self.clanghostname, self.clangport)
 
 
 class MyriaBackend(Backend):
@@ -195,16 +214,21 @@ class MyriaBackend(Backend):
 
     def execute_query(self, query, logical_plan, physical_plan, language,
                       profile):
-        # Get the Catalog needed to get schemas for compiling the query
-        # .. and compile
-        compiled = compile_to_json(
-            query, logical_plan, physical_plan, language)
-        compiled['profilingMode'] = profile
-        query_status = self.connection().submit_query(compiled)
-        # Issue the query
-        query_url = 'http://%s:%d/execute?query_id=%d' %\
-                    (self.hostname, self.port, query_status['queryId'])
-        return {'query_status': query_status, 'query_url': query_url}
+        try:
+            # Get the Catalog needed to get schemas for compiling the query
+            # .. and compile
+            compiled = compile_to_json(
+                query, logical_plan, physical_plan, language)
+            compiled['profilingMode'] = profile
+            query_status = self.connection().submit_query(compiled)
+            # Issue the query
+            query_url = 'http://%s:%d/execute?query_id=%d' %\
+                        (self.hostname, self.port, query_status['queryId'])
+            return {'query_status': query_status, 'query_url': query_url}
+        except myria.MyriaError as e:
+            raise e
+        except requests.ConnectionError as e:
+            raise e
 
     def get_query_status(self, query_id):
         return self.connection().get_query_status(query_id)
@@ -621,10 +645,12 @@ class Execute(MyriaHandler):
         physicalplan = get_physical_plan(query, language, backend)
 
         try:
+            print backend
             execute = backend.execute_query(
                 query, cached_logicalplan, physicalplan, language, profile)
             query_status = execute['query_status']
             query_url = execute['query_url']
+            print execute
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -705,12 +731,16 @@ class Application(webapp2.WSGIApplication):
                                                      port=port)
         self.myriahostname = hostname
         self.myriaport = port
-        self.backends = {"clang": CBackend('localhost', 1337),
-                         "grappa": GrappaBackend('localhost', 1337),
-                         "myria": MyriaBackend('rest.myria.cs.washington.edu',
-                                               1776),
+        self.clanghostname = 'localhost'
+        self.clangport = 1337
+
+        self.backends = {"clang": CBackend(self.clanghostname, self.clangport),
+                         "grappa": GrappaBackend(self.clanghostname,
+                                                 self.clangport),
+                         "myria": MyriaBackend(self.myriahostname,
+                                               self.myriaport),
                          "myriamultijoin": MyriaMultiJoinBackend(
-                             'rest.myria.cs.washington.edu', 1776)}
+                             self.myriahostname, self.myriaport)}
         self.ssl = ssl
 
         # Quiet logging for production
