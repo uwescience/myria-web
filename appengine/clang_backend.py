@@ -47,3 +47,9 @@ class ClangBackend(Backend):
             return "unable to connect to %s:%d" % (self.hostname, self.port)
         else:
             return "%s:%d" % (self.hostname, self.port)
+
+    def connection_url(self, uri_scheme):
+        return "http://{h}:{p}".format(h=self.hostname, p=self.port)
+
+    def backend_url(self):
+        return "TODO figure this location"

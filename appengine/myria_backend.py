@@ -59,6 +59,9 @@ class MyriaBackend(Backend):
             except:
                 return "error connecting to %s:%d" % (self.hostname, self.port)
 
+    def backend_url(self):
+        return "http://myria.cs.washington.edu/"
+
 
 class MyriaMultiJoinBackend(MyriaBackend):
     def algebra(self):

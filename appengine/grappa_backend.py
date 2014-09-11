@@ -50,3 +50,9 @@ class GrappaBackend(Backend):
                                                    self.clangport)
         else:
             return "%s:%d" % (self.clanghostname, self.clangport)
+
+    def connection_url(self, uri_scheme):
+        return "http://{h}:{p}".format(h=self.clanghostname, p=self.clangport)
+
+    def backend_url(self):
+        return "http://grappa.io/"

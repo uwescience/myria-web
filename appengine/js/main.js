@@ -9,10 +9,13 @@ function updateBackend() {
 }
 
 function changeUrl(backend) {
+  console.log($("#projecturl"));
   $("#projecturl").empty();
-  $("#projecturl").attr("href") = backendUrl;
+  $("#projecturl").attr("href", backendUrl);
   var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
-  $("#projecturl").val(urlname + ' Project');
+  console.log(  $("#projecturl").html());
+    console.log(  $("#projecturl").text());
+  $("#projecturl").html(urlname + ' Project');
 }
 
 function changeLinks(backend) {

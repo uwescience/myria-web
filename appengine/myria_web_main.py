@@ -157,18 +157,24 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
+    def get_connection_string(self, backend):
+        return self.app.backends[backend].connection_string()
+
+    def get_connection_url(self, backend, uri_scheme):
+        return self.app.backends[backend].connection_url(uri_scheme)
+
+    def get_backend_url(self, backend):
+        return self.app.backends[backend].backend_url()
+
     def base_template_vars(self, backend="myria"):
         if self.app.ssl:
             uri_scheme = "https"
         else:
             uri_scheme = "http"
         return {'connectionString':
-                self.app.backends[backend].connection_string(),
-                'myriaConnection': "{s}://{h}:{p}".format(
-                    s=uri_scheme, h=self.app.myriahostname,
-                    p=self.app.myriaport),
-                'clangConnection': "{h}:{p}".format(
-                    h='localhost', p=1337),
+                self.get_connection_string(backend),
+                'connection': self.get_connection_url(backend, uri_scheme),
+                'backendUrl': self.get_backend_url(backend),
                 'backend': backend,
                 'version': VERSION,
                 'branch': BRANCH}
