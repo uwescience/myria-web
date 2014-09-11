@@ -35,15 +35,20 @@ function setBackend(backend) {
 function loadTable() {
   // default to host from myria
   var url;
-  if (backendProcess == 'clang') {
-    url = connection + '/dataset?backend=clang';
-  }
-  else if (backendProcess == 'grappa') {
-    url = connection + '/dataset?backend=grappa';
-  } else {
-    url = connection + '/dataset';
-  }
-  var t = dataset_templates;
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (info) {
+    var conn = JSON.parse(info).connection;
+    if (backendProcess == 'clang') {
+      url = conn + '/dataset?backend=clang';
+    }
+    else if (backendProcess == 'grappa') {
+      url = conn + '/dataset?backend=grappa';
+    } else {
+      url = conn + '/dataset';
+    }
+      var t = dataset_templates;
   var jqxhr = $.getJSON(url,
     function (data) {
       var html = '';
@@ -78,6 +83,8 @@ function loadTable() {
     }).fail (function (res, err) {
       console.log(err);
     });
+
+  });
 }
 
 /* A dataset is small if we know its size and the size is below the

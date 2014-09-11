@@ -171,10 +171,7 @@ class MyriaPage(MyriaHandler):
             uri_scheme = "https"
         else:
             uri_scheme = "http"
-        return {'connectionString':
-                self.get_connection_string(backend),
-                'connection': self.get_connection_url(backend, uri_scheme),
-                'backendUrl': self.get_backend_url(backend),
+        return {'connection': self.get_connection_url(backend, uri_scheme),
                 'version': VERSION,
                 'branch': BRANCH}
 

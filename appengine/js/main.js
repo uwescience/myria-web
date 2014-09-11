@@ -62,6 +62,7 @@ $(function() {
 
   $(".backend-menu").change(updateBackend);
   var backendProcess = localStorage.getItem(editorBackendKey);
+  restoreState();
   changeLinks(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
