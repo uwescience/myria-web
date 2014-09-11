@@ -46,7 +46,7 @@ class ClangBackend(Backend):
         if not conn:
             return "unable to connect to %s:%d" % (self.hostname, self.port)
         else:
-            return "%s:%d" % (self.hostname, self.port)
+            return "%s:%d[1/1]" % (self.hostname, self.port)
 
     def connection_url(self, uri_scheme):
         return "http://{h}:{p}".format(h=self.hostname, p=self.port)
