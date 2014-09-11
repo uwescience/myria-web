@@ -14,11 +14,8 @@ function changeUrl(backend) {
     backend: backendProcess
   });
   request.success(function (data) {
-    console.log(data);
-    console.log(JSON.parse(data));
     $("#projecturl").attr("href", JSON.parse(data).backendUrl);
   });
-//  $("#projecturl").attr("href", backendUrl);
   if (backend === "myriamultijoin") {
     backend = "myria";
   }
@@ -47,7 +44,13 @@ function changeLinks(backend) {
 
 function changeConnection(backend) {
   $("#connectionstr").empty();
-  $("#connectionstr").append('<a href="' + connection + '/workers" target="_blank">' + connectionString + '</a>');
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (data) {
+    var d = JSON.parse(data);
+    $("#connectionstr").append('<a href="' + d.connection + '/workers" target="_blank">' + d.connectionString + '</a>');
+  });
 }
 
 $(function() {
