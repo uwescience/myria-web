@@ -2,19 +2,27 @@ var editorBackendKey = 'myria',
     backendProcess = 'myria';
 
 function updateBackend() {
-  var backend = $(".backend-menu option:selected").val();
-  changeLinks(backend);
-  changeConnection(backend);
-  changeUrl(backend);
+  backendProcess = $(".backend-menu option:selected").val();
+  changeLinks(backendProcess);
+  changeConnection(backendProcess);
+  changeUrl(backendProcess);
 }
 
 function changeUrl(backend) {
-  console.log($("#projecturl"));
   $("#projecturl").empty();
-  $("#projecturl").attr("href", backendUrl);
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (data) {
+    console.log(data);
+    console.log(JSON.parse(data));
+    $("#projecturl").attr("href", JSON.parse(data).backendUrl);
+  });
+//  $("#projecturl").attr("href", backendUrl);
+  if (backend === "myriamultijoin") {
+    backend = "myria";
+  }
   var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
-  console.log(  $("#projecturl").html());
-    console.log(  $("#projecturl").text());
   $("#projecturl").html(urlname + ' Project');
 }
 
@@ -24,7 +32,7 @@ function changeLinks(backend) {
     console.log('Backend not supported: ' + backend);
     return;
   }
-  backendProcess = backend;
+
   $('.backends').each(function () {
     var href = $(this).attr('href');
     var newhref;
@@ -50,8 +58,10 @@ $(function() {
 
 
   $(".backend-menu").change(updateBackend);
-  var backend = localStorage.getItem(editorBackendKey);
-  changeLinks(backend);
+  var backendProcess = localStorage.getItem(editorBackendKey);
+  changeLinks(backendProcess);
+  changeConnection(backendProcess);
+  changeUrl(backendProcess);
 
   //warn if backend is not available
   if (connectionString.indexOf('error') === 0) {

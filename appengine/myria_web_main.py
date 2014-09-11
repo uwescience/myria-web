@@ -175,9 +175,19 @@ class MyriaPage(MyriaHandler):
                 self.get_connection_string(backend),
                 'connection': self.get_connection_url(backend, uri_scheme),
                 'backendUrl': self.get_backend_url(backend),
-                'backend': backend,
                 'version': VERSION,
                 'branch': BRANCH}
+
+    def post(self):
+        backend = self.request.get("backend", "myria")
+        uri_scheme = self.request.get("uri_scheme", "http")
+        var = {'connectionString':
+               self.get_connection_string(backend),
+               'connection': self.get_connection_url(backend, uri_scheme),
+               'backendUrl': self.get_backend_url(backend),
+               'version': VERSION,
+               'branch': BRANCH}
+        self.response.write(json.dumps(var))
 
 
 def nano_to_str(elapsed):
@@ -538,7 +548,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo3', Demo3)
+            ('/demo3', Demo3),
+            ('/page', MyriaPage)
         ]
 
         # Connection to Myria. Thread-safe
