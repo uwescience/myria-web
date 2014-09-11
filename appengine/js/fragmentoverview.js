@@ -187,7 +187,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
         var step = Math.floor((end - start) / width);
 
         var url = templates.urls.histogram({
-            myria: myriaConnection,
+            myria: connection,
             query: queryPlan.queryId,
             fragment: fragmentId,
             start: start,

@@ -219,7 +219,7 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
         var step = Math.floor((end - start)/width);
 
         var url = templates.urls.histogram({
-            myria: myriaConnection,
+            myria: connection,
             query: queryId,
             fragment: fragmentId,
             start: start,
@@ -280,7 +280,7 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     // initially fetch data and load minimap
     var url = templates.urls.range({
-            myria: myriaConnection,
+            myria: connection,
             query: queryId,
             fragment: fragmentId
         });
@@ -484,7 +484,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
     function fetchData(range) {
         var tooLarge = range[1] - range[0] > maxTimeForDetails;
          var url = templates.urls.profiling({
-            myria: myriaConnection,
+            myria: connection,
             query: queryId,
             fragment: fragmentId,
             start: range[0],

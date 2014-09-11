@@ -38,10 +38,9 @@
 {% block footer %}
 
 <script type="text/javascript" src="js/dataset.js"></script>
-<script>
+<script type="text/javascript">
     {% autoescape false %}
-        var myriaConnection = '{{ myriaConnection }}';
-        var clangConnection = '{{ clangConnection }}';
+        var connection = '{{ connection }}';
     {% endautoescape %}
 </script>
 <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>

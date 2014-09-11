@@ -4,6 +4,15 @@ var editorBackendKey = 'myria',
 function updateBackend() {
   var backend = $(".backend-menu option:selected").val();
   changeLinks(backend);
+  changeConnection(backend);
+  changeUrl(backend);
+}
+
+function changeUrl(backend) {
+  $("#projecturl").empty();
+  $("#projecturl").attr("href") = backendUrl;
+  var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
+  $("#projecturl").val(urlname + ' Project');
 }
 
 function changeLinks(backend) {
@@ -23,6 +32,11 @@ function changeLinks(backend) {
     }
     $(this).attr('href', newhref);
   });
+}
+
+function changeConnection(backend) {
+  $("#connectionstr").empty();
+  $("#connectionstr").append('<a href="' + connection + '/workers" target="_blank">' + connectionString + '</a>');
 }
 
 $(function() {

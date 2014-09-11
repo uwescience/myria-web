@@ -77,7 +77,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
         // download data
         var fragmentId = fragments[0];
         var url = templates.urls.sentData({
-            myria: myriaConnection,
+            myria: connection,
             query: queryPlan.queryId,
             fragment: fragmentId
         });

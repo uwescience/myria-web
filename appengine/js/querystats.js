@@ -1,7 +1,7 @@
 var updateQueryStats = function(element){
     //fragment=-1 means getting all the data
     var shuffleUrl = templates.urls.sentData({
-            myria: myriaConnection,
+            myria: connection,
             query: queryPlan.queryId,
             fragment: -1
         });

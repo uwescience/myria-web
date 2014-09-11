@@ -36,12 +36,12 @@ function loadTable() {
   // default to host from myria
   var url;
   if (backendProcess == 'clang') {
-    url = 'http://' + clangConnection + '/dataset?backend=clang';
+    url = connection + '/dataset?backend=clang';
   }
   else if (backendProcess == 'grappa') {
-    url = 'http://' + clangConnection + '/dataset?backend=grappa';
+    url = connection + '/dataset?backend=grappa';
   } else {
-    url = myriaConnection + '/dataset';
+    url = connection + '/dataset';
   }
   var t = dataset_templates;
   var jqxhr = $.getJSON(url,

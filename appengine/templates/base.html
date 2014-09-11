@@ -18,7 +18,8 @@
 
 <script type="text/javascript">
     {% autoescape false %}
-    var myriaConnection = '{{ myriaConnection }}';
+    var connection = '{{ connection }}';
+    var backendUrl = '{{ backendUrl }}'
     var connectionString = '{{ connectionString }}';
     {% endautoescape %}
 </script>
@@ -51,9 +52,10 @@
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
-					<li>
-						<a href="{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
-					</li>
+					<li id="connectionstr">
+                                          <a href="{{ connection }}/workers" target="_blank"> {{ connectionString }}</a>
+
+</li>
 				</ul>
 			</div>
 		</div>
@@ -71,6 +73,7 @@
 		<div id="footer">
 	    	<div class="container">
 	    		<p class="text-muted credit">
+                         <a id="projecturl"> </a>
 	    			<a href="http://myria.cs.washington.edu/">Myria Project</a> at the <a href="http://www.washington.edu/">University of Washington</a>, 2014
 	    			<span class="pull-right">Using <a href="https://github.com/uwescience/myria-web/commit/{{version}}">{{ version|truncate(10, True) }}</a> from branch <a href="https://github.com/uwescience/myria-web/tree/{{ branch }}">{{ branch }}</a>.</span>
 	    		</p>

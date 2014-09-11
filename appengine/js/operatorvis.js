@@ -30,7 +30,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         .attr("class", "map");
 
     var url = templates.urls.contribution({
-        myria: myriaConnection,
+        myria: connection,
         query: queryPlan.queryId,
         fragment: fragmentId
     });
