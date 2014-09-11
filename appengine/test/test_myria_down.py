@@ -36,7 +36,7 @@ def test_datalog_logical():
               'query': 'A(x) :- R(x,3)'}
     response = app.get('/plan', params)
     assert_equals(response.status_code, 200)
-    assert 'Project' in str(response)
+    assert 'Apply' in str(response)
 
     response = app.get('/optimize', params)
     assert_equals(response.status_code, 200)

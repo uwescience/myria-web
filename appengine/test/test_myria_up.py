@@ -112,7 +112,7 @@ def test_datalog():
               'query': 'A(x) :- Twitter(x,3)'}
     response = mock_get('/plan', params)
     assert_equals(response.status_code, 200)
-    assert 'Project' in str(response)
+    assert 'Apply' in str(response)
 
     response = mock_get('/optimize', params)
     assert_equals(response.status_code, 200)
