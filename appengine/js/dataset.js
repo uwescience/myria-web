@@ -83,9 +83,9 @@ function loadTable() {
     }).fail (function (res, err) {
       console.log(err);
     });
-
   });
 }
+
 
 /* A dataset is small if we know its size and the size is below the
     specified cell limit. (Number of cells is # cols * # rows.) */
