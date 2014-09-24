@@ -371,6 +371,7 @@ function resizeEditor() {
     $('.editor-row>div:nth-child(2)').attr("class", "col-md-12");
     $('.resize-editor>span').removeClass('glyphicon-resize-full').addClass('glyphicon-resize-small');
   }
+  editor.refresh();
 }
 
 function initializeDatasetSearch() {
