@@ -98,7 +98,7 @@ def get_plan(query, language, backend, plan_type):
         if plan_type == 'logical':
             return processor.get_logical_plan()
         elif plan_type == 'physical':
-            return processor.get_physical_plan_for(target_algebra)
+            return processor.get_physical_plan(target_alg=target_algebra)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     raise NotImplementedError('Language %s is not supported on %s'
