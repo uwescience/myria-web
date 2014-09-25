@@ -59,6 +59,7 @@ function loadTable() {
         html += t.finishInfo({elapsedStr: d.elaspedStr,
                               finishTime: d.finishTime});
         });
+      
       $("#querytable").html(html);
     }).fail (function (res, err) {
       console.log(err);
