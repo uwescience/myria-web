@@ -37,6 +37,9 @@ http.createServer(function (req, res) {
     case '/catalog':
       processRelKey(req, res);
     break;
+    case 'queries':
+      processBackend(req, res, selectTable);
+    break;
     default:
     processQuery(req, res);
     break;

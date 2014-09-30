@@ -196,9 +196,9 @@ def select_table(params):
         val = {'relationKey': {'userName': row[0], 'programName': row[1],
                                'relationName': row[2]}, 'queryId': row[3],
                'created': row[4], 'uri': row[5], 'status': row[6],
-               'startTime': row[7], 'endTime': row[8], 'elapsedNanos': row[9],
-               'numTuples': row[10], 'schema': row[11], 'backend': row[12],
-               'rawQuery': row[13]}
+               'startTime': row[7], 'finishTime': row[8],
+               'elapsedNanos': row[9], 'numTuples': row[10],
+               'schema': row[11], 'backend': row[12], 'rawQuery': row[13]}
         res.append(val)
     conn.close()
     print json.dumps(res)

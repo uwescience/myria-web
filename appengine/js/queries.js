@@ -47,14 +47,18 @@ function loadTable() {
     var jqxhr = $.getJSON(url, function (data) {
       var html = '';
       _.each(data, function (d) {
-	var qload = '';
+	var url = d.url;
+        var profile = d.profilingMode;
+        if (!profile) {
+          profile = false;
+        }
         if (_.contains(grappaends, backendProcess)) {
-	  qload = '/query?qid=' + d['queryId'];
+	  url = d.uri + '/query?qid=' + d.queryId;
 	}
         html += t.queryInfo({bootstrapStatus: d.bootstrapStatus,
                              status: d.status, queryId: d.queryId,
-                             rawQuery: d.rawQuery, url: d.url + qload});
-        html += t.profileInfo({profilingMode: d.profilingMode,
+                             rawQuery: d.rawQuery, url: url});
+        html += t.profileInfo({profilingMode: profile,
                                  status: d.status, queryId: d.queryId});
         html += t.finishInfo({elapsedStr: d.elaspedStr,
                               finishTime: d.finishTime});
