@@ -55,20 +55,58 @@ function loadTable() {
         if (_.contains(grappaends, backendProcess)) {
 	  url = d.uri + '/query?qid=' + d.queryId;
 	}
+        d['elapsedStr'] = nano_to_str(d.elapsedNanos);
+        console.log(d.elaplsedStr);
+        if (d['status'] == 'ERROR' || d['status'] == 'KILLED') {
+          d['bootstrapStatus'] = 'danger';
+        } else if (d['status'] == 'SUCCESS') {
+          d['bootstrapStatus'] = 'success';
+        } else if (d['status'] == 'RUNNING') {
+          d['bootstrapStatus'] = 'warning';
+        } else {
+          d['bootstrapStatus'] = '';
+        }
+
         html += t.queryInfo({bootstrapStatus: d.bootstrapStatus,
                              status: d.status, queryId: d.queryId,
                              rawQuery: d.rawQuery, url: url});
         html += t.profileInfo({profilingMode: profile,
                                  status: d.status, queryId: d.queryId});
-        html += t.finishInfo({elapsedStr: d.elaspedStr,
+        html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
                               finishTime: d.finishTime});
         });
-      
+
       $("#querytable").html(html);
     }).fail (function (res, err) {
       console.log(err);
     });
   });
+}
+
+function nano_to_str(elapsed) {
+  if (!elapsed) {
+    return null;
+  }
+  console.log(elapsed);
+  var s = elapsed / 1000000000.0;
+  var m, h, d;
+  m = parseInt(s / 60);
+  s = s % 60;
+  h = parseInt(m / 60);
+  m = m % 60;
+  d = parseInt(h / 24);
+  h = h % 24;
+  var elapsed_str = s.toFixed(6) + 's';
+  if (m) {
+    elapsed_str = m + 'm ' + elapsed_str;
+  }
+  if (h) {
+    elapsed_str = h + 'h ' + elapsed_str;
+  }
+  if (d) {
+    elapsed_str = d + 'd ' + elapsed_str;
+  }
+  return elapsed_str;
 }
 
 function saveState() {

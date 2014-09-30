@@ -187,9 +187,9 @@ function displayQueryStatus(query_status) {
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
-  var connection = connection + '/query/query-' + query_id;
+  var url = connection + '/query/query-' + query_id;
   if (_.contains(grappaends, backendProcess)) {
-      connection = connection + '/query?qid=' + query_id;
+      url = connection + '/query?qid=' + query_id;
   }
   html += t.row({name: 'Status', val: status});
   html += t.time_row({name: 'Start', val: query_status['startTime']});
@@ -198,16 +198,16 @@ function displayQueryStatus(query_status) {
   html = t.table({connection: connection, query_id: query_id, content: html});
 
   if (status === 'SUCCESS') {
-    connection = connection + '/dataset';
+    url = connection + '/dataset';
     var data = {queryId: query_id};
     if (_.contains(grappaends, backendProcess)) {
-      connection = connection + '/query';
+      url = connection + '/query';
       data = {qid: query_id};
     }
     // Populate the datasets created table
     $.ajax({
       dataType: "json",
-      url: connection,
+      url: url,
       data: data,
       async: false})
     .done(function (datasets) {
