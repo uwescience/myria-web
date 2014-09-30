@@ -277,19 +277,20 @@ def get_query_results(filename, qid):
     print json.dumps(res)
 
 
-# params: qid
+# params: username, programname, relationname
 def get_num_tuples(params):
-    query = 'SELECT numTuples FROM dataset WHERE queryId= ?'
+    query = 'SELECT numTuples FROM dataset WHERE userName = ? AND ' + \
+            'programName = ? AND relationName = ? ORDER BY queryId DESC'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
-    c.execute(query, params[0])
+    c.execute(query, (params[0], params[1], params[2],))
     row = c.fetchone()
     res = {'numTuples': row[0]}
     conn.close()
     print json.dumps(res)
 
 
-# node doesnt like returning values
+# node doesnt like return values
 def get_latest_qid():
     query = 'SELECT queryId FROM dataset ORDER BY queryId DESC LIMIT 1'
     conn = sqlite3.connect('dataset.db')

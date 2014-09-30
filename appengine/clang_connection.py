@@ -15,7 +15,7 @@ class ClangConnection(object):
         return "%s:%d" % (self.hostname, self.port)
 
     def create_json(self, query, logical_plan, physical_plan):
-        return {'logicalRa': str(logical_plan),
+        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
                 'plan': compile(physical_plan),
                 'dot': operator_to_dot(physical_plan)}
 

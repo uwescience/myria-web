@@ -226,17 +226,6 @@ class Queries(MyriaPage):
         if max_ is None:
             max_ = count
 
-        for q in queries:
-            q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
-            if q['status'] in ['ERROR', 'KILLED']:
-                q['bootstrapStatus'] = 'danger'
-            elif q['status'] == 'SUCCESS':
-                q['bootstrapStatus'] = 'success'
-            elif q['status'] == 'RUNNING':
-                q['bootstrapStatus'] = 'warning'
-            else:
-                q['bootstrapStatus'] = ''
-
         template_vars = self.base_template_vars()
         template_vars.update({'queries': queries,
                               'prevUrl': None,

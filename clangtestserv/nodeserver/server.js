@@ -29,13 +29,13 @@ http.createServer(function (req, res) {
       processQid(req, res, getQueryStatus);
     break;
     case '/tuples':
-      processQid(req, res, getTuples);
+      processRelKey(req, res, getTuples);
     break;
     case '/data':
       processData(req, res);
     break;
     case '/catalog':
-      processRelKey(req, res);
+      processRelKey(req, res, isInCatalog);
     break;
     case 'queries':
       processBackend(req, res, selectTable);
@@ -48,7 +48,7 @@ http.createServer(function (req, res) {
 }).listen(port, hostname);
 console.log('Server running at http://' + hostname + ':' + port + '/');
 
-function processRelKey(req, res) {
+function processRelKey(req, res, callbackfn) {
   if (req.method == "POST") {
     var body = '';
     req.on('data', function (chunk) {
@@ -57,7 +57,7 @@ function processRelKey(req, res) {
 
     req.on('end', function () {
       var relkey = JSON.parse(body);
-      isInCatalog(res, relkey);
+      callbackfn(res, relkey);
     });
   }
 }
@@ -198,8 +198,10 @@ function getQueryStatus(res, qid) {
   });
 }
 
-function getTuples(res, qid) {
-  cp.exec(py + ' get_num_tuples -p ' + qid, function (err, stdout) {
+function getTuples(res, rkey) {
+  var params = rkey.userName + ' ' + rkey.programName + ' '
+        + rkey.relationName;
+  cp.exec(py + ' get_num_tuples -p ' + params, function (err, stdout) {
     if (err) { console.log( 'numtuples ' + err.stack); } else {
       sendJSONResponse(res, stdout);
     }
