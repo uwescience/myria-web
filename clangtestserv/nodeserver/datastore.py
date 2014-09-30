@@ -35,7 +35,7 @@ def parse_options(args):
     return ns
 
 
-# params: rel_keys url qid backend
+# params: rel_keys url qid backend rawQuery
 # retrieves query, inserts into db
 def process_query(params):
     conn = sqlite3.connect('dataset.db')
@@ -43,13 +43,14 @@ def process_query(params):
     default_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     qid = params[2]
     backend = params[3]
+    query = params[4]
     c = conn.cursor()
     cur_time = time.time()
     query = 'INSERT INTO dataset VALUES' + \
             ' (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend,
-                  '')
+                  query)
     try:
         c.execute(query, param_list)
         conn.commit()
