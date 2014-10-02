@@ -56,7 +56,6 @@ function loadTable() {
 	  url = d.uri + '/query?qid=' + d.queryId;
 	}
         d['elapsedStr'] = nano_to_str(d.elapsedNanos);
-        console.log(d.elaplsedStr);
         if (d['status'] == 'ERROR' || d['status'] == 'KILLED') {
           d['bootstrapStatus'] = 'danger';
         } else if (d['status'] == 'SUCCESS') {
@@ -77,6 +76,8 @@ function loadTable() {
         });
 
       $("#querytable").html(html);
+      runningHighlight();
+      myriaHighlight();
     }).fail (function (res, err) {
       console.log(err);
     });
@@ -87,7 +88,6 @@ function nano_to_str(elapsed) {
   if (!elapsed) {
     return null;
   }
-  console.log(elapsed);
   var s = elapsed / 1000000000.0;
   var m, h, d;
   m = parseInt(s / 60);
@@ -124,16 +124,7 @@ function restoreState() {
   setBackend(backend);
 }
 
-$(function() {
- $(".backend-menu").change(changeBackend);
-
-  restoreState();
-  // save state every 2 seconds or when page is unloaded
-  window.onbeforeunload = saveState;
-  setInterval(saveState, 2000);
-
-  loadTable();
-
+function runningHighlight() {
   $('.query-row[data-status="RUNNING"]').each(function(i, e) {
     var qid = $(this).attr('data-id');
     window.setInterval(function() {
@@ -144,4 +135,38 @@ $(function() {
       });
     }, 10*1000);
   });
+}
+
+function myriaHighlight() {
+  $("td.query-raw").each(function (index, elt) {
+    elt = $(elt);
+    var text = elt.text();
+    /*
+     * TODO: This is a hack to detect MyriaL programs, both to distinguish
+     * them from other languages and to distinguish them from manually
+     * written "raw" queries. We should really include the query language
+     * in the Myria catalog and use it instead.
+         */
+    if (text.toLowerCase().indexOf("store") === -1) {
+      return;
+    }
+    var pre = document.createElement('pre');
+    pre.className += "CodeMirror";
+    elt.empty().append(pre);
+    CodeMirror.runMode(text, {name: 'myrial', singleLineStringErrors: false}, pre);
+  });}
+
+$(function() {
+ $(".backend-menu").change(changeBackend);
+
+  restoreState();
+  // save state every 2 seconds or when page is unloaded
+  window.onbeforeunload = saveState;
+  setInterval(saveState, 2000);
+
+  loadTable();
+
+
+  
+  
 });

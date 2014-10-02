@@ -47,4 +47,7 @@ class ClangConnection(object):
     def get_num_tuples(self, rel_args):
         url = 'http://%s/tuples' % (self.get_conn_string())
         r = requests.Session().post(url, data=json.dumps(rel_args))
-        return r.json()
+        ret = r.json()
+        if ret:
+            return ret
+        raise myria.MyriaError

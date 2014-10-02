@@ -386,7 +386,7 @@ def main(args):
         select_row(params)
     elif func == 'get_filename':
         get_filename(params)
-    elif func == 'num_tuples':
+    elif func == 'get_num_tuples':
         get_num_tuples(params)
     elif func == 'get_latest_qid':
         get_latest_qid()
