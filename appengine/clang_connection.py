@@ -11,9 +11,6 @@ class ClangConnection(object):
         self.hostname = hostname
         self.port = port
 
-    def get_conn_string(self):
-        return "%s:%d" % (self.hostname, self.port)
-
     def create_json(self, query, logical_plan, physical_plan):
         return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
                 'plan': compile(physical_plan),
@@ -37,7 +34,7 @@ class ClangConnection(object):
         return r.json()
 
     def check_datasets(self, rel_args):
-        url = 'http://%s/catalog' % (self.get_conn_string())
+        url = 'http://%s:%d/catalog' % (self.hostname, self.port)
         r = requests.Session().post(url, data=json.dumps(rel_args))
         ret = r.json()
         if ret:
@@ -45,7 +42,7 @@ class ClangConnection(object):
         raise myria.MyriaError
 
     def get_num_tuples(self, rel_args):
-        url = 'http://%s/tuples' % (self.get_conn_string())
+        url = 'http://%s:%d/tuples' % (self.hostname, self.port)
         r = requests.Session().post(url, data=json.dumps(rel_args))
         ret = r.json()
         if ret:
