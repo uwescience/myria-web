@@ -2,7 +2,6 @@
 'use strict';
 
 var http = require('http');
-var qs = require("querystring");
 var fs = require('fs');
 var cp = require('child_process');
 var url = require('url');
@@ -37,7 +36,7 @@ http.createServer(function (req, res) {
     case '/catalog':
       processRelKey(req, res, isInCatalog);
     break;
-    case 'queries':
+    case '/queries':
       processBackend(req, res, selectTable);
     break;
     default:
@@ -124,7 +123,7 @@ function processQuery(req, res) {
       var backend = myriares.backend;
       var plan = myriares.plan;
       var relkey = myriares.relkey;
-      var query = myriares.rawQuery;
+      var query = encodeURI(myriares.rawQuery);
       var url = 'http://' + hostname + ':' + port;
       var filename = relkey.split('_')[2];
       var params = relkey + ' ' + url + ' ' + ' ' + qid + ' ' + backend + ' ' +

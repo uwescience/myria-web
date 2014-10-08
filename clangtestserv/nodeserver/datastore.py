@@ -10,9 +10,10 @@ import json
 import datetime
 import subprocess
 from subprocess import Popen
+
 import os
 import struct
-
+import urllib2
 raco_path = 'raco/'
 grappa_path = 'grappa/'
 
@@ -43,14 +44,14 @@ def process_query(params):
     default_schema = json.dumps({'columnNames': "[]", 'columnTypes': "[]"})
     qid = params[2]
     backend = params[3]
-    query = params[4]
+    raw_query = urllib2.unquote(params[4]).decode('utf-8')
     c = conn.cursor()
     cur_time = time.time()
     query = 'INSERT INTO dataset VALUES' + \
             ' (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     param_list = (relkey[0], relkey[1], relkey[2], qid, cur_time, params[1],
                   'ACCEPTED', cur_time, None, 0, 0, default_schema, backend,
-                  query)
+                  raw_query)
     try:
         c.execute(query, param_list)
         conn.commit()
