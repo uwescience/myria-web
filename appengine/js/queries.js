@@ -55,18 +55,11 @@ function loadTable() {
         if (_.contains(grappaends, backendProcess)) {
 	  url = d.uri + '/query?qid=' + d.queryId;
 	}
-        d['elapsedStr'] = nano_to_str(d.elapsedNanos);
-        if (d['status'] == 'ERROR' || d['status'] == 'KILLED') {
-          d['bootstrapStatus'] = 'danger';
-        } else if (d['status'] == 'SUCCESS') {
-          d['bootstrapStatus'] = 'success';
-        } else if (d['status'] == 'RUNNING') {
-          d['bootstrapStatus'] = 'warning';
-        } else {
-          d['bootstrapStatus'] = '';
-        }
 
-        html += t.queryInfo({bootstrapStatus: d.bootstrapStatus,
+        d.elapsedStr = nano_to_str(d.elapsedNanos);
+        var bootstrapStatus = getBootstrapStatus(d.status);
+
+        html += t.queryInfo({bootstrapStatus: bootstrapStatus,
                              status: d.status, queryId: d.queryId,
                              rawQuery: d.rawQuery, url: url});
         html += t.profileInfo({profilingMode: profile,
@@ -82,6 +75,18 @@ function loadTable() {
       console.log(err);
     });
   });
+}
+
+function getBootstrapStatus(status) {
+  if (status == 'ERROR' || status == 'KILLED') {
+    return 'danger';
+  } else if (status == 'SUCCESS') {
+    return 'success';
+  } else if (status == 'RUNNING') {
+    return 'warning';
+  } else {
+    return '';
+  }
 }
 
 function nano_to_str(elapsed) {
