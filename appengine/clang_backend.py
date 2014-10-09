@@ -53,3 +53,9 @@ class ClangBackend(Backend):
 
     def backend_url(self):
         return "TODO figure this location"
+
+    def num_entries(self, limit, max_):
+        return self.connection().num_entries(limit, max_)
+
+    def image(self):
+        return ""

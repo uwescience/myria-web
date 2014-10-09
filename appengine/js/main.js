@@ -6,6 +6,17 @@ function updateBackend() {
   changeLinks(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
+  changeImage(backendProcess);
+}
+
+function changeImage(backend) {
+  $("projectimg").empty();
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (data) {
+    $("#projectimg").attr("img", JSON.parse(data).backendUrl);
+  });
 }
 
 function changeUrl(backend) {

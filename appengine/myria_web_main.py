@@ -166,6 +166,9 @@ class MyriaPage(MyriaHandler):
     def get_backend_url(self, backend):
         return self.app.backends[backend].backend_url()
 
+    def get_image(self, backend):
+        return self.app.backends[backend].image()
+
     def base_template_vars(self, backend="myria"):
         if self.app.ssl:
             uri_scheme = "https"
@@ -173,7 +176,8 @@ class MyriaPage(MyriaHandler):
             uri_scheme = "http"
         return {'connection': self.get_connection_url(backend, uri_scheme),
                 'version': VERSION,
-                'branch': BRANCH}
+                'branch': BRANCH,
+                'image': self.get_image(backend)}
 
     def post(self):
         backend = self.request.get("backend", "myria")
@@ -183,7 +187,8 @@ class MyriaPage(MyriaHandler):
                'connection': self.get_connection_url(backend, uri_scheme),
                'backendUrl': self.get_backend_url(backend),
                'version': VERSION,
-               'branch': BRANCH}
+               'branch': BRANCH,
+               'image': self.get_image(backend)}
         self.response.write(json.dumps(var))
 
 
@@ -207,7 +212,7 @@ def nano_to_str(elapsed):
 class Queries(MyriaPage):
 
     def get(self):
-        conn = self.app.myriaConnection
+        conn = self.app.backends[self.request.get("backend", "myria")]
         try:
             limit = int(self.request.get('limit', QUERIES_PER_PAGE))
         except (ValueError, TypeError):
@@ -218,7 +223,7 @@ class Queries(MyriaPage):
         except (ValueError, TypeError):
             max_ = None
         try:
-            count, queries = conn.queries(limit, max_)
+            count, queries = conn.num_entries(limit, max_)
         except myria.MyriaError:
             queries = []
             count = 0
@@ -227,8 +232,7 @@ class Queries(MyriaPage):
             max_ = count
 
         template_vars = self.base_template_vars()
-        template_vars.update({'queries': queries,
-                              'prevUrl': None,
+        template_vars.update({'prevUrl': None,
                               'nextUrl': None})
         template_vars['myrialKeywords'] = get_keywords()
 
