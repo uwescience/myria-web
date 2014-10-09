@@ -39,6 +39,9 @@ http.createServer(function (req, res) {
     case '/queries':
       processBackend(req, res, selectTable);
     break;
+    case '/entries':
+      countEntries(res);
+    break;
     default:
     processQuery(req, res);
     break;
@@ -106,7 +109,6 @@ function processBackend(req, res, callbackfn) {
       callbackfn(res, backend);
     });
   }
-
 }
 
 // Parses the query from posted json
@@ -123,7 +125,7 @@ function processQuery(req, res) {
       var backend = myriares.backend;
       var plan = myriares.plan;
       var relkey = myriares.relkey;
-      var query = encodeURI(myriares.rawQuery);
+      var query = escape(myriares.rawQuery);
       var url = 'http://' + hostname + ':' + port;
       var filename = relkey.split('_')[2];
       var params = relkey + ' ' + url + ' ' + ' ' + qid + ' ' + backend + ' ' +
@@ -214,6 +216,14 @@ function getQid() {
       counter = 0;
     } else {
       counter = parseInt(stdout) + 1;
+    }
+  });
+}
+
+function countEntries(res) {
+  cp.exec(py + ' get_num_entries', function (err, stdout) {
+    if (err) { console.log( 'countentries ' + err.stack); } else {
+      sendJSONResponse(res, stdout);
     }
   });
 }

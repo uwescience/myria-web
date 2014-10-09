@@ -14,6 +14,7 @@ from subprocess import Popen
 import os
 import struct
 import urllib2
+
 raco_path = 'raco/'
 grappa_path = 'grappa/'
 
@@ -305,6 +306,16 @@ def get_latest_qid():
         print row[0]
 
 
+def get_num_entries():
+    query = 'SELECT count(*) FROM dataset'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query)
+    row = c.fetchone()
+    conn.close()
+    print row[0]
+
+
 def latest_qid():
     query = 'SELECT queryId FROM dataset ORDER BY queryId DESC LIMIT 1'
     conn = sqlite3.connect('dataset.db')
@@ -391,6 +402,8 @@ def main(args):
         get_num_tuples(params)
     elif func == 'get_latest_qid':
         get_latest_qid()
+    elif func == 'get_num_entries':
+        get_num_entries()
     elif func == 'insert_new_dataset':
         insert_new_dataset(params)
 

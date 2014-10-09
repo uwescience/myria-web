@@ -48,3 +48,11 @@ class ClangConnection(object):
         if ret:
             return ret
         raise myria.MyriaError
+
+    def num_entries(self, limit, max_):
+        url = 'http://%s:%d/entries' % (self.hostname, self.port)
+        r = requests.Session().post(url)
+        ret = r.json()
+        if ret:
+            return ret, True
+        raise myria.MyriaError
