@@ -193,6 +193,17 @@ class MyriaCatalog(Catalog):
 
 class MyriaHandler(webapp2.RequestHandler):
 
+    def get_boolean_request_param(self, name, default=False):
+        """Fetch a request parameter with the specified name, and return it as
+        a boolean value. Missing parameters default to False, unless the
+        optional default parameter is provided.
+
+        :param name: (string) the parameter to be decoded
+        :param default: (bool) the value of the parameter if missing from
+                        the request.
+        """
+        return bool(strtobool(self.request.get(name, str(default))))
+
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
         if isinstance(exception,
@@ -473,8 +484,8 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = bool(strtobool(self.request.get("multiway_join")))
-        push_sql = bool(strtobool(self.request.get("push_sql")))
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
         try:
             optimized = get_physical_plan(
                 query, language, self.app.connection, multiway_join, push_sql)
@@ -499,8 +510,8 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = bool(strtobool(self.request.get("multiway_join")))
-        push_sql = bool(strtobool(self.request.get("push_sql")))
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         cached_logicalplan = str(get_logical_plan(
             query, language, self.app.connection, push_sql=push_sql))
@@ -536,8 +547,8 @@ class Execute(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         profile = self.request.get("profile", False)
-        multiway_join = bool(strtobool(self.request.get("multiway_join")))
-        push_sql = bool(strtobool(self.request.get("push_sql")))
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         cached_logicalplan = str(
             get_logical_plan(query, language, self.app.connection,
@@ -601,8 +612,8 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-        multiway_join = bool(strtobool(self.request.get("multiway_join")))
-        push_sql = bool(strtobool(self.request.get("push_sql")))
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         plan = get_plan(
             query, language, plan_type, self.app.connection,
