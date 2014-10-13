@@ -39,6 +39,10 @@ class Backend(object):
     def backend_url(self):
         """Returns url for the backend """
 
+    @abstractmethod
+    def num_entries(self, limit, max_):
+        """Returns the total number of queries for the backend"""
+
     def connection_url(self, uri_scheme="http"):
         return "{s}://{h}:{p}".format(s=uri_scheme,
                                       h=self.hostname, p=self.port)

@@ -59,6 +59,3 @@ class GrappaBackend(Backend):
 
     def num_entries(self, limit, max_):
         return self.connection().num_entries(limit, max_)
-
-    def image(self):
-        return "http://grappa.io/images/logo.svg"

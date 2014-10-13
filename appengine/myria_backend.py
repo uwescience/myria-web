@@ -65,9 +65,6 @@ class MyriaBackend(Backend):
     def num_entries(self, limit, max_):
         return self.connection().queries(limit, max_)
 
-    def image(self):
-        return "img/myria-logo.svg"
-
 
 class MyriaMultiJoinBackend(MyriaBackend):
     def algebra(self):
