@@ -350,7 +350,7 @@ def insert_new_dataset(params):
                                  'columnTypes': str(col_types)})
             param_list = (val[0], val[1], val[2], qid, cur_time, val[3],
                           'SUCCESS', cur_time, cur_time, 0, val[4], schema,
-                          val[5], 'Insert query')
+                          val[5], 'Insert dataset')
             c.execute(query, param_list)
             conn.commit()
     conn.close()
