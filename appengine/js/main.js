@@ -3,7 +3,7 @@ var editorBackendKey = 'myria',
 
 function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
-  changeLinks(backendProcess);
+//  changeLinks(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
 }
@@ -21,25 +21,6 @@ function changeUrl(backend) {
   }
   var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
   $("#projecturl").html(urlname + ' Project');
-}
-
-function changeLinks(backend) {
-  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
-  if (!_.contains(backends, backend)) {
-    console.log('Backend not supported: ' + backend);
-    return;
-  }
-
-  $('.backends').each(function () {
-    var href = $(this).attr('href');
-    var newhref;
-    if (href.indexOf('?') === -1) {
-      newhref = href + '?backend=' + backend;
-    } else {
-      newhref = href.replace(/backend=[\w]+/, 'backend=' + backend);
-    }
-    $(this).attr('href', newhref);
-  });
 }
 
 function changeConnection(backend) {
@@ -63,7 +44,6 @@ $(function() {
   $(".backend-menu").change(updateBackend);
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreState();
-  changeLinks(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
 
