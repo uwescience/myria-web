@@ -166,9 +166,6 @@ class MyriaPage(MyriaHandler):
     def get_backend_url(self, backend):
         return self.app.backends[backend].backend_url()
 
-    def get_image(self, backend):
-        return self.app.backends[backend].image()
-
     def base_template_vars(self, backend="myria"):
         if self.app.ssl:
             uri_scheme = "https"
@@ -176,8 +173,7 @@ class MyriaPage(MyriaHandler):
             uri_scheme = "http"
         return {'connection': self.get_connection_url(backend, uri_scheme),
                 'version': VERSION,
-                'branch': BRANCH,
-                'image': self.get_image(backend)}
+                'branch': BRANCH}
 
     def post(self):
         backend = self.request.get("backend", "myria")
@@ -187,8 +183,7 @@ class MyriaPage(MyriaHandler):
                'connection': self.get_connection_url(backend, uri_scheme),
                'backendUrl': self.get_backend_url(backend),
                'version': VERSION,
-               'branch': BRANCH,
-               'image': self.get_image(backend)}
+               'branch': BRANCH}
         self.response.write(json.dumps(var))
 
 
