@@ -1,4 +1,5 @@
 import copy
+from distutils.util import strtobool
 import json
 import logging
 import math
@@ -69,7 +70,7 @@ QUERIES_PER_PAGE = 25
 
 
 def get_plan(query, language, plan_type, connection,
-             multiway_join=False):
+             multiway_join=False, push_sql=False):
     catalog = None
     if multiway_join:
         catalog = MyriaCatalog(connection)
@@ -89,11 +90,11 @@ def get_plan(query, language, plan_type, connection,
         dlog.fromDatalog(query)
         if not dlog.logicalplan:
             raise SyntaxError("Unable to parse Datalog")
+
         if plan_type == 'logical':
             return dlog.logicalplan
-        dlog.optimize(target=target_algebra)
-
-        if plan_type == 'physical':
+        elif plan_type == 'physical':
+            dlog.optimize(target=target_algebra, push_sql=push_sql)
             return dlog.physicalplan
         else:
             raise NotImplementedError('Datalog plan type %s' % plan_type)
@@ -108,19 +109,23 @@ def get_plan(query, language, plan_type, connection,
         if plan_type == 'logical':
             return processor.get_physical_plan(target_alg=OptLogicalAlgebra())
         elif plan_type == 'physical':
-            return processor.get_physical_plan(multiway_join=multiway_join)
+            return processor.get_physical_plan(target_alg=target_algebra,
+                                               multiway_join=multiway_join,
+                                               push_sql=push_sql)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
 
     raise NotImplementedError('Language %s is not supported' % language)
 
 
-def get_logical_plan(query, language, connection):
-    return get_plan(query, language, 'logical', connection)
+def get_logical_plan(query, language, connection, push_sql=False):
+    return get_plan(query, language, 'logical', connection, push_sql=push_sql)
 
 
-def get_physical_plan(query, language, connection, multiway_join=False):
-    return get_plan(query, language, 'physical', connection, multiway_join)
+def get_physical_plan(query, language, connection,
+                      multiway_join=False, push_sql=False):
+    return get_plan(query, language, 'physical', connection,
+                    multiway_join=multiway_join, push_sql=push_sql)
 
 
 def format_rule(expressions):
@@ -187,6 +192,17 @@ class MyriaCatalog(Catalog):
 
 
 class MyriaHandler(webapp2.RequestHandler):
+
+    def get_boolean_request_param(self, name, default=False):
+        """Fetch a request parameter with the specified name, and return it as
+        a boolean value. Missing parameters default to False, unless the
+        optional default parameter is provided.
+
+        :param name: (string) the parameter to be decoded
+        :param default: (bool) the value of the parameter if missing from
+                        the request.
+        """
+        return bool(strtobool(self.request.get(name, str(default))))
 
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
@@ -468,11 +484,11 @@ class Optimize(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = json.loads(self.request.get("multiway_join", "false"))
-        assert type(multiway_join) is bool
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
         try:
             optimized = get_physical_plan(
-                query, language, self.app.connection, multiway_join)
+                query, language, self.app.connection, multiway_join, push_sql)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(
@@ -494,15 +510,15 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
-        multiway_join = self.request.get("multiway_join", False)
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         cached_logicalplan = str(get_logical_plan(
-            query, language, self.app.connection))
-        if multiway_join == 'false':
-            multiway_join = False
+            query, language, self.app.connection, push_sql=push_sql))
         # Generate physical plan
         physicalplan = get_physical_plan(
-            query, language, self.app.connection, multiway_join)
+            query, language, self.app.connection, multiway_join=multiway_join,
+            push_sql=push_sql)
 
         try:
             compiled = compile_to_json(
@@ -531,17 +547,18 @@ class Execute(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         profile = self.request.get("profile", False)
-        multiway_join = self.request.get("multiway_join", False)
-        if multiway_join == 'false':
-            multiway_join = False
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection))
+            get_logical_plan(query, language, self.app.connection,
+                             push_sql=push_sql))
 
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
-                query, language, self.app.connection, multiway_join)
+                query, language, self.app.connection,
+                multiway_join=multiway_join, push_sql=push_sql)
 
             # .. and compile
             compiled = compile_to_json(
@@ -595,12 +612,12 @@ class Dot(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         plan_type = self.request.get("type")
-        multiway_join = self.request.get("multiway_join", False)
-        if multiway_join == 'false':
-            multiway_join = False
+        multiway_join = self.get_boolean_request_param("multiway_join")
+        push_sql = self.get_boolean_request_param("push_sql")
 
         plan = get_plan(
-            query, language, plan_type, self.app.connection, multiway_join)
+            query, language, plan_type, self.app.connection,
+            multiway_join=multiway_join, push_sql=push_sql)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
