@@ -44,7 +44,7 @@
 		</table>
 
 		<div class="text-center">
-			<ul class="pagination">
+			<ul id="paging" class="pagination">
 				<li>
 				{% if pagination.has_prev %}
 					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>

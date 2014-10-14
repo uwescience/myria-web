@@ -3,7 +3,6 @@ var editorBackendKey = 'myria',
 
 function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
-//  changeLinks(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
 }

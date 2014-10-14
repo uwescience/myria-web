@@ -1,10 +1,14 @@
 //query templates go here
 var query_templates = {
   queryInfo: _.template('<tr class="<%- bootstrapStatus %> query-row" data-status="<%- status %>" data-id="<%- queryId %>"> <td class="query-url"><a href="<%- url%>" target="_blank"><%- queryId %></a></td><td class="query-raw"><%- rawQuery %></td><td class="query-status"><%- status %></td>'),
-  profileInfo: _.template('<td><% if (profilingMode) {%><% if (status == "SUCCESS") { %><a href="/profile?queryId=<%- queryId %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a><% } else if (status == "RUNNING" || status == "ACCEPTED") {%><span class="glyphicon glyphicon-dashboard" title="Visualization will be available when the query has finished" data-toggle="tooltip"></span><% } else {%><span class="glyphicon glyphicon-dashboard" title="Visualization not available for failed queries" data-toggle="tooltip"></span><% } %><% } else { %><span title="Profiling not enabled for this query" data-toggle="tooltip">-</span><% } %></td>'),
-  finishInfo: _.template('<td class="query-elapsed"><%- elapsedStr %></td><td class="query-finish"><abbr class="timeago" title="<%- finishTime %>"><%- finishTime%></abbr></td></tr>')
+  profileInfo: _.template('<td><%- if (profilingMode) {%><% if (status == "SUCCESS") { %><a href="/profile?queryId=<%- queryId %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a><% } else if (status == "RUNNING" || status == "ACCEPTED") {%><span class="glyphicon glyphicon-dashboard" title="Visualization will be available when the query has finished" data-toggle="tooltip"></span><% } else {%><span class="glyphicon glyphicon-dashboard" title="Visualization not available for failed queries" data-toggle="tooltip"></span><% } %><%- } else { %><span title="Profiling not enabled for this query" data-toggle="tooltip">-</span><%- } %></td>'),
+  finishInfo: _.template('<td class="query-elapsed"><%- elapsedStr %></td><td class="query-finish"><abbr class="timeago" title="<%- finishTime %>"><%- finishTime%></abbr></td></tr>'),
+  prevPaging: _.template('<li> <%- if (pagination.has_prev) {%><a href="<%- page_url(pagination.page - 1, current_max, pagination) %>">&laquo;</a> <%- } else { %><a href="<%- page_url(pagination.page - 1, current_max, pagination) %>">&laquo;</a></li><%- } %>'),
+  pagination: _.template('<%- if (page) { if (page != pagination.page) { %><li><a href="<%- page_url(page, current_max, pagination) %>"><%- page %></a></li><%-  } else {%><li class="active"><span><%- page %></span></li><%- }} else { %><li class="disabled"><span>...</span></li><%- }%>'),
+  nextPaging: _.template('<%- if (pagination.has_next) { %><li><a href="<%- page_url(pagination.page + 1, current_max, pagination) %>">&raquo;</a><%- } else { %><li class="disabled"><span>&raquo;</span><%- } %></li>')
 };
 
+//  {%- for page in pagination.iter_pages() %}
 var editorBackendKey = 'myria',
     backendProcess = 'myria',
     grappaends = ['grappa', 'clang'];
