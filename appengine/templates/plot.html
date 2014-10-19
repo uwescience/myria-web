@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+    <div id="dataset-choose">
+        <h3>Select a dataset to plot</h3>
+        <p>
+            Use the search form to retrieve the schema of a
+            <a href="/datasets" target=_blank>dataset</a>
+            which includes its columns and column types.
+        </p>
+        <p><input class="bigdrop dataset-search"/></p>
+    </div>
+    <div id="columns-choose" hidden="true">
+        <h3>Choose columns to plot</h3>
+        <div id="dataset-columns"></div>
+        <button type="button" id="plot-btn" class="btn btn-info pull-left"><span class="glyphicon glyphicon-pencil"></span> Plot</button>
+    </div>
+    <div id="plot-container">
+        <div id="plot-area">
+            <svg id="plot"></svg>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/select2.min.js"></script>
+<script src="js/d3.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="js/highcharts.js"></script>
+<script type="text/javascript" src="js/plot.js"></script>
+{% endblock %}

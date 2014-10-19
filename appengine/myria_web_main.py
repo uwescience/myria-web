@@ -442,6 +442,18 @@ class Editor(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
+class Plot(MyriaPage):
+
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('plot.html')
+        self.response.out.write(template.render(template_vars))
+
+
 class Demo3(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
@@ -636,6 +648,7 @@ class Application(webapp2.WSGIApplication):
             ('/editor', Editor),
             ('/queries', Queries),
             ('/profile', Profile),
+            ('/plot', Plot),
             ('/datasets', Datasets),
             ('/plan', Plan),
             ('/optimize', Optimize),
