@@ -5,7 +5,7 @@
 <link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
 {% endblock %}
 
-{% block editor_active %} class="active"{% endblock %}
+{% block plot_active %} class="active"{% endblock %}
 
 {% block content %}
     <div id="dataset-choose">
@@ -18,7 +18,7 @@
         <p><input class="bigdrop dataset-search"/></p>
     </div>
     <div id="columns-choose" hidden="true">
-        <h3>Choose columns to plot</h3>
+        <h3>Choose columns to plot (<em>early alpha: pick 1 or 2 DVs, no IVs</em>)</h3>
         <div id="dataset-columns"></div>
         <button type="button" id="plot-btn" class="btn btn-info pull-left"><span class="glyphicon glyphicon-pencil"></span> Plot</button>
     </div>
