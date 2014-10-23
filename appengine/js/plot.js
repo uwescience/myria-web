@@ -103,15 +103,13 @@ function makePlot() {
   }
 
   var ivseries = [];
-  iv.each(function () {
-    var label = this;
+  iv.each(function (i, label) {
     var series = _.map(downloaded_data, function (x) { return x[label]; });
     ivseries.push(series);
   });
 
   var dvseries = [];
-  dv.each(function () {
-    var label = this;
+  dv.each(function (i, label) {
     var series = _.map(downloaded_data, function (x) { return x[label]; });
     dvseries.push(series);
   });
