@@ -103,21 +103,16 @@ function makePlot() {
   }
 
   var ivseries = [];
-  for (var i in iv) {
-    var series = [];
-    $(downloaded_data).each(function () {
-      series.push(this[iv[i]]);
-    });
+  iv.each(function () {
+    var label = this;
+    var series = _.map(downloaded_data, function (x) { return x[label]; });
     ivseries.push(series);
-  }
+  });
 
   var dvseries = [];
-  dv.each(function() {
+  dv.each(function () {
     var label = this;
-    var series = [];
-    $(downloaded_data).each(function () {
-      series.push(this[label]);
-    });
+    var series = _.map(downloaded_data, function (x) { return x[label]; });
     dvseries.push(series);
   });
 
