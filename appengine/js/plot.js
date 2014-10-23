@@ -218,7 +218,7 @@ function renderCDF(container, dv, series) {
     return a - b;
   });
 
-  var values = $.map(data, function (x, i) {return [[(i+1)/data.length, x]];});
+  var values = _.map(data, function (x, i) {return [(i+1)/data.length, x];});
   var chart = $('#' + container).highcharts({
     chart: {
       type: 'line',
