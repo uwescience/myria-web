@@ -102,16 +102,12 @@ function makePlot() {
     console.log("downloaded");
   }
 
-  var ivseries = [];
-  iv.each(function (i, label) {
-    var series = _.map(downloaded_data, function (x) { return x[label]; });
-    ivseries.push(series);
+  var ivseries = _.map(iv, function (label) {
+    return _.map(downloaded_data, function (x) {return x[label];});
   });
 
-  var dvseries = [];
-  dv.each(function (i, label) {
-    var series = _.map(downloaded_data, function (x) { return x[label]; });
-    dvseries.push(series);
+  var dvseries = _.map(dv, function (label) {
+    return _.map(downloaded_data, function (x) {return x[label];});
   });
 
   if (iv.length === 0) {
