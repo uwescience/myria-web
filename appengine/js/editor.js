@@ -293,7 +293,6 @@ function updateExamples(restored) {
         optimizeplan();
       });
     }
-    $('#editor-tabs a[href="#examples"]').tab('show');
     if (!restored) {
       editor.setValue($(".example").first().attr('data-code'));
     }
@@ -345,6 +344,9 @@ function resetEditor(newLanguage, saveOld) {
   editor.setOption('mode', modes[newLanguage]);
 
   updateExamples(restored);
+  if (saveOld) {
+    $('#editor-tabs a[href="#examples"]').tab('show');
+  }
 }
 
 /**
