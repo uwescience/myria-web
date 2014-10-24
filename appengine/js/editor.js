@@ -55,7 +55,8 @@ function getplan() {
     query: query,
     language: editorLanguage,
     backend: backendProcess,
-    multiway_join: $("#multiway-join").is(':checked')
+    multiway_join: $("#multiway-join").is(':checked'),
+    push_sql: $("#push-sql").is(':checked')
   });
   handleerrors(request, "#plan");
   request = $.post("dot", {
@@ -77,12 +78,14 @@ function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
+  var push_sql_checked = $("#push-sql").is(':checked');
 
   var request = $.post("optimize", {
     query: query,
     language: editorLanguage,
     backend: backendProcess,
-    multiway_join: multiway_join_checked
+    multiway_join: multiway_join_checked,
+    push_sql: push_sql_checked
   });
   handleerrors(request, "#optimized");
 
@@ -91,7 +94,8 @@ function optimizeplan() {
     query: query,
     language: editorLanguage,
     backend: backendProcess,
-    multiway_join: multiway_join_checked
+    multiway_join: multiway_join_checked,
+    push_sql: push_sql_checked
   });
 
   request.success(function (queryPlan) {
@@ -159,7 +163,8 @@ function compileplan() {
     query: query,
     language: editorLanguage,
     backend: backendProcess,
-    multiway_join: $("#multiway-join").is(':checked')
+    multiway_join: $("#multiway-join").is(':checked'),
+    push_sql: $("#push-sql").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -283,7 +288,8 @@ function executeplan() {
       language: editorLanguage,
       backend: backendProcess,
       profile: $("#profile-enabled").is(':checked'),
-      multiway_join: $("#multiway-join").is(':checked')
+      multiway_join: $("#multiway-join").is(':checked'),
+      push_sql: $("#push-sql").is(':checked')
     },
     statusCode: {
       200: displayQueryStatus,
@@ -302,7 +308,8 @@ function executeplan() {
 function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
-  $("svg").empty();
+  $("#relational_svg").empty();
+  $("#myria_svg").empty().height('auto');
   $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
@@ -442,6 +449,7 @@ function resizeEditor() {
     $('.editor-row>div:nth-child(2)').attr("class", "col-md-12");
     $('.resize-editor>span').removeClass('glyphicon-resize-full').addClass('glyphicon-resize-small');
   }
+  editor.refresh();
 }
 
 function initializeDatasetSearch() {

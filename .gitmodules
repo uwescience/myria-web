@@ -9,3 +9,6 @@
 [submodule "requests"]
 	path = submodules/requests
 	url = https://github.com/kennethreitz/requests/
+[submodule "submodules/sqlalchemy"]
+	path = submodules/sqlalchemy
+	url = https://github.com/zzzeek/sqlalchemy.git

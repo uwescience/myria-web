@@ -8,9 +8,10 @@ from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
 
 
 class MyriaBackend(Backend):
-    def __init__(self, hostname, port):
+    def __init__(self, hostname, port, ssl):
         self.hostname = hostname
         self.port = port
+        self.ssl = ssl
 
     def catalog(self):
         return MyriaCatalog(self.connection())
@@ -19,7 +20,8 @@ class MyriaBackend(Backend):
         return MyriaLeftDeepTreeAlgebra()
 
     def connection(self):
-        return myria.MyriaConnection(hostname=self.hostname, port=self.port)
+        return myria.MyriaConnection(hostname=self.hostname, port=self.port,
+                                     ssl=self.ssl)
 
     def compile_query(self, query, logical_plan, physical_plan, language):
         return compile_to_json(
@@ -34,9 +36,14 @@ class MyriaBackend(Backend):
                 query, logical_plan, physical_plan, language)
             compiled['profilingMode'] = profile
             query_status = self.connection().submit_query(compiled)
+            if self.ssl:
+                uri_scheme = "https"
+            else:
+                uri_scheme = "http"
             # Issue the query
-            query_url = 'http://%s:%d/execute?query_id=%d' %\
-                        (self.hostname, self.port, query_status['queryId'])
+            query_url = '%s://%s:%d/execute?query_id=%d' %\
+                        (uri_scheme, self.hostname, self.port,
+                         query_status['queryId'])
             return {'query_status': query_status, 'query_url': query_url}
         except myria.MyriaError as e:
             raise e

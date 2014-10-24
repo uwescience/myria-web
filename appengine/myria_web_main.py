@@ -1,4 +1,5 @@
 import copy
+from distutils.util import strtobool
 import json
 import logging
 import math
@@ -17,6 +18,10 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
+from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
+                                     MyriaHyperCubeAlgebra,
+                                     compile_to_json)
+from raco.language.logical import OptLogicalAlgebra
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from examples import examples
@@ -63,8 +68,7 @@ except:
 QUERIES_PER_PAGE = 25
 
 
-def get_plan(query, language, backend, plan_type):
-
+def get_plan(query, language, backend, plan_type, push_sql=False):
     # Fix up the language string
     if language is None:
         language = "datalog"
@@ -78,10 +82,11 @@ def get_plan(query, language, backend, plan_type):
         dlog.fromDatalog(query)
         if not dlog.logicalplan:
             raise SyntaxError("Unable to parse Datalog")
+
         if plan_type == 'logical':
             return dlog.logicalplan
 
-        dlog.optimize(target=target_algebra)
+        dlog.optimize(target=target_algebra, push_sql=push_sql)
 
         if plan_type == 'physical':
             return dlog.physicalplan
@@ -96,20 +101,21 @@ def get_plan(query, language, backend, plan_type):
         processor.evaluate(parsed)
 
         if plan_type == 'logical':
-            return processor.get_logical_plan()
+            return processor.get_physical_plan(target_alg=OptLogicalAlgebra())
         elif plan_type == 'physical':
-            return processor.get_physical_plan(target_alg=target_algebra)
+            return processor.get_physical_plan(target_alg=target_algebra,
+                                               push_sql=push_sql)
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     raise NotImplementedError('Language %s is not supported on %s'
                               % (language, backend))
 
 
-def get_logical_plan(query, language, backend):
+def get_logical_plan(query, language, backend, push_sql=False):
     return get_plan(query, language, backend, 'logical')
 
 
-def get_physical_plan(query, language, backend):
+def get_physical_plan(query, language, backend, push_sql=False):
     return get_plan(query, language, backend, 'physical')
 
 
@@ -127,8 +133,18 @@ def get_datasets(connection):
     except myria.MyriaError:
         return []
 
-
 class MyriaHandler(webapp2.RequestHandler):
+
+    def get_boolean_request_param(self, name, default=False):
+        """Fetch a request parameter with the specified name, and return it as
+        a boolean value. Missing parameters default to False, unless the
+        optional default parameter is provided.
+
+        :param name: (string) the parameter to be decoded
+        :param default: (bool) the value of the parameter if missing from
+                        the request.
+        """
+        return bool(strtobool(self.request.get(name, str(default))))
 
     def handle_exception(self, exception, debug_mode):
         self.response.headers['Content-Type'] = 'text/plain'
@@ -177,7 +193,7 @@ class MyriaPage(MyriaHandler):
 
     def post(self):
         backend = self.request.get("backend", "myria")
-        uri_scheme = self.request.get("uri_scheme", "http")
+        uri_scheme = self.request.get("uri_scheme", "https")
         var = {'connectionString':
                self.get_connection_string(backend),
                'connection': self.get_connection_url(backend, uri_scheme),
@@ -390,10 +406,9 @@ class Optimize(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.app.backends[self.request.get("backend", "myria")]
-
+        push_sql = self.get_boolean_request_param("push_sql")
         try:
-            optimized = get_physical_plan(query, language, backend)
-
+            optimized = get_physical_plan(query, language, backend, push_sql)
         except MyrialInterpreter.NoSuchRelationException as e:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.write(
@@ -416,11 +431,12 @@ class Compile(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.app.backends[self.request.get("backend", "myria")]
-
-        cached_logicalplan = str(get_logical_plan(query, language, backend))
+        push_sql = self.get_boolean_request_param("push_sql")
+        cached_logicalplan = str(get_logical_plan(query, language, backend,
+                                                  push_sql))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend)
+        physicalplan = get_physical_plan(query, language, backend, push_sql)
 
         try:
             compiled = backend.compile_query(
@@ -450,11 +466,17 @@ class Execute(MyriaHandler):
         language = self.request.get("language")
         profile = self.request.get("profile", False)
         backend = self.app.backends[self.request.get("backend", "myria")]
-
-        cached_logicalplan = str(get_logical_plan(query, language, backend))
+        push_sql = self.get_boolean_request_param("push_sql")
+        cached_logicalplan = str(get_logical_plan(query, language, backend,
+                                                  push_sql))
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend)
+        multiway_join = self.get_boolean_request_param("multiway_join")
+
+        cached_logicalplan = str(
+            get_logical_plan(query, language, self.app.connection,
+                             push_sql=push_sql))
 
         try:
             execute = backend.execute_query(
@@ -506,8 +528,8 @@ class Dot(MyriaHandler):
         language = self.request.get("language")
         plan_type = self.request.get("type")
         backend = self.app.backends[self.request.get("backend", "myria")]
-
-        plan = get_plan(query, language, backend, plan_type)
+        push_sql = self.get_boolean_request_param("push_sql")
+        plan = get_plan(query, language, backend, plan_type, push_sql)
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write(get_dot(plan))
@@ -520,7 +542,7 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='rest.myria.cs.washington.edu',
-                 port=1776, ssl=False):
+                 port=1776, ssl=True):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -539,9 +561,10 @@ class Application(webapp2.WSGIApplication):
 
         # Connection to Myria. Thread-safe
         self.myriaConnection = myria.MyriaConnection(hostname=hostname,
-                                                     port=port)
+                                                     port=port, ssl=ssl)
         self.myriahostname = hostname
         self.myriaport = port
+        self.ssl = ssl
         self.clanghostname = 'localhost'
         self.clangport = 1337
 
@@ -550,10 +573,10 @@ class Application(webapp2.WSGIApplication):
                          "grappa": GrappaBackend(self.clanghostname,
                                                  self.clangport),
                          "myria": MyriaBackend(self.myriahostname,
-                                               self.myriaport),
+                                               self.myriaport, ssl),
                          "myriamultijoin": MyriaMultiJoinBackend(
-                             self.myriahostname, self.myriaport)}
-        self.ssl = ssl
+                             self.myriahostname, self.myriaport, ssl)}
+
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
