@@ -19,6 +19,9 @@ var editor_templates = {
     row: _.template('<tr><td><%- name %></td><td><%- type %></td></tr>'),
     dslink: _.template('<p>More details: <a href="<%- url %>"><%- user %>:<%- program %>:<%- name %></a></p>')
   },
+  reference: {
+    keyword: _.template('<a href="https://github.com/uwescience/myria/wiki/MyriaL-keyword-<%- keyword %>"><%- keyword %></a>')
+  },
   trim_example: _.template('\n... <%- remaining %> more line<% print(remaining > 1 ? "s": ""); %>')
 };
 
@@ -490,10 +493,12 @@ $(function () {
   }));
   anyKeywords.sort();
   var keywordList = $('#keyword-list');
+  var keywordTemplate = editor_templates.reference.keyword;
   $(anyKeywords).each(function (i, k) {
-    $('<a href="https://github.com/uwescience/myria/wiki/MyriaL-keyword-'+k+'">'+k+'</a>')
-      .appendTo(keywordList);
-    keywordList.append(' ');
+    if (k === 'theanswertolifetheuniverseandeverything') {
+      return;  // Easter egg
+    }
+    $(keywordTemplate({keyword: k})).append(' ').appendTo(keywordList);
   });
 
   editor.on("change", resetResults);
