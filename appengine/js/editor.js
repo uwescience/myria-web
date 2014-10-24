@@ -481,6 +481,20 @@ updateExamplesHeight = function () {
 
 $(function () {
   resetResults();
+  restoreState();
+  optimizeplan();
+
+  // Populate the keywords list in the reference pane
+  var anyKeywords = _.uniq($.map(myrialKeywords, function(x) {
+    return x;
+  }));
+  anyKeywords.sort();
+  var keywordList = $('#keyword-list');
+  $(anyKeywords).each(function (i, k) {
+    $('<a href="https://github.com/uwescience/myria/wiki/MyriaL-keyword-'+k+'">'+k+'</a>')
+      .appendTo(keywordList);
+    keywordList.append(' ');
+  });
 
   editor.on("change", resetResults);
 
@@ -502,10 +516,6 @@ $(function () {
   $(".show-svg-modal").click(showSvgModal);
   $(".resize-editor").click(resizeEditor);
   initializeDatasetSearch();
-
-  restoreState();
-
-  optimizeplan();
 
   // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
