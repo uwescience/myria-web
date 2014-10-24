@@ -292,7 +292,7 @@ function updateExamples(restored) {
     }
     $('#editor-tabs a[href="#examples"]').tab('show');
     if (!restored) {
-      $(".example").first().click();
+      editor.setValue($(".example").first().attr('data-code'));
     }
   };
 
@@ -323,9 +323,9 @@ function resetEditor(newLanguage, saveOld) {
 
   var restored;
   var state = editorState[newLanguage];
-  if (editorState[newLanguage]) {
+  if (state) {
     editor.setValue(state.content);
-    editor.setHistory(state.history)
+    editor.setHistory(state.history);
     restored = true;
   } else {
     restored = false;
