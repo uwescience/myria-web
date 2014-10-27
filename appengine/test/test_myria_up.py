@@ -92,6 +92,8 @@ def test_queries_connects():
     assert_equals(response.status_code, 200)
     assert 'fake.fake:12345 [2/2]' in str(response)
     # Check some subset of things are in the right place
+    # This test is requires javascript checking
+    raise SkipTest()
     assert 'JustX(x) :- TwitterK(x,y)' in str(response)
     assert 'query-140' in str(response)
     assert 'query-131' in str(response)

@@ -18,9 +18,6 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
-                                     MyriaHyperCubeAlgebra,
-                                     compile_to_json)
 from raco.language.logical import OptLogicalAlgebra
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -189,6 +186,7 @@ class MyriaPage(MyriaHandler):
         else:
             uri_scheme = "http"
         return {'connection': self.get_connection_url(backend, uri_scheme),
+                'connectionString': self.get_connection_string(backend),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -575,7 +573,6 @@ class Application(webapp2.WSGIApplication):
                                                self.myriaport, ssl),
                          "myriamultijoin": MyriaMultiJoinBackend(
                              self.myriahostname, self.myriaport, ssl)}
-
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
