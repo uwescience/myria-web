@@ -133,6 +133,7 @@ def get_datasets(connection):
     except myria.MyriaError:
         return []
 
+
 class MyriaHandler(webapp2.RequestHandler):
 
     def get_boolean_request_param(self, name, default=False):
@@ -472,11 +473,9 @@ class Execute(MyriaHandler):
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend)
-        multiway_join = self.get_boolean_request_param("multiway_join")
 
         cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection,
-                             push_sql=push_sql))
+            get_logical_plan(query, language, backend, push_sql=push_sql))
 
         try:
             execute = backend.execute_query(

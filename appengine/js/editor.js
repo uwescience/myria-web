@@ -192,62 +192,72 @@ function displayQueryStatus(query_status) {
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
-  var url = connection + '/query/query-' + query_id;
-  if (_.contains(grappaends, backendProcess)) {
-      url = connection + '/query?qid=' + query_id;
-  }
-  html += t.row({name: 'Status', val: status});
-  html += t.time_row({name: 'Start', val: query_status['startTime']});
-  html += t.time_row({name: 'End', val: query_status['finishTime']});
-  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = t.table({connection: connection, query_id: query_id, content: html});
-
-  if (status === 'SUCCESS') {
-    url = connection + '/dataset';
-    var data = {queryId: query_id};
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (info) {
+    var connection = JSON.parse(info).connection;
+    var url = connection + '/query/query-' + query_id;
     if (_.contains(grappaends, backendProcess)) {
-      url = connection + '/query';
-      data = {qid: query_id};
+      url = connection + '/query?qid=' + query_id;
     }
-    // Populate the datasets created table
-    $.ajax({
-      dataType: "json",
-      url: url,
-      data: data,
-      async: false})
-    .done(function (datasets) {
-      if (datasets.length > 0) {
-          var d_html = "";
-          _.each(datasets, function (d) {
-            var relKey = d['relationKey'];
-            var dload = d.uri + '/data?';
-            var limit = myria_max_size;
-	    if (_.contains(grappaends, backendProcess)) {
-      	      dload += 'qid=' + d['queryId'] + '&';
-              limit = clang_max_size;
-            }
-            d_html += t.dataset_row({uri : dload, userName: relKey.userName,
-                programName: relKey.programName, maxSize: limit,
-                relationName: relKey.relationName, numTuples: d.numTuples});
-            html += t.dataset_table({content: d_html});
-          });
-        }
-    });
-  }
+    html += t.row({name: 'Status', val: status});
+    html += t.time_row({name: 'Start', val: query_status['startTime']});
+    html += t.time_row({name: 'End', val: query_status['finishTime']});
+    html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+    html = t.table({connection: connection, query_id: query_id, content: html});
 
-  if (status === 'SUCCESS' && query_status['profilingMode']) {
+    if (status === 'SUCCESS') {
+      url = connection + '/dataset';
+      var data = {queryId: query_id};
+      if (_.contains(grappaends, backendProcess)) {
+        url = connection + '/query';
+        data = {qid: query_id};
+      }
+
+      // Populate the datasets created table
+      $.ajax({
+        dataType: "json",
+        url: url,
+        data: data,
+        async: false})
+        .done(function (datasets) {
+          if (datasets.length > 0) {
+            var d_html = "";
+            _.each(datasets, function (d) {
+              var relKey = d['relationKey'];
+              var dload = d.uri + '/data?';
+              var limit = myria_max_size;
+	      if (_.contains(grappaends, backendProcess)) {
+      	        dload += 'qid=' + d['queryId'] + '&';
+                limit = clang_max_size;
+              }
+              d_html += t.dataset_row({uri : dload, userName: relKey.userName,
+                                       programName: relKey.programName,
+                                       maxSize: limit, numTuples: d.numTuples,
+                                       relationName: relKey.relationName});
+              html += t.dataset_table({content: d_html});
+            });
+          }
+        });
+    }
+
+    if (status === 'SUCCESS' && query_status['profilingMode']) {
       html += t.prof_link({query_id: query_id});
-  } else if (status === 'ERROR') {
-    html += t.err_msg({message: query_status['message'] || '(missing)'});
-  }
-  $("#query-information").html(html);
-  $("abbr.timeago").timeago();
+    } else if (status === 'ERROR') {
+      html += t.err_msg({message: query_status['message'] || '(missing)'});
+    }
+    $("#query-information").html(html);
+    $("abbr.timeago").timeago();
 
-  if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
-    setTimeout(function () {
-      checkQueryStatus(query_id);
-    }, 1000);
-  }
+    if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED'
+        || status === 'KILLING') {
+      setTimeout(function () {
+        checkQueryStatus(query_id);
+      }, 1000);
+    }
+  });
+
 }
 
 function displayQueryError(error, query_id) {
@@ -288,7 +298,6 @@ function executeplan() {
       language: editorLanguage,
       backend: backendProcess,
       profile: $("#profile-enabled").is(':checked'),
-      multiway_join: $("#multiway-join").is(':checked'),
       push_sql: $("#push-sql").is(':checked')
     },
     statusCode: {

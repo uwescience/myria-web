@@ -121,7 +121,7 @@ def update_catalog(filename, qid, backend, col_names):
     if backend == 'grappa':
         filename = grappa_data_path + filename + '.bin'
         col_size = len(eval(col_names))
-        file_size = os.stat(filename + '.bin').st_size
+        file_size = os.stat(filename).st_size
         output = file_size / 8 / col_size
     else:
         filename = compile_path + filename
