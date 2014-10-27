@@ -5,6 +5,7 @@ function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
   changeConnection(backendProcess);
   changeUrl(backendProcess);
+  changeLinks(backendProcess);
 }
 
 function changeUrl(backend) {
@@ -33,6 +34,25 @@ function changeConnection(backend) {
   });
 }
 
+function changeLinks(backend) {
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
+  if (!_.contains(backends, backend)) {
+    console.log('Backend not supported: ' + backend);
+    return;
+  }
+
+  $('.backends').each(function () {
+    var href = $(this).attr('href');
+    var newhref;
+    if (href.indexOf('?') === -1) {
+      newhref = href + '?backend=' + backend;
+    } else {
+      newhref = href.replace(/backend=[\w]+/, 'backend=' + backend);
+    }
+    $(this).attr('href', newhref);
+  });
+}
+
 $(function() {
   //warn if not in Chrome
   if (!window.chrome) {
@@ -45,6 +65,7 @@ $(function() {
   restoreState();
   changeConnection(backendProcess);
   changeUrl(backendProcess);
+  changeLinks(backendProcess);
 
   //warn if backend is not available
   if (connectionString.indexOf('error') === 0) {

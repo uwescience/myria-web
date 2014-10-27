@@ -49,7 +49,8 @@
 				{% if pagination.has_prev %}
 					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
 				{% else %}
-					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
+                                        <li class="disabled">
+			                  <span>&laquo;</span>
 				{% endif %}
 				</li>
 				{%- for page in pagination.iter_pages() %}

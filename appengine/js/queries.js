@@ -5,7 +5,6 @@ var query_templates = {
   finishInfo: _.template('<td class="query-elapsed"><%- elapsedStr %></td><td class="query-finish"><abbr class="timeago" title="<%- finishTime %>"><%- finishTime%></abbr></td></tr>')
 };
 
-//  {%- for page in pagination.iter_pages() %}
 var editorBackendKey = 'myria',
     backendProcess = 'myria',
     grappaends = ['grappa', 'clang'];
@@ -29,7 +28,8 @@ function setBackend(backend) {
 }
 
 function loadTable() {
- // default to host from myria
+
+  // default to host from myria
   var url;
   var request = $.post("page", {
     backend: backendProcess
@@ -171,6 +171,5 @@ $(function() {
   setInterval(saveState, 2000);
 
   loadTable();
-
 
 });
