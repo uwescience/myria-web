@@ -115,6 +115,7 @@ function optimizeplan() {
       $('a[href="#queryplan"]').on('shown.bs.tab', clangrerender);
       $('#relational-plan').collapse('hide');
       $('#physical-plan').collapse('show');
+
       clangrerender();
     } else if (_.contains(myriaends, backendProcess)) {
       try {

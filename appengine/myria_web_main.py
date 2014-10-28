@@ -109,11 +109,11 @@ def get_plan(query, language, backend, plan_type, push_sql=False):
 
 
 def get_logical_plan(query, language, backend, push_sql=False):
-    return get_plan(query, language, backend, 'logical')
+    return get_plan(query, language, backend, 'logical', push_sql)
 
 
 def get_physical_plan(query, language, backend, push_sql=False):
-    return get_plan(query, language, backend, 'physical')
+    return get_plan(query, language, backend, 'physical', push_sql)
 
 
 def format_rule(expressions):
@@ -470,10 +470,7 @@ class Execute(MyriaHandler):
                                                   push_sql))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend)
-
-        cached_logicalplan = str(
-            get_logical_plan(query, language, backend, push_sql=push_sql))
+        physicalplan = get_physical_plan(query, language, backend, push_sql)
 
         try:
             execute = backend.execute_query(
