@@ -20,7 +20,6 @@ from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.language.clang import CCAlgebra
 from raco.language.grappalang import GrappaAlgebra
-from raco.viz import get_dot
 from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
                                      MyriaHyperCubeAlgebra,
                                      compile_to_json)
@@ -491,7 +490,8 @@ class Compile(MyriaHandler):
             conn = self.app.clangConnection
 
         cached_logicalplan = str(
-            get_logical_plan(query, language, backend, conn, push_sql=push_sql))
+            get_logical_plan(query, language, backend, conn,
+                             push_sql=push_sql))
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend, conn,
@@ -535,8 +535,8 @@ class Execute(MyriaHandler):
         if backend in ["clang", "grappa"]:
             conn = self.app.clangConnection
 
-        cached_logicalplan = str(
-            get_logical_plan(query, language, backend, conn, push_sql=push_sql))
+        cached_logicalplan = str(get_logical_plan(query, language, backend,
+                                                  conn, push_sql=push_sql))
 
         # Generate physical plan
         physicalplan = get_physical_plan(
