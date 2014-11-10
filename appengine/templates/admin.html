@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block workers_active %} class="active"{% endblock %}
+
+{% block content %}
+    <button class="btn btn-warning" id="restart" data-toggle="modal" data-target="#restart-modal">(Re)start</button>
+
+	<div class="modal fade" id="restart-modal" role="dialog" aria-labelledby="restartModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="restartModalLabel">Enter The Admin Password</h4>
+				</div>
+				<div class="modal-body">
+					<p id="restart-tips"></p>
+					<form id="restart-form" action="/admin" method="post">
+						<input type="text" name="password"></input>
+						<input type="hidden" name="master" value={{myriaConnection}}></input>
+						<button type="button" class="btn btn-primary" id="restart-submit">Submit</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+	{% autoescape false %}
+        var myriaConnection = '{{ myriaConnection }}';
+        var watchdog = '{{ watchdog }}';
+        {% if response != None %}
+            {% if response.status_code == 200 %}
+                $("#restart-tips").text('{{response.content.strip()}}');
+            {% else %}
+                $("#restart-tips").text("Return Code: " + '{{response.status_code}}');
+            {% endif %}
+            $("#restart-form").hide();
+            $("#restart-modal").modal('show');
+        {% endif %}
+	{% endautoescape %}
+</script>
+<script type="text/javascript" src="js/d3.min.js"></script>
+<script type="text/javascript" src="js/admin.js"></script>
+{% endblock %}

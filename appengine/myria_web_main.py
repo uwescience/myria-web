@@ -37,6 +37,8 @@ import myria
 myrial_parser_lock = Lock()
 myrial_parser = MyrialParser.Parser()
 
+# The default watchdog, change it to your own if necessary
+WATCHDOG = "vega.cs.washington.edu:8385"
 
 def is_small_dataset(d, cell_limit=0):
     """A dataset is small if we know its size and the size is below the
@@ -257,6 +259,7 @@ class MyriaPage(MyriaHandler):
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
+                'watchdog': WATCHDOG,
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -372,6 +375,29 @@ class Profile(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
 
+class Admin(MyriaPage):
+    def get(self):
+        template_vars = self.base_template_vars()
+        template_vars['response'] = None
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('admin.html')
+        self.response.out.write(template.render(template_vars))
+
+    def post(self):
+        data = {'master': self.request.get('master'),
+                'password': self.request.get('password')}
+        # Could take a while to restart
+        response = requests.post("http://" + WATCHDOG + "/restart",
+                                 data=data, timeout=30)
+        template_vars = self.base_template_vars()
+        template_vars['response'] = response
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('admin.html')
+        self.response.out.write(template.render(template_vars))
 
 class Datasets(MyriaPage):
 
@@ -643,6 +669,7 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
+            ('/admin', Admin),
             ('/demo3', Demo3)
         ]
 
