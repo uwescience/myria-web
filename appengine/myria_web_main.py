@@ -209,7 +209,7 @@ class MyriaHandler(webapp2.RequestHandler):
         if isinstance(exception,
                       (ValueError, SyntaxError, MyrialCompileException)):
             self.response.status = 400
-            msg = '{}: {}'.format(exception.__class__.__name__, exception)
+            msg = u'{}: {}'.format(exception.__class__.__name__, exception)
         else:
             self.response.status = 500
             msg = ""
