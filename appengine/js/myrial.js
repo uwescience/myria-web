@@ -5,7 +5,7 @@ CodeMirror.defineMode("myrial", function(conf, parserConf) {
         return new RegExp("^((" + words.join(")|(") + "))\\b");
     }
 
-    var singleOperators = parserConf.singleOperators || new RegExp("^[\\+\\-\\*/%&|\\^~<>!]");
+    var singleOperators = parserConf.singleOperators || new RegExp("^[\\+\\-\\*/%&|\\^~<>!≤≥≠]");
     var singleDelimiters = parserConf.singleDelimiters || new RegExp('^[\\(\\)\\[\\]\\{\\}@,:`=;\\.]');
     var doubleOperators = parserConf.doubleOperators || new RegExp("^((==)|(<=)|(>=)|(<>)|(//))");
     var identifiers = parserConf.identifiers|| new RegExp("^[_A-Za-z][_A-Za-z0-9]*|\\$[0-9]+|\\*");
