@@ -72,11 +72,11 @@ $(function() {
       }).length > 0;
 
       if (busyNow) {
-        message = '<div class="alert alert-danger alert-dismissible" role="alert"><strong>Myria is reserved right now </strong>. Please don\'t use it right now! The reservation ends in <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
+        message = '<div class="alert alert-danger alert-dismissible" role="alert"><strong>The Myria cluster is currently being used right now </strong>. Please don\'t use it! It will be available in <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
       } else if (busySoon) {
-        message = '<div class="alert alert-warning alert-dismissible" role="alert"><strong>Myria will be reserved soon </strong>The reservation starts in <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
+        message = '<div class="alert alert-warning alert-dismissible" role="alert"><strong>Myria will be reserved soon </strong>The reservation will begin in <abbr class="timeago" title="' + start + '">' + start + '</abbr>. Please only submit queries that will finish well before that time.'
       } else if (busyLater) {
-        message = '<div class="alert alert-info alert-dismissible" role="alert"><strong>There is an upcoming reservation </strong>The reservation starts in <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
+        message = '<div class="alert alert-info alert-dismissible" role="alert"><strong>There is an upcoming reservation </strong>The reservation will begin in <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
       } else {
         return;
       }
