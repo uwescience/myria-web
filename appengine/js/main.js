@@ -1,10 +1,13 @@
-
-
 $(function() {
   jQuery.timeago.settings.allowFuture = true;
 
   Date.prototype.addHours= function(h){
     this.setHours(this.getHours()+h);
+    return this;
+  }
+
+  Date.prototype.addDays= function(d){
+    this.setHours(this.getHours()+24*d);
     return this;
   }
 
@@ -21,13 +24,17 @@ $(function() {
   var apiKey = "AIzaSyCIB8MWWVeix26boS_WLJGmW41A9oNj8fw";
   var calId = "cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8@group.calendar.google.com";
 
+  var now = new Date(),
+      soon = (new Date()).addHours(6),
+      later = (new Date()).addDays(2);
+
   // warn if there are experiments running
   $.ajax({
     url: "https://www.googleapis.com/calendar/v3/freeBusy?key=" + apiKey,
     type: "POST",
     data: JSON.stringify({
-      "timeMin": (new Date().addHours(-100)).toISOString(),
-      "timeMax": (new Date().addHours(100)).toISOString(),
+      "timeMin": (now).toISOString(),
+      "timeMax": (later).toISOString(),
       "timeZone": "UTC",
       "items": [
         {
@@ -38,24 +45,44 @@ $(function() {
     contentType: "application/json; charset=utf-8",
     dataType: "json",
     success: function(data){
-      var now = new Date(),
-          later = (new Date()).addHours(3);
+      var message = '',
+        start = later,
+        end = now;
+
+      // filter for events happening now
+      var busyNow = _.filter(data.calendars[calId].busy, function(b) {
+        var busy = new Date(b.start) < now && new Date(b.end) > now;
+        if (busy && new Date(b.end) > new Date(end))
+          end = b.end;
+        return busy;
+      }).length > 0;
+
+      // filter by overlap with now and soon
+      var busySoon = _.filter(data.calendars[calId].busy, function(b) {
+        if (new Date(b.start) < new Date(start))
+          start = b.start;
+        return new Date(b.start) < soon && new Date(b.end) > now;
+      }).length > 0;
 
       // filter by overlap with now and later
-      var busy = _.filter(data.calendars[calId].busy, function(b) {
-        var start = new Date(b.start),
-            end = new Date(b.end);
-        return start < later && end > now;
-      });
+      var busyLater = _.filter(data.calendars[calId].busy, function(b) {
+        if (new Date(b.start) < new Date(start))
+          start = b.start;
+        return new Date(b.start) < later && new Date(b.end) > now;
+      }).length > 0;
 
-      if (busy.length > 0) {
-        var times = [];
-        _.forEach(busy, function(el) {
-          times.push('<abbr class="timeago" title="' + el.start + '">' + el.start + '</abbr> to <abbr class="timeago" title="' + el.end + '">' + el.end + '</abbr>')
-        });
-        $("#page-body").prepend('<div class="alert alert-warning alert-dismissible" role="alert"><strong>Cluster is reserved or will be reserved very soon</strong>. Please don\'t use the cluster during the following times: ' + times.join(' and ') + '. For more information, check the <a href="https://www.google.com/calendar/embed?src=cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8%40group.calendar.google.com&ctz=America/Los_Angeles">calendar</a></div>');
-        jQuery("abbr.timeago").timeago();
+      if (busyNow) {
+        message = '<div class="alert alert-danger alert-dismissible" role="alert"><strong>Myria is reserved right now </strong>. Please don\'t use it right now! The reservation ends in <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
+      } else if (busySoon) {
+        message = '<div class="alert alert-warning alert-dismissible" role="alert"><strong>Myria will be reserved soon </strong>The reservation starts in <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
+      } else if (busyLater) {
+        message = '<div class="alert alert-info alert-dismissible" role="alert"><strong>There is an upcoming reservation </strong>The reservation starts in <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
+      } else {
+        return;
       }
+
+      $("#page-body").prepend(message + ' For more information, please check the <a target="_blank" href="https://www.google.com/calendar/embed?src=cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8%40group.calendar.google.com&ctz=America/Los_Angeles&mode=week">calendar</a>.</div>');
+      jQuery("abbr.timeago").timeago();
     }
   });
 
