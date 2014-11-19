@@ -458,7 +458,6 @@ function Graph () {
 
         var interactive = chartElement ? true : false;
 
-        // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
@@ -642,9 +641,9 @@ function Graph () {
 
             textBackground
                 .attr("width", function(d) {
-                    return 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width;
+                    return 8 + d3.select(this.parentNode).select("text").node().getBBox().width;
                 }).attr("x", function(d) {
-                    return - 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width / 2;
+                    return - 4 - d3.select(this.parentNode).select("text").node().getBBox().width / 2;
                 });
 
             node.select(".node-label")
