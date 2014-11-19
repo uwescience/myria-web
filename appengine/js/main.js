@@ -1,26 +1,4 @@
-$(function() {
-  jQuery.timeago.settings.allowFuture = true;
-
-  Date.prototype.addHours= function(h){
-    this.setHours(this.getHours()+h);
-    return this;
-  }
-
-  Date.prototype.addDays= function(d){
-    this.setHours(this.getHours()+24*d);
-    return this;
-  }
-
-  //warn if not in Chrome
-  if (!window.chrome) {
-    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
-  }
-
-  //warn if backend is not available
-  if (connectionString.indexOf('error') === 0) {
-    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to Myria. Most functionality will not work.</div>');
-  }
-
+var updateCalendarWarning = function() {
   var apiKey = "AIzaSyCIB8MWWVeix26boS_WLJGmW41A9oNj8fw";
   var calId = "cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8@group.calendar.google.com";
 
@@ -72,19 +50,47 @@ $(function() {
       }).length > 0;
 
       if (busyNow) {
-        message = '<div class="alert alert-danger" role="alert"><strong>The Myria cluster is reserved for research experiments right now</strong>. Please don\'t use it! It will be available <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
+        message = '<div id="calendar-alert" class="alert alert-danger" role="alert"><strong>The Myria cluster is reserved for research experiments right now</strong>. Please don\'t use it! It will be available <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
       } else if (busySoon) {
-        message = '<div class="alert alert-warning" role="alert"><strong>Myria will be reserved for research experiments soon</strong>. The reservation will begin <abbr class="timeago" title="' + start + '">' + start + '</abbr>. Please only submit queries that will finish well before that time.'
+        message = '<div id="calendar-alert" class="alert alert-warning" role="alert"><strong>Myria will be reserved for research experiments soon</strong>. The reservation will begin <abbr class="timeago" title="' + start + '">' + start + '</abbr>. Please only submit queries that will finish well before that time.'
       } else if (busyLater) {
-        message = '<div class="alert alert-info" role="alert"><strong>There is an upcoming reservation for research experiments</strong>. The reservation will begin <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
+        message = '<div id="calendar-alert" class="alert alert-info" role="alert"><strong>There is an upcoming reservation for research experiments</strong>. The reservation will begin <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
       } else {
         return;
       }
 
+      $("#calendar-alert").remove();
       $("#page-body").prepend(message + ' For more information, please check the <a target="_blank" href="https://www.google.com/calendar/embed?src=cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8%40group.calendar.google.com&ctz=America/Los_Angeles&mode=week">calendar</a>.</div>');
       jQuery("abbr.timeago").timeago();
     }
   });
+}
+
+$(function() {
+  jQuery.timeago.settings.allowFuture = true;
+
+  Date.prototype.addHours= function(h){
+    this.setHours(this.getHours()+h);
+    return this;
+  }
+
+  Date.prototype.addDays= function(d){
+    this.setHours(this.getHours()+24*d);
+    return this;
+  }
+
+  //warn if not in Chrome
+  if (!window.chrome) {
+    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
+  }
+
+  //warn if backend is not available
+  if (connectionString.indexOf('error') === 0) {
+    $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to Myria. Most functionality will not work.</div>');
+  }
+
+  window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
+  updateCalendarWarning();
 
   //back to top button
   var offset = 220;
