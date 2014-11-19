@@ -3,6 +3,7 @@ var templates = {
     //*/
     urls: {
         sentData: _.template("<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        aggregatedSentData: _.template("<%- myria %>/logs/aggregated_sent?queryId=<%- query %>"),
         profiling: _.template("<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
         range: _.template("<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         contribution: _.template("<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
