@@ -46,7 +46,7 @@
 				<td class="query-elapsed">{{q.elapsedStr}}</td>
 				<td class="query-finish">
 					{% if q.status in ['RUNNING', 'ACCEPTED'] %}
-						<a href="{{q.url}}" class="kill-query glyphicon glyphicon-remove-sign" title="Kill query {{q.queryId}}" data-toggle="tooltip"></a>
+						<a href="{{q.url}}" class="kill-query glyphicon glyphicon-remove-circle text-danger" title="Kill query {{q.queryId}}" data-toggle="tooltip"></a>
 					{% else %}
 						<abbr class="timeago" title="{{q.finishTime}}">{{q.finishTime}}</abbr>
 					{% endif %}
