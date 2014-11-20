@@ -157,7 +157,6 @@ svg .help-text {
 }
 
 .query-graph .link > path {
-  stroke-width: 3;
   fill: transparent;
 }
 

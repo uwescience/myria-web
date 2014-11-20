@@ -1,9 +1,7 @@
-var updateQueryStats = function(element){
-    //fragment=-1 means getting all the data
-    var shuffleUrl = templates.urls.sentData({
+var updateQueryStats = function(element) {
+    var shuffleUrl = templates.urls.aggregatedSentData({
             myria: myriaConnection,
-            query: queryPlan.queryId,
-            fragment: -1
+            query: queryPlan.queryId
         });
 
     d3.csv(shuffleUrl, function(d) {

@@ -4,8 +4,10 @@ var queryGraphInteractive = function (element, queryPlan) {
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-    graphObj.render(element, chartElement);
-    graphObj.openOverview();
+    graphObj.loadCosts(function() {
+        graphObj.render(element, chartElement);
+        graphObj.openOverview();
+    });
     return graphObj;
 };
 
@@ -31,6 +33,8 @@ function Graph () {
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
     this.queryPlan = {};    // Physical plan
+    this.costs = {};
+    this.linkOrigins = {};
 
     /********************/
     // Private properties
@@ -120,6 +124,7 @@ function Graph () {
                     link.v.oID = ""+op.opId;                            // Dst fragment ID
                     var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
                     graph.links["link-" + linkID.hashCode()] = link;
+                    graph.linkOrigins["link-" + linkID.hashCode()] = link.u.fID;
                 }
                 // Add in-fragment links
                 for (var key in op) {
@@ -176,6 +181,29 @@ function Graph () {
                 return c;
             };
             graph.nested[fragid] = addChildren(root);
+        });
+    };
+
+    // Function that loads the communication costs
+    Graph.prototype.loadCosts = function(cb) {
+        var url = templates.urls.aggregatedSentData({
+            myria: myriaConnection,
+            query: queryPlan.queryId,
+        });
+
+        var self = this;
+
+        d3.csv(url, function(d) {
+            d.numTuples = +d.numTuples;
+            return d;
+        }, function(data) {
+            var d = _.pluck(data, "numTuples");
+            var costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
+            self.costs = {};
+            _.each(data, function(e) {
+                self.costs["f" + e["fragmentId"]] = costs(e["numTuples"])
+            });
+            cb()
         });
     };
 
@@ -429,7 +457,6 @@ function Graph () {
 
         var interactive = chartElement ? true : false;
 
-        // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
@@ -613,9 +640,9 @@ function Graph () {
 
             textBackground
                 .attr("width", function(d) {
-                    return 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width;
+                    return 8 + d3.select(this.parentNode).select("text").node().getBBox().width;
                 }).attr("x", function(d) {
-                    return - 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width / 2;
+                    return - 4 - d3.select(this.parentNode).select("text").node().getBBox().width / 2;
                 });
 
             node.select(".node-label")
@@ -688,7 +715,14 @@ function Graph () {
                 .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });});
+                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
+                .attr("stroke-width", function(d) {
+                    var x = self.costs[self.linkOrigins[d.id]];
+                    if (x !== undefined) {
+                        return x;
+                    }
+                    return 3;
+                });
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
