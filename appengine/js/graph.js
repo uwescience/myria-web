@@ -197,13 +197,12 @@ function Graph () {
             d.numTuples = +d.numTuples;
             return d;
         }, function(data) {
-            var d = _.pluck(data, "numTuples")
-            var costs = d3.scale.linear().domain([_.min(d), _.max(d)]).range([2, 6]);
+            var d = _.pluck(data, "numTuples");
+            var costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
             self.costs = {};
             _.each(data, function(e) {
                 self.costs["f" + e["fragmentId"]] = costs(e["numTuples"])
             });
-            console.log(self.costs)
             cb()
         });
     };
