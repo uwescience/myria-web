@@ -49,6 +49,8 @@ var updateCalendarWarning = function() {
         return new Date(b.start) < later && new Date(b.end) > now;
       }).length > 0;
 
+      $("#calendar-alert").remove();
+
       if (busyNow) {
         message = '<div id="calendar-alert" class="alert alert-danger" role="alert"><strong>The Myria cluster is reserved for research experiments right now</strong>. Please don\'t use it! It will be available <abbr class="timeago" title="' + end + '">' + end + '</abbr>.'
       } else if (busySoon) {
@@ -59,7 +61,6 @@ var updateCalendarWarning = function() {
         return;
       }
 
-      $("#calendar-alert").remove();
       $("#page-body").prepend(message + ' For more information, please check the <a target="_blank" href="https://www.google.com/calendar/embed?src=cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8%40group.calendar.google.com&ctz=America/Los_Angeles&mode=week">calendar</a>.</div>');
       jQuery("abbr.timeago").timeago();
     }
