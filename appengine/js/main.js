@@ -56,6 +56,7 @@ var updateCalendarWarning = function() {
       } else if (busyLater) {
         message = '<div id="calendar-alert" class="alert alert-info" role="alert"><strong>There is an upcoming reservation for research experiments</strong>. The reservation will begin <abbr class="timeago" title="' + start + '">' + start + '</abbr>.'
       } else {
+        $("#calendar-alert").remove();
         return;
       }
 
