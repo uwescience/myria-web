@@ -32,42 +32,45 @@ function setBackend(backend) {
   loadTable();
 }
 
+function backendDatasetUrl(conn){
+  var url;
+  if (backendProcess == 'clang') {
+    url = conn + '/dataset?backend=clang';
+  }
+  else if (backendProcess == 'grappa') {
+    url = conn + '/dataset?backend=grappa';
+  } else {
+    url = conn + '/dataset';
+  }
+  return url;
+}
+
 function loadTable() {
   // default to host from myria
-  var url;
   var request = $.post("page", {
     backend: backendProcess
   });
   request.success(function (info) {
     var conn = JSON.parse(info).connection;
-    if (backendProcess == 'clang') {
-      url = conn + '/dataset?backend=clang';
-    }
-    else if (backendProcess == 'grappa') {
-      url = conn + '/dataset?backend=grappa';
-    } else {
-      url = conn + '/dataset';
-    }
+    var url = backendDatasetUrl(conn);
     var t = dataset_templates;
     var jqxhr = $.getJSON(url, function (data) {
       var html = '';
       _.each(data, function (d) {
-	var qload = '';
-	var dload = d['uri'] + '/data?';
-        var time = d['created'];
+	var dload = d.uri + '/data?';
+        var limit = myriaCellLimit;
         if (_.contains(grappaends, backendProcess)) {
-	  qload = '/query?qid=' + d['queryId'];
+	  d.uri = d.uri +'/query?qid=' + d['queryId'];
           dload += 'qid=' + d['queryId'] + '&';
-          time = new Date(time * 1000).toISOString();
+          d.created = new Date(d.created * 1000).toISOString();
 	}
         var relation = d['relationKey'];
-        html += t.relName({url: d['uri'] + qload, user: relation['userName'],
+        html += t.relName({url: d['uri'], user: relation['userName'],
                 program: relation['programName'],
                 name: relation['relationName']});
-        html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
-                created: time});
+        html += t.extraInfo({url: d['uri'], queryId: d['queryId'],
+                created: d.created});
 
-        var limit = myriaCellLimit;
         if (_.contains(grappaends, backendProcess)) {
           limit = clangCellLimit;
         }
