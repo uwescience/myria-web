@@ -31,7 +31,7 @@ class ClangConnection(object):
         return r.json()
 
     def check_query(self, qid):
-        requrl = url.generate_url(self.url,'status', 'qid', qid)
+        requrl = url.generate_url(self.url, 'status', 'qid', qid)
         r = requests.Session().get(requrl)
         return r.json()
 
