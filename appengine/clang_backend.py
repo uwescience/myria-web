@@ -7,9 +7,10 @@ from raco.language.clang import CCAlgebra
 
 
 class ClangBackend(Backend):
-    def __init__(self, hostname, port):
+    def __init__(self, hostname, port, ssl):
         self.hostname = hostname
         self.port = port
+        self.ssl = ssl
 
     def catalog(self):
         return ClangCatalog(self.connection())
@@ -18,7 +19,7 @@ class ClangBackend(Backend):
         return CCAlgebra('file')
 
     def connection(self):
-        return ClangConnection(self.hostname, self.port)
+        return ClangConnection(self.hostname, self.port, self.ssl)
 
     def compile_query(self, query, logical_plan, physical_plan, language=None):
         return self.connection().create_json(
@@ -52,7 +53,7 @@ class ClangBackend(Backend):
         return "http://{h}:{p}".format(h=self.hostname, p=self.port)
 
     def backend_url(self):
-        return "TODO figure this location"
+        return ""
 
-    def num_entries(self, limit, max_):
-        return self.connection().num_entries(limit, max_)
+    def num_queries(self, limit, max_):
+        return self.connection().num_queries(limit, max_)

@@ -1,15 +1,18 @@
 import myria
 import json
 import requests
+import url
 from raco.compile import compile
 from raco.viz import operator_to_dot
 
 
 class ClangConnection(object):
 
-    def __init__(self, hostname, port):
+    def __init__(self, hostname, port, ssl):
         self.hostname = hostname
         self.port = port
+        self.ssl = ssl
+        self.url = url.generate_base_url(ssl, hostname, port)
 
     def create_json(self, query, logical_plan, physical_plan):
         return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
@@ -24,34 +27,33 @@ class ClangConnection(object):
                 'relkey': relkey, 'rawQuery': str(query)}
 
     def submit_query(self, compiled):
-        url = 'http://%s:%d' % (self.hostname, self.port)
-        r = requests.Session().post(url, data=json.dumps(compiled))
+        r = requests.Session().post(self.url, data=json.dumps(compiled))
         return r.json()
 
     def check_query(self, qid):
-        url = 'http://%s:%d/status?qid=%s' % (self.hostname, self.port, qid)
-        r = requests.Session().get(url)
+        requrl = url.generate_url(self.url,'status', 'qid', qid)
+        r = requests.Session().get(requrl)
         return r.json()
 
     def check_datasets(self, rel_args):
-        url = 'http://%s:%d/catalog' % (self.hostname, self.port)
-        r = requests.Session().post(url, data=json.dumps(rel_args))
+        requrl = url.generate_url(self.url, 'catalog')
+        r = requests.Session().post(requrl, data=json.dumps(rel_args))
         ret = r.json()
         if ret:
             return ret
         raise myria.MyriaError
 
     def get_num_tuples(self, rel_args):
-        url = 'http://%s:%d/tuples' % (self.hostname, self.port)
-        r = requests.Session().post(url, data=json.dumps(rel_args))
+        requrl = url.generate_url(self.url, 'tuples')
+        r = requests.Session().post(requrl, data=json.dumps(rel_args))
         ret = r.json()
         if ret:
             return ret
         raise myria.MyriaError
 
-    def num_entries(self, limit, max_):
-        url = 'http://%s:%d/entries' % (self.hostname, self.port)
-        r = requests.Session().post(url)
+    def num_queries(self, limit, max_):
+        requrl = url.generate_url(self.url, 'entries')
+        r = requests.Session().post(requrl)
         ret = r.json()
         if ret:
             return ret, True

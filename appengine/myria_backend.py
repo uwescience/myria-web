@@ -1,4 +1,5 @@
 from backend import Backend
+import url
 from myria_catalog import MyriaCatalog
 import myria
 import requests
@@ -12,6 +13,7 @@ class MyriaBackend(Backend):
         self.hostname = hostname
         self.port = port
         self.ssl = ssl
+        self.url = url.generate_base_url(ssl, hostname, port)
 
     def catalog(self):
         return MyriaCatalog(self.connection())
@@ -36,14 +38,9 @@ class MyriaBackend(Backend):
                 query, logical_plan, physical_plan, language)
             compiled['profilingMode'] = profile
             query_status = self.connection().submit_query(compiled)
-            if self.ssl:
-                uri_scheme = "https"
-            else:
-                uri_scheme = "http"
             # Issue the query
-            query_url = '%s://%s:%d/execute?query_id=%d' %\
-                        (uri_scheme, self.hostname, self.port,
-                         query_status['queryId'])
+            query_url = url.generate_url(self.url, 'execute', 'query_id',
+                                         query_status['queryId'])
             return {'query_status': query_status, 'query_url': query_url}
         except myria.MyriaError as e:
             raise e
@@ -69,7 +66,7 @@ class MyriaBackend(Backend):
     def backend_url(self):
         return "http://myria.cs.washington.edu/"
 
-    def num_entries(self, limit, max_):
+    def num_queries(self, limit, max_):
         return self.connection().queries(limit, max_)
 
 

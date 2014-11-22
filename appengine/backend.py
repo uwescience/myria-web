@@ -6,7 +6,7 @@ class Backend(object):
 
     @abstractmethod
     def catalog(self):
-        """Returns the catalog to use for dataset checking"""
+        """Returns an instance of the catalog to use for dataset checking"""
 
     @abstractmethod
     def algebra(self):
@@ -14,7 +14,7 @@ class Backend(object):
 
     @abstractmethod
     def connection(self):
-        """Returns connection corresponding target algebra"""
+        """Returns an instance of a connection"""
 
     @abstractmethod
     def compile_query(self, query, logical_plan, physical_plan, language=None):
@@ -37,10 +37,10 @@ class Backend(object):
 
     @abstractmethod
     def backend_url(self):
-        """Returns url for the backend """
+        """Returns the url for more information about the backend project"""
 
     @abstractmethod
-    def num_entries(self, limit, max_):
+    def num_queries(self, limit, max_):
         """Returns the total number of queries for the backend"""
 
     def connection_url(self, uri_scheme="http"):
