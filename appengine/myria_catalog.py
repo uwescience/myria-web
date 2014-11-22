@@ -23,7 +23,6 @@ class MyriaCatalog(Catalog):
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))
         schema = dataset_info['schema']
-        print schema
         return scheme.Scheme(zip(schema['columnNames'], schema['columnTypes']))
 
     def get_num_servers(self):

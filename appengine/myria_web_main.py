@@ -102,6 +102,7 @@ def get_plan(query, language, backend, plan_type, push_sql=False):
         elif plan_type == 'physical':
             return processor.get_physical_plan(target_alg=target_algebra,
                                                push_sql=push_sql)
+
         else:
             raise NotImplementedError('Myria plan type %s' % plan_type)
     raise NotImplementedError('Language %s is not supported on %s'
@@ -233,7 +234,7 @@ class Queries(MyriaPage):
         except (ValueError, TypeError):
             max_ = None
         try:
-            count, queries = conn.num_entries(limit, max_)
+            count, queries = conn.num_queries(limit, max_)
         except myria.MyriaError:
             queries = []
             count = 0
@@ -563,9 +564,9 @@ class Application(webapp2.WSGIApplication):
         self.clangport = 1337
 
         self.backends = {"clang": ClangBackend(self.clanghostname,
-                                               self.clangport),
+                                               self.clangport, False),
                          "grappa": GrappaBackend(self.clanghostname,
-                                                 self.clangport),
+                                                 self.clangport, False),
                          "myria": MyriaBackend(self.myriahostname,
                                                self.myriaport, ssl),
                          "myriamultijoin": MyriaMultiJoinBackend(
