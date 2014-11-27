@@ -182,6 +182,12 @@ svg .help-text {
   stroke-width: 2;
 }
 
+.expand-circle {
+  fill: lightgreen;
+  stroke: green;
+  stroke-width: 2;
+}
+
 /* Fragment vis */
 
 .area {

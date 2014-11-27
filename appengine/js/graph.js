@@ -101,7 +101,7 @@ function Graph () {
             graph.nodes[id] = node;
         });
 
-        // If there are more than 10 fragments, do not expand
+        // If there are more than 7 fragments, do not expand
         if (graph.queryPlan.plan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
@@ -486,6 +486,21 @@ function Graph () {
         if (interactive) {
             gel.attr("class", "interactive");
 
+            gel.selectAll(".expand-circle")
+                .on("click", function() {
+                    if (d3.event.defaultPrevented) return;
+                    d3.event.preventDefault();
+
+                    var node = d3.select(this).data()[0];
+
+                    // Handle fragment state
+                    if (node.type == "cluster") {
+                        self.closeFragment(node.id);
+                    } else if (node.type == "fragment") {
+                        self.openFragment(node.id, false);
+                    }
+                });
+
             gel.selectAll(".node")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
@@ -497,10 +512,10 @@ function Graph () {
                         if (node.id === self.state.focus) {
                             self.closeFragment(node.id);
                         } else {
-                            self.openFragment(node.id);
+                            self.openFragment(node.id, true);
                         }
                     } else if (node.type == "fragment") {
-                        self.openFragment(node.id);
+                        self.openFragment(node.id, true);
                     }
                 });
 
@@ -568,6 +583,28 @@ function Graph () {
                     return initial ? 1 : 0;
                 });
 
+            if (interactive) {
+                var circle = gel.selectAll("circle.expand-circle")
+                    .data(data.nodes, function(d) { return d.id; });
+
+                circle
+                    .enter()
+                    .append("circle")
+                    .filter(function(d) {
+                        return d.type == "cluster" || d.type == "fragment";
+                    })
+                    .tooltip("click to<br/>expand/collapse")
+                    .attr("r", 6)
+                    .attr("class", "expand-circle");
+
+                circle.transition().duration(animationDuration)
+                    .attr("opacity", 1)
+                    .attr("cx", function(d) { return d.x * dpi + 20; })
+                    .attr("cy", function(d) { return d.y * dpi; });
+
+                circle.exit().remove();
+            }
+
             nodeEnter.append("circle")
                 .attr("r", 6)
                 .attr("class", "rect-info")
@@ -593,7 +630,7 @@ function Graph () {
                     };
                 });
 
-            node.select("circle").transition().duration(animationDuration)
+            node.select(".rect-info").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("cx", function(d) { return d.x * dpi; })
                 .attr("cy", function(d) { return d.y * dpi; });
@@ -740,12 +777,19 @@ function Graph () {
         Graph.prototype.draw = draw;
     };
 
-    Graph.prototype.openFragment = function(nodeId) {
+    Graph.prototype.openFragment = function(nodeId, focus) {
         var self = this;
 
+        console.log("open")
+
         self.expandNode(nodeId);
-        self.state.focus = nodeId;
-        fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+        if (focus) {
+            self.state.focus = nodeId;
+            fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+        } else {
+            // TODO: redraw better
+            self.openOverview();
+        }
 
         var newD3data = self.generateD3data();
         self.draw(newD3data, false);
@@ -753,6 +797,8 @@ function Graph () {
 
     Graph.prototype.closeFragment = function(nodeId) {
         var self = this;
+
+        console.log("close")
 
         self.state.focus = "";
         self.reduceNode(nodeId);
