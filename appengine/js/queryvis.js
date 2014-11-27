@@ -34,7 +34,7 @@ var templates = {
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
     titleFragmentsOverview: _.template("Overview over all fragments"),
-    fragmentTitle: _.template("Fragment <%- fragment %>:"),
+    fragmentTitle: _.template("Fragment <%- fragment %>"),
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%= value %></td></tr>'),
