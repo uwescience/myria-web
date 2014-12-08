@@ -201,7 +201,8 @@ function Graph () {
             var costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
             self.costs = {};
             _.each(data, function(e) {
-                self.costs["f" + e["fragmentId"]] = costs(e["numTuples"])
+                var k = "f" + e["fragmentId"];
+                self.costs[k] = costs(e["numTuples"]);
             });
             cb()
         });
@@ -749,7 +750,6 @@ function Graph () {
                 });
 
             link.select("path.line").transition().duration(animationDuration)
-                .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
@@ -759,11 +759,32 @@ function Graph () {
                         return x;
                     }
                     return 3;
+                })
+                .attr("opacity", function(d) {
+                    var k = self.linkOrigins[d.id];
+                    if (k !== undefined && _.size(self.costs) > 0 && self.costs[k] === undefined) {
+                        return 0.3;
+                    }
+                    return 1;
                 });
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
-                .attr("stroke", "black");
+                .attr("stroke", "black")
+
+            if (interactive) {
+                link.select("path.clickme")
+                    .tooltip(function(d) {
+                        var k = self.linkOrigins[d.id];
+                        var x = self.costs[k];
+                        if (k !== undefined) {
+                            if (x === undefined)
+                                x = 0;
+                            return x + " tuples";
+                        }
+                        return "";
+                    });
+            }
 
             link.exit().select("path").transition().duration(shortDuration)
                 .attr("opacity", 0);
