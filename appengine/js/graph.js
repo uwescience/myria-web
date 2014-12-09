@@ -781,7 +781,7 @@ function Graph () {
                             var x = self.numTuples[k];
                             if (x === undefined)
                                 x = 0;
-                            return x + " tuples";
+                            return Intl.NumberFormat().format(x) + " tuples";
                         }
                         return "";
                     });
