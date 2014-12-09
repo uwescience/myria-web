@@ -33,7 +33,7 @@ function Graph () {
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
     this.queryPlan = {};    // Physical plan
-    this.costs = {};
+    this.numTuples = {};    // Number of tuples sent from fragment
     this.linkOrigins = {};
 
     /********************/
@@ -198,10 +198,11 @@ function Graph () {
             return d;
         }, function(data) {
             var d = _.pluck(data, "numTuples");
-            var costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
-            self.costs = {};
+            self.costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
+            self.numTuples = {};
             _.each(data, function(e) {
-                self.costs["f" + e["fragmentId"]] = costs(e["numTuples"])
+                var k = "f" + e["fragmentId"];
+                self.numTuples[k] = e["numTuples"];
             });
             cb()
         });
@@ -749,21 +750,42 @@ function Graph () {
                 });
 
             link.select("path.line").transition().duration(animationDuration)
-                .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
                 .attr("stroke-width", function(d) {
-                    var x = self.costs[self.linkOrigins[d.id]];
+                    var x = self.numTuples[self.linkOrigins[d.id]];
                     if (x !== undefined) {
-                        return x;
+                        return self.costs(x);
                     }
                     return 3;
+                })
+                .attr("opacity", function(d) {
+                    var k = self.linkOrigins[d.id];
+                    if (k !== undefined && _.size(self.numTuples) > 0 && self.numTuples[k] === undefined) {
+                        return 0.3;
+                    }
+                    return 1;
                 });
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
-                .attr("stroke", "black");
+                .attr("stroke", "black")
+
+            if (interactive) {
+                link.select("path.clickme")
+                    .tooltip(function(d) {
+                        var k = self.linkOrigins[d.id];
+                        // only show tooltip for links between fragments
+                        if (k !== undefined) {
+                            var x = self.numTuples[k];
+                            if (x === undefined)
+                                x = 0;
+                            return Intl.NumberFormat().format(x) + " tuples";
+                        }
+                        return "";
+                    });
+            }
 
             link.exit().select("path").transition().duration(shortDuration)
                 .attr("opacity", 0);
