@@ -57,28 +57,26 @@
 		<div class="text-center">
 			<ul class="pagination">
 				<li>
-				{% if pagination.has_prev %}
-					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
-				{% else %}
-					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
-				{% endif %}
+					<a href="{{ page_url(pagination.prev_args) }}">&laquo;</a>
 				</li>
-				{%- for page in pagination.iter_pages() %}
-					{% if page %}
-						{% if page != pagination.page %}
-							<li>
-								<a href="{{ page_url(page, current_max, pagination) }}">{{ page }}</a>
-					  		</li>
+					{%- if pagination.can_jump %}
+					{%- for page_args in pagination.iter_pages() %}
+						{% if page_args %}
+							{% if page_args.current %}
+								<li class="active"><span>{{ page_args.page }}</span></li>
+							{% else %}
+								<li>
+									<a href="{{ page_url(page_args.args) }}">{{ page_args.page }}</a>
+								</li>
+							{% endif %}
 						{% else %}
-							<li class="active"><span>{{ page }}</span></li>
+							<li class="disabled"><span>...</span></li>
 						{% endif %}
-					{% else %}
-						<li class="disabled"><span>...</span></li>
-					{% endif %}
-				{%- endfor %}
+					{%- endfor %}
+				{% endif %}
 				{% if pagination.has_next %}
 				<li>
-					<a href="{{ page_url(pagination.page + 1, current_max, pagination) }}">&raquo;</a>
+					<a href="{{ page_url(pagination.next_args) }}">&raquo;</a>
 				{% else %}
 				<li class="disabled">
 					<span>&raquo;</span>
