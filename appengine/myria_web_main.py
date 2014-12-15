@@ -1,8 +1,6 @@
-import copy
 from distutils.util import strtobool
 import json
 import logging
-import math
 import os
 import requests
 from threading import Lock
