@@ -69,16 +69,21 @@ class Pagination(object):
         if not self.can_jump:
             raise NotImplementedError("page iteration when we cannot jump")
 
+        # The user's search had no results
+        if self.result[QUERIES]:
+            current_max = self.result[QUERIES][0][QUERY_ID]
+        else:
+            current_max = 0
+
         max_query = self.result[MAX]
-        current_max = self.result[QUERIES][0][QUERY_ID]
         per_page = self.base_args[LIMIT]
         current_page = 1 + (max_query - current_max + per_page - 1) / per_page
         all_pages = current_page + ((current_max - 1) / per_page)
         last = 0
         for num in xrange(1, all_pages + 1):
             if (num <= left_edge or  # we show the first left_edge pages
-                    (num >= current_page - left_current and
-                     num <= current_page + right_current)  # +/- a few nearby
+                    (current_page - left_current <= num
+                     <= current_page + right_current)  # +/- a few nearby
                     or num > all_pages - right_edge):  # and last right_edge
                 if last + 1 != num:
                     yield None
