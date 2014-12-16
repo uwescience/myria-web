@@ -288,6 +288,9 @@ class Queries(MyriaPage):
         except myria.MyriaError:
             result = {'max': 0, 'min': 0, 'results': []}
 
+        if 'q' in args and not args['q'].strip():
+            del args['q']
+
         queries = result['results']
 
         for q in queries:
@@ -306,6 +309,7 @@ class Queries(MyriaPage):
         template_vars['pagination'] = Pagination(args, result)
         template_vars['page_url'] = lambda largs: '{}?{}'.format(
             self.request.path, urllib.urlencode(largs))
+        template_vars['query_string'] = args.get('q', '')
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
