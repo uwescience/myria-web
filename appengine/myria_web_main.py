@@ -281,7 +281,10 @@ class Queries(MyriaPage):
         args = {a: self.request.get(a) for a in self.request.arguments()}
 
         try:
-            result = conn.queries(**args)
+            result = conn.queries(limit=args.get("limit"),
+                                  min_id=args.get("min"),
+                                  max_id=args.get("max"),
+                                  q=args.get("q"))
         except myria.MyriaError:
             result = {'max': 0, 'min': 0, 'results': []}
 
