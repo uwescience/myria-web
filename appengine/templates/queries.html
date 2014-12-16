@@ -25,6 +25,13 @@
 					<th>Finished</th>
 				</tr>
 			</thead>
+			{% if not queries %}
+			<tr>
+				<td colspan="7" class="text-center text-muted">
+					<h3>No queries</h3>
+				</td>
+			</tr>
+			{% endif %}
 			{% for q in queries %}
 			<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
 				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
