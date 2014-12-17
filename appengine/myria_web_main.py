@@ -25,7 +25,7 @@ from raco.algebra import DEFAULT_CARDINALITY
 from raco import scheme
 from examples import examples
 from demo3_examples import demo3_examples
-from pagination import Pagination
+from pagination import Pagination, QUERIES_PER_PAGE
 
 import myria
 
@@ -281,7 +281,7 @@ class Queries(MyriaPage):
         args = {a: self.request.get(a) for a in self.request.arguments()}
 
         try:
-            result = conn.queries(limit=args.get("limit"),
+            result = conn.queries(limit=args.get("limit", QUERIES_PER_PAGE),
                                   min_id=args.get("min"),
                                   max_id=args.get("max"),
                                   q=args.get("q"))
