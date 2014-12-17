@@ -632,4 +632,5 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
+# app = Application(hostname='localhost', port=8753, ssl=False)
 app = Application()
