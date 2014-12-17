@@ -288,9 +288,9 @@ class Queries(MyriaPage):
         except myria.MyriaError:
             result = {'max': 0, 'min': 0, 'results': []}
 
-        query_string = args.get('q', '')
-        if len(query_string) > 0:
-            query_string = query_string.strip()
+        query_string = ''
+        if 'q' in args:
+            query_string = args['q'].strip()
             if not query_string:
                 del args['q']
             else:
