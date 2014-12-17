@@ -109,3 +109,11 @@ input[type=range].zoom-range {
 .tablesorter-header[aria-disabled=false] {
   cursor: pointer;
 }
+
+.query-panel-heading .form-group {
+  margin-bottom: 0;
+}
+
+.query-panel-heading .panel-title {
+  margin-top: 7px;
+}
