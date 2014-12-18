@@ -519,7 +519,7 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
-        profile = self.request.get("profile", False)
+        profile = self.request.get("profile", "")
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
 
