@@ -195,6 +195,7 @@ function Graph () {
 
         d3.csv(url, function(d) {
             d.numTuples = +d.numTuples;
+            d.duration = +d.duration;
             return d;
         }, function(data) {
             var d = _.pluck(data, "numTuples");
