@@ -1,4 +1,4 @@
-var networkVisualization = function (element, fragments, queryPlan) {
+var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
     $('.title-current').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
@@ -112,7 +112,9 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 return d;
             });
 
-            summary.duration = queryPlan.elapsedNanos;
+            // Dan NB: we could also get numTuples from linkAttr.
+            // .. I did verify that they match for q46220 and q59564
+            summary.duration = linkAttr.duration;
 
             updateSummary(element.select(".summary"), summary);
 

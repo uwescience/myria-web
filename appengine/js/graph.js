@@ -33,7 +33,7 @@ function Graph () {
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
     this.queryPlan = {};    // Physical plan
-    this.numTuples = {};    // Number of tuples sent from fragment
+    this.linkAttr = {};     // Number of tuples sent, duration for each link
     this.linkOrigins = {};
 
     /********************/
@@ -199,10 +199,11 @@ function Graph () {
         }, function(data) {
             var d = _.pluck(data, "numTuples");
             self.costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
-            self.numTuples = {};
+            self.linkAttr = {};
             _.each(data, function(e) {
                 var k = "f" + e["fragmentId"];
-                self.numTuples[k] = e["numTuples"];
+                self.linkAttr[k] = {numTuples: e["numTuples"],
+                                          duration: e["duration"]};
             });
             cb()
         });
@@ -529,8 +530,9 @@ function Graph () {
                     if (line.type == "frag") {
                         var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opId2fId[line.src]].fragmentIndex;
                         var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fId[line.dst]].fragmentIndex;
+                        var link = self.linkAttr['f'+src];
                         chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], self.queryPlan);
+                        networkVisualization(chartElement, [src, dst], self.queryPlan, link);
                         self.state.focus = line.id;
                         var newD3data = self.generateD3data();
                         draw(newD3data, false);
@@ -754,15 +756,15 @@ function Graph () {
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
                 .attr("stroke-width", function(d) {
-                    var x = self.numTuples[self.linkOrigins[d.id]];
+                    var x = self.linkAttr[self.linkOrigins[d.id]];;
                     if (x !== undefined) {
-                        return self.costs(x);
+                        return self.costs(x.numTuples);
                     }
                     return 3;
                 })
                 .attr("opacity", function(d) {
                     var k = self.linkOrigins[d.id];
-                    if (k !== undefined && _.size(self.numTuples) > 0 && self.numTuples[k] === undefined) {
+                    if (k !== undefined && _.size(self.linkAttr[k]) > 0 && self.linkAttr[k].numTuples === undefined) {
                         return 0.3;
                     }
                     return 1;
@@ -778,7 +780,7 @@ function Graph () {
                         var k = self.linkOrigins[d.id];
                         // only show tooltip for links between fragments
                         if (k !== undefined) {
-                            var x = self.numTuples[k];
+                            var x = self.linkAttr[k].numTuples;
                             if (x === undefined)
                                 x = 0;
                             return Intl.NumberFormat().format(x) + " tuples";
