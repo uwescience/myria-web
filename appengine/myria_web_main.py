@@ -483,6 +483,7 @@ class Compile(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         query = self.request.get("query")
         language = self.request.get("language")
+        profile = self.get_boolean_request_param("profile")
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
 
@@ -496,6 +497,11 @@ class Compile(MyriaHandler):
         try:
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, language)
+
+            if profile:
+                compiled['profilingMode'] = ["QUERY", "RESOURCE"]
+            else:
+                compiled['profilingMode'] = []
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -519,7 +525,7 @@ class Execute(MyriaHandler):
 
         query = self.request.get("query")
         language = self.request.get("language")
-        profile = self.request.get("profile", False)
+        profile = self.get_boolean_request_param("profile")
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
 
@@ -537,7 +543,10 @@ class Execute(MyriaHandler):
             compiled = compile_to_json(
                 query, cached_logicalplan, physicalplan, language)
 
-            compiled['profilingMode'] = profile
+            if profile:
+                compiled['profilingMode'] = ["QUERY", "RESOURCE"]
+            else:
+                compiled['profilingMode'] = []
 
             # Issue the query
             query_status = conn.submit_query(compiled)
