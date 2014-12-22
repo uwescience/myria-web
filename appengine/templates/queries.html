@@ -48,7 +48,7 @@
 				<td class="query-raw">{{q.rawQuery}}</td>
 				<td class="query-status">{{q.status}}</td>
 				<td>
-					{% if q.profilingMode %}
+					{% if 'QUERY' in q.profilingMode %}
 						{% if q.status == 'SUCCESS' %}
 							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>
 						{% elif q.status in ['RUNNING', 'ACCEPTED'] %}

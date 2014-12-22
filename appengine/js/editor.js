@@ -180,7 +180,7 @@ function displayQueryStatus(query_status) {
     });
   }
 
-  if (status === 'SUCCESS' && query_status['profilingMode']) {
+  if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {
       html += t.prof_link({query_id: query_id});
   } else if (status === 'ERROR') {
     html += t.err_msg({message: query_status['message'] || '(missing)'});
