@@ -90,8 +90,11 @@ $(function() {
     $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to Myria. Most functionality will not work.</div>');
   }
 
-  window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
-  updateCalendarWarning();
+  //warn if myria cluster has scheduled calendar use
+  if (connectionString.indexOf('rest.myria.cs.washington.edu') === 0) {
+    window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
+    updateCalendarWarning();
+  }
 
   //back to top button
   var offset = 220;
