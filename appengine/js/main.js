@@ -91,7 +91,7 @@ $(function() {
   }
 
   //warn if myria cluster has scheduled calendar use
-  if (connectionString.indexOf('rest.myria.cs.washington.edu') === 0) {
+  if (connectionString.indexOf('localhost') === -1) {
     window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
     updateCalendarWarning();
   }
