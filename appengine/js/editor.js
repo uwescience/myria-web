@@ -50,7 +50,7 @@ function getplan() {
     query: query,
     language: editorLanguage,
     multiway_join: $("#multiway-join").is(':checked'),
-    push_sql: $("#push-sql").is(':checked')
+    push_sql: !$("#disable-push").is(':checked')
   });
   handleerrors(request, "#plan");
   var request = $.post("dot", {
@@ -70,7 +70,7 @@ function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
-  var push_sql_checked = $("#push-sql").is(':checked');
+  var push_sql_checked = !$("#disable-push").is(':checked');
 
   var request = $.post("optimize", {
     query: query,
@@ -129,7 +129,7 @@ function compileplan() {
     query: query,
     language: editorLanguage,
     multiway_join: $("#multiway-join").is(':checked'),
-    push_sql: $("#push-sql").is(':checked')
+    push_sql: !$("#disable-push").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -232,7 +232,7 @@ function executeplan() {
       language: editorLanguage,
       profile: $("#profile-enabled").is(':checked'),
       multiway_join: $("#multiway-join").is(':checked'),
-      push_sql: $("#push-sql").is(':checked')
+      push_sql: !$("#disable-push").is(':checked')
     },
     statusCode: {
       200: displayQueryStatus,
