@@ -1,21 +1,13 @@
 //query graph and profiling charts
-var queryGraphInteractive = function (element, queryPlan) {
+var queryGraphInteractive = function (element, queryStatus, fragments) {
     var chartElement = d3.select('.chart');
 
     var graphObj = new Graph();
-    graphObj.loadQueryPlan(queryPlan);
+    graphObj.loadQueryPlan(queryStatus, fragments);
     graphObj.loadCosts(function() {
         graphObj.render(element, chartElement);
         graphObj.openOverview();
     });
-    return graphObj;
-};
-
-//query graph
-var queryGraph = function(element, queryPlan){
-    var graphObj = new Graph();
-    graphObj.loadQueryPlan(queryPlan);
-    graphObj.render(element, null);
     return graphObj;
 };
 
@@ -25,14 +17,13 @@ function Graph () {
     /********************/
     // Public properties
     /********************/
-    this.name = "";         // Query Name
-    this.qId = 0;           // Query ID
     this.nodes = {};        // List of graph fragment nodes
     this.links = {};        // List of graph fragment edges
     this.state = {};        // Describes which nodes are "expanded"
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
-    this.queryPlan = {};    // Physical plan
+    this.queryStatus = {};  // The status of the profiled query
+    this.fragments = [];    // Executed fragments of the profiled subquery
     this.linkAttr = {};     // Number of tuples sent, duration for each link
     this.linkOrigins = {};
 
@@ -45,18 +36,17 @@ function Graph () {
     /********************/
     // Public methods
     /********************/
-    Graph.prototype.loadQueryPlan = function(json) {
+    Graph.prototype.loadQueryPlan = function(queryStatus, fragments) {
         var graph = this;
 
         // Initialize the state
         graph.state.opened = [];
         graph.state.focus = "";
 
-        // Get the query plan ID
-        graph.qId = json.queryId;
-        graph.name = "Query Plan " + graph.qId;
-        // Get query plan
-        graph.queryPlan = json;
+        // Status includes the start time, end time, etc. of the entire query
+        graph.queryStatus = queryStatus;
+        // Fragments is the actual executed fragments of the current subquery.
+        graph.fragments = fragments;
 
         // a nested version of op ids, not needed in here but useful for other visualizations
         graph.nested = {};
@@ -65,7 +55,7 @@ function Graph () {
         var links = {};
 
         // Collect graph nodes
-        graph.queryPlan.plan.fragments.forEach(function(fragment) {
+        graph.fragments.forEach(function(fragment) {
             // Create fragment node object
             var node = {};                                              // Node object
             var id = "f"+fragment.fragmentIndex;                            // Node ID
@@ -102,7 +92,7 @@ function Graph () {
         });
 
         // If there are more than 7 fragments, do not expand
-        if (graph.queryPlan.plan.fragments.length < 7) {
+        if (graph.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
             }
@@ -186,12 +176,13 @@ function Graph () {
 
     // Function that loads the communication costs
     Graph.prototype.loadCosts = function(cb) {
+        var self = this;
+
         var url = templates.urls.aggregatedSentData({
             myria: myriaConnection,
-            query: queryPlan.queryId,
+            query: self.queryStatus.queryId,
+            subquery: self.queryStatus.subqueryId
         });
-
-        var self = this;
 
         d3.csv(url, function(d) {
             d.numTuples = +d.numTuples;
@@ -533,7 +524,7 @@ function Graph () {
                         var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fId[line.dst]].fragmentIndex;
                         var link = self.linkAttr['f'+src];
                         chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], self.queryPlan, link);
+                        networkVisualization(chartElement, [src, dst], self.queryStatus, link);
                         self.state.focus = line.id;
                         var newD3data = self.generateD3data();
                         draw(newD3data, false);
@@ -805,12 +796,10 @@ function Graph () {
     Graph.prototype.openFragment = function(nodeId, focus) {
         var self = this;
 
-        console.log("open")
-
         self.expandNode(nodeId);
         if (focus) {
             self.state.focus = nodeId;
-            fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+            fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self);
         } else {
             // TODO: redraw better
             self.openOverview();
@@ -822,8 +811,6 @@ function Graph () {
 
     Graph.prototype.closeFragment = function(nodeId) {
         var self = this;
-
-        console.log("close")
 
         self.state.focus = "";
         self.reduceNode(nodeId);
@@ -843,7 +830,7 @@ function Graph () {
 
     Graph.prototype.openOverview = function() {
         var self = this;
-        var allFragments = _.pluck(self.queryPlan.plan.fragments, 'fragmentIndex');
-        manyLineCharts(self.chartElement, allFragments, self.queryPlan, self);
+        var allFragments = _.pluck(self.fragments, 'fragmentIndex');
+        manyLineCharts(self.chartElement, allFragments, self);
     };
 }

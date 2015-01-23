@@ -10,7 +10,7 @@
 
 {% block content %}
     <div class="page-header">
-  		<h1>Query {{ queryId }} <small>visualization of physical query execution</small></h1>
+		<h1>Query {{ queryId }}.{{ subqueryId }} <small>visualization of physical query execution</small></h1>
 	</div>
 
 	<p class="lead">
@@ -65,16 +65,13 @@
 	<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
 
-	<script type="text/javascript">
-		{% autoescape false %}
-			var queryPlan = {{ queryPlan }};
-		{% endautoescape %}
-	</script>
 	<script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 	<script async defer>
 		d3.select('.query-plan').each(function() {
-		    element = d3.select(this);
-		    theGraph = queryGraphInteractive(element, queryPlan);
+			var element = d3.select(this);
+			var queryStatus = {{ queryStatus | safe}};
+			var fragments = {{ fragments | safe }};
+			theGraph = queryGraphInteractive(element, queryStatus, fragments);
 		});
 
 		$(function() {
