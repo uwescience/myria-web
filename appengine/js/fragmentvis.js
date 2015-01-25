@@ -49,13 +49,13 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
     var xAxis = d3.svg.axis()
         .scale(x)
-        .tickFormat(customTimeFormat)
+        .tickFormat(customFullTimeFormat)
         .tickSize(-height)
         .orient("bottom");
 
     var xAxis2 = d3.svg.axis()
         .scale(x2)
-        .tickFormat(customTimeFormat)
+        .tickFormat(customFullTimeFormat)
         .tickSize(-height2)
         .orient("bottom");
 
@@ -102,7 +102,7 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
         .attr("dy", ".71em")
         .attr("transform", "translate(" + [0, height/2] + ") rotate(-90)")
         .style("text-anchor", "end")
-        .text("Number of workers");
+        .text("# of workers");
 
     svg.append("defs").append("clipPath")
         .attr("id", "clip")
@@ -372,7 +372,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
 
     var xAxis = d3.svg.axis()
         .scale(x)
-        .tickFormat(customTimeFormat)
+        .tickFormat(customFullTimeFormat)
         .tickSize(-height)
         .orient("bottom");
 

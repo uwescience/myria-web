@@ -3,6 +3,7 @@ var templates = {
     //*/
     urls: {
         sentData: _.template("<%- myria %>/logs/sent?queryId=<%- query %>&fragmentId=<%- fragment %>"),
+        aggregatedSentData: _.template("<%- myria %>/logs/aggregated_sent?queryId=<%- query %>"),
         profiling: _.template("<%- myria %>/logs/profiling?queryId=<%- query %>&fragmentId=<%- fragment %>&start=<%- start %>&end=<%- end %>&onlyRootOp=<%- onlyRootOp %>&minLength=<%- minLength %>"),
         range: _.template("<%- myria %>/logs/range?queryId=<%- query %>&fragmentId=<%- fragment %>"),
         contribution: _.template("<%- myria %>/logs/contribution?queryId=<%- query %>&fragmentId=<%- fragment %>"),
@@ -33,7 +34,7 @@ var templates = {
     titleNetworkVis: _.template("Communication between workers from fragment <%- src %> to fragment <%- dst %>"),
     titleFragmentsVis: _.template("Operators inside fragment <%- fragment %>"),
     titleFragmentsOverview: _.template("Overview over all fragments"),
-    fragmentTitle: _.template("Fragment <%- fragment %>:"),
+    fragmentTitle: _.template("Fragment <%- fragment %>"),
     markerUrl: _.template("url(#<%- name %>)"),
     table: _.template('<div class="table-responsive"><table class="table table-striped table-condensed"><tbody><%= body %></tbody></table></div>'),
     row: _.template('<tr><th><%- key %></th><td><%= value %></td></tr>'),

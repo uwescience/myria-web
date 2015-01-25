@@ -4,8 +4,10 @@ var queryGraphInteractive = function (element, queryPlan) {
 
     var graphObj = new Graph();
     graphObj.loadQueryPlan(queryPlan);
-    graphObj.render(element, chartElement);
-    graphObj.openOverview();
+    graphObj.loadCosts(function() {
+        graphObj.render(element, chartElement);
+        graphObj.openOverview();
+    });
     return graphObj;
 };
 
@@ -31,6 +33,8 @@ function Graph () {
     this.opId2color = {};   // Dictionary of opId - color
     this.opId2fId = {};     // Dictionary of opId - fragment ID
     this.queryPlan = {};    // Physical plan
+    this.linkAttr = {};     // Number of tuples sent, duration for each link
+    this.linkOrigins = {};
 
     /********************/
     // Private properties
@@ -97,7 +101,7 @@ function Graph () {
             graph.nodes[id] = node;
         });
 
-        // If there are more than 10 fragments, do not expand
+        // If there are more than 7 fragments, do not expand
         if (graph.queryPlan.plan.fragments.length < 7) {
             for (var id in graph.nodes) {
                 graph.state.opened.push(id);
@@ -120,6 +124,7 @@ function Graph () {
                     link.v.oID = ""+op.opId;                            // Dst fragment ID
                     var linkID = link.u.fID + "->" + link.v.fID;        // Link ID
                     graph.links["link-" + linkID.hashCode()] = link;
+                    graph.linkOrigins["link-" + linkID.hashCode()] = link.u.fID;
                 }
                 // Add in-fragment links
                 for (var key in op) {
@@ -176,6 +181,32 @@ function Graph () {
                 return c;
             };
             graph.nested[fragid] = addChildren(root);
+        });
+    };
+
+    // Function that loads the communication costs
+    Graph.prototype.loadCosts = function(cb) {
+        var url = templates.urls.aggregatedSentData({
+            myria: myriaConnection,
+            query: queryPlan.queryId,
+        });
+
+        var self = this;
+
+        d3.csv(url, function(d) {
+            d.numTuples = +d.numTuples;
+            d.duration = +d.duration;
+            return d;
+        }, function(data) {
+            var d = _.pluck(data, "numTuples");
+            self.costs = d3.scale.linear().domain([0, _.max(d)]).range([2, 6]);
+            self.linkAttr = {};
+            _.each(data, function(e) {
+                var k = "f" + e["fragmentId"];
+                self.linkAttr[k] = {numTuples: e["numTuples"],
+                                          duration: e["duration"]};
+            });
+            cb()
         });
     };
 
@@ -429,7 +460,6 @@ function Graph () {
 
         var interactive = chartElement ? true : false;
 
-        // D3 stuff...
         var margin = {top: 0, right: 0, bottom: 0, left:0 },
             width = parseInt(graphElement.style('width'), 10) - margin.left - margin.right;
 
@@ -459,6 +489,21 @@ function Graph () {
         if (interactive) {
             gel.attr("class", "interactive");
 
+            gel.selectAll(".expand-circle")
+                .on("click", function() {
+                    if (d3.event.defaultPrevented) return;
+                    d3.event.preventDefault();
+
+                    var node = d3.select(this).data()[0];
+
+                    // Handle fragment state
+                    if (node.type == "cluster") {
+                        self.closeFragment(node.id);
+                    } else if (node.type == "fragment") {
+                        self.openFragment(node.id, false);
+                    }
+                });
+
             gel.selectAll(".node")
                 .on("click", function() {
                     if (d3.event.defaultPrevented) return;
@@ -470,10 +515,10 @@ function Graph () {
                         if (node.id === self.state.focus) {
                             self.closeFragment(node.id);
                         } else {
-                            self.openFragment(node.id);
+                            self.openFragment(node.id, true);
                         }
                     } else if (node.type == "fragment") {
-                        self.openFragment(node.id);
+                        self.openFragment(node.id, true);
                     }
                 });
 
@@ -486,8 +531,9 @@ function Graph () {
                     if (line.type == "frag") {
                         var src = (line.src in self.nodes) ? self.nodes[line.src].fragmentIndex : self.nodes[self.opId2fId[line.src]].fragmentIndex;
                         var dst = (line.dst in self.nodes) ? self.nodes[line.dst].fragmentIndex : self.nodes[self.opId2fId[line.dst]].fragmentIndex;
+                        var link = self.linkAttr['f'+src];
                         chartElement.selectAll("svg").remove();
-                        networkVisualization(chartElement, [src, dst], self.queryPlan);
+                        networkVisualization(chartElement, [src, dst], self.queryPlan, link);
                         self.state.focus = line.id;
                         var newD3data = self.generateD3data();
                         draw(newD3data, false);
@@ -541,6 +587,28 @@ function Graph () {
                     return initial ? 1 : 0;
                 });
 
+            if (interactive) {
+                var circle = gel.selectAll("circle.expand-circle")
+                    .data(data.nodes, function(d) { return d.id; });
+
+                circle
+                    .enter()
+                    .append("circle")
+                    .filter(function(d) {
+                        return d.type == "cluster" || d.type == "fragment";
+                    })
+                    .tooltip("click to<br/>expand/collapse")
+                    .attr("r", 6)
+                    .attr("class", "expand-circle");
+
+                circle.transition().duration(animationDuration)
+                    .attr("opacity", 1)
+                    .attr("cx", function(d) { return d.x * dpi + 20; })
+                    .attr("cy", function(d) { return d.y * dpi; });
+
+                circle.exit().remove();
+            }
+
             nodeEnter.append("circle")
                 .attr("r", 6)
                 .attr("class", "rect-info")
@@ -566,7 +634,7 @@ function Graph () {
                     };
                 });
 
-            node.select("circle").transition().duration(animationDuration)
+            node.select(".rect-info").transition().duration(animationDuration)
                 .attr("opacity", 1)
                 .attr("cx", function(d) { return d.x * dpi; })
                 .attr("cy", function(d) { return d.y * dpi; });
@@ -613,9 +681,9 @@ function Graph () {
 
             textBackground
                 .attr("width", function(d) {
-                    return 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width;
+                    return 8 + d3.select(this.parentNode).select("text").node().getBBox().width;
                 }).attr("x", function(d) {
-                    return - 1.2 * d3.select(this.parentNode).select("text").node().getBBox().width / 2;
+                    return - 4 - d3.select(this.parentNode).select("text").node().getBBox().width / 2;
                 });
 
             node.select(".node-label")
@@ -685,14 +753,42 @@ function Graph () {
                 });
 
             link.select("path.line").transition().duration(animationDuration)
-                .attr("opacity", 1)
                 .attr("d", function(d) { return line(d.points); })
                 .attr("stroke", function(d) { return d.stroke; })
-                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });});
+                .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
+                .attr("stroke-width", function(d) {
+                    var x = self.linkAttr[self.linkOrigins[d.id]];;
+                    if (x !== undefined) {
+                        return self.costs(x.numTuples);
+                    }
+                    return 3;
+                })
+                .attr("opacity", function(d) {
+                    var k = self.linkOrigins[d.id];
+                    if (k !== undefined && _.size(self.linkAttr[k]) > 0 && self.linkAttr[k].numTuples === undefined) {
+                        return 0.3;
+                    }
+                    return 1;
+                });
 
             link.select("path.clickme")
                 .attr("d", function(d) { return line(d.points); })
-                .attr("stroke", "black");
+                .attr("stroke", "black")
+
+            if (interactive) {
+                link.select("path.clickme")
+                    .tooltip(function(d) {
+                        var k = self.linkOrigins[d.id];
+                        // only show tooltip for links between fragments
+                        if (k !== undefined) {
+                            var x = self.linkAttr[k].numTuples;
+                            if (x === undefined)
+                                x = 0;
+                            return Intl.NumberFormat().format(x) + " tuples";
+                        }
+                        return "";
+                    });
+            }
 
             link.exit().select("path").transition().duration(shortDuration)
                 .attr("opacity", 0);
@@ -706,12 +802,19 @@ function Graph () {
         Graph.prototype.draw = draw;
     };
 
-    Graph.prototype.openFragment = function(nodeId) {
+    Graph.prototype.openFragment = function(nodeId, focus) {
         var self = this;
 
+        console.log("open")
+
         self.expandNode(nodeId);
-        self.state.focus = nodeId;
-        fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+        if (focus) {
+            self.state.focus = nodeId;
+            fragmentVisualization(self.chartElement, self.nodes[nodeId].fragmentIndex, self.queryPlan, self);
+        } else {
+            // TODO: redraw better
+            self.openOverview();
+        }
 
         var newD3data = self.generateD3data();
         self.draw(newD3data, false);
@@ -719,6 +822,8 @@ function Graph () {
 
     Graph.prototype.closeFragment = function(nodeId) {
         var self = this;
+
+        console.log("close")
 
         self.state.focus = "";
         self.reduceNode(nodeId);

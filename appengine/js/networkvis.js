@@ -1,4 +1,4 @@
-var networkVisualization = function (element, fragments, queryPlan) {
+var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
     $('.title-current').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
@@ -112,7 +112,9 @@ var networkVisualization = function (element, fragments, queryPlan) {
                 return d;
             });
 
-            summary.duration = queryPlan.elapsedNanos;
+            // Dan NB: we could also get numTuples from linkAttr.
+            // .. I did verify that they match for q46220 and q59564
+            summary.duration = linkAttr.duration;
 
             updateSummary(element.select(".summary"), summary);
 
@@ -323,7 +325,7 @@ var networkVisualization = function (element, fragments, queryPlan) {
 var updateSummary = function(element, summary) {
     var items = "";
     items += templates.defItem({key: "# Tuples", value: Intl.NumberFormat().format(summary.numTuples)});
-    items += templates.defItem({key: "Local tuples sent", value: summary.localTuples});
+    items += templates.defItem({key: "Local tuples sent", value: Intl.NumberFormat().format(summary.localTuples)});
     items += templates.defItem({key: "Duration", value: customFullTimeFormat(summary.duration, false)});
     items += templates.defItem({key: "Tuples per second", value: (summary.numTuples / summary.duration * 1000000).toFixed(3)});
     var dl = templates.defList({items: items});

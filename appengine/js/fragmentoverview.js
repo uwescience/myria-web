@@ -17,14 +17,30 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
     charts = _.map(fragmentIds, function(fragmentId) {
         var div = element.append("div")
             .attr("class", "overview-fragment");
-        var h = div.append("h4").append("a").attr("href", "#")
-            .text(templates.fragmentTitle({fragment: fragmentId}));
+        var h = div.append("h4")
 
-        h.on("click", function(a) {
-            d3.event.stopPropagation();
-            graph.openFragment("f"+fragmentId);
-            d3.event.preventDefault();
-        });
+        h.append("a").attr("href", "#")
+            .text(templates.fragmentTitle({fragment: fragmentId}))
+            .tooltip("Open detailed execution view")
+            .on("click", function(a) {
+                d3.event.stopPropagation();
+                graph.openFragment("f"+fragmentId, true);
+            })
+
+        h.append("span").text(" ");
+
+        var small = h.append('a').append('small')
+            .attr('class', 'muted')
+            .text('expand/collapse')
+            .on("click", function(a) {
+                d3.event.stopPropagation();
+                if (_.contains(graph.state.opened, "f"+fragmentId)) {
+                    graph.closeFragment("f"+fragmentId);
+                } else {
+                    graph.openFragment("f"+fragmentId, false);
+                }
+            })
+
         var workers = queryPlan.plan.fragments[fragmentId].workers;
         var numWorkers = workers.length;
 
@@ -51,17 +67,22 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
             return -d.level;
         });
 
-        return lineChart(div, fragmentId, queryPlan, numWorkers, operators, changeRange);
+        return lineChart(div, fragmentId, queryPlan, numWorkers, operators, changeRange, graph, _.contains(graph.state.opened, "f"+fragmentId));
     });
 
     // return variables that are needed outside this scope
     return {};
 };
 
-var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, callback) {
+var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, callback, graph, expanded) {
     var margin = {top: 10, right: 10, bottom: 20, left: 180 },
-        width = parseInt(element.style('width'), 10) - margin.left - margin.right,
-        height = operators.length * 70 - margin.top - margin.bottom;
+        width = parseInt(element.style('width'), 10) - margin.left - margin.right;
+
+    if (expanded) {
+        var height = operators.length * 70 - margin.top - margin.bottom;
+    } else {
+        var height = 80 - margin.top - margin.bottom;
+    }
 
     margin.left = _.max([margin.left, width / 6]);
 
@@ -80,7 +101,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
 
     var xAxis = d3.svg.axis()
         .scale(x)
-        .tickFormat(customTimeFormat)
+        .tickFormat(customFullTimeFormat)
         .tickSize(-height)
         .orient("bottom");
 
@@ -144,7 +165,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
         .style("font-size", 9)
         .attr("x", -height)
         .style("text-anchor", "start")
-        .text("Number of nodes working");
+        .text("# of workers");
 
     // put Time label on xAxis
     svg.append("g")
@@ -225,6 +246,19 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                 return opIndex[d.key].level;
             });
 
+            if (expanded) {
+                draw(data, opIndex, range, true);
+            } else {
+                o.domain([data[0].key]);
+                y.range([o.rangeBand(), 0]);
+                area.y0(o.rangeBand());
+                draw([data[0]], opIndex, range, false);
+            }
+        });
+    }
+
+    function draw(data, opIndex, range, expanded) {
+        if (expanded) {
             // subtract data from children to get the self time, not total
             indexedData = _.object(_.map(data, function(x){ return [x.key, x.values]; }));
             _.each(data, function(d) {
@@ -235,165 +269,171 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                     }
                 });
             });
+        }
 
-            x.domain(range);
+        x.domain(range);
 
-            svg.select(".x.axis").call(xAxis);
+        svg.select(".x.axis").call(xAxis);
 
-            lanes = plot.selectAll(".lane").data(data);
+        lanes = plot.selectAll(".lane").data(data);
 
-            lanes.enter().append("g")
-                .attr("class", "lane")
-                .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
-                .each(multiple);
+        lanes.enter().append("g")
+            .attr("class", "lane")
+            .attr("transform", function(d) { return "translate(0," + o(d.key) + ")"; })
+            .each(multiple);
 
-            lanes.each(function(op) {
-                var lane = d3.select(this);
-                lane.on("mousemove", function (e) {
-                    var xPixels = d3.mouse(this)[0],
-                        xValue = Math.round(x.invert(xPixels));
+        lanes.each(function(op) {
+            var lane = d3.select(this);
+            lane.on("mousemove", function (e) {
+                var xPixels = d3.mouse(this)[0],
+                    xValue = Math.round(x.invert(xPixels));
 
-                    var i = bisectTime(op.values, xValue),
-                        d0 = op.values[i - 1];
+                var i = bisectTime(op.values, xValue),
+                    d0 = op.values[i - 1];
 
-                    if (d0 === undefined) {
-                        return;
-                    }
-
-                    svg
-                        .select(".rulerInfo")
-                        .style("opacity", 1)
-                        .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
-
-                    tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
-
-                    var bbox = tttext.node().getBBox();
-                    tooltip.select("rect")
-                        .attr("width", bbox.width + 10)
-                        .attr("height", bbox.height + 6)
-                        .attr("x", bbox.x - 5)
-                        .attr("y", bbox.y - 3);
-                });
-            });
-
-            lanes.select(".area").attr("d", function(op) {
-                return area(op.values);
-            });
-
-            function multiple(op) {
-                var lane = d3.select(this);
-
-                lane.append("g")
-                    .attr("class", "y axis")
-                    .call(yAxis);
-
-                var t = lane.append("g")
-                    .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 20) + ")"; })
-                    .attr("clip-path", "url(#textclip)");
-
-                t.append("text")
-                    .style("font-size", 12)
-                    .attr("class", "strong")
-                    .attr("x", 10)
-                    .attr("y", 8)
-                    .attr("dx", function(d) {
-                        return opIndex[d.key].level * 5;
-                    })
-                    .text(function(d) {
-                        return opIndex[d.key].opName;
-                    });
-
-                t.append("text")
-                    .style("font-size", 11)
-                    .attr("x", 10)
-                    .attr("dx", function(d) {
-                        return opIndex[d.key].level * 5;
-                    })
-                    .attr("dy", "2em")
-                    .attr("class", "muted")
-                    .text(function(d) {
-                        return opIndex[d.key].opType;
-                    });
-
-                // avoid ruler over op texts
-                t.append("rect")
-                    .attr("width", margin.left)
-                    .attr("height", 32)
-                    .attr("y", -10)
-                    .style("opacity", 0)
-                    .on("mousemove", function () {
-                        d3.select(".ruler").style("display", "none");
-                        d3.event.stopPropagation();
-                    });
-
-                t.append("circle")
-                    .attr("r", 4)
-                    .attr("cx", function(d) {
-                        return opIndex[d.key].level * 5 + 5;
-                    }).attr("cy", -5)
-                    .attr("class", "rect-info")
-                    .popover(function(d) {
-                        var body = '';
-                        _.each(opIndex[d.key].rawData, function(value, key){
-                            if (key == 'operators') {
-                                return;
-                            }
-                            if (value === null) {
-                                value = 'null';
-                            }
-                            if (value !== null && typeof value === 'object') {
-                              value = templates.code({code: JSON.stringify(value)});
-                            }
-                            body += templates.row({key: key, value: value});
-                        });
-                        return {
-                            placement: 'left',
-                            title: templates.strong({text: opIndex[d.key].opName}),
-                            content: templates.table({body: body})
-                        };
-                    }).on("mousemove", function () {
-                        d3.select(".ruler").style("display", "none");
-                        d3.event.stopPropagation();
-                    });
-
-                /* Ruler */
-                lane.append("rect")
-                    .attr("width", width)
-                    .attr("height", o.rangeBand())
-                    .style("opacity", 0);
-
-                lane.on("mouseleave", function () {
-                    svg
-                        .select(".rulerInfo")
-                        .style("opacity", 0);
-                });
-
-                /* Area */
-                lane.append("path")
-                    .attr("clip-path", "url(#chartclip)")
-                    .attr("class", "area");
-
-                // Brush
-                var brush = d3.svg.brush()
-                    .x(x)
-                    .on("brushend", brushend);
-
-                var brushElement = lane.append("g")
-                    .attr("class", "brush")
-                    .call(brush);
-                brushElement.selectAll('rect')
-                    .attr('height', o.rangeBand());
-
-                function brushend() {
-                    var brush_extent = brush.empty() ? wholeDomain : brush.extent();
-                    var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
-
-                    callback(range);
-
-                    brushElement.call(brush.clear());
+                if (d0 === undefined) {
+                    return;
                 }
-            }
+
+                svg
+                    .select(".rulerInfo")
+                    .style("opacity", 1)
+                    .attr("transform", "translate(" + [xPixels + 6, o(op.key) + o.rangeBand() + 14] + ")");
+
+                tttext.text(templates.chartTooltipTemplate({time: customFullTimeFormat(xValue), number: d0.numWorkers}));
+
+                var bbox = tttext.node().getBBox();
+                tooltip.select("rect")
+                    .attr("width", bbox.width + 10)
+                    .attr("height", bbox.height + 6)
+                    .attr("x", bbox.x - 5)
+                    .attr("y", bbox.y - 3);
+            });
         });
+
+        lanes.select(".area").attr("d", function(op) {
+            return area(op.values);
+        });
+
+        function multiple(op) {
+            var lane = d3.select(this);
+
+            lane.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+            var t = lane.append("g")
+                .attr("transform", function(d) { return "translate(" + (-margin.left) + "," + (o.rangeBand()/2 - 20) + ")"; })
+                .attr("clip-path", "url(#textclip)");
+
+            t.append("text")
+                .style("font-size", 12)
+                .attr("class", "strong")
+                .attr("x", 10)
+                .attr("y", 8)
+                .attr("dx", function(d) {
+                    return opIndex[d.key].level * 5;
+                })
+                .text(function(d) {
+                    if (expanded) {
+                        return opIndex[d.key].opName;
+                    } else {
+                        return "Fragment " + fragmentId;
+                    }
+                });
+
+            t.append("text")
+                .style("font-size", 11)
+                .attr("x", 10)
+                .attr("dx", function(d) {
+                    return opIndex[d.key].level * 5;
+                })
+                .attr("dy", "2em")
+                .attr("class", "muted")
+                .text(function(d) {
+                    if (expanded) {
+                        return opIndex[d.key].opType;
+                    }
+                });
+
+            // avoid ruler over op texts
+            t.append("rect")
+                .attr("width", margin.left)
+                .attr("height", 32)
+                .attr("y", -10)
+                .style("opacity", 0)
+                .on("mousemove", function () {
+                    d3.select(".ruler").style("display", "none");
+                    d3.event.stopPropagation();
+                });
+
+            t.append("circle")
+                .attr("r", 4)
+                .attr("cx", function(d) {
+                    return opIndex[d.key].level * 5 + 5;
+                }).attr("cy", -5)
+                .attr("class", "rect-info")
+                .popover(function(d) {
+                    var body = '';
+                    _.each(expanded ? opIndex[d.key].rawData : graph.nodes["f"+fragmentId].rawData, function(value, key){
+                        if (key == 'operators') {
+                            return;
+                        }
+                        if (value === null) {
+                            value = 'null';
+                        }
+                        if (value !== null && typeof value === 'object') {
+                          value = templates.code({code: JSON.stringify(value)});
+                        }
+                        body += templates.row({key: key, value: value});
+                    });
+                    return {
+                        placement: 'left',
+                        title: templates.strong({text: expanded ? opIndex[d.key].opName : "Fragment " + fragmentId}),
+                        content: templates.table({body: body})
+                    };
+                }).on("mousemove", function () {
+                    d3.select(".ruler").style("display", "none");
+                    d3.event.stopPropagation();
+                });
+
+            /* Ruler */
+            lane.append("rect")
+                .attr("width", width)
+                .attr("height", o.rangeBand())
+                .style("opacity", 0);
+
+            lane.on("mouseleave", function () {
+                svg
+                    .select(".rulerInfo")
+                    .style("opacity", 0);
+            });
+
+            /* Area */
+            lane.append("path")
+                .attr("clip-path", "url(#chartclip)")
+                .attr("class", "area");
+
+            // Brush
+            var brush = d3.svg.brush()
+                .x(x)
+                .on("brushend", brushend);
+
+            var brushElement = lane.append("g")
+                .attr("class", "brush")
+                .call(brush);
+            brushElement.selectAll('rect')
+                .attr('height', o.rangeBand());
+
+            function brushend() {
+                var brush_extent = brush.empty() ? wholeDomain : brush.extent();
+                var range = [Math.floor(brush_extent[0]), Math.ceil(brush_extent[1])];
+
+                callback(range);
+
+                brushElement.call(brush.clear());
+            }
+        }
     }
 
     function changeDomain(range) {

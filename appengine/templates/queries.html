@@ -8,23 +8,32 @@
 {% block queries_active %} class="active"{% endblock %}
 
 {% block content %}
-
 <form class="form-horizontal" role="form">
-                <div class="form-group">
-		    <label for="backend-menu" class="col-sm-2 control-label"> Backend </label>
-		    <div class = "col-sm-9">
-		      <select class="form-control backend-menu">
-			<option value="grappa"> Grappa </option>
-			<option value="myria" selected> Myria </option>
-                        <option value="clang"> C </option>
-                      </select>
-                    </div>
-                </div>
-            </form>
+  <div class="form-group">
+	<label for="backend-menu" class="col-sm-2 control-label"> Backend </label>
+	<div class = "col-sm-9">
+	  <select class="form-control backend-menu">
+		<option value="grappa"> Grappa </option>
+		<option value="myria" selected> Myria </option>
+        <option value="clang"> C </option>
+      </select>
+    </div>
+  </div>
+</form>
 
-	    <div class="panel panel-primary">
-		<div class="panel-heading">
-			<h3 class="panel-title">
+	<div class="panel panel-primary">
+		<div class="panel-heading clearfix query-panel-heading">
+			<form role="search">
+				<div class="form-group">
+					<div class="input-group input-group-sm pull-right" style="max-width:40%;">
+						<input type="text" class="form-control" name="q" placeholder="Search queries" value="{{query_string}}">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+						</span>
+					</div>
+				</div>
+			</form>
+			<h3 class="panel-title pull-left">
 				Myria Query Log
 			</h3>
 		</div>
@@ -32,7 +41,7 @@
 			<thead>
 				<tr>
 					<th>#</th>
-					<th>Logical plan</th>
+					<th>Query</th>
 					<th>Status</th>
 					<th></th>
 					<th>Time elapsed</th>
@@ -53,22 +62,24 @@
 			                  <span>&laquo;</span>
 				{% endif %}
 				</li>
-				{%- for page in pagination.iter_pages() %}
-					{% if page %}
-						{% if page != pagination.page %}
-							<li>
-								<a href="{{ page_url(page, current_max, pagination) }}">{{ page }}</a>
-					  		</li>
+					{%- if pagination.can_jump %}
+					{%- for page_args in pagination.iter_pages() %}
+						{% if page_args %}
+							{% if page_args.current %}
+								<li class="active"><span>{{ page_args.page }}</span></li>
+							{% else %}
+								<li>
+									<a href="{{ page_url(page_args.args) }}">{{ page_args.page }}</a>
+								</li>
+							{% endif %}
 						{% else %}
-							<li class="active"><span>{{ page }}</span></li>
+							<li class="disabled"><span>...</span></li>
 						{% endif %}
-					{% else %}
-						<li class="disabled"><span>...</span></li>
-					{% endif %}
-				{%- endfor %}
+					{%- endfor %}
+				{% endif %}
 				{% if pagination.has_next %}
 				<li>
-					<a href="{{ page_url(pagination.page + 1, current_max, pagination) }}">&raquo;</a>
+					<a href="{{ page_url(pagination.next_args) }}">&raquo;</a>
 				{% else %}
 				<li class="disabled">
 					<span>&raquo;</span>
