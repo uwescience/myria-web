@@ -243,7 +243,7 @@ def nano_to_str(elapsed):
 class Queries(MyriaPage):
 
     def get(self):
-        conn = self.app.connection
+        conn = self.app.myriaConnection
         args = {a: self.request.get(a) for a in self.request.arguments()}
 
         try:
