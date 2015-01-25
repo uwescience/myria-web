@@ -54,7 +54,7 @@ function getplan() {
     language: editorLanguage,
     backend: backendProcess,
     multiway_join: $("#multiway-join").is(':checked'),
-    push_sql: $("#push-sql").is(':checked')
+    push_sql: !$("#disable-push").is(':checked')
   });
   handleerrors(request, "#plan");
   request = $.post("dot", {
@@ -76,7 +76,7 @@ function optimizeplan() {
   getplan(); // make sure the plan matches the query
   var query = editor.getValue();
   var multiway_join_checked = $("#multiway-join").is(':checked');
-  var push_sql_checked = $("#push-sql").is(':checked');
+  var push_sql_checked = !$("#disable-push").is(':checked');
 
   var request = $.post("optimize", {
     query: query,
@@ -163,7 +163,7 @@ function compileplan() {
     language: editorLanguage,
     backend: backendProcess,
     multiway_join: $("#multiway-join").is(':checked'),
-    push_sql: $("#push-sql").is(':checked')
+    push_sql: !$("#disable-push").is(':checked')
   });
   window.open(url, '_blank');
 }
@@ -232,7 +232,7 @@ function displayQueryStatus(query_status) {
     });
   }
 
-  if (status === 'SUCCESS' && query_status['profilingMode']) {
+  if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {
       html += t.prof_link({query_id: query_id});
   } else if (status === 'ERROR') {
     html += t.err_msg({message: query_status['message'] || '(missing)'});
@@ -286,7 +286,7 @@ function executeplan() {
       backend: backendProcess,
       profile: $("#profile-enabled").is(':checked'),
       multiway_join: $("#multiway-join").is(':checked'),
-      push_sql: $("#push-sql").is(':checked')
+      push_sql: !$("#disable-push").is(':checked')
     },
     statusCode: {
       200: displayQueryStatus,

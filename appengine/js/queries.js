@@ -9,4 +9,15 @@ $(document).ready(function() {
 			});
 		}, 10*1000);
 	});
+
+	$('.kill-query').click(function() {
+		$.ajax({
+		    url: $(this).attr('href'),
+		    type: 'DELETE',
+		    success: function(result) {
+		        location.reload();
+		    }
+		});
+		return false;
+	});
 });

@@ -1,8 +1,6 @@
-import copy
 from distutils.util import strtobool
 import json
 import logging
-import math
 import os
 from threading import Lock
 import urllib
@@ -28,7 +26,8 @@ from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from examples import examples
 from demo3_examples import demo3_examples
-from pagination import Pagination
+from pagination import Pagination, QUERIES_PER_PAGE
+
 import myria
 
 
@@ -66,8 +65,6 @@ try:
         BRANCH = branch_file.read().strip()
 except:
     BRANCH = "branch file not found"
-
-QUERIES_PER_PAGE = 25
 
 
 def get_plan(query, language, backend, plan_type, connection,
@@ -246,67 +243,44 @@ def nano_to_str(elapsed):
 class Queries(MyriaPage):
 
     def get(self):
-        conn = self.app.myriaConnection
-        try:
-            limit = int(self.request.get('limit', QUERIES_PER_PAGE))
-        except (ValueError, TypeError):
-            limit = 1
+        conn = self.app.connection
+        args = {a: self.request.get(a) for a in self.request.arguments()}
 
         try:
-            max_ = int(self.request.get('max', None))
-        except (ValueError, TypeError):
-            max_ = None
-        try:
-            count, queries = conn.queries(limit, max_)
+            result = conn.queries(limit=args.get("limit", QUERIES_PER_PAGE),
+                                  min_id=args.get("min"),
+                                  max_id=args.get("max"),
+                                  q=args.get("q"))
         except myria.MyriaError:
-            queries = []
-            count = 0
+            result = {'max': 0, 'min': 0, 'results': []}
 
-        if max_ is None:
-            max_ = count
+        query_string = ''
+        if 'q' in args:
+            query_string = args['q'].strip()
+            if not query_string:
+                del args['q']
+            else:
+                args['q'] = query_string
+
+        queries = result['results']
 
         for q in queries:
             q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
-            if q['status'] in ['ERROR', 'KILLED']:
-                q['bootstrapStatus'] = 'danger'
-            elif q['status'] == 'SUCCESS':
-                q['bootstrapStatus'] = 'success'
-            elif q['status'] == 'RUNNING':
-                q['bootstrapStatus'] = 'warning'
-            else:
-                q['bootstrapStatus'] = ''
+            bootstrap_status = {
+                'ERROR': 'danger',
+                'KILLED': 'danger',
+                'SUCCESS': 'success',
+                'RUNNING': 'warning',
+            }
+            q['bootstrapStatus'] = bootstrap_status.get(q['status'], '')
 
         template_vars = self.base_template_vars()
-        template_vars.update({'queries': queries,
-                              'prevUrl': None,
-                              'nextUrl': None})
+        template_vars.update({'queries': queries})
         template_vars['myrialKeywords'] = get_keywords()
-
-        if queries:
-            page = int(math.ceil(count - max_) / limit) + 1
-            args = {arg: self.request.get(arg)
-                    for arg in self.request.arguments()
-                    if arg != 'page'}
-
-            def page_url(page, current_max, pagination):
-                largs = copy.copy(args)
-                if page > 0:
-                    largs['max'] = (current_max +
-                                    (pagination.page - page) * limit)
-                else:
-                    largs.pop("max", None)
-                return '{}?{}'.format(
-                    self.request.path, urllib.urlencode(largs))
-
-            template_vars['pagination'] = Pagination(
-                page, limit, count)
-            template_vars['current_max'] = max_
-            template_vars['page_url'] = page_url
-        else:
-            template_vars['current_max'] = 0
-            template_vars['pagination'] = Pagination(
-                1, limit, 0)
-            template_vars['page_url'] = lambda *args: self.request.path
+        template_vars['pagination'] = Pagination(args, result)
+        template_vars['page_url'] = lambda largs: '{}?{}'.format(
+            self.request.path, urllib.urlencode(largs))
+        template_vars['query_string'] = query_string
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -479,7 +453,8 @@ class Compile(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend", "myria")
-        multiway_join = self.request.get("multiway_join", False)
+        profile = self.get_boolean_request_param("profile")
+        multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
         if multiway_join == 'false':
             multiway_join = False
@@ -505,6 +480,10 @@ class Compile(MyriaHandler):
                 compiled = conn.create_json(
                     query, cached_logicalplan, physicalplan)
 
+            if profile:
+                compiled['profilingMode'] = ["QUERY", "RESOURCE"]
+            else:
+                compiled['profilingMode'] = []
         except requests.ConnectionError:
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 503
@@ -528,7 +507,7 @@ class Execute(MyriaHandler):
         query = self.request.get("query")
         language = self.request.get("language")
         backend = self.request.get("backend", "myria")
-        profile = self.request.get("profile", False)
+        profile = self.get_boolean_request_param("profile")
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
         conn = self.app.myriaConnection
@@ -549,7 +528,10 @@ class Execute(MyriaHandler):
                 # .. and compile
                 compiled = compile_to_json(
                     query, cached_logicalplan, physicalplan, language)
-                compiled['profilingMode'] = profile
+                if profile:
+                    compiled['profilingMode'] = ["QUERY", "RESOURCE"]
+                else:
+                    compiled['profilingMode'] = []
                 query_status = conn.submit_query(compiled)
                 # Issue the query
                 query_url = 'http://%s:%d/execute?query_id=%d' %\
@@ -562,7 +544,6 @@ class Execute(MyriaHandler):
                 query_url = 'http://%s:%d/query?qid=%d' %\
                             (self.app.clanghostname, self.app.clangport,
                              query_status['queryId'])
-
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
@@ -672,4 +653,5 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
+# app = Application(hostname='localhost', port=8753, ssl=False)
 app = Application()

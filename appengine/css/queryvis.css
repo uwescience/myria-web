@@ -157,7 +157,6 @@ svg .help-text {
 }
 
 .query-graph .link > path {
-  stroke-width: 3;
   fill: transparent;
 }
 
@@ -166,20 +165,25 @@ svg .help-text {
   opacity: 0;
 }
 
-.query-graph .frag:hover>path:not(.clickme) {
+.interactive .frag:hover>path:not(.clickme) {
   transition: stroke .1s, fill .1s;
   stroke: orange;
 }
 
-.query-graph .frag:hover marker {
+.interactive .frag:hover marker {
   transition: stroke .1s, fill .1s;
-  stroke: orange;
   fill:orange;
 }
 
 .rect-info {
   fill: white;
   stroke: #333;
+  stroke-width: 2;
+}
+
+.expand-circle {
+  fill: lightgreen;
+  stroke: green;
   stroke-width: 2;
 }
 

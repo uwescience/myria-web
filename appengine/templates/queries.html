@@ -9,8 +9,18 @@
 
 {% block content %}
 	<div class="panel panel-primary">
-		<div class="panel-heading">
-			<h3 class="panel-title">
+		<div class="panel-heading clearfix query-panel-heading">
+			<form role="search">
+				<div class="form-group">
+					<div class="input-group input-group-sm pull-right" style="max-width:40%;">
+						<input type="text" class="form-control" name="q" placeholder="Search queries" value="{{query_string}}">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+						</span>
+					</div>
+				</div>
+			</form>
+			<h3 class="panel-title pull-left">
 				Myria Query Log
 			</h3>
 		</div>
@@ -18,20 +28,27 @@
 			<thead>
 				<tr>
 					<th>#</th>
-					<th>Logical plan</th>
+					<th>Query</th>
 					<th>Status</th>
 					<th></th>
 					<th>Time elapsed</th>
 					<th>Finished</th>
 				</tr>
 			</thead>
+			{% if not queries %}
+			<tr>
+				<td colspan="7" class="text-center text-muted">
+					<h3>No queries</h3>
+				</td>
+			</tr>
+			{% endif %}
 			{% for q in queries %}
 			<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
 				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
 				<td class="query-raw">{{q.rawQuery}}</td>
 				<td class="query-status">{{q.status}}</td>
 				<td>
-					{% if q.profilingMode %}
+					{% if 'QUERY' in q.profilingMode %}
 						{% if q.status == 'SUCCESS' %}
 							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>
 						{% elif q.status in ['RUNNING', 'ACCEPTED'] %}
@@ -45,7 +62,11 @@
 				</td>
 				<td class="query-elapsed">{{q.elapsedStr}}</td>
 				<td class="query-finish">
-					<abbr class="timeago" title="{{q.finishTime}}">{{q.finishTime}}</abbr>
+					{% if q.status in ['RUNNING', 'ACCEPTED'] %}
+						<a href="{{q.url}}" class="kill-query glyphicon glyphicon-remove-circle text-danger" title="Kill query {{q.queryId}}" data-toggle="tooltip"></a>
+					{% else %}
+						<abbr class="timeago" title="{{q.finishTime}}">{{q.finishTime}}</abbr>
+					{% endif %}
 				</td>
 			</tr>
 			{% endfor %}
@@ -53,28 +74,26 @@
 		<div class="text-center">
 			<ul class="pagination">
 				<li>
-				{% if pagination.has_prev %}
-					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
-				{% else %}
-					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
-				{% endif %}
+					<a href="{{ page_url(pagination.prev_args) }}">&laquo;</a>
 				</li>
-				{%- for page in pagination.iter_pages() %}
-					{% if page %}
-						{% if page != pagination.page %}
-							<li>
-								<a href="{{ page_url(page, current_max, pagination) }}">{{ page }}</a>
-					  		</li>
+					{%- if pagination.can_jump %}
+					{%- for page_args in pagination.iter_pages() %}
+						{% if page_args %}
+							{% if page_args.current %}
+								<li class="active"><span>{{ page_args.page }}</span></li>
+							{% else %}
+								<li>
+									<a href="{{ page_url(page_args.args) }}">{{ page_args.page }}</a>
+								</li>
+							{% endif %}
 						{% else %}
-							<li class="active"><span>{{ page }}</span></li>
+							<li class="disabled"><span>...</span></li>
 						{% endif %}
-					{% else %}
-						<li class="disabled"><span>...</span></li>
-					{% endif %}
-				{%- endfor %}
+					{%- endfor %}
+				{% endif %}
 				{% if pagination.has_next %}
 				<li>
-					<a href="{{ page_url(pagination.page + 1, current_max, pagination) }}">&raquo;</a>
+					<a href="{{ page_url(pagination.next_args) }}">&raquo;</a>
 				{% else %}
 				<li class="disabled">
 					<span>&raquo;</span>
