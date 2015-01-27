@@ -40,7 +40,7 @@ class Backend(object):
         """Returns the url for more information about the backend project"""
 
     @abstractmethod
-    def num_queries(self, limit, max_):
+    def queries(self, limit, max_id, min_id, q):
         """Returns the total number of queries for the backend"""
 
     def connection_url(self, uri_scheme="http"):

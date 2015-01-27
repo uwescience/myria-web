@@ -306,11 +306,21 @@ def get_latest_qid():
         print row[0]
 
 
-def get_num_entries():
-    query = 'SELECT count(*) FROM dataset'
+# params min max
+def get_num_entries(params):
+    min = int(params[0])
+    max = int(params[1])
+    if max == 0:
+        query = 'SELECT count(*) FROM dataset'
+    else:
+        query = 'SELECT count(*) FROM dataset WHERE queryId >= ? AND \ ' \
+                + 'queryId <= ?'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
-    c.execute(query)
+    if max == 0:
+        c.execute(query, (min,))
+    else:
+        c.execute(query, (min, max))
     row = c.fetchone()
     conn.close()
     print row[0]
@@ -403,7 +413,7 @@ def main(args):
     elif func == 'get_latest_qid':
         get_latest_qid()
     elif func == 'get_num_entries':
-        get_num_entries()
+        get_num_entries(params)
     elif func == 'insert_new_dataset':
         insert_new_dataset(params)
 

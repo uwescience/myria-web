@@ -40,7 +40,7 @@ http.createServer(function (req, res) {
       processBackend(req, res, selectTable);
     break;
     case '/entries':
-      countEntries(res);
+      processMinMax(req, res, countEntries);
     break;
     default:
     processQuery(req, res);
@@ -60,6 +60,22 @@ function processRelKey(req, res, callbackfn) {
     req.on('end', function () {
       var relkey = JSON.parse(body);
       callbackfn(res, relkey);
+    });
+  }
+}
+
+function processMinMax(req, res, callbackfn) {
+  if (req.method == "POST") {
+    var body = '';
+    req.on('data', function (chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function () {
+      var json = JSON.parse(body);
+      var min = json.min;
+      var max = json.max;
+      callbackfn(res, min, max);
     });
   }
 }
@@ -220,8 +236,8 @@ function getQid() {
   });
 }
 
-function countEntries(res) {
-  cp.exec(py + ' get_num_entries', function (err, stdout) {
+function countEntries(res, min, max) {
+  cp.exec(py + ' get_num_entries -p' + min + ' ' + max, function (err, stdout) {
     if (err) { console.log( 'countentries ' + err.stack); } else {
       sendJSONResponse(res, stdout);
     }

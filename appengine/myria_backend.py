@@ -66,8 +66,8 @@ class MyriaBackend(Backend):
     def backend_url(self):
         return "http://myria.cs.washington.edu/"
 
-    def num_queries(self, limit, max_):
-        return self.connection().queries(limit, max_)
+    def queries(self, limit, max_id, min_id, q):
+        return self.connection().queries(limit, max_id, min_id, q)
 
 
 class MyriaMultiJoinBackend(MyriaBackend):
