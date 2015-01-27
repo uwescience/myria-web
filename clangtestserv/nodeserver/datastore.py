@@ -165,7 +165,7 @@ def get_query_status(params):
     conn.close()
     res = {'status': row[6], 'queryId': row[3], 'url': row[5],
            'startTime': datetime.datetime.fromtimestamp(row[7]).isoformat(),
-           'finishTime': fin, 'elapsedNanos': elapsed}
+           'finishTime': fin, 'elapsedNanos': elapsed, 'profilingMode': []}
     print json.dumps(res)
 
 
