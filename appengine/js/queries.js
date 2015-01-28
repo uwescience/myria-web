@@ -46,29 +46,32 @@ function loadTable() {
     }
     var t = query_templates;
     var jqxhr = $.getJSON(url, function (data) {
+      console.log(data);
+      var max = data.max;
+      var min = data.min;
       var html = '';
-      _.each(data, function (d) {
-	var url = d.url;
+      _.each(data.results, function (d) {
+	    var url = d.url;
         var profile = d.profilingMode;
         if (!profile) {
           profile = false;
         }
         if (_.contains(grappaends, backendProcess)) {
-	  url = d.uri + '/query?qid=' + d.queryId;
-	}
-
+	      url = d.uri + '/query?qid=' + d.queryId;
+	    }
         d.elapsedStr = nano_to_str(d.elapsedNanos);
         var bootstrapStatus = getBootstrapStatus(d.status);
 
         html += t.queryInfo({bootstrapStatus: bootstrapStatus,
                              status: d.status, queryId: d.queryId,
                              rawQuery: d.rawQuery, url: url});
+    //    console.log(d);
         html += t.profileInfo({profilingMode: profile,
                                  status: d.status, queryId: d.queryId});
         html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
                               finishTime: d.finishTime});
         });
-
+      
       $("#querytable").html(html);
       runningHighlight();
       myriaHighlight();

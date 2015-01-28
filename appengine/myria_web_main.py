@@ -230,7 +230,7 @@ class Queries(MyriaPage):
                                   q=args.get("q"))
         except myria.MyriaError:
             result = {'max': 0, 'min': 0, 'results': []}
-
+        print result
         query_string = ''
         if 'q' in args:
             query_string = args['q'].strip()
@@ -239,29 +239,16 @@ class Queries(MyriaPage):
             else:
                 args['q'] = query_string
 
-        queries = result['results']
-
         template_vars = self.base_template_vars()
         template_vars.update({'prevUrl': None,
                               'nextUrl': None})
-        for q in queries:
-            q['elapsedStr'] = nano_to_str(q['elapsedNanos'])
-            bootstrap_status = {
-                'ERROR': 'danger',
-                'KILLED': 'danger',
-                'SUCCESS': 'success',
-                'RUNNING': 'warning',
-            }
-            q['bootstrapStatus'] = bootstrap_status.get(q['status'], '')
 
-        template_vars = self.base_template_vars()
-        template_vars.update({'queries': queries})
         template_vars['myrialKeywords'] = get_keywords()
         template_vars['pagination'] = Pagination(args, result)
         template_vars['page_url'] = lambda largs: '{}?{}'.format(
             self.request.path, urllib.urlencode(largs))
         template_vars['query_string'] = query_string
-
+        #print template_vars
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. load and render the template
