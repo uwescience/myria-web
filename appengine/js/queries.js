@@ -46,7 +46,6 @@ function loadTable() {
     }
     var t = query_templates;
     var jqxhr = $.getJSON(url, function (data) {
-      console.log(data);
       var max = data.max;
       var min = data.min;
       var html = '';
@@ -65,13 +64,12 @@ function loadTable() {
         html += t.queryInfo({bootstrapStatus: bootstrapStatus,
                              status: d.status, queryId: d.queryId,
                              rawQuery: d.rawQuery, url: url});
-    //    console.log(d);
         html += t.profileInfo({profilingMode: profile,
                                  status: d.status, queryId: d.queryId});
         html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
                               finishTime: d.finishTime});
         });
-      
+
       $("#querytable").html(html);
       runningHighlight();
       myriaHighlight();

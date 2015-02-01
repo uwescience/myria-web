@@ -19,7 +19,7 @@ http.createServer(function (req, res) {
   getQid();
   switch(path) {
     case '/dataset':
-      processBackend(req, res, selectTable);
+      processBackend(req, res, selectAll);
     break;
     case '/query':
       processQid(req, res, selectRow);
@@ -37,10 +37,7 @@ http.createServer(function (req, res) {
       processRelKey(req, res, isInCatalog);
     break;
     case '/queries':
-      processBackend(req, res, selectTable);
-    break;
-    case '/entries':
-      processMinMax(req, res, countEntries);
+      processMinMax(req, res, selectTable);
     break;
     default:
     processQuery(req, res);
@@ -75,7 +72,20 @@ function processMinMax(req, res, callbackfn) {
       var json = JSON.parse(body);
       var min = json.min;
       var max = json.max;
-      callbackfn(res, min, max);
+      var backend = json.backend;
+      callbackfn(res, backend, min, max);
+    });
+  }
+  if (req.method == "GET") {
+    var body = '';
+    req.on('data', function (chunk) {
+      body += chunk;
+    });
+
+    req.on('end', function () {
+      var url_parts = url.parse(req.url, true);
+      var backend = url_parts.query.backend;
+      callbackfn(res, backend, 0, 0);
     });
   }
 }
@@ -183,10 +193,25 @@ function isInCatalog(res, rkey) {
   });
 }
 
-function selectTable(res, backend) {
-  cp.exec(py + ' select_table -p' + backend, function (err, stdout) {
+function selectTable(res, backend, min, max) {
+  if (min == null) {
+      min = '0';
+  }
+  if (max == null) {
+      max = '0';
+  }
+  var params = min + ' ' + max + ' ' + backend;
+  cp.exec(py + ' select_table -p ' + params, function (err, stdout) {
     if (err) { console.log('seltab ' + err.stack); } else {
-      sendJSONResponse(res, JSON.stringify(JSON.parse(stdout)));
+	sendJSONResponse(res, stdout);
+    }
+  });
+}
+
+function selectAll(res, backend) {
+   cp.exec(py + ' select_all -p ' + backend, function (err, stdout) {
+    if (err) { console.log('selall ' + err.stack); } else {
+	sendJSONResponse(res, stdout);
     }
   });
 }
@@ -232,14 +257,6 @@ function getQid() {
       counter = 0;
     } else {
       counter = parseInt(stdout) + 1;
-    }
-  });
-}
-
-function countEntries(res, min, max) {
-  cp.exec(py + ' get_num_entries -p' + min + ' ' + max, function (err, stdout) {
-    if (err) { console.log( 'countentries ' + err.stack); } else {
-      sendJSONResponse(res, stdout);
     }
   });
 }

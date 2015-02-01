@@ -189,13 +189,26 @@ def check_catalog(params):
         print json.dumps(res)
 
 
-# params: backend
+# params: min max backend
 def select_table(params):
+    min = int(params[0])
+    max = int(params[1])
+    backend = params[2]
     conn = sqlite3.connect('dataset.db')
     res = []
-    query = 'SELECT * FROM dataset WHERE backend = ?'
+    if max == 0:
+        query = 'SELECT * FROM dataset WHERE backend = ? AND ' \
+                + 'queryId >= ?'
+    else:
+        query = 'SELECT * FROM dataset WHERE backend = ? AND ' \
+                + ' queryId >= ? AND queryId <= ?'
     c = conn.cursor()
-    for row in c.execute(query, (params[0], )):
+    if max == 0:
+        c.execute(query, (backend, min))
+    else:
+        c.execute(query, (backend, min, max))
+    rows = c.fetchall()
+    for row in rows:
         val = {'relationKey': {'userName': row[0], 'programName': row[1],
                                'relationName': row[2]}, 'queryId': row[3],
                'created': row[4], 'uri': row[5], 'status': row[6],
@@ -204,7 +217,8 @@ def select_table(params):
                'schema': row[11], 'backend': row[12], 'rawQuery': row[13]}
         res.append(val)
     conn.close()
-    print json.dumps(res)
+    print json.dumps({'min': get_min_entry(min, backend), 
+                      'max': get_max_entry(max, backend), 'results': res})
 
 
 # params: qid
@@ -224,6 +238,23 @@ def select_row(params):
     conn.close()
     print json.dumps(res)
 
+# params: backend
+def get_all_entries(params):
+    backend = params[0]
+    conn = sqlite3.connect('dataset.db')
+    res = []
+    query = 'SELECT * FROM dataset WHERE backend = ?' 
+    c = conn.cursor()
+    for row in c.execute(query, (backend,)):
+        val = {'relationKey': {'userName': row[0], 'programName': row[1],
+                               'relationName': row[2]}, 'queryId': row[3],
+               'created': row[4], 'uri': row[5], 'status': row[6],
+               'startTime': row[7], 'finishTime': row[8],
+               'elapsedNanos': row[9], 'numTuples': row[10],
+               'schema': row[11], 'backend': row[12], 'rawQuery': row[13]}
+        res.append(val)
+    conn.close()
+    print json.dumps(res)
 
 # params: qid
 def get_filename(params):
@@ -306,24 +337,36 @@ def get_latest_qid():
         print row[0]
 
 
-# params min max
-def get_num_entries(params):
-    min = int(params[0])
-    max = int(params[1])
+def get_min_entry(min, backend):
+    query = 'SELECT queryId FROM dataset WHERE backend = ? AND ' \
+        + 'queryId >= ? ORDER BY queryId LIMIT 1'
+    conn = sqlite3.connect('dataset.db')
+    c = conn.cursor()
+    c.execute(query, (backend, min))
+    row = c.fetchone()
+    conn.close()
+    return row[0]
+
+
+def get_max_entry(max, backend):
     if max == 0:
-        query = 'SELECT count(*) FROM dataset'
+        query = 'SELECT queryId FROM dataset WHERE backend = ? ' \
+            + 'ORDER BY queryId DESC LIMIT 1'
     else:
-        query = 'SELECT count(*) FROM dataset WHERE queryId >= ? AND \ ' \
-                + 'queryId <= ?'
+        query = 'SELECT queryId FROM dataset WHERE backend = ? AND ' \
+            + 'queryId <= ? ORDER BY queryId DESC LIMIT 1'
     conn = sqlite3.connect('dataset.db')
     c = conn.cursor()
     if max == 0:
-        c.execute(query, (min,))
+        c.execute(query, (backend,))
     else:
-        c.execute(query, (min, max))
+        c.execute(query, (backend, max))
     row = c.fetchone()
     conn.close()
-    print row[0]
+    if row is not None:
+        return row[0]
+    else:
+        return 0
 
 
 def latest_qid():
@@ -412,8 +455,8 @@ def main(args):
         get_num_tuples(params)
     elif func == 'get_latest_qid':
         get_latest_qid()
-    elif func == 'get_num_entries':
-        get_num_entries(params)
+    elif func == 'select_all':
+        get_all_entries(params)
     elif func == 'insert_new_dataset':
         insert_new_dataset(params)
 

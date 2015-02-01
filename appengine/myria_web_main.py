@@ -230,7 +230,7 @@ class Queries(MyriaPage):
                                   q=args.get("q"))
         except myria.MyriaError:
             result = {'max': 0, 'min': 0, 'results': []}
-        print result
+
         query_string = ''
         if 'q' in args:
             query_string = args['q'].strip()
@@ -248,7 +248,6 @@ class Queries(MyriaPage):
         template_vars['page_url'] = lambda largs: '{}?{}'.format(
             self.request.path, urllib.urlencode(largs))
         template_vars['query_string'] = query_string
-        #print template_vars
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. load and render the template
