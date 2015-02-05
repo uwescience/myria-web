@@ -328,16 +328,22 @@ class Profile(MyriaPage):
     def get(self):
         conn = self.app.connection
         query_id = self.request.get("queryId")
-        query_plan = {}
+        subquery_id = self.request.get("subqueryId", 0)
+        query_status = {}
+        subquery_fragments = None
         if query_id != '':
             try:
-                query_plan = conn.get_query_status(query_id)
+                query_status = conn.get_query_status(query_id)
+                query_status["subqueryId"] = subquery_id
+                subquery_fragments = conn.get_query_plan(query_id, subquery_id)
             except myria.MyriaError:
                 pass
 
         template_vars = self.base_template_vars()
-        template_vars['queryPlan'] = json.dumps(query_plan)
+        template_vars['queryStatus'] = json.dumps(query_status)
+        template_vars['fragments'] = json.dumps(subquery_fragments)
         template_vars['queryId'] = query_id
+        template_vars['subqueryId'] = subquery_id
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'

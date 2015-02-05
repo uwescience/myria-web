@@ -1,10 +1,10 @@
-var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
+var fragmentVisualization = function (element, fragmentId, graph) {
     $('.title-current').html(templates.titleFragmentsVis({fragment: fragmentId}));
 
     $(element.node()).empty();
     $(element.node()).append(templates.fragmentVisFrames);
 
-    var idNameMapping = nameMappingFromFragments(queryPlan.plan.fragments);
+    var idNameMapping = nameMappingFromFragments(graph.fragments);
 
     var hierarchy = graph.nested["f"+fragmentId],
         levels = {};
@@ -16,20 +16,20 @@ var fragmentVisualization = function (element, fragmentId, queryPlan, graph) {
     }
     addLevels(hierarchy, 0);
 
-    var workers = queryPlan.plan.fragments[fragmentId].workers;
+    var workers = graph.fragments[fragmentId].workers;
     var numWorkers = workers.length;
 
-    var opVis = operatorVisualization(element.select(".contrib"), fragmentId, queryPlan, graph);
+    var opVis = operatorVisualization(element.select(".contrib"), fragmentId, graph);
 
-    var lanesChart = drawLanes(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, idNameMapping, levels);
-    drawLineChart(element.select(".details"), fragmentId, queryPlan.queryId, numWorkers, lanesChart);
+    var lanesChart = drawLanes(element.select(".details"), fragmentId, graph, numWorkers, idNameMapping, levels);
+    drawLineChart(element.select(".details"), fragmentId, graph, numWorkers, lanesChart);
 
     // return variables that are needed outside this scope
     return {};
 };
 
 // Draw the area plot and the mini-brush and big-brush for it
-function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
+function drawLineChart(element, fragmentId, graph, numWorkers, lanesChart) {
 
     var margin = {top: 50, right: 10, bottom: 20, left:20 },
         labels_width = 20,
@@ -220,7 +220,8 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
 
         var url = templates.urls.histogram({
             myria: myriaConnection,
-            query: queryId,
+            query: graph.queryStatus.queryId,
+            subquery: graph.queryStatus.subqueryId,
             fragment: fragmentId,
             start: start,
             end: end,
@@ -281,7 +282,8 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
     // initially fetch data and load minimap
     var url = templates.urls.range({
             myria: myriaConnection,
-            query: queryId,
+            query: graph.queryStatus.queryId,
+            subquery: graph.queryStatus.subqueryId,
             fragment: fragmentId
         });
     d3.csv(url, function(d) {
@@ -357,7 +359,7 @@ function drawLineChart(element, fragmentId, queryId, numWorkers, lanesChart) {
     }
 }
 
-function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, levels) {
+function drawLanes(element, fragmentId, graph, numWorkers, idNameMapping, levels) {
     var margin = {top: 10, right: 10, bottom: 20, left: 20},
         labels_width = 20,
         fullWidth = parseInt(element.style('width'), 10) - margin.left - margin.right,
@@ -485,7 +487,8 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         var tooLarge = range[1] - range[0] > maxTimeForDetails;
          var url = templates.urls.profiling({
             myria: myriaConnection,
-            query: queryId,
+            query: graph.queryStatus.queryId,
+            subquery: graph.queryStatus.subqueryId,
             fragment: fragmentId,
             start: range[0],
             end: range[1],
@@ -507,7 +510,7 @@ function drawLanes(element, fragmentId, queryId, numWorkers, idNameMapping, leve
         }, function(error, data) {
             var aggregatedData = [],
                 grouped = _.groupBy(data, 'workerId'),
-                numOps = queryPlan.plan.fragments[fragmentId].operators.length;
+                numOps = graph.fragments[fragmentId].operators.length;
             aggregatedData = _.map(grouped, function(val, key){
                 return { workerId: +key, states: val };
             });
