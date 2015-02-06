@@ -1,4 +1,4 @@
-var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
+var networkVisualization = function (element, fragments, queryStatus, linkAttr) {
     $('.title-current').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
@@ -78,7 +78,8 @@ var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
         var fragmentId = fragments[0];
         var url = templates.urls.sentData({
             myria: myriaConnection,
-            query: queryPlan.queryId,
+            query: queryStatus.queryId,
+            subquery: queryStatus.subqueryId,
             fragment: fragmentId
         });
 

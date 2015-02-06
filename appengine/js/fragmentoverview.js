@@ -1,12 +1,12 @@
-var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
+var manyLineCharts = function(element, fragmentIds, graph) {
     $('.title-current').html('');
 
     $(element.node()).empty();
 
-    stats = element.append("div").attr("class", "stats");
-    updateQueryStats(stats);
+    var stats = element.append("div").attr("class", "stats");
+    updateQueryStats(stats, graph.queryStatus);
 
-    charts = [];
+    var charts = [];
 
     function changeRange(range) {
         _.each(charts, function (c) {
@@ -41,7 +41,7 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
                 }
             })
 
-        var workers = queryPlan.plan.fragments[fragmentId].workers;
+        var workers = graph.fragments[fragmentId].workers;
         var numWorkers = workers.length;
 
         var hierarchy = graph.nested["f"+fragmentId],
@@ -67,14 +67,14 @@ var manyLineCharts = function(element, fragmentIds, queryPlan, graph) {
             return -d.level;
         });
 
-        return lineChart(div, fragmentId, queryPlan, numWorkers, operators, changeRange, graph, _.contains(graph.state.opened, "f"+fragmentId));
+        return lineChart(div, fragmentId, numWorkers, operators, changeRange, graph, _.contains(graph.state.opened, "f"+fragmentId));
     });
 
     // return variables that are needed outside this scope
     return {};
 };
 
-var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, callback, graph, expanded) {
+var lineChart = function(element, fragmentId, numWorkers, operators, callback, graph, expanded) {
     var margin = {top: 10, right: 10, bottom: 20, left: 180 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right;
 
@@ -146,7 +146,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
-    var wholeDomain = [0, queryPlan.elapsedNanos];
+    var wholeDomain = [0, graph.queryStatus.elapsedNanos];
 
     fetchData(wholeDomain);
 
@@ -209,7 +209,8 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
 
         var url = templates.urls.histogram({
             myria: myriaConnection,
-            query: queryPlan.queryId,
+            query: graph.queryStatus.queryId,
+            subquery: graph.queryStatus.subqueryId,
             fragment: fragmentId,
             start: start,
             end: end,
@@ -260,7 +261,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
     function draw(data, opIndex, range, expanded) {
         if (expanded) {
             // subtract data from children to get the self time, not total
-            indexedData = _.object(_.map(data, function(x){ return [x.key, x.values]; }));
+            var indexedData = _.object(_.map(data, function(x){ return [x.key, x.values]; }));
             _.each(data, function(d) {
                 var allChildrenValues = _.values(_.pick(indexedData, opIndex[d.key].children));
                 _.each(allChildrenValues, function(childValues) {
@@ -373,7 +374,7 @@ var lineChart = function(element, fragmentId, queryPlan, numWorkers, operators, 
                     return opIndex[d.key].level * 5 + 5;
                 }).attr("cy", -5)
                 .attr("class", "rect-info")
-                .popover(function(d) {
+                .popover(function (d) {
                     var body = '';
                     _.each(expanded ? opIndex[d.key].rawData : graph.nodes["f"+fragmentId].rawData, function(value, key){
                         if (key == 'operators') {

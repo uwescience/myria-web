@@ -86,16 +86,17 @@ function optimizeplan() {
       multiway_join: multiway_join_checked,
       push_sql: push_sql_checked
   });
-  request.success(function (queryPlan) {
+  request.success(function (queryStatus) {
     try {
+      var fragments = queryStatus.plan.fragments;
       var i = 0;
-      _.map(queryPlan.plan.fragments, function (frag) {
+      _.map(fragments, function (frag) {
         frag.fragmentIndex = i++;
         return frag;
       });
 
       var g = new Graph();
-      g.loadQueryPlan(queryPlan);
+      g.loadQueryPlan(queryStatus, fragments);
 
       function rerender() {
         $('#myria_svg').empty().height('auto');
