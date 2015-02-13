@@ -647,4 +647,4 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-app = Application()
+app = Application(hostname='rest.myria.cs.washington.edu', port=1776, ssl=True)
