@@ -771,11 +771,11 @@ function Graph () {
                     .tooltip(function(d) {
                         var k = self.linkOrigins[d.id];
                         // only show tooltip for links between fragments
-												if (k === undefined) return "";
-												var x;
-												try {x = self.linkAttr[k].numTuples || 0;}
-												catch (_) {x = 0;}
-												return Intl.NumberFormat().format(x) + " tuples";
+                        if (k === undefined) return "";
+                        var x;
+                        try {x = self.linkAttr[k].numTuples || 0;}
+                        catch (_) {x = 0;}
+                        return Intl.NumberFormat().format(x) + " tuples";
                     });
             }
 
