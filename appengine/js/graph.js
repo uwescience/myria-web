@@ -748,7 +748,7 @@ function Graph () {
                 .attr("stroke", function(d) { return d.stroke; })
                 .attr("marker-end", function(d) { return templates.markerUrl({ name: d.id });})
                 .attr("stroke-width", function(d) {
-                    var x = self.linkAttr[self.linkOrigins[d.id]];;
+                    var x = self.linkAttr[self.linkOrigins[d.id]];
                     if (x !== undefined) {
                         return self.costs(x.numTuples);
                     }
@@ -771,13 +771,11 @@ function Graph () {
                     .tooltip(function(d) {
                         var k = self.linkOrigins[d.id];
                         // only show tooltip for links between fragments
-                        if (k !== undefined) {
-                            var x = self.linkAttr[k].numTuples;
-                            if (x === undefined)
-                                x = 0;
-                            return Intl.NumberFormat().format(x) + " tuples";
-                        }
-                        return "";
+												if (k === undefined) return "";
+												var x;
+												try {x = self.linkAttr[k].numTuples || 0;}
+												catch (_) {x = 0;}
+												return Intl.NumberFormat().format(x) + " tuples";
                     });
             }
 
