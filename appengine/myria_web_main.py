@@ -617,8 +617,8 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='rest.myria.cs.washington.edu',
-                 port=1776, ssl=True):
+                 hostname='localhost',
+                 port=8753, ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -647,5 +647,4 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-# app = Application(hostname='localhost', port=8753, ssl=False)
 app = Application()
