@@ -286,8 +286,8 @@ var networkVisualization = function (element, fragments, queryStatus, linkAttr) 
                 .tooltip("average " + d3.round(avgX, 1));
 
             // axes
-            var xAxis = d3.svg.axis().scale(barHeight).ticks(5).tickFormat(d3.format(".1s")).orient("top");
-            var yAxis = d3.svg.axis().scale(barHeight).ticks(5).tickFormat(d3.format(".1s")).orient("left");
+            var xAxis = d3.svg.axis().scale(barHeight).ticks(_.min([4, maxValue])).tickFormat(d3.format("s")).orient("top");
+            var yAxis = d3.svg.axis().scale(barHeight).ticks(_.min([4, maxValue])).tickFormat(d3.format("s")).orient("left");
 
             svg.append("g")
                 .attr("class", "x axis")
@@ -296,7 +296,7 @@ var networkVisualization = function (element, fragments, queryStatus, linkAttr) 
 
             svg.append("g")
                 .attr("class", "y axis")
-                .attr("transform", "translate(" + matMargin.left + ",0)")
+                .attr("transform", "translate(" + (matMargin.left - 2) + ",0)")
                 .call(yAxis);
 
             /* Controls */
