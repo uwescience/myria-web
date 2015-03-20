@@ -73,12 +73,12 @@ $(function() {
   Date.prototype.addHours= function(h){
     this.setHours(this.getHours()+h);
     return this;
-  }
+  };
 
   Date.prototype.addDays= function(d){
     this.setHours(this.getHours()+24*d);
     return this;
-  }
+  };
 
   //warn if not in Chrome
   if (!window.chrome) {
