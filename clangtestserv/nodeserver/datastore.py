@@ -390,6 +390,7 @@ def insert_new_dataset(params):
         query = 'INSERT INTO dataset VALUES' + \
                 '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         for row in data:
+            if row=='': break
             cur_time = time.time()
             qid = latest_qid() + 1
             val = row.split(',')
