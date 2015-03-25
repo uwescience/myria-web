@@ -203,6 +203,7 @@ function displayQueryStatus(query_status) {
     if (_.contains(grappaends, backendProcess)) {
       url = connection + '/query?qid=' + query_id;
     }
+
     html += t.row({name: 'Status', val: status});
     html += t.time_row({name: 'Start', val: query_status['startTime']});
     html += t.time_row({name: 'End', val: query_status['finishTime']});
