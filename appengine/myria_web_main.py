@@ -38,7 +38,7 @@ def is_small_dataset(d, cell_limit=0):
     specified cell limit. (Number of cells is # cols * # rows.)"""
     return (d['numTuples'] >= 0 and
             ((cell_limit == 0) or
-            (len(d['schema']['columnNames']) * d['numTuples'] <= cell_limit)))
+             (len(d['schema']['columnNames']) * d['numTuples'] <= cell_limit)))
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader('templates'),
@@ -169,6 +169,7 @@ class RedirectToEditor(MyriaHandler):
 
 
 class MyriaPage(MyriaHandler):
+
     def get_connection_string(self, backend):
         return self.app.backends[backend].connection_string()
 
@@ -267,7 +268,8 @@ class Profile(MyriaPage):
                 query_status = self.app.backends["myria"].get_query_status(
                     query_id)
                 query_status["subqueryId"] = subquery_id
-                subquery_fragments = self.app.backends["myria"].get_query_plan(query_id, subquery_id)
+                subquery_fragments = self.app.backends[
+                    "myria"].get_query_plan(query_id, subquery_id)
             except myria.MyriaError:
                 pass
 
@@ -521,6 +523,7 @@ class Dot(MyriaHandler):
 
 
 class Application(webapp2.WSGIApplication):
+
     def __init__(self, debug=True,
                  hostname='localhost',
                  port=8753, ssl=False):
