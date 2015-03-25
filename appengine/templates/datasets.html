@@ -8,7 +8,7 @@
 		    <label for="backend-menu" class="col-sm-2 control-label"> Backend Datasets </label>
 		    <div class = "col-sm-9">
 		      <select class="form-control backend-menu">
-			<option value="grappa"> Grappa </option>
+			<option value="grappa"> Radish </option>
 			<option value="myria" selected> Myria </option>
                         <option value="clang"> C </option>
                       </select>
@@ -38,10 +38,9 @@
 {% block footer %}
 
 <script type="text/javascript" src="js/dataset.js"></script>
-<script>
+<script type="text/javascript">
     {% autoescape false %}
-        var myriaConnection = '{{ myriaConnection }}';
-        var clangConnection = '{{ clangConnection }}';
+        var connection = '{{ connection }}';
     {% endautoescape %}
 </script>
 <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>

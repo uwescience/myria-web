@@ -1,4 +1,4 @@
-var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
+var operatorVisualization = function (element, fragmentId, graph) {
     $(element.node()).empty();
 
     var hierarchy = graph.nested["f"+fragmentId],
@@ -13,7 +13,7 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
     }
     addLevels(hierarchy, 0);
 
-    var idNameMapping = nameMappingFromFragments(queryPlan.plan.fragments);
+    var idNameMapping = nameMappingFromFragments(graph.fragments);
 
     var margin = {top: 5, right: 5, bottom: 5, left: 5 },
         width = parseInt(element.style('width'), 10) - margin.left - margin.right,
@@ -30,8 +30,9 @@ var operatorVisualization = function (element, fragmentId, queryPlan, graph) {
         .attr("class", "map");
 
     var url = templates.urls.contribution({
-        myria: myriaConnection,
-        query: queryPlan.queryId,
+        myria: connection,
+        query: graph.queryStatus.queryId,
+        subquery: graph.queryStatus.subqueryId,
         fragment: fragmentId
     });
 

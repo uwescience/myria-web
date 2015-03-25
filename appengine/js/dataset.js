@@ -10,7 +10,9 @@ var dataset_templates = {
 
 var editorBackendKey = 'myria',
     backendProcess = 'myria',
-    grappaends = ['grappa', 'clang'];
+    grappaends = ['grappa', 'clang'],
+    myriaCellLimit = 100*1000*1000,
+    clangCellLimit = 10*1000;
 
 function changeBackend() {
   var backend = $(".backend-menu option:selected").val();
@@ -30,38 +32,49 @@ function setBackend(backend) {
   loadTable();
 }
 
-function loadTable() {
-  // default to host from myria
+function backendDatasetUrl(conn){
   var url;
   if (backendProcess == 'clang') {
-    url = 'http://' + clangConnection + '/dataset?backend=clang';
+    url = conn + '/dataset?backend=clang';
   }
   else if (backendProcess == 'grappa') {
-    url = 'http://' + clangConnection + '/dataset?backend=grappa';
+    url = conn + '/dataset?backend=grappa';
   } else {
-    url = myriaConnection + '/dataset';
+    url = conn + '/dataset';
   }
-  var t = dataset_templates;
-  var jqxhr = $.getJSON(url,
-    function (data) {
+  return url;
+}
+
+function loadTable() {
+  // default to host from myria
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (info) {
+    var conn = JSON.parse(info).connection;
+    var url = backendDatasetUrl(conn);
+    var t = dataset_templates;
+    var jqxhr = $.getJSON(url, function (data) {
       var html = '';
       _.each(data, function (d) {
-	var qload = '';
-	var dload = d['uri'] + '/data?';
-        var time = d['created'];
+	var dload = d.uri + '/data?';
+        var limit = myriaCellLimit;
         if (_.contains(grappaends, backendProcess)) {
-	  qload = '/query?qid=' + d['queryId'];
+	  d.uri = d.uri +'/query?qid=' + d['queryId'];
           dload += 'qid=' + d['queryId'] + '&';
-          time = new Date(time * 1000).toISOString();
+          d.created = new Date(d.created * 1000).toISOString();
 	}
         var relation = d['relationKey'];
-        html += t.relName({url: d['uri'] + qload, user: relation['userName'],
+        html += t.relName({url: d['uri'], user: relation['userName'],
                 program: relation['programName'],
                 name: relation['relationName']});
-        html += t.extraInfo({url: d['uri'] + qload, queryId: d['queryId'],
-                created: time});
+        html += t.extraInfo({url: d['uri'], queryId: d['queryId'],
+                created: d.created});
 
-	if (is_small_dataset(d, 100*1000*1000)) {
+        if (_.contains(grappaends, backendProcess)) {
+          limit = clangCellLimit;
+        }
+	if (is_small_dataset(d, limit)) {
 	  html += t.download({url: dload});
 	} else {
 	  html += t.toolarge;
@@ -72,6 +85,8 @@ function loadTable() {
     }).fail (function (res, err) {
       console.log(err);
     });
+
+  });
 }
 
 /* A dataset is small if we know its size and the size is below the
@@ -95,7 +110,11 @@ function saveState() {
 
 function restoreState() {
   var backend = localStorage.getItem(editorBackendKey);
-  $(".backend-menu").val(backend);
+  if (backend === "myriamultijoin") {
+    $(".backend-menu").val("myria");
+  } else {
+    $(".backend-menu").val(backend);
+  }
   setBackend(backend);
 }
 

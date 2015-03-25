@@ -1,18 +1,19 @@
 // put all the underscore templates here
-var max_dataset_size = 10*1000*1000;
+var myria_max_size = 10*1000*1000;
+var clang_max_size = 10*1000;
 var editor_templates = {
   //*/
   urls: {
     profiling: _.template("http://<%- myria %>/logs/profiling?queryId=<%- query_id %>")
   },
   query: {
-    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="http://<%- connection %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
+    table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Query <a href="<%- connection %>" target="_blank">#<%- query_id %></a></th></tr></thead><trbody><%= content %></trbody></table>'),
     row: _.template('<tr><td><%- name %></td><td><%- val %></td></tr>'),
     time_row: _.template('<tr><td><%- name %></td><td><abbr class="timeago" title="<%- val %>"><%- val %></abbr></td></tr>'),
     prof_link: _.template('<p>Profiling results: <a href="/profile?queryId=<%- query_id %>" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>'),
     err_msg: _.template('<p>Error message:</p><pre><%- message %></pre>'),
     dataset_table: _.template('<table class="table table-condensed table-striped"><thead><tr><th colspan="2">Datasets Created</th></tr></thead><trbody><%= content %></trbody></table>'),
-    dataset_row: _.template('<tr><td><%- userName %>:<%- programName %>:<%- relationName %></td><td><%- numTuples %> tuples <% if (numTuples < max_dataset_size) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
+    dataset_row: _.template('<tr><td><%- userName %>:<%- programName %>:<%- relationName %></td><td><%- numTuples %> tuples <% if (numTuples < maxSize) { %> <a href="<%- uri %>format=json" rel="nofollow" class="label label-default">JSON</a> <a href="<%- uri %>format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="<%- uri %>format=tsv" rel="nofollow" class="label label-default">TSV</a><% } %></td></tr>')
   },
   dataset: {
     table: _.template('<table class="table table-condensed table-striped"><thead><tr><th>Name</th><th>Type</th></tr></thead><trbody><%= content %></trbody></table>'),
@@ -28,6 +29,7 @@ var editorLanguage = 'myrial',
   editorBackendKey = 'myria',
   developerCollapseKey = 'developer-collapse',
   backendProcess = 'myria',
+  myriaends = ['myria', 'myriamultijoin'],
   grappaends = ['grappa', 'clang'],
   editorState = {};
 
@@ -96,11 +98,11 @@ function optimizeplan() {
     push_sql: push_sql_checked
   });
 
-  request.success(function (queryPlan) {
+  request.success(function (queryStatus) {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
-        var dot = queryPlan.dot;
+        var dot = queryStatus.plan.dot;
         var result = Viz(dot, "svg");
         $('#svg').html(result);
         $('svg').width('100%');
@@ -115,21 +117,22 @@ function optimizeplan() {
       $('#physical-plan').collapse('show');
 
       clangrerender();
-    } else if (backendProcess === "myria") {
-      try {
-        var i = 0;
-        _.map(queryPlan.plan.fragments, function (frag) {
+    } else if (_.contains(myriaends, backendProcess)) {
+        try {
+            var fragments = queryStatus.plan.fragments;
+            var i = 0;
+            _.map(fragments, function (frag) {
+                frag.fragmentIndex = i++;
+                return frag;
+            });
 
-          frag.fragmentIndex = i++;
-          return frag;
-        });
 
-        var g = new Graph();
-        g.loadQueryPlan(queryPlan);
+          var g = new Graph();
+          g.loadQueryPlan(queryStatus, fragments);
 
         function myriarerender() {
-          $('#svg').empty();
-          g.render(d3.select('#svg'));
+            $('#myria_svg').empty().height('auto');
+            g.render(d3.select('#myria_svg'));
         }
         myriarerender();
 
@@ -191,60 +194,73 @@ function displayQueryStatus(query_status) {
   var query_id = query_status['queryId'];
   var status = query_status['status'];
   var html = '';
-  var connection = myriaConnection + '/query/query-' + query_id;
-  if (_.contains(grappaends, backendProcess)) {
-      connection = clangConnection + '/query?qid=' + query_id;
-  }
-  html += t.row({name: 'Status', val: status});
-  html += t.time_row({name: 'Start', val: query_status['startTime']});
-  html += t.time_row({name: 'End', val: query_status['finishTime']});
-  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = t.table({connection: connection, query_id: query_id, content: html});
-
-  if (status === 'SUCCESS') {
-    connection = 'http://' + myriaConnection + '/dataset';
-    var data = {queryId: query_id};
+  var request = $.post("page", {
+    backend: backendProcess
+  });
+  request.success(function (info) {
+    var connection = JSON.parse(info).connection;
+    var url = connection + '/query/query-' + query_id;
     if (_.contains(grappaends, backendProcess)) {
-      connection = 'http://' + clangConnection + '/query';
-      data = {qid: query_id};
+      url = connection + '/query?qid=' + query_id;
     }
-    // Populate the datasets created table
-    $.ajax({
-      dataType: "json",
-      url: connection,
-      data: data,
-      async: false})
-    .done(function (datasets) {
-      if (datasets.length > 0) {
-          var d_html = "";
-          _.each(datasets, function (d) {
-            var relKey = d['relationKey'];
-            var dload = d.uri + '/data?';
-	    if (_.contains(grappaends, backendProcess)) {
-      	      dload += 'qid=' + d['queryId'] + '&';
-            }
-            d_html += t.dataset_row({uri : dload, userName: relKey.userName,
-                programName: relKey.programName,
-                relationName: relKey.relationName, numTuples: d.numTuples});
-            html += t.dataset_table({content: d_html});
-          });
-        }
-    });
-  }
+
+    html += t.row({name: 'Status', val: status});
+    html += t.time_row({name: 'Start', val: query_status['startTime']});
+    html += t.time_row({name: 'End', val: query_status['finishTime']});
+    html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+    html = t.table({connection: connection, query_id: query_id, content: html});
+
+    if (status === 'SUCCESS') {
+      url = connection + '/dataset';
+      var data = {queryId: query_id};
+      if (_.contains(grappaends, backendProcess)) {
+        url = connection + '/query';
+        data = {qid: query_id};
+      }
+
+      // Populate the datasets created table
+      $.ajax({
+        dataType: "json",
+        url: url,
+        data: data,
+        async: false})
+        .done(function (datasets) {
+          if (datasets.length > 0) {
+            var d_html = "";
+            _.each(datasets, function (d) {
+              var relKey = d['relationKey'];
+              var dload = d.uri + '/data?';
+              var limit = myria_max_size;
+	      if (_.contains(grappaends, backendProcess)) {
+      	        dload += 'qid=' + d['queryId'] + '&';
+                limit = clang_max_size;
+              }
+              d_html += t.dataset_row({uri : dload, userName: relKey.userName,
+                                       programName: relKey.programName,
+                                       maxSize: limit, numTuples: d.numTuples,
+                                       relationName: relKey.relationName});
+              html += t.dataset_table({content: d_html});
+            });
+          }
+        });
+    }
 
   if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {
       html += t.prof_link({query_id: query_id});
-  } else if (status === 'ERROR') {
-    html += t.err_msg({message: query_status['message'] || '(missing)'});
-  }
-  $("#query-information").html(html);
-  $("abbr.timeago").timeago();
+    } else if (status === 'ERROR') {
+      html += t.err_msg({message: query_status['message'] || '(missing)'});
+    }
+    $("#query-information").html(html);
+    $("abbr.timeago").timeago();
 
-  if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
-    setTimeout(function () {
-      checkQueryStatus(query_id);
-    }, 1000);
-  }
+    if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED'
+        || status === 'KILLING') {
+      setTimeout(function () {
+        checkQueryStatus(query_id);
+      }, 1000);
+    }
+  });
+
 }
 
 function displayQueryError(error, query_id) {
@@ -405,7 +421,7 @@ function changeBackend() {
 }
 
 function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang'];
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
     if (!_.contains(backends, backend)) {
 	console.log('Backend not supported: ' + backend);
 	return;
@@ -458,7 +474,7 @@ function initializeDatasetSearch() {
     placeholder: "Search for a dataset...",
     minimumInputLength: 3,
     ajax: {
-      url: myriaConnection + "/dataset/search/",
+      url: connection + "/dataset/search/",
       dataType: 'json',
       quietMillis: 100,
       cache: true,
@@ -507,7 +523,7 @@ function initializeDatasetSearch() {
   }).on("change", function (e) {
     var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
-      url = myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
+      url = connection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
     $.getJSON(url, function (data) {
       var html = '';
       _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {

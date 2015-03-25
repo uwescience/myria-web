@@ -8,6 +8,19 @@
 {% block queries_active %} class="active"{% endblock %}
 
 {% block content %}
+<form class="form-horizontal" role="form">
+  <div class="form-group">
+	<label for="backend-menu" class="col-sm-2 control-label"> Backend </label>
+	<div class = "col-sm-9">
+	  <select class="form-control backend-menu">
+		<option value="grappa"> Radish </option>
+		<option value="myria" selected> Myria </option>
+        <option value="clang"> C </option>
+      </select>
+    </div>
+  </div>
+</form>
+
 	<div class="panel panel-primary">
 		<div class="panel-heading clearfix query-panel-heading">
 			<form role="search">
@@ -35,6 +48,12 @@
 					<th>Finished</th>
 				</tr>
 			</thead>
+
+<!-- not sure if this was required in merge -->
+	        <tbody id="querytable">
+		    </tbody>
+<!-- -->
+
 			{% if not queries %}
 			<tr>
 				<td colspan="7" class="text-center text-muted">
@@ -45,7 +64,7 @@
 			{% for q in queries %}
 			<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
 				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
-				<td class="query-raw">{{q.rawQuery}}</td>
+				<td class="query-raw" data-language="{{q.language}}">{{q.rawQuery}}</td>
 				<td class="query-status">{{q.status}}</td>
 				<td>
 					{% if 'QUERY' in q.profilingMode %}
@@ -71,10 +90,16 @@
 			</tr>
 			{% endfor %}
 		</table>
+
 		<div class="text-center">
-			<ul class="pagination">
+			<ul id="paging" class="pagination">
 				<li>
-					<a href="{{ page_url(pagination.prev_args) }}">&laquo;</a>
+				{% if pagination.has_prev %}
+					<a href="{{ page_url(pagination.page - 1, current_max, pagination) }}">&laquo;</a>
+				{% else %}
+                                        <li class="disabled">
+			                  <span>&laquo;</span>
+				{% endif %}
 				</li>
 					{%- if pagination.can_jump %}
 					{%- for page_args in pagination.iter_pages() %}
@@ -114,26 +139,24 @@
 <script type="text/javascript" src="js/codemirror.js"></script>
 <script type="text/javascript" src="js/runmode.js"></script>
 <script type="text/javascript" src="js/myrial.js"></script>
+<script type="text/javascript" src="js/sql.js"></script>
+<script type="text/javascript" src="js/prolog.js"></script>
 <script type="text/javascript">
 $(function () {
-    $("td.query-raw").each(function (index, elt) {
-        elt = $(elt);
-        var text = elt.text();
-        /*
-         * TODO: This is a hack to detect MyriaL programs, both to distinguish
-         * them from other languages and to distinguish them from manually
-         * written "raw" queries. We should really include the query language
-         * in the Myria catalog and use it instead.
-         */
-        if (text.toLowerCase().indexOf("store") === -1) {
-            return;
-        }
-        var pre = document.createElement('pre');
-        pre.className += "CodeMirror";
-        elt.empty().append(pre);
-        CodeMirror.runMode(text, {name: 'myrial', singleLineStringErrors: false}, pre);
-    });
+    var addCodeMirror = function (language, syntaxmode) {
+        var selector = "td.query-raw[data-language='" + language + "']";
+        $(selector).each(function (index, elt) {
+            elt = $(elt);
+            var text = elt.text();
+            var pre = document.createElement('pre');
+            pre.className += "CodeMirror";
+            elt.empty().append(pre);
+            CodeMirror.runMode(text, {name: syntaxmode, singleLineStringErrors: false}, pre);
+        });
+	};
+	addCodeMirror('myrial', 'myrial');
+	addCodeMirror('sql', 'text/x-sql');
+	addCodeMirror('datalog', 'prolog');
 });
 </script>
 {% endblock %}
-

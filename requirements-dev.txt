@@ -1,4 +1,3 @@
-appengine
 httmock
 nosegae
 nose-exclude
