@@ -7,7 +7,7 @@ var cp = require('child_process');
 var url = require('url');
 
 var compilepath = 'raco/c_test_environment/';
-var hostname = 'n03';
+var hostname = 'localhost';
 var port = 1337;
 
 var py = './datastore.py';
