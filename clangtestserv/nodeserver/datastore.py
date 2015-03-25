@@ -12,6 +12,7 @@ import subprocess
 from subprocess import Popen
 
 import os
+import errno
 import struct
 import urllib2
 
@@ -21,6 +22,15 @@ grappa_path = 'grappa/'
 compile_path = raco_path + 'c_test_environment/'
 scheme_path = compile_path + 'schema/'
 grappa_data_path = '/shared/'
+
+
+def _mkdir_p(dirname):
+    try:
+        os.mkdir(dirname)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise e
+        pass
 
 
 def parse_options(args):
@@ -104,11 +114,12 @@ class DatastoreAPI(object):
 
     def __update_scheme(self, filename, qid, backend):
         if backend == 'grappa':
-            openfile = grappa_data_path + filename
+            schemefile = grappa_data_path + filename
         else:
-            openfile = scheme_path + filename
+            schemefile = scheme_path + filename
+            _mkdir_p(scheme_path)
         try:
-            with open(openfile, 'r') as f:
+            with open(schemefile, 'r') as f:
                 data = f.read().split('\n')
                 schema = {'columnNames': data[0], 'columnTypes': data[1]}
                 query = 'UPDATE dataset SET schema = ? WHERE queryId = ?'
