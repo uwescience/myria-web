@@ -48,8 +48,47 @@
 					<th>Finished</th>
 				</tr>
 			</thead>
+
+<!-- not sure if this was required in merge -->
 	        <tbody id="querytable">
 		    </tbody>
+<!-- -->
+
+			{% if not queries %}
+			<tr>
+				<td colspan="7" class="text-center text-muted">
+					<h3>No queries</h3>
+				</td>
+			</tr>
+			{% endif %}
+			{% for q in queries %}
+			<tr class="{{q.bootstrapStatus}} query-row" data-status="{{q.status}}" data-id="{{q.queryId}}">
+				<td class="query-url"><a href="{{q.url}}" target="_blank">{{q.queryId}}</a></td>
+				<td class="query-raw" data-language="{{q.language}}">{{q.rawQuery}}</td>
+				<td class="query-status">{{q.status}}</td>
+				<td>
+					{% if 'QUERY' in q.profilingMode %}
+						{% if q.status == 'SUCCESS' %}
+							<a href="/profile?queryId={{q.queryId}}" class="glyphicon glyphicon-dashboard" title="Visualization of query profiling" data-toggle="tooltip"></a>
+						{% elif q.status in ['RUNNING', 'ACCEPTED'] %}
+							<span class="glyphicon glyphicon-dashboard" title="Visualization will be available when the query has finished" data-toggle="tooltip"></span>
+						{% else %}
+							<span class="glyphicon glyphicon-dashboard" title="Visualization not available for failed queries" data-toggle="tooltip"></span>
+						{% endif %}
+					{% else %}
+						<span title="Profiling not enabled for this query" data-toggle="tooltip">-</span>
+					{% endif %}
+				</td>
+				<td class="query-elapsed">{{q.elapsedStr}}</td>
+				<td class="query-finish">
+					{% if q.status in ['RUNNING', 'ACCEPTED'] %}
+						<a href="{{q.url}}" class="kill-query glyphicon glyphicon-remove-circle text-danger" title="Kill query {{q.queryId}}" data-toggle="tooltip"></a>
+					{% else %}
+						<abbr class="timeago" title="{{q.finishTime}}">{{q.finishTime}}</abbr>
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
 		</table>
 
 		<div class="text-center">
@@ -100,5 +139,24 @@
 <script type="text/javascript" src="js/codemirror.js"></script>
 <script type="text/javascript" src="js/runmode.js"></script>
 <script type="text/javascript" src="js/myrial.js"></script>
+<script type="text/javascript" src="js/sql.js"></script>
+<script type="text/javascript" src="js/prolog.js"></script>
+<script type="text/javascript">
+$(function () {
+    var addCodeMirror = function (language, syntaxmode) {
+        var selector = "td.query-raw[data-language='" + language + "']";
+        $(selector).each(function (index, elt) {
+            elt = $(elt);
+            var text = elt.text();
+            var pre = document.createElement('pre');
+            pre.className += "CodeMirror";
+            elt.empty().append(pre);
+            CodeMirror.runMode(text, {name: syntaxmode, singleLineStringErrors: false}, pre);
+        });
+	};
+	addCodeMirror('myrial', 'myrial');
+	addCodeMirror('sql', 'text/x-sql');
+	addCodeMirror('datalog', 'prolog');
+});
+</script>
 {% endblock %}
-

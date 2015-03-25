@@ -194,12 +194,12 @@ svg .help-text {
   shape-rendering: auto;
 }
 
-.x.axis .tick line {
+.overview-fragment .x.axis .tick line {
   stroke: lightgrey;
   opacity: 0.7;
 }
 
-.x.axis .tick text {
+.overview-fragment .x.axis .tick text {
   fill: #555;
 }
 
@@ -228,7 +228,7 @@ svg .help-text {
   fill: #333;
 }
 
-.chart .x.axis path {
+.overview-fragment .chart .x.axis path {
   display: none;
 }
 

@@ -1,4 +1,4 @@
-var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
+var networkVisualization = function (element, fragments, queryStatus, linkAttr) {
     $('.title-current').html(templates.titleNetworkVis({src: fragments[0], dst: fragments[1]}));
 
     $(element.node()).empty();
@@ -28,10 +28,13 @@ var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
             .range([barChartHeight, 0]);
 
         //append the svg for matrix
-        var svg = matrixElement.append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("class", "matrix-chart");
+        var wsvg = matrixElement.append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        var svg = wsvg.append("g")
+            .attr("transform", "translate(10, 10)")
+            .attr("class", "matrix-chart");
 
         var colBarChart = svg.append("g")
             .attr("class", "bars")
@@ -78,7 +81,8 @@ var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
         var fragmentId = fragments[0];
         var url = templates.urls.sentData({
             myria: connection,
-            query: queryPlan.queryId,
+            query: queryStatus.queryId,
+            subquery: queryStatus.subqueryId,
             fragment: fragmentId
         });
 
@@ -280,6 +284,20 @@ var networkVisualization = function (element, fragments, queryPlan, linkAttr) {
                 .attr("y2", matrixHeight)
                 .attr("x2", barHeight(avgX))
                 .tooltip("average " + d3.round(avgX, 1));
+
+            // axes
+            var xAxis = d3.svg.axis().scale(barHeight).ticks(_.min([4, maxValue])).tickFormat(d3.format("s")).orient("top");
+            var yAxis = d3.svg.axis().scale(barHeight).ticks(_.min([4, maxValue])).tickFormat(d3.format("s")).orient("left");
+
+            svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0, " + (matMargin.top - 2) + ")")
+                .call(xAxis);
+
+            svg.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate(" + (matMargin.left - 2) + ",0)")
+                .call(yAxis);
 
             /* Controls */
 

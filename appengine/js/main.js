@@ -129,12 +129,12 @@ $(function() {
   Date.prototype.addHours= function(h){
     this.setHours(this.getHours()+h);
     return this;
-  }
+  };
 
   Date.prototype.addDays= function(d){
     this.setHours(this.getHours()+24*d);
     return this;
-  }
+  };
 
   //warn if not in Chrome
   if (!window.chrome) {
@@ -154,8 +154,11 @@ $(function() {
     $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to Myria. Most functionality will not work.</div>');
   }
 
-  window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
-  updateCalendarWarning();
+  //warn if myria cluster has scheduled calendar use
+  if (connectionString.indexOf('localhost') === -1) {
+    window.setInterval(updateCalendarWarning, 5 * 60 * 1000);
+    updateCalendarWarning();
+  }
 
   //back to top button
   var offset = 220;

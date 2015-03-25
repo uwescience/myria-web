@@ -75,17 +75,19 @@ Install the developer dependencies.
 pip install -r requirements-dev.txt
 ```
 
-Download a local copy of Google App Engine
+Download a local copy of [Google App Engine](https://cloud.google.com/appengine/downloads)
 
 ```sh
-curl -O http://googleappengine.googlecode.com/files/google_appengine_1.8.1.zip
-unzip -q google_appengine_1.8.1.zip
+curl -O https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.17.zip
+unzip -q google_appengine_1.9.17.zip
 ```
 
 Run
 
 ```
-nosetests -w appengine --with-gae --exclude-dir={myria,raco,ply,networkx} --without-sandbox --gae-lib-root=google_appengine
+nosetests -w appengine --with-gae \
+  --exclude-dir={myria,raco,ply,networkx,sqlalchemy} \
+  --gae-lib-root=google_appengine
 ```
 
 # Issues

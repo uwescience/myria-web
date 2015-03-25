@@ -98,11 +98,11 @@ function optimizeplan() {
     push_sql: push_sql_checked
   });
 
-  request.success(function (queryPlan) {
+  request.success(function (queryStatus) {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
-        var dot = queryPlan.dot;
+        var dot = queryStatus.plan.dot;
         var result = Viz(dot, "svg");
         $('#svg').html(result);
         $('svg').width('100%');
@@ -118,20 +118,21 @@ function optimizeplan() {
 
       clangrerender();
     } else if (_.contains(myriaends, backendProcess)) {
-      try {
-        var i = 0;
-        _.map(queryPlan.plan.fragments, function (frag) {
+        try {
+            var fragments = queryStatus.plan.fragments;
+            var i = 0;
+            _.map(fragments, function (frag) {
+                frag.fragmentIndex = i++;
+                return frag;
+            });
 
-          frag.fragmentIndex = i++;
-          return frag;
-        });
 
-        var g = new Graph();
-        g.loadQueryPlan(queryPlan);
+          var g = new Graph();
+          g.loadQueryPlan(queryStatus, fragments);
 
         function myriarerender() {
-          $('#svg').empty();
-          g.render(d3.select('#svg'));
+            $('#myria_svg').empty().height('auto');
+            g.render(d3.select('#myria_svg'));
         }
         myriarerender();
 

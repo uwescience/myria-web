@@ -259,17 +259,23 @@ class Profile(MyriaPage):
 
     def get(self):
         query_id = self.request.get("queryId")
-        query_plan = {}
+        subquery_id = self.request.get("subqueryId", 0)
+        query_status = {}
+        subquery_fragments = None
         if query_id != '':
             try:
-                query_plan = self.app.backends["myria"].get_query_status(
+                query_status = self.app.backends["myria"].get_query_status(
                     query_id)
+                query_status["subqueryId"] = subquery_id
+                subquery_fragments = self.app.backends["myria"].get_query_plan(query_id, subquery_id)
             except myria.MyriaError:
                 pass
 
         template_vars = self.base_template_vars()
-        template_vars['queryPlan'] = json.dumps(query_plan)
+        template_vars['queryStatus'] = json.dumps(query_status)
+        template_vars['fragments'] = json.dumps(subquery_fragments)
         template_vars['queryId'] = query_id
+        template_vars['subqueryId'] = subquery_id
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
@@ -516,8 +522,8 @@ class Dot(MyriaHandler):
 
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
-                 hostname='rest.myria.cs.washington.edu',
-                 port=1776, ssl=True):
+                 hostname='localhost',
+                 port=8753, ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -558,5 +564,4 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-# app = Application(hostname='localhost', port=8753, ssl=False)
 app = Application()
