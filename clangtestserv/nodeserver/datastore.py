@@ -71,7 +71,7 @@ class DatastoreAPI(object):
             self.conn.commit()
             print str(cur_time) + ' ' + qid + ' started'
         except sqlite3.IntegrityError as e:
-            __update_query_error(qid, e.output)
+            self.__update_query_error(qid, e.output)
 
 
     def update_query_run(self, params):
@@ -231,8 +231,8 @@ class DatastoreAPI(object):
                    'elapsedNanos': row[9], 'numTuples': row[10],
                    'schema': row[11], 'backend': row[12], 'rawQuery': row[13]}
             res.append(val)
-        print json.dumps({'min': __get_min_entry(min, backend), 
-                          'max': __get_max_entry(max, backend), 'results': res})
+        print json.dumps({'min': self.__get_min_entry(min, backend), 
+                          'max': self.__get_max_entry(max, backend), 'results': res})
 
 
     def select_row(self, params):
@@ -393,7 +393,7 @@ class DatastoreAPI(object):
             for row in data:
                 if row=='': break
                 cur_time = time.time()
-                qid = __latest_qid() + 1
+                qid = self.__latest_qid() + 1
                 val = row.split(',')
                 num_cols = int(val[6])
                 col_names = []
