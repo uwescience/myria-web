@@ -44,6 +44,7 @@ function loadTable() {
     } else {
       url = conn + '/query';
     }
+    console.log(conn);
     var t = query_templates;
     var jqxhr = $.getJSON(url, function (data) {
       var max = data.max;

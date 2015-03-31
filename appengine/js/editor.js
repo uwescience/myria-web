@@ -97,7 +97,6 @@ function optimizeplan() {
     multiway_join: multiway_join_checked,
     push_sql: push_sql_checked
   });
-
   request.success(function (queryStatus) {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {

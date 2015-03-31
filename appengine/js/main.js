@@ -24,14 +24,14 @@ function changeUrl(backend) {
 }
 
 function changeConnection(backend) {
-  $("#connectionstr").empty();
   var request = $.post("page", {
     backend: backendProcess
   });
   request.success(function (data) {
     var d = JSON.parse(data);
-    $("#connectionstr").append('<a href="' + d.connection + '/workers" target="_blank">' + d.connectionString + '</a>');
+    $("#connectstr").html(d.connectionString);
   });
+
 }
 
 function changeLinks(backend) {
@@ -143,6 +143,12 @@ $(function() {
 
 
   $(".backend-menu").change(updateBackend);
+  $("#connectionstr select").hide();
+  $('#connectionstr').click(function(e) {
+    $('#connectionstr select').slideToggle(200);
+    $(".backend-menu").change(changeConnection(backendProcess));
+      e.stopPropagation();
+  });
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreState();
   changeConnection(backendProcess);
