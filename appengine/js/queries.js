@@ -24,7 +24,14 @@ function setBackend(backend) {
   var request = $.get("datasets", {
     backend : backendProcess
   });
+  
+  defaultTable();
   loadTable();
+}
+
+function defaultTable() {
+  var html = '<tr> <td colspan="7" class="text-center text-muted"> <h3>No queries</h3> </td>  </tr>';
+  $("#querytable").html(html);
 }
 
 function loadTable() {
@@ -44,7 +51,7 @@ function loadTable() {
     } else {
       url = conn + '/query';
     }
-    console.log(conn);
+
     var t = query_templates;
     var jqxhr = $.getJSON(url, function (data) {
       var max = data.max;
