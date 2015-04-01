@@ -130,8 +130,8 @@ function optimizeplan() {
           g.loadQueryPlan(queryStatus, fragments);
 
         function myriarerender() {
-            $('#myria_svg').empty().height('auto');
-            g.render(d3.select('#myria_svg'));
+            $('#svg').empty().height('auto');
+            g.render(d3.select('#svg'));
         }
         myriarerender();
 
@@ -321,7 +321,7 @@ function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
   $("#relational_svg").empty();
-  $("#myria_svg").empty().height('auto');
+  $("#svg").empty().height('auto');
   $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
