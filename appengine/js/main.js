@@ -3,6 +3,7 @@ var editorBackendKey = 'myria',
 
 function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
+  $(".backend-menu").val(backendProcess);
   changeConnection(backendProcess);
   changeUrl(backendProcess);
   changeLinks(backendProcess);
@@ -123,6 +124,31 @@ var updateCalendarWarning = function() {
   });
 }
 
+function saveBackend() {
+  localStorage.setItem(editorBackendKey,
+                       $(".backend-menu").find(":selected").val());
+}
+
+function restoreBackend() {
+  var backend = localStorage.getItem(editorBackendKey);
+  if (backend === "myriamultijoin") {
+    $(".backend-menu").val("myria");
+  } else {
+    $(".backend-menu").val(backend);
+  }
+  setBackend(backend);
+}
+
+function setBackend(backend) {
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
+    if (!_.contains(backends, backend)) {
+        console.log('Backend not supported: ' + backend);
+        return;
+    }
+
+  backendProcess = backend;
+}
+
 $(function() {
   jQuery.timeago.settings.allowFuture = true;
 
@@ -141,7 +167,6 @@ $(function() {
     $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
   }
 
-
   $(".backend-menu").change(updateBackend);
   $("#connectionstr select").hide();
   $('#connectionstr').click(function(e) {
@@ -149,11 +174,16 @@ $(function() {
     $(".backend-menu").change(changeConnection(backendProcess));
       e.stopPropagation();
   });
+
   var backendProcess = localStorage.getItem(editorBackendKey);
-  restoreState();
+  restoreBackend();
   changeConnection(backendProcess);
   changeUrl(backendProcess);
   changeLinks(backendProcess);
+
+  // save state every 2 seconds or when page is unloaded
+  window.onbeforeunload = saveBackend;
+  setInterval(saveBackend, 2000);
 
   //warn if backend is not available
   if (connectionString.indexOf('error') === 0) {

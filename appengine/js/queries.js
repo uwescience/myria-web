@@ -9,33 +9,13 @@ var editorBackendKey = 'myria',
     backendProcess = 'myria',
     grappaends = ['grappa', 'clang'];
 
-function changeBackend() {
-  var backend = $(".backend-menu option:selected").val();
-  setBackend(backend);
-}
-
-function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang'];
-  if (!_.contains(backends, backend)) {
-    console.log('Backend not supported: ' + backend);
-    return;
-  }
-  backendProcess = backend;
-  var request = $.get("datasets", {
-    backend : backendProcess
-  });
-  
-  defaultTable();
-  loadTable();
-}
-
 function defaultTable() {
   var html = '<tr> <td colspan="7" class="text-center text-muted"> <h3>No queries</h3> </td>  </tr>';
   $("#querytable").html(html);
 }
 
 function loadTable() {
-
+  defaultTable();
   // default to host from myria
   var url;
   var request = $.post("page", {
@@ -124,21 +104,6 @@ function nano_to_str(elapsed) {
   return elapsed_str;
 }
 
-function saveState() {
-  localStorage.setItem(editorBackendKey,
-		       $(".backend-menu").find(":selected").val());
-}
-
-function restoreState() {
-  var backend = localStorage.getItem(editorBackendKey);
-  if (backend === "myriamultijoin") {
-    $(".backend-menu").val("myria");
-  } else {
-    $(".backend-menu").val(backend);
-  }
-  setBackend(backend);
-}
-
 function runningHighlight() {
   $('.query-row[data-status="RUNNING"]').each(function(i, e) {
     var qid = $(this).attr('data-id');
@@ -173,14 +138,7 @@ function myriaHighlight() {
 
 
 $(document).ready(function() {
-   $(".backend-menu").change(changeBackend);
-
-  restoreState();
-  // save state every 2 seconds or when page is unloaded
-  window.onbeforeunload = saveState;
-  setInterval(saveState, 2000);
-
-  loadTable();
+  $(".backend-menu").change(loadTable);
 
   $('.query-row[data-status="RUNNING"]').each(function(i, e) {
 		var qid = $(this).attr('data-id');
