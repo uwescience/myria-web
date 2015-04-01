@@ -125,7 +125,7 @@ $(function() {
   $(".backend-menu").change(changeBackend);
 
   restoreState();
-   save state every 2 seconds or when page is unloaded
+  // save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
