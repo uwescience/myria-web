@@ -46,6 +46,7 @@ function backendDatasetUrl(conn){
 }
 
 function loadTable() {
+  $("#datatable").empty();
   // default to host from myria
   var request = $.post("page", {
     backend: backendProcess
