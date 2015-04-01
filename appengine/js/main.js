@@ -147,7 +147,6 @@ $(function() {
 
   $(".backend-menu").change(updateBackend);
   var backendProcess = localStorage.getItem(editorBackendKey);
-  restoreState();
   if (backendProcess != null && backendProcess != "undefined") {
       changeConnection(backendProcess);
       changeUrl(backendProcess);
