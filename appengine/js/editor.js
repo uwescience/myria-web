@@ -102,8 +102,7 @@ function optimizeplan() {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
-        var dot = queryStatus.plan.dot;
-        var result = Viz(dot, "svg");
+        var result = Viz(queryStatus.dot, "svg");
         $('#svg').html(result);
         $('svg').width('100%');
 	$('svg').height('95%');
