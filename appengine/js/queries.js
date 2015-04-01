@@ -27,8 +27,13 @@ function setBackend(backend) {
   loadTable();
 }
 
-function loadTable() {
+function defaultTable() {
+	var html = '<tr> <td colspan="7" class="text-center text-muted"> <h3>No queries</h3> </td>	</tr>';
+  $("#querytable").html(html);  
+}
 
+function loadTable() {
+  defaultTable();
   // default to host from myria
   var url;
   var request = $.post("page", {
