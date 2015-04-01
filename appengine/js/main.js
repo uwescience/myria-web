@@ -3,9 +3,11 @@ var editorBackendKey = 'myria',
 
 function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
-  changeConnection(backendProcess);
-  changeUrl(backendProcess);
-  changeLinks(backendProcess);
+  if (backendProcess != null && backendProcess != "undefined") {
+    changeConnection(backendProcess);
+    changeUrl(backendProcess);
+    changeLinks(backendProcess);
+  }
 }
 
 function changeUrl(backend) {
@@ -19,6 +21,7 @@ function changeUrl(backend) {
   if (backend === "myriamultijoin") {
     backend = "myria";
   }
+  
   var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
   $("#projecturl").html(urlname + ' Project');
 }
@@ -145,9 +148,11 @@ $(function() {
   $(".backend-menu").change(updateBackend);
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreState();
-  changeConnection(backendProcess);
-  changeUrl(backendProcess);
-  changeLinks(backendProcess);
+  if (backendProcess != null && backendProcess != "undefined") {
+      changeConnection(backendProcess);
+      changeUrl(backendProcess);
+      changeLinks(backendProcess);
+  }
 
   //warn if backend is not available
   if (connectionString.indexOf('error') === 0) {

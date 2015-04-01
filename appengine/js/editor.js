@@ -560,8 +560,11 @@ function restoreState() {
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
   backendProcess = localStorage.getItem(editorBackendKey);
-  $(".backend-menu").val(backendProcess);
-  setBackend(backendProcess);
+  // only set it if there was an existing value 
+  if (backendProcess != null && backendProcess != "undefined") {
+    $(".backend-menu").val(backendProcess);
+    setBackend(backendProcess);
+  }
 }
 
 updateExamplesHeight = function () {

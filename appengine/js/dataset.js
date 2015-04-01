@@ -112,8 +112,11 @@ function restoreState() {
   var backend = localStorage.getItem(editorBackendKey);
   if (backend === "myriamultijoin") {
     $(".backend-menu").val("myria");
-  } else {
+  } else if (backend != null && backend != "undefined") {
+    console.log("setting backend to " + backend);
     $(".backend-menu").val(backend);
+  } else {
+    return; // do nothing if no value yet
   }
   setBackend(backend);
 }
@@ -122,7 +125,7 @@ $(function() {
   $(".backend-menu").change(changeBackend);
 
   restoreState();
-  // save state every 2 seconds or when page is unloaded
+   save state every 2 seconds or when page is unloaded
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
