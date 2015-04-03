@@ -18,8 +18,12 @@ function changeUrl(backend) {
   request.success(function (data) {
     $("#projecturl").attr("href", JSON.parse(data).backendUrl);
   });
+
+  // translations
   if (backend === "myriamultijoin") {
     backend = "myria";
+  } else if (backend === "grappa") {
+    backend = "radish";
   }
   
   var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
