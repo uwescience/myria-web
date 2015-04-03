@@ -36,7 +36,12 @@ class MyriaBackend(Backend):
             # .. and compile
             compiled = compile_to_json(
                 query, logical_plan, physical_plan, language)
-            compiled['profilingMode'] = profile
+
+            if profile:
+                compiled['profilingMode'] = ["QUERY", "RESOURCE"]
+            else:
+                compiled['profilingMode'] = []
+
             query_status = self.connection().submit_query(compiled)
             # Issue the query
             query_url = url.generate_url(self.url, 'execute', 'query_id',
