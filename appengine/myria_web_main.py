@@ -491,7 +491,7 @@ class Execute(MyriaHandler):
         backend = self.request.get("backend", "myria")
 
         if not query_id:
-            self.response.hpeaders['Content-Type'] = 'text/plain'
+            self.response.headers['Content-Type'] = 'text/plain'
             self.response.status = 400
             self.response.write("Error 400 (Bad Request): missing query_id")
             return
