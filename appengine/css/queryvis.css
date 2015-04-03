@@ -194,7 +194,7 @@ svg .help-text {
   shape-rendering: auto;
 }
 
-.overview-fragment .x.axis .tick line {
+.overview-fragment .x.axis .tick line, .details .x.axis .tick line {
   stroke: lightgrey;
   opacity: 0.7;
 }
