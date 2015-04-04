@@ -10,23 +10,25 @@ function updateBackend() {
   }
 }
 
-function changeUrl(backend) {
+function changeUrl(_backend) {
   $("#projecturl").empty();
   var request = $.post("page", {
-    backend: backendProcess
+    backend: _backend
   });
+
   request.success(function (data) {
     $("#projecturl").attr("href", JSON.parse(data).backendUrl);
   });
 
   // translations
-  if (backend === "myriamultijoin") {
-    backend = "myria";
-  } else if (backend === "grappa") {
-    backend = "radish";
+  backend_display_name = _backend;
+  if (_backend === "myriamultijoin") {
+    backend_display_name = "myria";
+  } else if (_backend === "grappa") {
+    backend_display_name = "radish";
   }
   
-  var urlname = backend.charAt(0).toUpperCase() + backend.slice(1);
+  var urlname = backend_display_name.charAt(0).toUpperCase() + backend_display_name.slice(1);
   $("#projecturl").html(urlname + ' Project');
 }
 
