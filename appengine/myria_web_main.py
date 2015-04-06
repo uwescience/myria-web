@@ -9,6 +9,7 @@ import jinja2
 
 from clang_backend import ClangBackend
 from grappa_backend import GrappaBackend
+from sparql_backend import SPARQLBackend
 from myria_backend import MyriaBackend, MyriaMultiJoinBackend
 import requests
 import webapp2
@@ -559,7 +560,8 @@ class Application(webapp2.WSGIApplication):
                          "myria": MyriaBackend(self.myriahostname,
                                                self.myriaport, ssl),
                          "myriamultijoin": MyriaMultiJoinBackend(
-                             self.myriahostname, self.myriaport, ssl)}
+                             self.myriahostname, self.myriaport, ssl),
+                         "sparql": SPARQLBackend(None, None, None)}
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
