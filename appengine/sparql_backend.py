@@ -2,6 +2,7 @@ from backend import Backend
 from sparql_catalog import SPARQLCatalog
 from raco.viz import operator_to_dot
 from raco.language.sparql import SPARQLAlgebra
+from raco.compile import compile
 
 
 class SPARQLBackend(Backend):
