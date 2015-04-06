@@ -31,6 +31,7 @@ var editorLanguage = 'myrial',
   backendProcess = 'myria',
   myriaends = ['myria', 'myriamultijoin'],
   grappaends = ['grappa', 'clang'],
+  noends = ['sparql'],
   editorState = {};
 
 function handleerrors(request, display) {
@@ -99,7 +100,7 @@ function optimizeplan() {
   });
 
   request.success(function (queryStatus) {
-    if (_.contains(grappaends, backendProcess)) {
+    if (_.contains(grappaends+noends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
         var result = Viz(queryStatus.dot, "svg");
@@ -420,7 +421,7 @@ function changeBackend() {
 }
 
 function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin', 'sparql'];
     if (!_.contains(backends, backend)) {
 	console.log('Backend not supported: ' + backend);
 	return;
