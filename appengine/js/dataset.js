@@ -46,6 +46,7 @@ function backendDatasetUrl(conn){
 }
 
 function loadTable() {
+  $("#datatable").empty();
   // default to host from myria
   var request = $.post("page", {
     backend: backendProcess
@@ -112,8 +113,11 @@ function restoreState() {
   var backend = localStorage.getItem(editorBackendKey);
   if (backend === "myriamultijoin") {
     $(".backend-menu").val("myria");
-  } else {
+  } else if (backend != null && backend != "undefined") {
+    console.log("setting backend to " + backend);
     $(".backend-menu").val(backend);
+  } else {
+    return; // do nothing if no value yet
   }
   setBackend(backend);
 }

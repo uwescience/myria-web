@@ -27,8 +27,13 @@ function setBackend(backend) {
   loadTable();
 }
 
-function loadTable() {
+function defaultTable() {
+	var html = '<tr> <td colspan="7" class="text-center text-muted"> <h3>No queries</h3> </td>	</tr>';
+  $("#querytable").html(html);  
+}
 
+function loadTable() {
+  defaultTable();
   // default to host from myria
   var url;
   var request = $.post("page", {
@@ -125,8 +130,10 @@ function restoreState() {
   var backend = localStorage.getItem(editorBackendKey);
   if (backend === "myriamultijoin") {
     $(".backend-menu").val("myria");
-  } else {
+  } else if (backend != null && backend != "undefined") {
     $(".backend-menu").val(backend);
+  } else {
+    return; // do nothing if no value yet
   }
   setBackend(backend);
 }

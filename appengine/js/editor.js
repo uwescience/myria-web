@@ -102,8 +102,7 @@ function optimizeplan() {
     if (_.contains(grappaends, backendProcess)) {
       function clangrerender() {
         $('#svg').empty();
-        var dot = queryStatus.plan.dot;
-        var result = Viz(dot, "svg");
+        var result = Viz(queryStatus.dot, "svg");
         $('#svg').html(result);
         $('svg').width('100%');
 	$('svg').height('95%');
@@ -131,8 +130,8 @@ function optimizeplan() {
           g.loadQueryPlan(queryStatus, fragments);
 
         function myriarerender() {
-            $('#myria_svg').empty().height('auto');
-            g.render(d3.select('#myria_svg'));
+            $('#svg').empty().height('auto');
+            g.render(d3.select('#svg'));
         }
         myriarerender();
 
@@ -322,7 +321,7 @@ function resetResults() {
   $(".display").empty();
   $("#query-information").text("Run query to see results here...");
   $("#relational_svg").empty();
-  $("#myria_svg").empty().height('auto');
+  $("#svg").empty().height('auto');
   $('a[href="#queryplan"]').off('shown.bs.tab');
 }
 
@@ -560,8 +559,11 @@ function restoreState() {
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
   backendProcess = localStorage.getItem(editorBackendKey);
-  $(".backend-menu").val(backendProcess);
-  setBackend(backendProcess);
+  // only set it if there was an existing value 
+  if (backendProcess != null && backendProcess != "undefined") {
+    $(".backend-menu").val(backendProcess);
+    setBackend(backendProcess);
+  }
 }
 
 updateExamplesHeight = function () {
