@@ -44,7 +44,7 @@ function changeConnection(backend) {
 }
 
 function changeLinks(backend) {
-  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
+  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin', 'sparql'];
   if (!_.contains(backends, backend)) {
     $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><strong>Error!</strong> Unable to connect to selected backend. Please select a different option.</div>');
     console.log('Backend not supported: ' + backend);
