@@ -105,7 +105,7 @@ function optimizeplan() {
         var result = Viz(queryStatus.dot, "svg");
         $('#svg').html(result);
         $('svg').width('100%');
-	$('svg').height('95%');
+	    $('svg').height('95%');
       }
 
       clangrerender();
