@@ -53,7 +53,7 @@ class ClangBackend(Backend):
         return "http://{h}:{p}".format(h=self.hostname, p=self.port)
 
     def backend_url(self):
-        return ""
+        return "http://grappa.io/"
 
     def queries(self, limit, max_id, min_id, q):
         return self.connection().num_queries(limit, max_id, min_id, q)
