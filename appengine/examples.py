@@ -87,6 +87,59 @@ while continue;
 store(Good, OUTPUT);
 """
 
+Q9 = """Triples = scan(public:adhoc:sp2bench);
+
+onPerson = select T2.predicate 
+from Triples T1, Triples T2
+where T1.subject=T2.object
+and T1.predicate = 'rdf:type' 
+and T1.object = 'foaf:Person';
+
+byPerson = select T4.predicate 
+from Triples T3, Triples T4
+where T3.subject=T4.subject
+and T3.predicate = 'rdf:type' 
+and T3.object = 'foaf:Person';
+
+Q9 = UNIONALL(onPerson, byPerson);
+store(Q9, Q9);"""
+
+Q3_d = """
+Triples = scan(public:adhoc:sp2bench);
+
+Q3 = SELECT
+    T1.subject AS article
+FROM
+    Triples T1,
+    Triples T2
+WHERE
+    T1.subject=T2.subject
+    AND T1.predicate="swrc:pages"
+    AND T2.predicate="rdf:type"
+    AND T2.object="bench:Article";
+
+store(Q3, Q3);
+"""
+
+Q3_i = """
+Triples = scan(public:adhoc:sp2bench);
+
+-- Everything that has pages
+HasPages = select T1.* from Triples T1 where T1.predicate="swrc:pages";
+
+-- All Articles
+Articles = select T2.* from Triples T2
+            where T2.predicate = "rdf:type"
+              and T2.object = "bench:Article";
+
+-- All Articles that have pages
+Q3 = select Articles.subject AS article
+       from Articles, HasPages
+      where Articles.subject = HasPages.subject;
+
+store(Q3, Q3);
+"""
+
 myria_examples = [
     ('JustX: A simple projection query on TwitterK', justx),
     ('Calculate all two hops in the TwitterK relation using a simple join', twohops),
@@ -95,6 +148,9 @@ myria_examples = [
     ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
     ('Aggregate profiling data on each worker', profiling),
 #    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
+    ('SP^2Bench Q9: predicates on or by Person', Q9),
+    ('SP^2Bench Q3 (declarative): Articles with pages', Q3_d),
+    ('SP^2Bench Q3 (imperative): Articles with pages', Q3_i),
 ]
 
 sql_examples = [
