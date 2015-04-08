@@ -13,10 +13,6 @@ class Backend(object):
         """Returns corresponding target algebra"""
 
     @abstractmethod
-    def connection(self):
-        """Returns an instance of a connection"""
-
-    @abstractmethod
     def compile_query(self, query, logical_plan, physical_plan, language=None):
         """Takes the raw query, logical,b and physical plan
            Returns JSON of compiled query"""

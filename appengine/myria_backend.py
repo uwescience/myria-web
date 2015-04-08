@@ -14,16 +14,14 @@ class MyriaBackend(Backend):
         self.port = port
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
+        self.connection = myria.MyriaConnection(hostname=self.hostname,
+                                                port=self.port, ssl=self.ssl)
 
     def catalog(self):
-        return MyriaCatalog(self.connection())
+        return MyriaCatalog(self.connection)
 
     def algebra(self):
         return MyriaLeftDeepTreeAlgebra()
-
-    def connection(self):
-        return myria.MyriaConnection(hostname=self.hostname, port=self.port,
-                                     ssl=self.ssl)
 
     def compile_query(self, query, logical_plan, physical_plan, language):
         return compile_to_json(
@@ -42,7 +40,7 @@ class MyriaBackend(Backend):
             else:
                 compiled['profilingMode'] = []
 
-            query_status = self.connection().submit_query(compiled)
+            query_status = self.connection.submit_query(compiled)
             # Issue the query
             query_url = url.generate_url(self.url, 'execute', 'query_id',
                                          query_status['queryId'])
@@ -53,10 +51,10 @@ class MyriaBackend(Backend):
             raise e
 
     def get_query_status(self, query_id):
-        return self.connection().get_query_status(query_id)
+        return self.connection.get_query_status(query_id)
 
     def connection_string(self):
-        conn = self.connection()
+        conn = self.connection
         if not conn:
             return "unable to connect to %s:%d" % (self.hostname, self.port)
         else:
@@ -72,7 +70,7 @@ class MyriaBackend(Backend):
         return "http://myria.cs.washington.edu/"
 
     def queries(self, limit, max_id, min_id, q):
-        return self.connection().queries(limit, max_id, min_id, q)
+        return self.connection.queries(limit, max_id, min_id, q)
 
 
 class MyriaMultiJoinBackend(MyriaBackend):

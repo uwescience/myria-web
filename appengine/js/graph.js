@@ -179,7 +179,7 @@ function Graph () {
         var self = this;
 
         var url = templates.urls.aggregatedSentData({
-            myria: myriaConnection,
+            myria: connection,
             query: self.queryStatus.queryId,
             subquery: self.queryStatus.subqueryId
         });
