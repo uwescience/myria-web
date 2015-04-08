@@ -96,7 +96,8 @@ function optimizeplan() {
     language: editorLanguage,
     backend: backendProcess,
     multiway_join: multiway_join_checked,
-    push_sql: push_sql_checked
+    push_sql: push_sql_checked,
+    plan_only: false
   });
 
   request.success(function (queryStatus) {
@@ -166,7 +167,8 @@ function compileplan() {
     language: editorLanguage,
     backend: backendProcess,
     multiway_join: $("#multiway-join").is(':checked'),
-    push_sql: !$("#disable-push").is(':checked')
+    push_sql: !$("#disable-push").is(':checked'),
+    plan_only: true
   });
   window.open(url, '_blank');
 }

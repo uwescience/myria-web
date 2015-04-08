@@ -417,6 +417,7 @@ class Compile(MyriaHandler):
         backend = self.app.backends[self.request.get("backend", "myria")]
         profile = self.get_boolean_request_param("profile")
         push_sql = self.get_boolean_request_param("push_sql")
+        plan_only = self.get_boolean_request_param("plan_only")
         cached_logicalplan = str(get_logical_plan(query, language, backend,
                                                   push_sql))
 
@@ -439,7 +440,10 @@ class Compile(MyriaHandler):
             return
 
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(json.dumps(compiled))
+        if plan_only:
+            self.response.write(compiled['plan'])
+        else:
+            self.response.write(json.dumps(compiled))
 
     def post(self):
         "The same as get(), here because there may be long programs"
