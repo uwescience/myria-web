@@ -10,13 +10,15 @@
 
 {% block content %}
     <div class="page-header">
-		<h1>Query {{ queryId }}.{{ subqueryId }} <small>visualization of physical query execution</small></h1>
+		<h1>Query {{ queryId }}.{{ subqueryId }} <small>visualization of query execution with <a href="https://idl.cs.washington.edu/papers/perfopticon">Perfopticon</a>.</small></h1>
+		<a href="#" data-toggle="collapse" data-target="#details">How does this work?</a>
 	</div>
-
-	<p class="lead">
-		This page shows a visualization of how query {{ queryId }} was executed. On the left, you can see the physical query plan consisting of operators that are grouped in fragments.
-
-		Click on a fragment to explore what happened inside a fragment and on a connection between fragments to explore the network communication.
+	<p class="collapse" id="details">
+		On this page, you can explore how query {{ queryId }} was executed. On the left, you can see the physical query plan consisting of operators that are grouped in fragments.
+		On the right is an overview of the whole execution. For each operator, the number of workers that are executing that particular operator over time are shown. Select a time range by brushing over the chart to zoom in. Click to return to the overview.
+		Click on a fragment to explore what happened inside a fragment (local execution) and on a connection between fragments to look at the communication between workers.
+		The view with details about the local execution shows how much each operator contributed to the runtime, the number of workers executing the fragment over time (like in the overview), and exactly when which operator executed on which worker.
+		More details and examples are in <a href="https://idl.cs.washington.edu/files/2015-Perfopticon-EuroVis.pdf">our paper</a>.
 	</p>
 
 	<div class="row">
