@@ -40,30 +40,34 @@ class BaseClangBackend(Backend):
 
     @staticmethod
     def _create_json_for_compile(query, logical_plan, physical_plan,
-                                 compiled_plan):
+                                 compiled_plan,
+                                 dots):
         return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
                 'plan': compiled_plan,
-                'dot': operator_to_dot(physical_plan)}
+                'dot': dots}
 
-    def _create_json_for_execute(self, query, logical_plan, physical_plan,
-                                 compiled_plan):
+    @staticmethod
+    def _create_json_for_execute(query, logical_plan, physical_plan,
+                                 compiled_plan, backend_name):
         start_index = logical_plan.find("Store(") + 6
         end_index = logical_plan.find(")", start_index)
         relkey = logical_plan[start_index:end_index].replace(":", "_")
         return {'plan': compiled_plan,
-                'backend': self._backend_name(),
+                'backend': backend_name,
                 'relkey': relkey, 'rawQuery': str(query)}
 
     def compile_query(self, query, logical_plan, physical_plan, language=None):
         return self._create_json_for_compile(
-            query, logical_plan, physical_plan, self._compile(physical_plan))
+            query, logical_plan, physical_plan, self._compile(physical_plan),
+            operator_to_dot(physical_plan))
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
         try:
             sub_json = self._create_json_for_execute(
                 query, logical_plan,
-                physical_plan, self._compile(physical_plan))
+                physical_plan, self._compile(physical_plan),
+                self._backend_name())
             query_status = self.connection.submit_query(sub_json)
             query_url = 'http://%s:%d/query?qid=%d' % \
                         (self.hostname, self.port, query_status['queryId'])
