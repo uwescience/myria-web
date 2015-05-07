@@ -53,6 +53,9 @@ class MyriaBackend(Backend):
     def get_query_status(self, query_id):
         return self.connection.get_query_status(query_id)
 
+    def get_query_plan(self, query_id, sub_query_id):
+        return self.connection.get_query_plan(query_id, sub_query_id)
+
     def connection_string(self):
         conn = self.connection
         if not conn:

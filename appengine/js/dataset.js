@@ -83,6 +83,8 @@ function loadTable() {
       });
 
       $("#datatable").html(html);
+      sortTable();
+
     }).fail (function (res, err) {
       console.log(err);
     });
@@ -120,6 +122,29 @@ function restoreState() {
     return; // do nothing if no value yet
   }
   setBackend(backend);
+}
+
+function sortTable() {
+  $(".table").trigger("update");
+  $(".table").tablesorter({
+    textExtraction: {
+      2: function (node, table, cellIndex) {
+        return new Date($(node).find("abbr").attr("title"));
+      }
+        },
+    headers: {
+      2: {sorter: "isoDate"}
+    },
+    headerTemplate: '{content} <small><span></span>'
+    });
+
+  var resetSortIcons = function() {
+    $("th[aria-sort=ascending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes");
+    $("th[aria-sort=descending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes-alt");
+    $("th[aria-sort=none][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort");
+  };
+  $(".table").bind("sortEnd", resetSortIcons);
+  resetSortIcons();
 }
 
 $(function() {
