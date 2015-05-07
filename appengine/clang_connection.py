@@ -2,9 +2,6 @@ import myria
 import json
 import requests
 import url
-from raco.compile import compile
-from raco.viz import operator_to_dot
-
 
 class ClangConnection(object):
 
@@ -13,11 +10,6 @@ class ClangConnection(object):
         self.port = port
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
-
-    def create_json(self, query, logical_plan, physical_plan):
-        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
-                'plan': compile(physical_plan),
-                'dot': operator_to_dot(physical_plan)}
 
     def submit_query(self, compiled):
         r = requests.Session().post(self.url, data=json.dumps(compiled))

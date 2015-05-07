@@ -4,6 +4,8 @@ from clang_connection import ClangConnection
 import myria
 import requests
 from abc import abstractmethod
+import raco.compile
+from raco.viz import operator_to_dot
 
 
 class BaseClangBackend(Backend):
@@ -32,23 +34,37 @@ class BaseClangBackend(Backend):
     def _num_workers(self):
         pass
 
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        return self.connection.create_json(
-            query, logical_plan, physical_plan)
+    @staticmethod
+    def _compile(physical_plan):
+        return raco.compile.compile(physical_plan)
 
-    def _create_execute_json(self, query, logical_plan, physical_plan):
+    @staticmethod
+    def _create_json_for_compile(query, logical_plan, physical_plan,
+                                 compiled_plan):
+        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
+                'plan': compiled_plan,
+                'dot': operator_to_dot(physical_plan)}
+
+    def _create_json_for_execute(self, query, logical_plan, physical_plan,
+                                 compiled_plan):
         start_index = logical_plan.find("Store(") + 6
         end_index = logical_plan.find(")", start_index)
         relkey = logical_plan[start_index:end_index].replace(":", "_")
-        return {'plan': compile(physical_plan), 'backend': self._backend_name(),
+        return {'plan': compiled_plan,
+                'backend': self._backend_name(),
                 'relkey': relkey, 'rawQuery': str(query)}
+
+    def compile_query(self, query, logical_plan, physical_plan, language=None):
+        return self._create_json_for_compile(
+            query, logical_plan, physical_plan, self._compile(physical_plan))
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
         try:
-            compiled = self._create_execute_json(
-                query, logical_plan, physical_plan)
-            query_status = self.connection.submit_query(compiled)
+            sub_json = self._create_json_for_execute(
+                query, logical_plan,
+                physical_plan, self._compile(physical_plan))
+            query_status = self.connection.submit_query(sub_json)
             query_url = 'http://%s:%d/query?qid=%d' % \
                         (self.hostname, self.port, query_status['queryId'])
             return {'query_status': query_status, 'query_url': query_url}
