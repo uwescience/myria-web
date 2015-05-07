@@ -54,4 +54,4 @@ class ClangBackend(Backend):
         return "ftp://ftp.cs.washington.edu/tr/2014/10/UW-CSE-14-10-01.pdf"
 
     def queries(self, limit, max_id, min_id, q):
-        return self.connection.num_queries(limit, max_id, min_id, q)
+        return self.connection.queries(limit, max_id, min_id, q)

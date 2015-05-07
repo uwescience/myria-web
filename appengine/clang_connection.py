@@ -51,7 +51,7 @@ class ClangConnection(object):
             return ret
         raise myria.MyriaError
 
-    def num_queries(self, limit, max_id, min_id, q):
+    def queries(self, limit, max_id, min_id, q):
         requrl = url.generate_url(self.url, 'queries')
         data = {'min': min_id, 'max': max_id, 'backend': 'clang'}
         r = requests.Session().post(requrl, data=json.dumps(data))

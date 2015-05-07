@@ -37,7 +37,8 @@ class Backend(object):
 
     @abstractmethod
     def queries(self, limit, max_id, min_id, q):
-        """Returns the total number of queries for the backend"""
+        """Returns all the queries, the minimum and maximum query number for
+           the backend"""
 
     def connection_url(self, uri_scheme="http"):
         return "{s}://{h}:{p}".format(s=uri_scheme,

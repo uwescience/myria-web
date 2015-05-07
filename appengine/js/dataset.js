@@ -52,16 +52,17 @@ function loadTable() {
     backend: backendProcess
   });
   request.success(function (info) {
+    // Populates the dataset table with data from back end
     var conn = JSON.parse(info).connection;
     var url = backendDatasetUrl(conn);
     var t = dataset_templates;
     var jqxhr = $.getJSON(url, function (data) {
       var html = '';
       _.each(data, function (d) {
-	var dload = d.uri + '/data?';
+	    var dload = d.uri + '/data?';
         var limit = myriaCellLimit;
         if (_.contains(grappaends, backendProcess)) {
-	  d.uri = d.uri +'/query?qid=' + d['queryId'];
+	      d.uri = d.uri +'/query?qid=' + d['queryId'];
           dload += 'qid=' + d['queryId'] + '&';
           d.created = new Date(d.created * 1000).toISOString();
 	}
@@ -83,6 +84,7 @@ function loadTable() {
       });
 
       $("#datatable").html(html);
+      // Allow the table to become sortable
       sortTable();
 
     }).fail (function (res, err) {
@@ -124,7 +126,9 @@ function restoreState() {
   setBackend(backend);
 }
 
+// Updates the entries to become sortable
 function sortTable() {
+  // Needed to update the existing table after data from the new backend is loaded
   $(".table").trigger("update");
   $(".table").tablesorter({
     textExtraction: {
@@ -138,6 +142,7 @@ function sortTable() {
     headerTemplate: '{content} <small><span></span>'
     });
 
+  // Originally from dataset.html 
   var resetSortIcons = function() {
     $("th[aria-sort=ascending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes");
     $("th[aria-sort=descending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes-alt");
