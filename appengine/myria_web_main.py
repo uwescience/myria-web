@@ -269,7 +269,7 @@ class Profile(MyriaPage):
                     query_id)
                 query_status["subqueryId"] = subquery_id
                 subquery_fragments = self.app.backends[
-                    "myria"].get_query_plan(query_id, subquery_id)
+                    "myria"].connection.get_query_plan(query_id, subquery_id)
             except myria.MyriaError:
                 pass
 

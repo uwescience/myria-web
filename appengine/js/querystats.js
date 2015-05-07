@@ -1,6 +1,6 @@
 var updateQueryStats = function(element, queryStatus) {
     var shuffleUrl = templates.urls.aggregatedSentData({
-            myria: myriaConnection, //should this be "connection"?
+            myria: connection, //should this be "connection"?
             query: queryStatus.queryId,
             subquery: queryStatus.subqueryId
         });
