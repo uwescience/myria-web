@@ -1,68 +1,18 @@
-from backend import Backend
-from clang_catalog import ClangCatalog
-from clang_connection import ClangConnection
-import myria
-import requests
+from base_clang_backend import BaseClangBackend
 from raco.language.grappalang import GrappaAlgebra
+from raco.language.clangcommon import EMIT_FILE
 
 
-class GrappaBackend(Backend):
-    # might use a grappa catalog if clang and grappa are on different servers
-    def __init__(self, hostname, port, ssl):
-        self.clanghostname = hostname
-        self.clangport = port
-        self.ssl = ssl
-        self.connection = ClangConnection(self.clanghostname, self.clangport,
-                                          self.ssl)
-
-    def catalog(self):
-        return ClangCatalog(self.connection)
+class GrappaBackend(BaseClangBackend):
 
     def algebra(self):
-        return GrappaAlgebra('file')
+        return GrappaAlgebra(emit_print=EMIT_FILE)
 
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        return self.connection.create_json(
-            query, logical_plan, physical_plan)
-    
-    def _create_execute_json(self, query, logical_plan, physical_plan, backend):
-        start_index = logical_plan.find("Store(") + 6
-        end_index = logical_plan.find(")", start_index)
-        relkey = logical_plan[start_index:end_index].replace(":", "_")
-        return {'plan': compile(physical_plan), 'backend': backend,
-                'relkey': relkey, 'rawQuery': str(query)}
+    def _backend_name(self):
+        return "grappa"
 
-    def execute_query(self, query, logical_plan, physical_plan, language=None,
-                      profile=False):
-        try:
-            compiled = self._create_execute_json(
-                query, logical_plan, physical_plan, "grappa")
-            query_status = self.connection.submit_query(compiled)
-            query_url = 'http://%s:%d/query?qid=%d' %\
-                        (self.clanghostname, self.clangport,
-                         query_status['queryId'])
-            return {'query_status': query_status, 'query_url': query_url}
-        except myria.MyriaError as e:
-            raise e
-        except requests.ConnectionError as e:
-            raise e
+    def _num_alive(self):
+        return "?"
 
-    def get_query_status(self, query_id):
-        return self.connection.check_query(query_id)
-
-    def connection_string(self):
-        conn = self.connection
-        if not conn:
-            return "unable to connect to %s:%d" % (self.clanghostname,
-                                                   self.clangport)
-        else:
-            return "%s:%d[?/?]" % (self.clanghostname, self.clangport)
-
-    def connection_url(self, uri_scheme):
-        return "http://{h}:{p}".format(h=self.clanghostname, p=self.clangport)
-
-    def backend_url(self):
-        return "ftp://ftp.cs.washington.edu/tr/2014/10/UW-CSE-14-10-01.pdf"
-
-    def queries(self, limit, max_id, min_id, q):
-        return self.connection.queries(limit, max_id, min_id, q)
+    def _num_workers(self):
+        return "?"
