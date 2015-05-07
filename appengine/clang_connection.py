@@ -19,13 +19,6 @@ class ClangConnection(object):
                 'plan': compile(physical_plan),
                 'dot': operator_to_dot(physical_plan)}
 
-    def create_execute_json(self, query, logical_plan, physical_plan, backend):
-        start_index = logical_plan.find("Store(") + 6
-        end_index = logical_plan.find(")", start_index)
-        relkey = logical_plan[start_index:end_index].replace(":", "_")
-        return {'plan': compile(physical_plan), 'backend': backend,
-                'relkey': relkey, 'rawQuery': str(query)}
-
     def submit_query(self, compiled):
         r = requests.Session().post(self.url, data=json.dumps(compiled))
         return r.json()

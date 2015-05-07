@@ -22,11 +22,19 @@ class ClangBackend(Backend):
     def compile_query(self, query, logical_plan, physical_plan, language=None):
         return self.connection.create_json(
             query, logical_plan, physical_plan)
+    
+    def _create_execute_json(self, query, logical_plan, physical_plan, backend):
+        start_index = logical_plan.find("Store(") + 6
+        end_index = logical_plan.find(")", start_index)
+        relkey = logical_plan[start_index:end_index].replace(":", "_")
+        return {'plan': compile(physical_plan), 'backend': backend,
+                'relkey': relkey, 'rawQuery': str(query)}
+
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
         try:
-            compiled = self.connection.create_execute_json(
+            compiled = self._create_execute_json(
                 query, logical_plan, physical_plan, "clang")
             query_status = self.connection.submit_query(compiled)
             query_url = 'http://%s:%d/query?qid=%d' %\
