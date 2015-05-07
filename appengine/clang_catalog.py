@@ -19,7 +19,7 @@ class ClangCatalog(Catalog):
             raise RuntimeError(
                 "no schema for relation %s because no connection" % rel_key)
         try:
-            dataset_info = self.connection.check_datasets(relation_args)
+            dataset_info = self.connection.catalog(relation_args)
 
         except myria.MyriaError:
             raise ValueError('No relation {} in the catalog'.format(rel_key))

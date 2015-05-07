@@ -3,6 +3,7 @@ import json
 import requests
 import url
 
+
 class ClangConnection(object):
 
     def __init__(self, hostname, port, ssl):
@@ -11,16 +12,16 @@ class ClangConnection(object):
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
 
-    def submit_query(self, compiled):
-        r = requests.Session().post(self.url, data=json.dumps(compiled))
+    def submit_query(self, jsons):
+        r = requests.Session().post(self.url, data=json.dumps(jsons))
         return r.json()
 
-    def check_query(self, qid):
+    def status(self, qid):
         requrl = url.generate_url(self.url, 'status', 'qid', qid)
         r = requests.Session().get(requrl)
         return r.json()
 
-    def check_datasets(self, rel_args):
+    def catalog(self, rel_args):
         requrl = url.generate_url(self.url, 'catalog')
         r = requests.Session().post(requrl, data=json.dumps(rel_args))
         ret = r.json()

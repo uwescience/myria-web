@@ -78,7 +78,7 @@ class BaseClangBackend(Backend):
             raise e
 
     def get_query_status(self, query_id):
-        return self.connection.check_query(query_id)
+        return self.connection.status(query_id)
 
     def connection_string(self):
         conn = self.connection
