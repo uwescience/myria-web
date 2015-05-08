@@ -1,7 +1,17 @@
-import myria
 import json
 import requests
 import url
+
+
+class ClangError(Exception):
+    def __init__(self, err=None):
+        if isinstance(err, requests.Response):
+            msg = 'Error {} ({})'.format(err.status_code, err.reason)
+            if err.text:
+                msg = '{}: {}'.format(msg, err.text)
+            Exception.__init__(self, msg)
+        else:
+            Exception.__init__(self, err)
 
 
 class ClangConnection(object):
@@ -27,7 +37,7 @@ class ClangConnection(object):
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
 
     def get_num_tuples(self, rel_args):
         requrl = url.generate_url(self.url, 'tuples')
@@ -35,7 +45,7 @@ class ClangConnection(object):
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
 
     def queries(self, limit, max_id, min_id, q):
         requrl = url.generate_url(self.url, 'queries')
@@ -44,4 +54,4 @@ class ClangConnection(object):
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
