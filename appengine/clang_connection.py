@@ -22,8 +22,8 @@ class ClangConnection(object):
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
 
-    def submit_query(self, jsons):
-        r = requests.Session().post(self.url, data=json.dumps(jsons))
+    def submit_query(self, json_obj):
+        r = requests.Session().post(self.url, data=json.dumps(json_obj))
         return r.json()
 
     def status(self, qid):

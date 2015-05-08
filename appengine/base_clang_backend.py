@@ -64,11 +64,11 @@ class BaseClangBackend(Backend):
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
         try:
-            sub_json = self._create_json_for_execute(
+            query_json = self._create_json_for_execute(
                 query, logical_plan,
                 physical_plan, self._compile(physical_plan),
                 self._backend_name())
-            query_status = self.connection.submit_query(sub_json)
+            query_status = self.connection.submit_query(query_json)
             query_url = 'http://%s:%d/query?qid=%d' % \
                         (self.hostname, self.port, query_status['queryId'])
             return {'query_status': query_status, 'query_url': query_url}
