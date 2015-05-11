@@ -143,6 +143,7 @@ function restoreBackend() {
   } else {
     $(".backend-menu").val(backend);
   }
+  setBackend(backend);
 }
 
 

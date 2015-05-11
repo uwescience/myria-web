@@ -138,7 +138,7 @@ function myriaHighlight() {
 
 $(document).ready(function() {
   $(".backend-menu").change(loadTable);
-
+  loadTable();
   $('.query-row[data-status="RUNNING"]').each(function(i, e) {
 		var qid = $(this).attr('data-id');
 		window.setInterval(function() {

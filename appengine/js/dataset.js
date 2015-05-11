@@ -116,4 +116,5 @@ function sortTable() {
 
 $(function() {
   $(".backend-menu").change(loadTable);
+  loadTable();
 });
