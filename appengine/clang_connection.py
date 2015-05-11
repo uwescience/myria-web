@@ -1,9 +1,17 @@
-import myria
 import json
 import requests
 import url
-from raco.compile import compile
-from raco.viz import operator_to_dot
+
+
+class ClangError(Exception):
+    def __init__(self, err=None):
+        if isinstance(err, requests.Response):
+            msg = 'Error {} ({})'.format(err.status_code, err.reason)
+            if err.text:
+                msg = '{}: {}'.format(msg, err.text)
+            Exception.__init__(self, msg)
+        else:
+            Exception.__init__(self, err)
 
 
 class ClangConnection(object):
@@ -14,34 +22,22 @@ class ClangConnection(object):
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
 
-    def create_json(self, query, logical_plan, physical_plan):
-        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
-                'plan': compile(physical_plan),
-                'dot': operator_to_dot(physical_plan)}
-
-    def create_execute_json(self, query, logical_plan, physical_plan, backend):
-        start_index = logical_plan.find("Store(") + 6
-        end_index = logical_plan.find(")", start_index)
-        relkey = logical_plan[start_index:end_index].replace(":", "_")
-        return {'plan': compile(physical_plan), 'backend': backend,
-                'relkey': relkey, 'rawQuery': str(query)}
-
-    def submit_query(self, compiled):
-        r = requests.Session().post(self.url, data=json.dumps(compiled))
+    def submit_query(self, json_obj):
+        r = requests.Session().post(self.url, data=json.dumps(json_obj))
         return r.json()
 
-    def check_query(self, qid):
+    def status(self, qid):
         requrl = url.generate_url(self.url, 'status', 'qid', qid)
         r = requests.Session().get(requrl)
         return r.json()
 
-    def check_datasets(self, rel_args):
+    def catalog(self, rel_args):
         requrl = url.generate_url(self.url, 'catalog')
         r = requests.Session().post(requrl, data=json.dumps(rel_args))
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
 
     def get_num_tuples(self, rel_args):
         requrl = url.generate_url(self.url, 'tuples')
@@ -49,7 +45,7 @@ class ClangConnection(object):
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
 
     def queries(self, limit, max_id, min_id, q):
         requrl = url.generate_url(self.url, 'queries')
@@ -58,4 +54,4 @@ class ClangConnection(object):
         ret = r.json()
         if ret:
             return ret
-        raise myria.MyriaError
+        raise ClangError
