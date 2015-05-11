@@ -52,11 +52,16 @@
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
-					<li id="connectionstr">
-                                          <a href="{{ connection }}/workers" target="_blank"> {{ connectionString }}</a>
-
-</li>
-				</ul>
+                      <li id="connectionstr">
+                        <a id="connectstr"> {{connectionString }}</a>
+                        <select class="form-control backend-menu">
+			              <option value="myria" selected> Myria </option>
+                          <option value="myriamultijoin"> Myria Multiway Join </option>
+			              <option value="clang"> C </option>
+			              <option value="grappa"> Radish </option>
+                        </select>
+                      </li>
+                </ul>
 			</div>
 		</div>
 	</nav>

@@ -4,6 +4,7 @@ var editorBackendKey = 'myria',
 function updateBackend() {
   backendProcess = $(".backend-menu option:selected").val();
   if (backendProcess != null && backendProcess != "undefined") {
+    $(".backend-menu").val(backendProcess);
     changeConnection(backendProcess);
     changeUrl(backendProcess);
     changeLinks(backendProcess);
@@ -21,7 +22,7 @@ function changeUrl(_backend) {
   });
 
   // translations
-  backend_display_name = _backend;
+  var backend_display_name = _backend;
   if (_backend === "myriamultijoin") {
     backend_display_name = "myria";
   } else if (_backend === "grappa") {
@@ -33,13 +34,12 @@ function changeUrl(_backend) {
 }
 
 function changeConnection(backend) {
-  $("#connectionstr").empty();
   var request = $.post("page", {
     backend: backendProcess
   });
   request.success(function (data) {
     var d = JSON.parse(data);
-    $("#connectionstr").append('<a href="' + d.connection + '/workers" target="_blank">' + d.connectionString + '</a>');
+    $("#connectstr").html(d.connectionString);
   });
 }
 
@@ -132,6 +132,30 @@ var updateCalendarWarning = function() {
   });
 }
 
+function saveBackend() {
+  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+}
+
+function restoreBackend() {
+  var backend = localStorage.getItem(editorBackendKey);
+  if (backend === "myriamultijoin") {
+    $(".backend-menu").val("myria");
+  } else {
+    $(".backend-menu").val(backend);
+  }
+}
+
+
+function setBackend(backend) {
+  var backends = ['myria', 'grappa', 'clang', 'myriamultijoin'];
+  if (!_.contains(backends, backend)) {
+    console.log('Backend no supported: ' + backend);
+    backend = null;
+    return;
+  }
+  backendProcess = backend;
+}
+
 $(function() {
   jQuery.timeago.settings.allowFuture = true;
 
@@ -152,12 +176,23 @@ $(function() {
 
 
   $(".backend-menu").change(updateBackend);
+  $("#connectionstr").click(function(e) {
+    $('#connectionstr select').slideToggle(200);
+    $(".backend-menu").change(changeConnection(backendProcess));
+    e.stopPropagation();
+  });
+  //$(".backend-menu").hide();
+
   var backendProcess = localStorage.getItem(editorBackendKey);
+  restoreBackend();
   if (backendProcess != null && backendProcess != "undefined") {
       changeConnection(backendProcess);
       changeUrl(backendProcess);
       changeLinks(backendProcess);
   }
+
+  window.onbeforeunload = saveBackend;
+  setInterval(saveBackend, 2000);
 
   //warn if backend is not available
   if (connectionString.indexOf('error') === 0) {

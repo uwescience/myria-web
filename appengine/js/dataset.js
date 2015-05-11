@@ -8,29 +8,9 @@ var dataset_templates = {
   toolarge: _.template('<td><abbr title="Too large or size unknown">not available</abbr></td></tr>')
 };
 
-var editorBackendKey = 'myria',
-    backendProcess = 'myria',
-    grappaends = ['grappa', 'clang'],
+var grappaends = ['grappa', 'clang'],
     myriaCellLimit = 100*1000*1000,
     clangCellLimit = 10*1000;
-
-function changeBackend() {
-  var backend = $(".backend-menu option:selected").val();
-  setBackend(backend);
-}
-
-function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang'];
-  if (!_.contains(backends, backend)) {
-    console.log('Backend not supported: ' + backend);
-    return;
-  }
-  backendProcess = backend;
-  var request = $.get("datasets", {
-    backend : backendProcess
-  });
-  loadTable();
-}
 
 function backendDatasetUrl(conn){
   var url;
@@ -108,24 +88,6 @@ function is_small_dataset(d, cell_limit) {
          (len * d['numTuples'] <= cell_limit)));
 }
 
-function saveState() {
-  localStorage.setItem(editorBackendKey,
-		       $(".backend-menu").find(":selected").val());
-}
-
-function restoreState() {
-  var backend = localStorage.getItem(editorBackendKey);
-  if (backend === "myriamultijoin") {
-    $(".backend-menu").val("myria");
-  } else if (backend != null && backend != "undefined") {
-    console.log("setting backend to " + backend);
-    $(".backend-menu").val(backend);
-  } else {
-    return; // do nothing if no value yet
-  }
-  setBackend(backend);
-}
-
 // Updates the entries to become sortable
 function sortTable() {
   // Needed to update the existing table after data from the new backend is loaded
@@ -153,12 +115,5 @@ function sortTable() {
 }
 
 $(function() {
-  $(".backend-menu").change(changeBackend);
-
-  restoreState();
-  // save state every 2 seconds or when page is unloaded
-  window.onbeforeunload = saveState;
-  setInterval(saveState, 2000);
-
-  loadTable();
+  $(".backend-menu").change(loadTable);
 });

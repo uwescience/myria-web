@@ -414,20 +414,6 @@ function resetEditor(newLanguage, saveOld) {
   updateExamples(restored);
 }
 
-function changeBackend() {
-  var backend = $(".backend-menu option:selected").val();
-  setBackend(backend);
-}
-
-function setBackend(backend) {
-  var backends = [ 'myria', 'grappa', 'clang', 'myriamultijoin'];
-    if (!_.contains(backends, backend)) {
-	console.log('Backend not supported: ' + backend);
-	return;
-    }
-
-  backendProcess = backend;
-}
 /**
  * This function populates the modal dialog box with the contents of the clicked
  * SVG.
@@ -558,12 +544,6 @@ function restoreState() {
   editorState = JSON.parse(localStorage.getItem(editorStateKey) || "{}");
   $('.language-menu').val(editorLanguage);
   resetEditor(editorLanguage, false);
-  backendProcess = localStorage.getItem(editorBackendKey);
-  // only set it if there was an existing value 
-  if (backendProcess != null && backendProcess != "undefined") {
-    $(".backend-menu").val(backendProcess);
-    setBackend(backendProcess);
-  }
 }
 
 updateExamplesHeight = function () {
@@ -586,7 +566,6 @@ $(function () {
   $(".language-menu").change(function () {
     resetEditor($(".language-menu option:selected").val(), true);
   });
-  $(".backend-menu").change(changeBackend);
   $(".example").click(function () {
 
     resetResults();

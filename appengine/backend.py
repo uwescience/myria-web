@@ -14,11 +14,11 @@ class Backend(object):
 
     @abstractmethod
     def compile_query(self, query, logical_plan, physical_plan, language=None):
-        """Takes the raw query, logical,b and physical plan
+        """Takes the raw query, logical, and physical plan
            Returns JSON of compiled query"""
 
     @abstractmethod
-    def execute_query(self, logical_plan, physical_plan, language=None,
+    def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
         """Executes the query, using raw query, logical, and physical plans
            returns the status and corresponding url"""
