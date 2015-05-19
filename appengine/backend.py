@@ -20,7 +20,7 @@ class Backend(object):
     @abstractmethod
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        """Executes the query, using raw query, logical, and physical plans
+        """Executes the query, using compiled query, logical, and physical plans
            returns the status and corresponding url"""
 
     @abstractmethod
