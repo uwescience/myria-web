@@ -448,7 +448,7 @@ function drawLanes(element, fragmentId, graph, numWorkers, idNameMapping, levels
     chart.on("mousemove", function (e) {
         ruler
             .style("display", "block")
-            .style("left", d3.event.pageX - 1 + "px");
+            .style("left", d3.event.pageX + "px");
 
         chart
             .select(".rulerInfo")
@@ -549,19 +549,8 @@ function drawLanes(element, fragmentId, graph, numWorkers, idNameMapping, levels
         box.enter().append("rect")
             //.attr("clip-path", "url(#clip)")
             .style("fill", function(d) { return opToColor[d.opId]; })
-            .attr("class", "box");
-
-        box.on('mouseover', function(d) {
-            d3.select(this)
-                .transition().duration(shortDuration)
-                .attr("height", function(d) {
-                    return getHeight(d) + 4;
-                })
-                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).brighter(0.4); });
-        });
-
-        box.on('mouseenter', function(d) {
-            d3.select(this).tooltip(function(d) {
+            .attr("class", "box")
+            .tooltip(function(d) {
                 var content = templates.strong({ text: idNameMapping[d.opId] });
                 if (_.has(d, 'numTuples')) {
                     if (d.numTuples >= 0) {
@@ -574,6 +563,14 @@ function drawLanes(element, fragmentId, graph, numWorkers, idNameMapping, levels
                 content += templates.duration({ duration: customFullTimeFormat(d.endTime - d.startTime, false) });
                 return content;
             });
+
+        box.on('mouseover', function(d) {
+            d3.select(this)
+                .transition().duration(shortDuration)
+                .attr("height", function(d) {
+                    return getHeight(d) + 4;
+                })
+                .style("fill", function(d) { return d3.rgb(opToColor[d.opId]).brighter(0.4); });
         });
 
         box.on('mouseleave', function(d) {
