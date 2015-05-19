@@ -39,11 +39,10 @@ class BaseClangBackend(Backend):
         return raco.compile.compile(physical_plan)
 
     @staticmethod
-    def _create_json_for_compile(query, logical_plan, physical_plan,
+    def _create_json_for_compile(query, physical_plan,
                                  compiled_plan,
                                  dots):
-        return {'rawQuery': str(query), 'logicalRa': str(logical_plan),
-                'plan': compiled_plan,
+        return {'rawQuery': str(query), 'plan': compiled_plan,
                 'dot': dots}
 
     @staticmethod
@@ -56,9 +55,10 @@ class BaseClangBackend(Backend):
                 'backend': backend_name,
                 'relkey': relkey, 'rawQuery': str(query)}
 
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
+    def compile_query(self, query, physical_plan, language=None,
+                      cached_logicalplan=None):
         return self._create_json_for_compile(
-            query, logical_plan, physical_plan, self._compile(physical_plan),
+            query, physical_plan, self._compile(physical_plan),
             operator_to_dot(physical_plan))
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
@@ -80,7 +80,7 @@ class BaseClangBackend(Backend):
     def get_query_status(self, query_id):
         return self.connection.status(query_id)
 
-    def connection_string(self):
+    def connection_info(self):
         conn = self.connection
         if not conn:
             return "unable to connect to %s:%d" % (self.hostname, self.port)

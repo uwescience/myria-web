@@ -23,7 +23,7 @@ class MyriaBackend(Backend):
     def algebra(self):
         return MyriaLeftDeepTreeAlgebra()
 
-    def compile_query(self, query, logical_plan, physical_plan, language):
+    def compile_query(self, query, physical_plan, language, logical_plan):
         return compile_to_json(
             query, logical_plan, physical_plan, language)
 
@@ -56,7 +56,7 @@ class MyriaBackend(Backend):
     def get_query_plan(self, query_id, sub_query_id):
         return self.connection.get_query_plan(query_id, sub_query_id)
 
-    def connection_string(self):
+    def connection_info(self):
         conn = self.connection
         if not conn:
             return "unable to connect to %s:%d" % (self.hostname, self.port)
