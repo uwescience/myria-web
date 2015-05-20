@@ -13,14 +13,14 @@ class Backend(object):
         """Returns corresponding target algebra"""
 
     @abstractmethod
-    def compile_query(self, query, logical_plan, physical_plan, language=None):
-        """Takes the raw query, logical, and physical plan
+    def compile_query(self, query, physical_plan, language=None):
+        """Takes the raw query and physical plan
            Returns JSON of compiled query"""
 
     @abstractmethod
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        """Executes the query, using raw query, logical, and physical plans
+        """Executes the query, using compiled query, logical, and physical plans
            returns the status and corresponding url"""
 
     @abstractmethod
@@ -28,8 +28,9 @@ class Backend(object):
         """Returns the query status of query_id"""
 
     @abstractmethod
-    def connection_string(self):
-        """Returns the status of the connection of the backend"""
+    def connection_info(self):
+        """Returns the hostname, port, number of alive workers,
+           and total number of workers of the connection of the backend"""
 
     @abstractmethod
     def backend_url(self):

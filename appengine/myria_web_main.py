@@ -170,8 +170,8 @@ class RedirectToEditor(MyriaHandler):
 
 class MyriaPage(MyriaHandler):
 
-    def get_connection_string(self, backend):
-        return self.app.backends[backend].connection_string()
+    def get_connection_info(self, backend):
+        return self.app.backends[backend].connection_info()
 
     def get_connection_url(self, backend, uri_scheme):
         return self.app.backends[backend].connection_url(uri_scheme)
@@ -185,7 +185,7 @@ class MyriaPage(MyriaHandler):
         else:
             uri_scheme = "http"
         return {'connection': self.get_connection_url(backend, uri_scheme),
-                'connectionString': self.get_connection_string(backend),
+                'connectionString': self.get_connection_info(backend),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -193,7 +193,7 @@ class MyriaPage(MyriaHandler):
         backend = self.request.get("backend", "myria")
         uri_scheme = self.request.get("uri_scheme", "https")
         var = {'connectionString':
-               self.get_connection_string(backend),
+               self.get_connection_info(backend),
                'connection': self.get_connection_url(backend, uri_scheme),
                'backendUrl': self.get_backend_url(backend),
                'version': VERSION,
@@ -424,7 +424,7 @@ class Compile(MyriaHandler):
 
         try:
             compiled = backend.compile_query(
-                query, cached_logicalplan, physicalplan, language)
+                query, physicalplan, language, cached_logicalplan)
 
             if profile:
                 compiled['profilingMode'] = ["QUERY", "RESOURCE"]

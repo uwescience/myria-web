@@ -28,12 +28,14 @@ function changeUrl(_backend) {
   } else if (_backend === "grappa") {
     backend_display_name = "radish";
   }
-  
+
   var urlname = backend_display_name.charAt(0).toUpperCase() + backend_display_name.slice(1);
   $("#projecturl").html(urlname + ' Project');
 }
 
-function changeConnection(backend) {
+// Uses global backendProcess to change the corresponding backend connection
+// (hostname:port [number of alive workers/total workers])
+function changeConnection() {
   var request = $.post("page", {
     backend: backendProcess
   });
@@ -177,12 +179,14 @@ $(function() {
 
 
   $(".backend-menu").change(updateBackend);
+
   $("#connectionstr").click(function(e) {
     $('#connectionstr select').slideToggle(200);
-    $(".backend-menu").change(changeConnection(backendProcess));
+    $(".backend-menu").change(changeConnection);
     e.stopPropagation();
   });
-  //$(".backend-menu").hide();
+
+  $(".backend-menu").hide();
 
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreBackend();
