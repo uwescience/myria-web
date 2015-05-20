@@ -22,8 +22,13 @@ class ClangConnection(object):
         self.ssl = ssl
         self.url = url.generate_base_url(ssl, hostname, port)
 
+    def _post_json(self, requrl, json_obj):
+        headers = {'Content-type': 'application/json'}
+        return requests.Session().post(requrl, data=json.dumps(json_obj),
+                                       headers=headers)
+
     def submit_query(self, json_obj):
-        r = requests.Session().post(self.url, data=json.dumps(json_obj))
+        r = self._post_json(self.url, json_obj)
         return r.json()
 
     def status(self, qid):
@@ -33,7 +38,7 @@ class ClangConnection(object):
 
     def catalog(self, rel_args):
         requrl = url.generate_url(self.url, 'catalog')
-        r = requests.Session().post(requrl, data=json.dumps(rel_args))
+        r = self._post_json(requrl, rel_args)
         ret = r.json()
         if ret:
             return ret
@@ -41,7 +46,7 @@ class ClangConnection(object):
 
     def get_num_tuples(self, rel_args):
         requrl = url.generate_url(self.url, 'tuples')
-        r = requests.Session().post(requrl, data=json.dumps(rel_args))
+        r = self._post_json(requrl, rel_args)
         ret = r.json()
         if ret:
             return ret
@@ -50,7 +55,7 @@ class ClangConnection(object):
     def queries(self, limit, max_id, min_id, q):
         requrl = url.generate_url(self.url, 'queries')
         data = {'min': min_id, 'max': max_id, 'backend': 'clang'}
-        r = requests.Session().post(requrl, data=json.dumps(data))
+        r = self._post_json(requrl, data)
         ret = r.json()
         if ret:
             return ret
