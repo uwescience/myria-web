@@ -86,7 +86,7 @@ class BaseClangBackend(Backend):
             return "unable to connect to %s:%d" % (self.hostname, self.port)
         else:
             return "{0}:{1}[{2}/{3}]".format(self.hostname, self.port,
-                                   self._num_alive, self._num_workers)
+                                             self._num_alive, self._num_workers)
 
     def connection_url(self, uri_scheme):
         return "http://{h}:{p}".format(h=self.hostname, p=self.port)
