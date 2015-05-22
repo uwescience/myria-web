@@ -56,8 +56,9 @@ function loadTable() {
         html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
                               finishTime: d.finishTime});
         });
-
-      $("#querytable").html(html);
+      if (html != "") {
+        $("#querytable").html(html);
+      }
       runningHighlight();
       myriaHighlight();
     }).fail (function (res, err) {
