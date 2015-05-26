@@ -90,6 +90,10 @@ nosetests -w appengine --with-gae \
   --gae-lib-root=google_appengine
 ```
 
+# Set up Clang/Radish backend server
+- See https://github.com/uwescience/radish-server
+- Set `clanghostname` and `clangport` in `myria_web_main.py` to those of your running `radish-server`
+
 # Issues
 
 The Google App Engine GUI has a Logs button that can be helpful for diagnosing issues with the Myria web app.
