@@ -41,7 +41,7 @@ function changeConnection() {
   });
   request.success(function (data) {
     var d = JSON.parse(data);
-    $("#connectstr").html(d.connectionString);
+    $("#connectionstr").html(d.connectionString + '<span class="caret"></span>');
   });
 }
 
@@ -135,7 +135,7 @@ var updateCalendarWarning = function() {
 }
 
 function saveBackend() {
-  localStorage.setItem(editorBackendKey, $(".backend-menu").find(":selected").val());
+  localStorage.setItem(editorBackendKey, $(".backend-menu").val());
 }
 
 function restoreBackend() {
@@ -179,14 +179,6 @@ $(function() {
 
 
   $(".backend-menu").change(updateBackend);
-
-  $("#connectionstr").click(function(e) {
-    $('#connectionstr select').slideToggle(200);
-    $(".backend-menu").change(changeConnection);
-    e.stopPropagation();
-  });
-
-  $(".backend-menu").hide();
 
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreBackend();

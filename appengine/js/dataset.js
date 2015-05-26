@@ -19,7 +19,8 @@ function backendDatasetUrl(conn){
   }
   else if (backendProcess == 'grappa') {
     url = conn + '/dataset?backend=grappa';
-  } else {
+  }
+  else {
     url = conn + '/dataset';
   }
   return url;
@@ -56,11 +57,12 @@ function loadTable() {
         if (_.contains(grappaends, backendProcess)) {
           limit = clangCellLimit;
         }
-	if (is_small_dataset(d, limit)) {
-	  html += t.download({url: dload});
-	} else {
-	  html += t.toolarge;
-	}
+	    if (is_small_dataset(d, limit)) {
+	      html += t.download({url: dload});
+	    }
+        else {
+	      html += t.toolarge;
+	    }
       });
 
       $("#datatable").html(html);
@@ -80,7 +82,8 @@ function is_small_dataset(d, cell_limit) {
   var len = 0;
   if (_.contains(grappaends, backendProcess)) {
     len = JSON.parse(d['schema'])['columnNames'].length;
-  } else {
+  }
+  else {
     len = d['schema']['columnNames'].length;
   }
   return (d['numTuples'] >= 0 &&
@@ -92,6 +95,7 @@ function is_small_dataset(d, cell_limit) {
 function sortTable() {
   // Needed to update the existing table after data from the new backend is loaded
   $(".table").trigger("update");
+  // Originally from dataset.html
   $(".table").tablesorter({
     textExtraction: {
       2: function (node, table, cellIndex) {
@@ -104,7 +108,7 @@ function sortTable() {
     headerTemplate: '{content} <small><span></span>'
     });
 
-  // Originally from dataset.html 
+  // Originally from dataset.html
   var resetSortIcons = function() {
     $("th[aria-sort=ascending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes");
     $("th[aria-sort=descending][aria-disabled=false] span").attr('class', "glyphicon glyphicon-sort-by-attributes-alt");

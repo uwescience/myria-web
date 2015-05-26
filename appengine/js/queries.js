@@ -28,7 +28,8 @@ function loadTable() {
     }
     else if (backendProcess == 'grappa') {
       url = conn + '/queries?backend=grappa';
-    } else {
+    }
+    else {
       url = conn + '/query';
     }
     var t = query_templates;
