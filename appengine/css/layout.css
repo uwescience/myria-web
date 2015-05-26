@@ -63,10 +63,6 @@ input[type=range].zoom-range {
     border-right-width: 1px;
 }
 
-.col-sm-9 {
-    margin-bottom: 5px;
-}
-
 .back-to-top {
     position: fixed;
     bottom: 8px;

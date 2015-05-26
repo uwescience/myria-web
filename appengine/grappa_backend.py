@@ -12,7 +12,7 @@ class GrappaBackend(BaseClangBackend):
         return "grappa"
 
     def _num_alive(self):
-        return "?"
+        return None
 
     def _num_workers(self):
-        return "?"
+        return None
