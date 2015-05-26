@@ -526,7 +526,8 @@ class Application(webapp2.WSGIApplication):
 
     def __init__(self, debug=True,
                  hostname='localhost',
-                 port=8753, ssl=False):
+                 port=8753, ssl=False, clanghostname='localhost',
+                 clangport=2337):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -549,8 +550,8 @@ class Application(webapp2.WSGIApplication):
         self.myriahostname = hostname
         self.myriaport = port
         self.ssl = ssl
-        self.clanghostname = 'localhost'
-        self.clangport = 1337
+        self.clanghostname = clanghostname
+        self.clangport = clangport
 
         self.backends = {"clang": ClangBackend(self.clanghostname,
                                                self.clangport, False),
