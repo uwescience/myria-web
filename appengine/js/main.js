@@ -139,11 +139,6 @@ function saveBackend() {
 
 function restoreBackend() {
   var backend = localStorage.getItem(editorBackendKey);
-  if (backend === "myriamultijoin") {
-    $(".backend-menu").val("myria");
-  } else {
-    $(".backend-menu").val(backend);
-  }
   setBackend(backend);
 }
 

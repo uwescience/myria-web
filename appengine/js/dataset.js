@@ -26,7 +26,17 @@ function backendDatasetUrl(conn){
   return url;
 }
 
-function loadTable() {
+function changeBackend(backend) {
+  if (backend != null && backend != "undefined") {
+    backendProcess = backend;
+    changeConnection();
+    changeUrl(backend);
+    changeLinks(backend);
+    loadDatasetTable();
+  }
+}
+
+function loadDatasetTable() {
   $("#datatable").empty();
   // default to host from myria
   var request = $.post("page", {
@@ -119,6 +129,5 @@ function sortTable() {
 }
 
 $(function() {
-  $(".backend-menu").change(loadTable);
-  loadTable();
+  loadDatasetTable();
 });

@@ -14,7 +14,17 @@ function defaultTable() {
   $("#querytable").html(html);  
 }
 
-function loadTable() {
+function changeBackend(backend) {
+  if (backend != null && backend != "undefined") {
+    backendProcess = backend;
+    changeConnection();
+    changeUrl(backend);
+    changeLinks(backend);
+    loadQueriesTable();
+  }
+}
+
+function loadQueriesTable() {
   defaultTable();
   // default to host from myria
   var url;
@@ -139,8 +149,7 @@ function myriaHighlight() {
 
 
 $(document).ready(function() {
-  $(".backend-menu").change(loadTable);
-  loadTable();
+  loadQueriesTable();
   $('.query-row[data-status="RUNNING"]').each(function(i, e) {
 		var qid = $(this).attr('data-id');
 		window.setInterval(function() {
