@@ -94,7 +94,7 @@ def test_queries_connects():
     assert 'fake.fake:12345 [2/2]' in str(response)
     # Check some subset of things are in the right place
     # This test requires javascript checking
-    raise SkipTest()
+    # raise SkipTest()
     assert 'JustX(x) :- TwitterK(x,y)' in str(response)
     assert 'query-140' in str(response)
     assert 'query-131' in str(response)
@@ -113,7 +113,7 @@ def test_datasets_fetch():
     assert 'fake.fake:12345 [2/2]' in str(response)
     # Ensure it includes the Twitter dataset, creation time, and download URL
     # This test requires javascript checking
-    raise SkipTest()
+    # raise SkipTest()
     assert 'Twitter' in str(response), str(response)
     assert '2014-02-09T12:40:43.438-08:00' in str(response)
     assert 'fake.fake:12345/dataset/user-public/program-adhoc/relation-Twitter/data' not in str(response)

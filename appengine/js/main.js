@@ -1,13 +1,12 @@
 var editorBackendKey = 'myria',
     backendProcess = 'myria';
 
-function updateBackend() {
-  backendProcess = $(".backend-menu option:selected").val();
-  if (backendProcess != null && backendProcess != "undefined") {
-    $(".backend-menu").val(backendProcess);
-    changeConnection(backendProcess);
-    changeUrl(backendProcess);
-    changeLinks(backendProcess);
+function changeBackend(backend) {
+  if (backend != null && backend != "undefined") {
+    backendProcess = backend;
+    changeConnection();
+    changeUrl(backend);
+    changeLinks(backend);
   }
 }
 
@@ -135,7 +134,7 @@ var updateCalendarWarning = function() {
 }
 
 function saveBackend() {
-  localStorage.setItem(editorBackendKey, $(".backend-menu").val());
+  localStorage.setItem(editorBackendKey, backendProcess);
 }
 
 function restoreBackend() {
@@ -177,15 +176,10 @@ $(function() {
     $("#page-body").prepend('<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><strong>Warning!</strong> Myria is developed and tested in Google Chrome, and other browsers may not support all the features.</div>');
   }
 
-
-  $(".backend-menu").change(updateBackend);
-
   var backendProcess = localStorage.getItem(editorBackendKey);
   restoreBackend();
   if (backendProcess != null && backendProcess != "undefined") {
-      changeConnection(backendProcess);
-      changeUrl(backendProcess);
-      changeLinks(backendProcess);
+    changeBackend(backendProcess);
   }
 
   window.onbeforeunload = saveBackend;
