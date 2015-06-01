@@ -33,6 +33,7 @@ function loadQueriesTable() {
   });
   request.success(function (info) {
     var conn = JSON.parse(info).connection;
+    var max;
     if (backendProcess == 'clang') {
       url = conn + '/queries?backend=clang';
     }
@@ -40,33 +41,48 @@ function loadQueriesTable() {
       url = conn + '/queries?backend=grappa';
     }
     else {
-      url = conn + '/query';
+      var queries = {};
+      $.each(document.location.search.substr(1).split('&'), function(c,q){
+        var i = q.split('=');
+        queries[i[0].toString()] = i[1].toString();
+      });
+      max = queries.max;
+      if (max == undefined || max == null) {
+        url = conn + '/query';
+      } else {
+        url = conn + '/query?max=' + max;
+      }
     }
     var t = query_templates;
     var jqxhr = $.getJSON(url, function (data) {
-      var max = data.max;
-      var min = data.min;
+      var dataMax = data.max;
+      var dataMin = data.min;
       var html = '';
+      if (max == undefined) {
+        max = dataMax;
+      }
       _.each(data.results, function (d) {
-	    var url = d.url;
-        var profile = d.profilingMode;
-        if (!profile) {
-          profile = false;
-        }
-        if (_.contains(grappaends, backendProcess)) {
-	      url = d.uri + '/query?qid=' + d.queryId;
-	    }
-        d.elapsedStr = nano_to_str(d.elapsedNanos);
-        var bootstrapStatus = getBootstrapStatus(d.status);
+        if (d.queryId <= max) {
+	      var url = d.url;
+          var profile = d.profilingMode;
+          if (!profile) {
+            profile = false;
+          }
+          if (_.contains(grappaends, backendProcess)) {
+	        url = d.uri + '/query?qid=' + d.queryId;
+	      }
+          d.elapsedStr = nano_to_str(d.elapsedNanos);
+          var bootstrapStatus = getBootstrapStatus(d.status);
 
-        html += t.queryInfo({bootstrapStatus: bootstrapStatus,
-                             status: d.status, queryId: d.queryId,
-                             rawQuery: d.rawQuery, url: url});
-        html += t.profileInfo({profilingMode: profile,
+          html += t.queryInfo({bootstrapStatus: bootstrapStatus,
+                               status: d.status, queryId: d.queryId,
+                               rawQuery: d.rawQuery, url: url});
+          html += t.profileInfo({profilingMode: profile,
                                  status: d.status, queryId: d.queryId});
-        html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
-                              finishTime: d.finishTime});
-        });
+          html += t.finishInfo({elapsedStr: nano_to_str(d.elapsedNanos),
+                                finishTime: d.finishTime});
+        }
+      });
       if (html != "") {
         $("#querytable").html(html);
       }
