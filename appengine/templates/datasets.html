@@ -23,7 +23,7 @@
 				<td class="query-finish">
 					<abbr class="timeago" title="{{d.created}}">{{d.created}}</abbr>
 				</td>
-				<td>{% if d is small_dataset(100*1000*1000) %}<a href="{{d.uri}}/data?format=json" rel="nofollow" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" rel="nofollow" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" rel="nofollow" class="label label-default">TSV</a>{% else %}<abbr title="Too large or size unknown">not available</abbr>{% endif %}</td>
+				<td>{% if d is small_dataset(100*1000*1000) %}<a href="{{d.uri}}/data?format=json" target="_blank" rel="nofollow" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" target="_blank" rel="nofollow" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" target="_blank" rel="nofollow" class="label label-default">TSV</a>{% else %}<abbr title="Too large or size unknown">not available</abbr>{% endif %}</td>
 			</tr>
 			{% endfor %}
 		</table>
