@@ -12,3 +12,9 @@
 [submodule "submodules/sqlalchemy"]
 	path = submodules/sqlalchemy
 	url = https://github.com/zzzeek/sqlalchemy.git
+[submodule "submodules/dateutil"]
+	path = submodules/dateutil
+	url = git@github.com:dateutil/dateutil.git
+[submodule "submodules/six"]
+	path = submodules/six
+	url = git@github.com:kelp404/six.git
