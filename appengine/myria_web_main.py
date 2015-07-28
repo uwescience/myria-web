@@ -580,3 +580,8 @@ class Application(webapp2.WSGIApplication):
             self, routes, debug=debug, config=None)
 
 app = Application()
+
+# fallback for when we can't run in GAE (reason was urlfetch_stub had url length limit)
+if __name__ == '__main__':
+    from paste import httpserver
+    httpserver.serve(app, host='localhost', port='8080')
