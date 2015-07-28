@@ -3,7 +3,7 @@ import url
 from myria_catalog import MyriaCatalog
 import myria
 import requests
-from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
+from raco.backends.myria.myria import (MyriaLeftDeepTreeAlgebra,
                                      MyriaHyperCubeAlgebra,
                                      compile_to_json)
 
