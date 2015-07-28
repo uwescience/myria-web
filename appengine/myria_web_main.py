@@ -13,10 +13,26 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language.myrialang import (MyriaLeftDeepTreeAlgebra,
-                                     MyriaHyperCubeAlgebra,
+from raco.language.myrialang import (MyriaHyperCubeAlgebra,
                                      compile_to_json)
 from raco.language.logical import OptLogicalAlgebra
+
+from raco.backends.scidb.connection import SciDBConnection
+from raco.backends.scidb.catalog import SciDBCatalog
+from raco.backends.scidb.algebra import SciDBAFLAlgebra, SciDBScan, SciDBStore, SciDBConcat
+
+from raco.backends.myria.connection import MyriaConnection
+from raco.backends.myria.catalog import MyriaCatalog
+from raco.backends.myria import MyriaLeftDeepTreeAlgebra
+
+from raco.backends.federated.connection import FederatedConnection
+from raco.backends.federated.catalog import FederatedCatalog
+from raco.backends.federated import FederatedAlgebra
+
+import raco.myrial.interpreter as interpreter
+import raco.myrial.parser as myrialparser
+
+from raco.backends.federated.movers.filesystem import SciDBToMyria
 
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
@@ -352,6 +368,35 @@ class Profile(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
+class Execution(MyriaPage):
+
+    def get(self):
+        conn = self.app.connection
+        query_id = self.request.get("queryId")
+        subquery_id = self.request.get("subqueryId", 0)
+        query_status = {}
+        subquery_fragments = None
+        if query_id != '':
+            try:
+                query_status = conn.get_query_status(query_id)
+                query_status["subqueryId"] = subquery_id
+                subquery_fragments = conn.get_query_plan(query_id, subquery_id)
+            except myria.MyriaError:
+                pass
+
+        template_vars = self.base_template_vars()
+        template_vars['queryStatus'] = json.dumps(query_status)
+        template_vars['fragments'] = json.dumps(subquery_fragments)
+        template_vars['queryId'] = query_id
+        template_vars['subqueryId'] = subquery_id
+
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('execution.html')
+        self.response.out.write(template.render(template_vars))
+
+
 class Datasets(MyriaPage):
 
     def get(self, connection_=None):
@@ -525,6 +570,26 @@ class Compile(MyriaHandler):
 
 class Execute(MyriaHandler):
 
+    def post_federated(self):
+        connections = {'Myria':     MyriaConnection(rest_url='http://ec2-52-1-38-182.compute-1.amazonaws.com:8753',
+                                                    execution_url='http://demo.myria.cs.washington.edu'),
+                       'SciDB':     SciDBConnection('http://ec2-54-175-66-8.compute-1.amazonaws.com:8080')}
+        connections['Federated'] = FederatedConnection(connections.values(), [SciDBToMyria()])
+        catalog = FederatedCatalog([MyriaCatalog(connections['Myria']), SciDBCatalog(connections['SciDB'])])
+        parser = myrialparser.Parser()
+        statements = parser.parse(program)
+        interpreter.StatementProcessor(catalog, True).evaluate(statements)
+
+        algebra = FederatedAlgebra([MyriaLeftDeepTreeAlgebra(), SciDBAFLAlgebra()], catalog)
+
+        logical_plan = processor.get_logical_plan()
+        physical_plan = processor.get_physical_plan(target_alg=algebra)
+        result = connections['Federated'].execute_query(pd)
+
+        self.response.status = 200
+        #self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(result)
+
     def post(self):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
         conn = self.app.connection
@@ -534,6 +599,9 @@ class Execute(MyriaHandler):
         profile = self.get_boolean_request_param("profile")
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
+
+        if language == 'federated':
+            return self.post_federated()
 
         cached_logicalplan = str(
             get_logical_plan(query, language, self.app.connection,
@@ -624,6 +692,7 @@ class Application(webapp2.WSGIApplication):
             ('/editor', Editor),
             ('/queries', Queries),
             ('/profile', Profile),
+            ('/execution', Execution),
             ('/datasets', Datasets),
             ('/plan', Plan),
             ('/optimize', Optimize),
