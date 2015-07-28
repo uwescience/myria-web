@@ -1,34 +1,48 @@
 from backend import Backend
+from raco.backends.myria.connection import MyriaConnection
+from raco.backends.scidb.connection import SciDBConnection
+from raco.backends.federated.connection import FederatedConnection
+from raco.backends.federated.catalog import FederatedCatalog
+from raco.backends.federated.movers.filesystem import SciDBToMyria
+from raco.backends.myria.catalog import MyriaCatalog
+from raco.backends.scidb.catalog import SciDBCatalog
 
 
 class FederatedBackend(Backend):
+    def __init__(self, myriaresturl, myriaexecurl, scidburl):
+        self.myriaconnection = MyriaConnection(rest_url=myriaresturl,
+                                               execution_url=myriaexecurl)
+        self.scidbconnection = SciDBConnection(scidburl)
+        self.federatedconnection = FederatedConnection([self.myriaconnection, self.scidbconnection], [SciDBToMyria()])
+        self.catalog = FederatedCatalog([MyriaCatalog(self.myriaconnection), SciDBCatalog(self.scidbconnection)])
+
     def get_query_status(self, query_id):
-        super(FederatedBackend, self).get_query_status(query_id)
+        raise NotImplementedError
 
     def catalog(self):
-        super(FederatedBackend, self).catalog()
+        # FIXME: expects myria web catalog not raco catalog (have adapter?)
+        return self.catalog
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        super(FederatedBackend, self).execute_query(query, logical_plan,
-                                                    physical_plan, language,
-                                                    profile)
+        raise NotImplementedError
+        result = self.federatedconnection.execute_query(physical_plan)
+        return result
 
     def connection_info(self):
-        super(FederatedBackend, self).connection_info()
+        raise NotImplementedError
 
     def compile_query(self, query, physical_plan, language=None):
-        super(FederatedBackend, self).compile_query(query, physical_plan,
-                                                    language)
+        raise NotImplementedError
 
     def connection_url(self, uri_scheme="http"):
-        return super(FederatedBackend, self).connection_url(uri_scheme)
+        raise NotImplementedError
 
     def backend_url(self):
-        super(FederatedBackend, self).backend_url()
+        raise NotImplementedError
 
     def queries(self, limit, max_id, min_id, q):
-        super(FederatedBackend, self).queries(limit, max_id, min_id, q)
+        raise NotImplementedError
 
     def algebra(self):
-        super(FederatedBackend, self).algebra()
+        raise NotImplementedError

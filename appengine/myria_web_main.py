@@ -10,6 +10,7 @@ import jinja2
 from clang_backend import ClangBackend
 from grappa_backend import GrappaBackend
 from myria_backend import MyriaBackend, MyriaMultiJoinBackend
+from federated_backend import FederatedBackend
 import requests
 import webapp2
 from raco import RACompiler
@@ -559,6 +560,9 @@ class Application(webapp2.WSGIApplication):
                                                  self.clangport, False),
                          "myria": MyriaBackend(self.myriahostname,
                                                self.myriaport, ssl),
+                         "federated": FederatedBackend(myriaresturl='http://ec2-52-1-38-182.compute-1.amazonaws.com:8753',
+                                                       myriaexecurl='http://demo.myria.cs.washington.edu',
+                                                       scidburl='http://ec2-54-175-66-8.compute-1.amazonaws.com:8080'),
                          "myriamultijoin": MyriaMultiJoinBackend(
                              self.myriahostname, self.myriaport, ssl)}
 
