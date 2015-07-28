@@ -9,6 +9,8 @@
 		</div>
 		<table class="table table-condensed">
 		<thead>
+
+        <!--grappa-master-b
 		  <tr>
 		    <th>Relation name</th>
 		    <th>Creating query</th>
@@ -18,6 +20,25 @@
 		</thead>
 		<tbody id="datatable">
 		</tbody>
+		-->
+
+			<tr>
+				<th>Relation name</th>
+				<th>Creating query</th>
+				<th>Create time</th>
+				<th data-sorter="false">Download</th>
+			</tr>
+			</thead>
+			{% for d in datasets %}
+			<tr>
+				<td><a href="{{d.uri}}" target="_blank" data-toggle="tooltip" title="{{d.relationKey.userName}}:{{d.relationKey.programName}}:{{d.relationKey.relationName}}">{{d.relationKey.relationName}}</a></td>
+				<td><a href="{{d.queryUrl}}" target=_blank>{{d.queryId}}</a></td>
+				<td class="query-finish">
+					<abbr class="timeago" title="{{d.created}}">{{d.created}}</abbr>
+				</td>
+				<td>{% if d is small_dataset(100*1000*1000) %}<a href="{{d.uri}}/data?format=json" target="_blank" rel="nofollow" class="label label-default">JSON</a> <a href="{{d.uri}}/data?format=csv" target="_blank" rel="nofollow" class="label label-default">CSV</a> <a href="{{d.uri}}/data?format=tsv" target="_blank" rel="nofollow" class="label label-default">TSV</a>{% else %}<abbr title="Too large or size unknown">not available</abbr>{% endif %}</td>
+			</tr>
+			{% endfor %}
 		</table>
 	</div>
 {% endblock %}
