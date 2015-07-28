@@ -18,3 +18,6 @@
 [submodule "submodules/six"]
 	path = submodules/six
 	url = https://github.com/kelp404/six.git
+[submodule "submodules/SciDB-Py"]
+	path = submodules/SciDB-Py
+	url = git@github.com:Paradigm4/SciDB-Py.git
