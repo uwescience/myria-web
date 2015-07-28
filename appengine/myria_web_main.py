@@ -17,7 +17,7 @@ from raco import RACompiler
 from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
-from raco.language.logical import OptLogicalAlgebra
+from raco.backends.logical import OptLogicalAlgebra
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from examples import examples
