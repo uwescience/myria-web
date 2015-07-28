@@ -457,8 +457,18 @@ class Execute(MyriaHandler):
         profile = self.get_boolean_request_param("profile")
         push_sql = self.get_boolean_request_param("push_sql")
 
-        if backend == "federated":
-            # FIXME: commented out for Federated
+        # TODO: refactor this hint, perhaps putting it into myriaL and the FederatedAlgebra
+        if self.request.get("backend", "myria") == "federated":
+            # check for first line hint in the myriaL query
+            if query.split('\n', 1)[0] == "-- exec myriax":
+                query = query.split('\n', 1)[1]
+                backend = self.app.backends["myria"]
+                logging.info("MyriaX-only execution")
+            else:
+                logging.info("Hybrid execution")
+
+        if self.request.get("backend", "myria") == "federated":
+            # don't need this for federated
             cached_logicalplan = None
         else:
             cached_logicalplan = str(get_logical_plan(query, language, backend,
