@@ -456,8 +456,13 @@ class Execute(MyriaHandler):
         backend = self.app.backends[self.request.get("backend", "myria")]
         profile = self.get_boolean_request_param("profile")
         push_sql = self.get_boolean_request_param("push_sql")
-        cached_logicalplan = str(get_logical_plan(query, language, backend,
-                                                  push_sql))
+
+        if backend == "federated":
+            # FIXME: commented out for Federated
+            cached_logicalplan = None
+        else:
+            cached_logicalplan = str(get_logical_plan(query, language, backend,
+                                                      push_sql))
 
         # Generate physical plan
         physicalplan = get_physical_plan(query, language, backend, push_sql)
@@ -470,7 +475,9 @@ class Execute(MyriaHandler):
             self.response.status = 201
             self.response.headers['Content-Type'] = 'application/json'
             self.response.headers['Content-Location'] = query_url
-            self.response.write(json.dumps(query_status))
+            # FIXME: changed the myria-web API here
+            # self.response.write(json.dumps(query_status))
+            self.response.write(json.dumps(execute))
             return
         except myria.MyriaError as e:
             self.response.headers['Content-Type'] = 'text/plain'
