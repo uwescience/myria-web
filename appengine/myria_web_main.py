@@ -545,8 +545,8 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
 
     def __init__(self, debug=True,
-                 hostname='localhost',
-                 port=8753, ssl=False, clanghostname='localhost',
+                 hostname='localhost', port=8753,
+                 ssl=False, clanghostname='localhost',
                  clangport=2337):
         routes = [
             ('/', RedirectToEditor),
@@ -579,9 +579,8 @@ class Application(webapp2.WSGIApplication):
                                                  self.clangport, False),
                          "myria": MyriaBackend(self.myriahostname,
                                                self.myriaport, ssl),
-                         "federated": FederatedBackend(myriaresturl='http://ec2-52-1-38-182.compute-1.amazonaws.com:8753',
-                                                       myriaexecurl='http://demo.myria.cs.washington.edu',
-                                                       scidburl='http://ec2-54-175-66-8.compute-1.amazonaws.com:8080'),
+                         "federated": FederatedBackend(myriaresturl='http://localhost:8753',
+                                                       scidburl='http://localhost:8092'),
                          "myriamultijoin": MyriaMultiJoinBackend(
                              self.myriahostname, self.myriaport, ssl)}
 
