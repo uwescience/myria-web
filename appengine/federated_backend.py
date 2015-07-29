@@ -12,9 +12,8 @@ from raco.backends.scidb.catalog import SciDBCatalog
 
 
 class FederatedBackend(Backend):
-    def __init__(self, myriaresturl, myriaexecurl, scidburl):
-        self.myriaconnection = MyriaConnection(rest_url=myriaresturl,
-                                               execution_url=myriaexecurl)
+    def __init__(self, myriaresturl, scidburl):
+        self.myriaconnection = MyriaConnection(rest_url=myriaresturl)
         self.scidbconnection = SciDBConnection(scidburl)
         self.federatedconnection = FederatedConnection([self.myriaconnection, self.scidbconnection], [SciDBToMyria()])
         self.federatedcatalog = FederatedCatalog([MyriaCatalog(self.myriaconnection), SciDBCatalog(self.scidbconnection)])
