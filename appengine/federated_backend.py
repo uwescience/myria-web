@@ -27,7 +27,9 @@ class FederatedBackend(Backend):
 
     def execute_query(self, query, logical_plan, physical_plan, language=None,
                       profile=False):
-        result = self.federatedconnection.execute_query(physical_plan)
+        #result = self.federatedconnection.execute_query(physical_plan)
+        # TODO: Federated will take a physical plan once its optimize() works
+        result = self.federatedconnection.execute_query(query)
         return result
 
     def connection_info(self):
