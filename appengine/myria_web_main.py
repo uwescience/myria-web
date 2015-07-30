@@ -458,6 +458,7 @@ class Execute(MyriaHandler):
         push_sql = self.get_boolean_request_param("push_sql")
 
         switched_to_myria = False
+        switched_to_scidb = False
         # TODO: refactor this hint, perhaps putting it into myriaL and the FederatedAlgebra
         if self.request.get("backend", "myria") == "federated":
             # check for first line hint in the myriaL query
@@ -466,6 +467,9 @@ class Execute(MyriaHandler):
                 backend = self.app.backends["myria"]
                 switched_to_myria = True
                 logging.info("MyriaX-only execution")
+            elif query.split('\n', 1)[0] == "-- exec scidb":
+                print 'found scidb query: ' + query
+                switched_to_scidb = True
             else:
                 logging.info("Hybrid execution")
 
@@ -477,7 +481,10 @@ class Execute(MyriaHandler):
                                                       push_sql))
 
         # Generate physical plan
-        physicalplan = get_physical_plan(query, language, backend, push_sql)
+        if not switched_to_scidb:
+            physicalplan = get_physical_plan(query, language, backend, push_sql)
+        else:
+            physicalplan = ""
 
         try:
             execute = backend.execute_query(
@@ -580,7 +587,7 @@ class Application(webapp2.WSGIApplication):
                          "myria": MyriaBackend(self.myriahostname,
                                                self.myriaport, ssl),
                          "federated": FederatedBackend(myriaresturl='http://localhost:8753',
-                                                       scidburl='http://localhost:8092'),
+                                                       scidburl='http://localhost:8751'),
                          "myriamultijoin": MyriaMultiJoinBackend(
                              self.myriahostname, self.myriaport, ssl)}
 

@@ -186,7 +186,11 @@ correlations = [from products, sum_squares
 sink(correlations);
 """
 
-payload = {'query': queryh,   #querym
+querys = """-- exec scidb
+scan(relation600x256);
+"""
+
+payload = {'query': querys,   #querym
            'language': 'myrial',
            'backend': 'federated',
            'profile': False,
