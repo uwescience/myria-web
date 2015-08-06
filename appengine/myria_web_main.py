@@ -470,6 +470,7 @@ class Execute(MyriaHandler):
             elif query.split('\n', 1)[0] == "-- exec scidb":
                 print 'found scidb query: ' + query
                 switched_to_scidb = True
+                backend = self.app.backends['federated']
             else:
                 logging.info("Hybrid execution")
 
