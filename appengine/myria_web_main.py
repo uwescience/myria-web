@@ -460,7 +460,7 @@ class Execute(MyriaHandler):
         switched_to_myria = False
         switched_to_scidb = False
         # TODO: refactor this hint, perhaps putting it into myriaL and the FederatedAlgebra
-        if self.request.get("backend", "myria") == "federated":
+        if self.request.get("backend", "federated") == "federated":
             # check for first line hint in the myriaL query
             if query.split('\n', 1)[0] == "-- exec myriax":
                 query = query.split('\n', 1)[1]
@@ -471,10 +471,13 @@ class Execute(MyriaHandler):
                 print 'found scidb query: ' + query
                 switched_to_scidb = True
                 backend = self.app.backends['federated']
+            elif query.split('\n', 1)[0] == "-- exec federated":
+                print 'federated query hint'
+                backend = self.app.backends['federated']
             else:
                 logging.info("Hybrid execution")
 
-        if (not switched_to_myria) and self.request.get("backend", "myria") == "federated":
+        if (not switched_to_myria) and self.request.get("backend", "federated") == "federated":
             # don't need this for federated
             cached_logicalplan = None
         else:
@@ -516,7 +519,7 @@ class Execute(MyriaHandler):
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
 
         query_id = self.request.get("queryId")
-        backend = self.request.get("backend", "myria")
+        backend = self.request.get("backend", "federated")
 
         if not query_id:
             self.response.headers['Content-Type'] = 'text/plain'
