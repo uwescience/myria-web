@@ -4,6 +4,9 @@ runtime: python27
 api_version: 1
 threadsafe: true
 
+env_variables:
+     GAE_USE_SOCKETS_HTTPLIB : 'anyvalue'
+
 handlers:
 - url: /favicon\.ico
   expiration: "7d"
