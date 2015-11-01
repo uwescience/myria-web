@@ -85,9 +85,7 @@ unzip -q google_appengine_1.9.22.zip
 Run
 
 ```
-nosetests -w appengine --with-gae \
-  --exclude-dir={myria,raco,ply,networkx,sqlalchemy} \
-  --gae-lib-root=google_appengine
+nosetests test/test_myria_down.py test/test_myria_up.py test_style.py -w appengine --with-gae --gae-lib-root=google_appengine
 ```
 
 # Issues
