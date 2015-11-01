@@ -16,21 +16,21 @@ You must have the [Google App Engine SDK for Python](https://developers.google.c
   git submodule init
   git submodule update
   ```
-  
+
     Then setup the module as described in the [Raco README](https://github.com/uwescience/raco/blob/master/README.md).
-  
+
 2. The PLY library used to parse programs in the Myria language uses a precompiled `parsetab.py` in the `raco` submodule. This file is not required, but dramatically speeds up the parser load time (which happens for every request to the app). To generate it, run
 
   ```sh
   scripts/myrial examples/reachable.myl
   ```
-  
+
   in the `raco` subdirectory.
-  
+
 3. Launch the local App Engine emulator. I prefer to use Google's `GoogleApp EngineLauncher` application (installed with the SDK), which provides a nice GUI interface to control the emulator. From the menu select Add Existing Application, and add the `myria-web/appengine` directory.
 
   Alternatively, from the command line, you may launch:
-  
+
   ```sh
   dev_appserver.py /path/to/myria-web/appengine
   ```
@@ -78,16 +78,14 @@ pip install -r requirements-dev.txt
 Download a local copy of [Google App Engine](https://cloud.google.com/appengine/downloads)
 
 ```sh
-curl -O https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.17.zip
-unzip -q google_appengine_1.9.17.zip
+curl -O https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.22.zip
+unzip -q google_appengine_1.9.22.zip
 ```
 
 Run
 
 ```
-nosetests -w appengine --with-gae \
-  --exclude-dir={myria,raco,ply,networkx,sqlalchemy} \
-  --gae-lib-root=google_appengine
+nosetests test/test_myria_down.py test/test_myria_up.py test_style.py -w appengine --with-gae --gae-lib-root=google_appengine
 ```
 
 # Set up Clang/Radish backend server
@@ -97,4 +95,3 @@ nosetests -w appengine --with-gae \
 # Issues
 
 The Google App Engine GUI has a Logs button that can be helpful for diagnosing issues with the Myria web app.
-

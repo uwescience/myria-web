@@ -10,6 +10,7 @@ class StyleTest(unittest.TestCase):
             exclude = [
                 'ply',
                 'networkx',
+                'six.py',
                 'pyparsing.py',
                 'parsetab.py',
                 'test_myria_up.py',
