@@ -1,6 +1,6 @@
 from base_clang_backend import BaseClangBackend
-from raco.language.clangcommon import EMIT_FILE
-from raco.language.clang import CCAlgebra
+from raco.backends.cpp.cppcommon import EMIT_FILE
+from raco.backends.cpp import CCAlgebra
 
 
 class ClangBackend(BaseClangBackend):

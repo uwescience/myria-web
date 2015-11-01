@@ -1,6 +1,6 @@
 from base_clang_backend import BaseClangBackend
-from raco.language.grappalang import GrappaAlgebra
-from raco.language.clangcommon import EMIT_FILE
+from raco.backends.radish import GrappaAlgebra
+from raco.backends.cpp.cppcommon import EMIT_FILE
 
 
 class GrappaBackend(BaseClangBackend):
