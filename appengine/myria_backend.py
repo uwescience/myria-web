@@ -4,8 +4,8 @@ from myria_catalog import MyriaCatalog
 import myria
 import requests
 from raco.backends.myria import (MyriaLeftDeepTreeAlgebra,
-                                     MyriaHyperCubeAlgebra,
-                                     compile_to_json)
+                                 MyriaHyperCubeAlgebra,
+                                 compile_to_json)
 
 
 class MyriaBackend(Backend):
