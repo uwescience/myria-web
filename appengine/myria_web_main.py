@@ -14,16 +14,13 @@ from raco.myrial.exceptions import MyrialCompileException
 from raco.myrial import parser as MyrialParser
 from raco.myrial import interpreter as MyrialInterpreter
 from raco.backends.myria.myria import (MyriaLeftDeepTreeAlgebra,
-                                     MyriaHyperCubeAlgebra,
-                                     compile_to_json)
+                                       MyriaHyperCubeAlgebra,
+                                       compile_to_json)
 from raco.backends.logical import OptLogicalAlgebra
 
 from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
-from raco.catalog import Catalog
 from raco.backends.myria.catalog import MyriaCatalog
-from raco.algebra import DEFAULT_CARDINALITY
-from raco import scheme
 from examples import examples
 from demo3_examples import demo3_examples
 from pagination import Pagination, QUERIES_PER_PAGE
