@@ -7,7 +7,7 @@ weight: 1
 
 # Myria Web
 
-this is the primary web front-end for Myria. The code for the web front end is at [https://github.com/uwescience/myria-web](https://github.com/uwescience/myria-web). You'll also find the developer documentation there.
+This is the primary web front-end for Myria. The code for the web front end is at [https://github.com/uwescience/myria-web](https://github.com/uwescience/myria-web). You'll also find the developer documentation there.
 
 ## Perfopticon
 
