@@ -570,7 +570,7 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='localhost',
-                 port=DEFAULT_MYRIA_API_PORT, ssl=False):
+                 port=DEFAULT_MYRIAX_REST_PORT, ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
