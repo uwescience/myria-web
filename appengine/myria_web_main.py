@@ -27,6 +27,8 @@ from pagination import Pagination, QUERIES_PER_PAGE
 
 import myria
 
+DEFAULT_MYRIAX_REST_PORT = 8753
+
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -568,7 +570,7 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='localhost',
-                 port=8753, ssl=False):
+                 port=DEFAULT_MYRIA_API_PORT, ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -597,4 +599,6 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-app = Application()
+myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
+myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) if os.environ.get('MYRIAX_REST_PORT') else DEFAULT_MYRIAX_REST_PORT
+app = Application(hostname=myriax_host, port=myriax_port)

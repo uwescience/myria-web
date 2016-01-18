@@ -36,3 +36,7 @@ libraries:
   version: latest
 - name: jinja2
   version: latest
+
+env_variables:
+  MYRIAX_REST_HOST: localhost
+  MYRIAX_REST_PORT: 8753
