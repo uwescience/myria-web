@@ -362,7 +362,6 @@ class Examples(MyriaPage):
 class Editor(MyriaPage):
 
     def get(self):
-        print "GET /editor"
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -372,7 +371,6 @@ class Editor(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
-        print "  wrote"
 
 
 class Demo3(MyriaPage):
@@ -598,10 +596,8 @@ class Application(webapp2.WSGIApplication):
         # Quiet logging for production
         logging.getLogger().setLevel(logging.DEBUG)
 
-        print "start"
         print webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
-        print "done"
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
 myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) if os.environ.get('MYRIAX_REST_PORT') else DEFAULT_MYRIAX_REST_PORT
