@@ -594,7 +594,7 @@ class Application(webapp2.WSGIApplication):
         self.ssl = ssl
 
         # Quiet logging for production
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.WARN)
 
         print webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
