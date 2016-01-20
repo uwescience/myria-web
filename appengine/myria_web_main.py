@@ -362,6 +362,7 @@ class Examples(MyriaPage):
 class Editor(MyriaPage):
 
     def get(self):
+        print "GET /editor"
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         template_vars = self.base_template_vars()
@@ -371,6 +372,7 @@ class Editor(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
+        print "  wrote"
 
 
 class Demo3(MyriaPage):
@@ -594,11 +596,32 @@ class Application(webapp2.WSGIApplication):
         self.ssl = ssl
 
         # Quiet logging for production
-        logging.getLogger().setLevel(logging.WARN)
+        logging.getLogger().setLevel(logging.DEBUG)
 
-        webapp2.WSGIApplication.__init__(
+        print "start"
+        print webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
+        print "done"
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
 myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) if os.environ.get('MYRIAX_REST_PORT') else DEFAULT_MYRIAX_REST_PORT
+
+# Google App Engine will just serve the app...
 app = Application(hostname=myriax_host, port=myriax_port)
+
+# ...but if we run this file directly, then paste will
+# serve the app
+def main():
+    from paste.urlparser import StaticURLParser
+    from paste.cascade import Cascade
+    # FIXME: this makes the source of the App downloadable; we should put css/js inside of a special serving folder
+    static_app = StaticURLParser(".")
+
+    # look for css, js, html before webapp URLs
+    appfull = Cascade([static_app, app])
+
+    from paste import httpserver
+    httpserver.serve(appfull)
+
+if __name__ == '__main__':
+    main()
