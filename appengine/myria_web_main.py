@@ -596,7 +596,7 @@ class Application(webapp2.WSGIApplication):
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
 
-        print webapp2.WSGIApplication.__init__(
+        webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
