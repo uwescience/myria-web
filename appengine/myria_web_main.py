@@ -600,7 +600,9 @@ class Application(webapp2.WSGIApplication):
             self, routes, debug=debug, config=None)
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
-myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) if os.environ.get('MYRIAX_REST_PORT') else DEFAULT_MYRIAX_REST_PORT
+myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) \
+    if os.environ.get('MYRIAX_REST_PORT') \
+    else DEFAULT_MYRIAX_REST_PORT
 
 # Google App Engine will just serve the app...
 app = Application(hostname=myriax_host, port=myriax_port)
@@ -610,7 +612,9 @@ app = Application(hostname=myriax_host, port=myriax_port)
 def main():
     from paste.urlparser import StaticURLParser
     from paste.cascade import Cascade
-    # FIXME: this makes the source of the App downloadable; we should put css/js inside of a special serving folder
+    # FIXME: this makes the source of the 
+    # App downloadable; we should put css/js 
+    # inside of a special serving folder
     static_app = StaticURLParser(".")
 
     # look for css, js, html before webapp URLs
