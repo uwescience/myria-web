@@ -607,13 +607,14 @@ myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) \
 # Google App Engine will just serve the app...
 app = Application(hostname=myriax_host, port=myriax_port)
 
+
 # ...but if we run this file directly, then paste will
 # serve the app
 def main():
     from paste.urlparser import StaticURLParser
     from paste.cascade import Cascade
-    # FIXME: this makes the source of the 
-    # App downloadable; we should put css/js 
+    # FIXME: this makes the source of the
+    # App downloadable; we should put css/js
     # inside of a special serving folder
     static_app = StaticURLParser(".")
 
