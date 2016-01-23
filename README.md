@@ -93,9 +93,16 @@ nosetests test/test_myria_down.py test/test_myria_up.py test_style.py -w appengi
 It is possible to run myria-web without a dependence on Google App Engine.
 Right now, myria-web uses the `paste` module to run the web application.
 
+Check out the dev branch with this functionality (soon will be in master).
+
+```bash
+git fetch
+git co bmyerz/no-google-app-engine
+```
+
 Install the developer dependencies.
 
-```sh
+```bash
 pip install -r requirements-dev.txt
 ```
 
