@@ -601,4 +601,5 @@ class Application(webapp2.WSGIApplication):
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
 myriax_port = int(os.environ.get('MYRIAX_REST_PORT')) if os.environ.get('MYRIAX_REST_PORT') else DEFAULT_MYRIAX_REST_PORT
+
 app = Application(hostname=myriax_host, port=myriax_port)
