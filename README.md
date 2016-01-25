@@ -106,7 +106,9 @@ Install the developer dependencies.
 pip install -r requirements-dev.txt
 ```
 
-Start the server.
+Do steps 1 and 2 only from [Initial setup](https://github.com/uwescience/myria-web/blob/bmyerz/no-google-app-engine/README.md#initial-setup).
+
+Finally, start the server.
 
 ```bash
 cd appengine
