@@ -37,8 +37,8 @@ def get_example(name):
     with open(path) as fh:
         return fh.read().strip()
 
-load_twitterk_data = '''T1 =load("https://goo.gl/YqKALA",
-    csv(schema(a:int, b:int),skip=0));
+load_twitterk_data = '''T1 = load("https://s3-us-west-2.amazonaws.com/uwdb/sampleData/TwitterK.csv",
+csv(schema(a:int, b:int),skip=0));
 store(T1, TwitterK, [a, b]);'''
 
 justx = '''T1 = scan(TwitterK);
@@ -70,6 +70,18 @@ T3 = scan(TwitterK);
 result = T2+T3;
 store(result, union_result);'''
 
+connected_components = '''E = scan(TwitterK);
+V = select distinct E.$0 from E;
+CC = [from V emit V.$0 as node_id, V.$0 as component_id];
+do
+  new_CC = [from E, CC where E.$0 = CC.$0 emit E.$1, CC.$1] + CC;
+  new_CC = [from new_CC emit new_CC.$0, MIN(new_CC.$1)];
+  delta = diff(CC, new_CC);
+  CC = new_CC;
+while [from delta emit count(*) > 0];
+comp = [from CC emit CC.$1 as id, count(CC.$0) as cnt];
+store(comp, TwitterCC);'''
+
 myria_examples = [
     ('Load TwitterK data', load_twitterk_data),
     ('Projection', justx),
@@ -77,6 +89,7 @@ myria_examples = [
     ('Calculate all two hops in the TwitterK relation using a simple join', twohops),
     ('Stateful Apply', stateful_apply),
     ('Union', union),
+    ('Connected components', connected_components),
 ]
 
 sql_examples = [
