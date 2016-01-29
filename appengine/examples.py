@@ -37,10 +37,17 @@ def get_example(name):
     with open(path) as fh:
         return fh.read().strip()
 
+load_twitterk_data = '''T1 = load("https://s3-us-west-2.amazonaws.com/uwdb/sampleData/TwitterK.csv",
+csv(schema(a:int, b:int),skip=0));
+store(T1, TwitterK, [a, b]);'''
 
 justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
 store(T2, JustX);'''
+
+aggregation = '''T1 = scan(TwitterK);
+Agg = [from T1 emit count(a) AS cnt, T1.a AS id];
+store(Agg, Twitter_aggregate, [$1]);'''
 
 twohops = '''T1 = scan(TwitterK);
 T2 = scan(TwitterK);
@@ -49,52 +56,40 @@ Joined = [from T1, T2
           emit T1.$0 as src, T1.$1 as link, T2.$1 as dst];
 store(Joined, TwoHopsInTwitter);'''
 
-profiling = '''P = scan(public:logs:Profiling);
-Agg = [from P emit worker_id() as workerId, count(*) as numProfilings];
-store(Agg, NumProfilings);'''
+stateful_apply = '''apply counter() {
+  [0 AS c];
+  [c + 1];
+  c;
+};
+T1 = scan(TwitterK);
+T2 = [from T1 emit $0, counter()];
+store (T2, K);'''
 
-phytoplankton = '''OppData = scan(all_opp_v3);
-VctData = scan(all_vct);
+union = '''T2 =  scan(TwitterK);
+T3 = scan(TwitterK);
+result = T2+T3;
+store(result, union_result);'''
 
-OppWithPop = select opp.*, vct.pop
-             from OppData as opp,
-                  VctData as vct
-             where opp.Cruise = vct.Cruise
-               and opp.Day = vct.Day
-               and opp.File_Id = vct.File_Id
-               and opp.Cell_Id = vct.Cell_Id;
-
-PlanktonCount = select Cruise, count(*) as Phytoplankton
-                from OppWithPop
-                where pop != "beads" and pop != "noise"
-                  and fsc_small > 10000;
-
-store(PlanktonCount, public:demo:PlanktonCount);'''
-
-sigma_clipping_naive = """Good = scan(public:adhoc:sc_points);
-
--- number of allowed standard deviations
-const Nstd: 2;
-
+connected_components = '''E = scan(TwitterK);
+V = select distinct E.$0 from E;
+CC = [from V emit V.$0 as node_id, V.$0 as component_id];
 do
-    stats = [from Good emit avg(v) AS mean, stdev(v) AS std];
-    NewBad = [from Good, stats where abs(Good.v - mean) > Nstd * std
-              emit Good.*];
-    Good = diff(Good, NewBad);
-    continue = [from NewBad emit count(NewBad.v) > 0];
-while continue;
-
-store(Good, OUTPUT);
-"""
+  new_CC = [from E, CC where E.$0 = CC.$0 emit E.$1, CC.$1] + CC;
+  new_CC = [from new_CC emit new_CC.$0, MIN(new_CC.$1)];
+  delta = diff(CC, new_CC);
+  CC = new_CC;
+while [from delta emit count(*) > 0];
+comp = [from CC emit CC.$1 as id, count(CC.$0) as cnt];
+store(comp, TwitterCC);'''
 
 myria_examples = [
-    ('JustX: A simple projection query on TwitterK', justx),
+    ('Load TwitterK data', load_twitterk_data),
+    ('Projection', justx),
+    ('Aggregation', aggregation),
     ('Calculate all two hops in the TwitterK relation using a simple join', twohops),
-    ('Count large phytoplankton in SeaFlow data (Armbrust Lab, UW Oceanography)', phytoplankton),
-    ('Powers Of 2: Simple iteration example', get_example('iteration.myl')),
-    ('Sigma-Clipping', get_example('sigma-clipping-v0.myl')),
-    ('Aggregate profiling data on each worker', profiling),
-#    ('Sigma-Clipping Optimized', get_example('sigma-clipping.myl')),
+    ('Stateful Apply', stateful_apply),
+    ('Union', union),
+    ('Connected components', connected_components),
 ]
 
 sql_examples = [
