@@ -88,6 +88,26 @@ Run
 nosetests test/test_myria_down.py test/test_myria_up.py test_style.py -w appengine --with-gae --gae-lib-root=google_appengine
 ```
 
+# Run without Google App Engine
+
+It is possible to run myria-web without a dependence on Google App Engine.
+Right now, myria-web uses the `paste` module to run the web application.
+
+Install the developer dependencies.
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Do steps 1 and 2 only from [Initial setup](https://github.com/uwescience/myria-web/blob/bmyerz/no-google-app-engine/README.md#initial-setup).
+
+Finally, start the server.
+
+```bash
+cd appengine
+python myria_web_main.py
+```
+
 # Issues
 
 The Google App Engine GUI has a Logs button that can be helpful for diagnosing issues with the Myria web app.
