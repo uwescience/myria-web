@@ -18,11 +18,20 @@ function recordOML(lr){
 }
 
 function printRL(){
-	console.log(localStorage.getItem("RL-alpha"));
-	console.log(localStorage.getItem("RL-beta"));
+	console.log("RL-alpha: " + localStorage.getItem("RL-alpha"));
+	console.log("RL-beta: " + localStorage.getItem("RL-beta"));
+}
+
+function printPI(){
+	console.log("PI-KP: " + localStorage.getItem("PI-KP"));
+	console.log("PI-KI: " + localStorage.getItem("PI-KI"));
+}
+
+function printOML(){
+	console.log("OML-LR: " + localStorage.getItem("OML-LR"));
 }
 
 
-function printTier(){
+function getTier(){
 	return localStorage.getItem("tier");
 }

@@ -14,9 +14,10 @@
 
 {% block content %}
 <script>
-    console.log("Tier Chosen: " + printTier());
+    console.log(getTier())
 </script>
 
+<h1>Select a Scaling Algorithm</h1>
 
 <div class="container">
   <div class="row top-buffer">
@@ -25,7 +26,7 @@
   		<div class="container">
   			<div class="row top-buffer">
   				<div class="col-md-12">
-			  		Reinforcement Learning Tuning
+			  		<h3>Reinforcement Learning Tuning</h3>
 			  	</div>
 			  	<div class="col-md-12">
 			  		<div class="col-xs-4">
@@ -53,18 +54,18 @@
   		<div class="container">
   			<div class="row top-buffer">
   				<div class="col-md-12">
-			  		PI Control
+			  		<h3>PI Control</h3>
 			  	</div>
 			  	<div class="col-md-12">
 			  		<div class="col-xs-4">
 			 			 <label for="KP">KP:</label>
-			  			<input type="text" class="form-control" href="replay-KP" id="KP-TEXTBOX" value=".20">
+			  			<input type="text" class="form-control" href="replay-KP" id="PI-KP-TEXTBOX" value=".20">
 					</div>
 				</div>
 				<div class="col-md-12">
 					<div class="col-xs-4">
 			 			 <label for="KI">KI:</label>
-			  			<input type="text" class="form-control" href="replay-KI" id="KI-TEXTBOX" value=".20">
+			  			<input type="text" class="form-control" href="replay-KI" id="PI-KI-TEXTBOX" value=".20">
 					</div>
 				</div>
 				<div class="col-md-12">
@@ -80,7 +81,7 @@
   		<div class="container">
   			<div class="row top-buffer">
   				<div class="col-md-12">
-			  		Online Learning
+			  		<h3>Online Learning</h3>
 			  	</div>
 			  	<div class="col-md-12">
 			  		<div class="col-xs-4">

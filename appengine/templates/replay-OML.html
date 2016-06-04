@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+  <link href="css/github.css" type="text/css" rel="stylesheet" />
+  <link href="css/select2.css" type="text/css" rel="stylesheet" />
+  <link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+  <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="css/queryvis.css">
+  <script type="text/javascript" src="js/perfenforce.js"></script>
+{% endblock %}
+{% block editor_active %} class="active"{% endblock %}
+{% block content %}
+  <script>
+  printOML()
+  </script>
+  <h1>Replay Mode</h1>
+  <div class="container">
+    <div class="row top-buffer">
+      <div class="col-md-12">
+        <h3>Selected PSLA</h3>
+        <script>document.write("Tier Shown : " + getTier())</script> <!-- Show the real tier here-->
+      </div>
+    </div>
+    <div class="row top-buffer">
+      <div class="col-md-12">
+        <h3>Workload Selection</h3>
+        <div class="btn-group" data-toggle="toggle">
+          <div class="row">
+            <div class="col-md-12">
+              <label><input type="radio" name="workloadSelection"> Random Workload (20 queries)</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label><input type="radio" name="workloadSelection"> Occasional Complex (20 queries)</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label><input type="radio" name="workloadSelection"> Simple to Complex (30 queries)</label></div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <label><input type="radio" name="workloadSelection"> Step-Wise Pattern (50 queries)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row top-buffer">
+        <div class="col-md-12">
+          <h3>Scaling Algorithm Tuning</h3>
+          <h3>Graphs</h3>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+  {% block footer %}
+  {% endblock %}
