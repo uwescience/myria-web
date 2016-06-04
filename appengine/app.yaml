@@ -23,6 +23,8 @@ handlers:
   static_dir: js
 - url: /data
   static_dir: data
+- url: /perfenforce_data
+  static_dir: perfenforce_data
 - url: /robots\.txt
   static_files: robots.txt
   upload: robots\.txt
