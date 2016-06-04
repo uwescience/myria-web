@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<script type="text/javascript" src="js/perfenforce.js"></script>
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+<script>
+    printRL()
+</script>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<script type="text/javascript" src="js/perfenforce.js"></script>
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<!-- Indicates a successful or positive action -->
+		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(1)">Tier 1 Select</a>
+  	</div>	
+  </div>
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<!-- Indicates a successful or positive action -->
+		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(2)">Tier 2 Select</a>
+  	</div>	
+  </div>
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<!-- Indicates a successful or positive action -->
+		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(3)">Tier 3 Select</a>
+  	</div>	
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

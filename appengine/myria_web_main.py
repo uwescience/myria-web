@@ -385,6 +385,65 @@ class Demo3(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
 
+class PerfenforceDemo(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'perfenforce-demo'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('perfenforce-demo.html')
+        self.response.out.write(template.render(template_vars))
+
+class ScalingAlgorithms(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'scaling-algorithms'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('scaling-algorithms.html')
+        self.response.out.write(template.render(template_vars))
+
+class ReplayRL(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'replay-RL'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('replay-RL.html')
+        self.response.out.write(template.render(template_vars))
+
+class ReplayPI(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'replay-RL'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('replay-PI.html')
+        self.response.out.write(template.render(template_vars))
+
+class ReplayOML(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'replay-RL'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('replay-OML.html')
+        self.response.out.write(template.render(template_vars))
 
 class Plan(MyriaHandler):
 
@@ -583,7 +642,12 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo3', Demo3)
+            ('/demo3', Demo3),
+            ('/perfenforce-demo',PerfenforceDemo),
+            ('/scaling-algorithms',ScalingAlgorithms),
+            ('/replay-RL',ReplayRL),
+            ('/replay-PI',ReplayPI),
+            ('/replay-OML',ReplayOML),
         ]
 
         # Connection to Myria. Thread-safe
@@ -599,7 +663,7 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
+myriax_host = 'localhost' #os.environ.get('MYRIAX_REST_HOST', 'localhost')
 # Google App Engine will just serve the app...
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')

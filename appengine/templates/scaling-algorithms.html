@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<script type="text/javascript" src="js/perfenforce.js"></script>
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+<script>
+    console.log("Tier Chosen: " + printTier());
+</script>
+
+
+<div class="container">
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<!--table for inner scaling algorithm -->
+  		<div class="container">
+  			<div class="row top-buffer">
+  				<div class="col-md-12">
+			  		Reinforcement Learning Tuning
+			  	</div>
+			  	<div class="col-md-12">
+			  		<div class="col-xs-4">
+			 			 <label for="RL-ALPHA">RL ALPHA:</label>
+			  			<input type="text" class="form-control" id="RL-ALPHA-TEXTBOX" value=".20">
+					</div>
+				</div>
+				<div class="col-md-12">
+					<div class="col-xs-4">
+			 			 <label for="RL-BETA">RL BETA:</label>
+			  			<input type="text" class="form-control" id="RL-BETA-TEXTBOX" value=".20">
+					</div>
+				</div>
+				<div class="col-md-12">
+					<!-- href="replay-RL"-->
+					<a type="button" class="btn btn-success" href="replay-RL" onClick="recordRL()" style="float: left;">Go</a>
+				</div>
+			</div>
+		</div>
+		<!--end table for inner scaling algorithm -->
+  	</div>
+  </div>
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<div class="container">
+  			<div class="row top-buffer">
+  				<div class="col-md-12">
+			  		PI Control
+			  	</div>
+			  	<div class="col-md-12">
+			  		<div class="col-xs-4">
+			 			 <label for="KP">KP:</label>
+			  			<input type="text" class="form-control" href="replay-KP" id="KP-TEXTBOX" value=".20">
+					</div>
+				</div>
+				<div class="col-md-12">
+					<div class="col-xs-4">
+			 			 <label for="KI">KI:</label>
+			  			<input type="text" class="form-control" href="replay-KI" id="KI-TEXTBOX" value=".20">
+					</div>
+				</div>
+				<div class="col-md-12">
+					<a type="button" class="btn btn-success" href="replay-PI" onClick="recordPI()" style="float: left;">Go</a>
+				</div>
+			</div>
+		</div>
+  	</div>
+  </div>
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  		<!--table for inner scaling algorithm -->
+  		<div class="container">
+  			<div class="row top-buffer">
+  				<div class="col-md-12">
+			  		Online Learning
+			  	</div>
+			  	<div class="col-md-12">
+			  		<div class="col-xs-4">
+			 			 <label for="OML">Learning Rate:</label>
+			  			<input type="text" class="form-control" href="replay-OML" id="OML-LR-TEXTBOX" value=".20">
+					</div>
+				</div>
+				<div class="col-md-12">
+					<a type="button" class="btn btn-success" href="replay-OML" onClick="recordOML()" style="float: left;">Go</a>
+				</div>
+			</div>
+		</div>
+		<!--end table for inner scaling algorithm -->
+  	</div>
+  </div>
+  <div class="row top-buffer">
+  	<div class="col-md-12">
+  	</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
