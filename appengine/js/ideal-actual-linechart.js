@@ -1,9 +1,10 @@
 var margin = {top: 20, right: 200, bottom: 30, left: 30},
-    width = 500 - margin.left - margin.right,
+    width = 300 - margin.left - margin.right,
     height = 180 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
-        .range([0, 50])
+        .domain([0,50])
+        .range([0,250])
         .clamp(true);
 
 var y = d3.scale.linear()
@@ -12,9 +13,7 @@ var y = d3.scale.linear()
 var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom")
-    .tickFormat(d3.format('.0f'))
-    .tickPadding(1)
-    .tickValues(d3.range(1, 50, 1));
+    .tickFormat(d3.format('.0f'));
 
 var yAxis = d3.svg.axis()
     .scale(y)
@@ -51,8 +50,8 @@ d3.csv("../perfenforce_data/data.csv", function(error, data) {
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis)
       .append("text")
-        .attr("y", 25)
-        .attr("x", 200)
+        .attr("y", 28)
+        .attr("x", 115)
         .text("Query ID");
 
   svg.append("g")
@@ -80,23 +79,10 @@ d3.csv("../perfenforce_data/data.csv", function(error, data) {
 function updateData() {
   //Get the data again
   d3.csv("../perfenforce_data/data.csv", function(error, data) {
-    console.log("updating graph...");
+      console.log("updating graph...");
 
       svg.select("path.lineActual").remove();
       svg.select("path.lineIdeal").remove();
-      svg.select("g.x.axis").remove();
-
-      x.domain(d3.extent(data, function(d) { return d.queryID; }));
-      y.domain(d3.extent([0,12]));
-
-      svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-      .append("text")
-        .attr("y", 25)
-        .attr("x", 200)
-        .text("Query ID");
 
       svg.append("path")
       .datum(data)
