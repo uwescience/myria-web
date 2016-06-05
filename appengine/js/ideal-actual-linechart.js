@@ -17,7 +17,7 @@ var xAxis = d3.svg.axis()
 
 var yAxis = d3.svg.axis()
     .scale(y)
-    .orient("left");
+    .orient("left").ticks(5);
 
 var idealLine = d3.svg.line()
     .x(function(d) { return x(d.queryID); })
@@ -33,7 +33,7 @@ var svg = d3.select("#idealactual").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("../perfenforce_data/data.csv", function(error, data) {
+d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
   if (error) throw error;
 
   data.forEach(function(d) {
@@ -78,7 +78,7 @@ d3.csv("../perfenforce_data/data.csv", function(error, data) {
 
 function updateData() {
   //Get the data again
-  d3.csv("../perfenforce_data/data.csv", function(error, data) {
+  d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
       console.log("updating graph...");
 
       svg.select("path.lineActual").remove();

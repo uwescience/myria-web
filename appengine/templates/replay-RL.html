@@ -73,7 +73,7 @@
               </div>
               <div class="row">
               <div class="col-md-12">
-                <a type="button" class="btn btn-primary" onClick="recordRL();updateData();" style="float: left;">Step</a>
+                <a type="button" class="btn btn-primary" onClick="recordRL();updateData();updateDataBar();" style="float: left;">Step</a>
               </div>
               </div>
             
@@ -81,11 +81,19 @@
             <!-- Adding table or something for results-->
             <!-- Adding graph for ideal vs actual -->
             <div class="row">
-              <div class="col-md-12 col-height">
+              <div class="col-md-6 col-height">
               <div class="span6" id="idealactual"></div>
             </div>
+
+            <div class="col-md-6 col-height">
+              <div class="span6" id="rl-barchart"></div>
+            </div>
+            
             </div>
             <!-- Adding graph for reward values -->
+            
+              
+           
             <!-- Button to reset values -->
             <div class="row">
               <div class="col-md-12">
@@ -102,5 +110,6 @@
       <!-- D3 scripts -->
       <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
       <script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
+      <script type="text/javascript" src="js/rl-reward-barchart.js"></script>
       <!-- end D3 scripts -->
     {% endblock %}
