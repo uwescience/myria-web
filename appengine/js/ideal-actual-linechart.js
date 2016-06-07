@@ -13,7 +13,7 @@ var y = d3.scale.linear()
 var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom")
-    .tickFormat(d3.format('.0f'));
+    .tickFormat(d3.format('d'));
 
 var yAxis = d3.svg.axis()
     .scale(y)
@@ -32,6 +32,9 @@ var svg = d3.select("#idealactual").append("svg")
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var idealLinePath = null;
+var actualLinePath = null;
 
 d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
   if (error) throw error;
@@ -64,15 +67,14 @@ d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
       .style("text-anchor", "middle")
       .text("Cluster Size");
 
-  svg.append("path")
-      .datum(data)
+  idealLinePath = svg.append("path")
       .attr("class", "lineIdeal")
-      .attr("d", idealLine);
+      .attr("d", idealLine(data));
 
-  svg.append("path")
-      .datum(data)
+  actualLinePath =  svg.append("path")
       .attr("class", "lineActual")
-      .attr("d", actualLine);
+      .attr("d", actualLine(data));
+
 });
 
 
@@ -81,18 +83,21 @@ function updateData() {
   d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
       console.log("updating graph...");
 
-      svg.select("path.lineActual").remove();
-      svg.select("path.lineIdeal").remove();
+      svg.selectAll("g.x.axis").remove();
 
-      svg.append("path")
-      .datum(data)
-      .attr("class", "lineIdeal")
-      .attr("d", idealLine);
+      x.domain(d3.extent(data, function(d) { return d.queryID; }));
 
-      svg.append("path")
-      .datum(data)
-      .attr("class", "lineActual")
-      .attr("d", actualLine);
+      svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+      .append("text")
+        .attr("y", 28)
+        .attr("x", 115)
+        .text("Query ID");
+
+      idealLinePath.attr("d", idealLine(data)).transition().duration(1000);
+      actualLinePath.attr("d", actualLine(data)).transition().duration(1000);
 
   });
 }

@@ -32,6 +32,7 @@ function updateRLTextboxes(){
 	document.getElementById("RL-BETA-TEXTBOX").value = getBeta()
 }
 
+// PI functions
 function recordPI(kp, ki){
 	localStorage.setItem("PI-KP", document.getElementById("PI-KP-TEXTBOX").value);
 	localStorage.setItem("PI-KI", document.getElementById("PI-KI-TEXTBOX").value);

@@ -7,6 +7,7 @@
   <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="css/queryvis.css">
   <script type="text/javascript" src="js/perfenforce.js"></script>
+  <script type="text/javascript" src="js/scaling_algorithms.js"></script>
 {% endblock %}
 {% block editor_active %} class="active"{% endblock %}
 {% block content %}
@@ -73,7 +74,7 @@
               </div>
               <div class="row">
               <div class="col-md-12">
-                <a type="button" class="btn btn-primary" onClick="recordRL();updateData();updateDataBar();" style="float: left;">Step</a>
+                <a type="button" class="btn btn-primary" onClick="recordRL();runRLMethod();updateData();updateDataBar();" style="float: left;">Step</a>
               </div>
               </div>
             

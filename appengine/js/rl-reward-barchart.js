@@ -10,7 +10,7 @@ var y_rl = d3.scale.linear().range([height_rl, 0]);
 var xAxis_rl = d3.svg.axis()
     .scale(x_rl)
     .orient("bottom")
-    .tickFormat(d3.format('.0f'));
+    .tickFormat(d3.format('d'));
 
 var yAxis_rl = d3.svg.axis()
     .scale(y_rl)
@@ -70,6 +70,24 @@ function updateDataBar() {
       console.log("updating graph bar...");
 
     svg_rl.selectAll("rect").remove();
+    svg_rl.selectAll("g.x.axis").remove();
+
+    x_rl.domain(data_rl.map(function(d) { return d.cluster; }));
+
+    svg_rl.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height_rl + ")")
+      .call(xAxis_rl)
+    .append("text")
+      .attr("y", 30)
+      .attr("x", 50)
+      .text("Cluster Size")
+    .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", "-.55em")
+      .attr("transform", "rotate(-90)" );
+
 
     svg_rl.selectAll("bar")
       .data(data_rl)

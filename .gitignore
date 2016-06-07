@@ -6,3 +6,4 @@ appengine/BRANCH
 /google_appengine
 /google_appengine*.zip
 .idea
+appengine/perfenforce_data
