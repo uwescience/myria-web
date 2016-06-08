@@ -67,32 +67,17 @@ d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl
 function updateDataBar() {
   //Get the data again
   d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl) {
-      console.log("updating graph bar...");
-
-    svg_rl.selectAll("rect").remove();
-    svg_rl.selectAll("g.x.axis").remove();
+    
+    console.log("updating graph bar...");
 
     x_rl.domain(data_rl.map(function(d) { return d.cluster; }));
 
-    svg_rl.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height_rl + ")")
-      .call(xAxis_rl)
-    .append("text")
-      .attr("y", 30)
-      .attr("x", 50)
-      .text("Cluster Size")
-    .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-.8em")
-      .attr("dy", "-.55em")
-      .attr("transform", "rotate(-90)" );
+    svg_rl.select("g.x.axis") // change the x axis
+            .transition(1500)
+            .call(xAxis_rl);
 
-
-    svg_rl.selectAll("bar")
-      .data(data_rl)
-    .enter().append("rect")
-      .style("fill", "steelblue")
+    svg_rl.selectAll("rect").data(data_rl)   // change the bar
+            .transition(1500)
       .attr("x", function(d) { return x_rl(d.cluster); })
       .attr("width", x_rl.rangeBand())
       .attr("y", function(d) { return y_rl(d.rewardRatio); })

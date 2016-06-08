@@ -77,27 +77,45 @@ d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
 
 });
 
+var xmlHttp = null
+function getClusterSize()
+{      
+    xmlHttp = new XMLHttpRequest();
+    //xmlHttp.onreadystatechange = ProcessRequest;
+    xmlHttp.open("GET", "http://ec2-52-41-7-106.us-west-2.compute.amazonaws.com:8753/perfenforce/cluster-size", false); // true for asynchronous 
+    xmlHttp.send( null );
+}
 
 function updateData() {
   //Get the data again
   d3.csv("../perfenforce_data/actual-ideal.csv", function(error, data) {
-      console.log("updating graph...");
+      console.log(data)
+      var newDataPoint = {}
+      newDataPoint.queryID = "8"
+      newDataPoint.actual = "6"
+      newDataPoint.ideal = "4"
 
-      svg.selectAll("g.x.axis").remove();
+      data.push(newDataPoint)
+
+      getClusterSize()
+      console.log(xmlHttp.responseText)
+
+      console.log(data[0])
+      console.log(newDataPoint)
+      console.log(data)
 
       x.domain(d3.extent(data, function(d) { return d.queryID; }));
+      svg.select("g.x.axis") // change the x axis
+            .transition(1500)
+            .call(xAxis);
 
-      svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-      .append("text")
-        .attr("y", 28)
-        .attr("x", 115)
-        .text("Query ID");
+      svg.select(".lineActual")   // change the line
+            .transition(1500)
+            .attr("d", actualLine(data));
 
-      idealLinePath.attr("d", idealLine(data)).transition().duration(1000);
-      actualLinePath.attr("d", actualLine(data)).transition().duration(1000);
+      svg.select(".lineIdeal")   // change the line
+            .transition(1500)
+            .attr("d", idealLine(data));
 
   });
 }
