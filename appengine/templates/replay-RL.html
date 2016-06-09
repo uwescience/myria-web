@@ -28,7 +28,7 @@
         <div class="btn-group" data-toggle="toggle">
           <div class="row">
             <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection"> Random Workload (20 queries)</label>
+              <label><input type="radio" name="workloadSelection" checked="checked"> Random Workload (20 queries)</label>
             </div>
           </div>
           <div class="row">
@@ -74,7 +74,7 @@
               </div>
               <div class="row">
               <div class="col-md-12">
-                <a type="button" class="btn btn-primary" onClick="recordRL();stepFake();updateData();updateDataBar();" style="float: left;">Step</a>
+                <a type="button" class="btn btn-primary" onClick="recordRL();stepFake();updateActualIdealLineGraph();updateRLAwardChart();" style="float: left;">Step</a>
               </div>
               </div>
             
@@ -92,9 +92,6 @@
             
             </div>
             <!-- Adding graph for reward values -->
-            
-              
-           
             <!-- Button to reset values -->
             <div class="row">
               <div class="col-md-12">

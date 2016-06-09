@@ -79,44 +79,32 @@ actualLinePath =  svg.append("path")
 // this won't be necessary if running on coordinator
 host = ''
 
-function getRequest(command)
-{
-  return JSON.parse($.ajax({
-                type: 'GET',
-                url: host + ":8753" + command,
-                dataType: 'json',
-                global: false,
-                async: false,
-                success: function (data) {
-                    return data;
-                }
-            }).responseText);
-}
-
-function updateData() {
-      if(userPoints.length == 0){
-          console.log("initializing");
-          initializeScaling()
-        }
+function updateActualIdealLineGraph() {
 
       var newDataPoint = {}
-      newDataPoint.queryID = ithQuery.toString()
-      newDataPoint.actual = getRequest('/perfenforce/cluster-size').toString()
-      newDataPoint.ideal = getRequest('/perfenforce/current-query-ideal').toString()
+      newDataPoint.queryID = ithQuery
 
-      userPoints.push(newDataPoint)
+      $.when(getRequest('/perfenforce/cluster-size'), getRequest('/perfenforce/current-query-ideal')).done(function(clusterSize, idealSize){
 
-      x.domain(d3.extent(userPoints, function(d) { return +d.queryID; }))
-      svg.select("g.x.axis") // change the x axis
+        newDataPoint.actual = clusterSize[0]
+        newDataPoint.ideal = idealSize[0]
+
+        userPoints.push(newDataPoint)
+
+        x.domain(d3.extent(userPoints, function(d) { return d.queryID; }))
+        svg.select("g.x.axis") // change the x axis
             .transition(2000)
             .call(xAxis);
 
-      svg.select(".lineActual")   // change the line
+        svg.select(".lineActual")   // change the line
             .transition(2000)
             .attr("d", actualLine(userPoints));
 
-      svg.select(".lineIdeal")   // change the line
+        svg.select(".lineIdeal")   // change the line
             .transition(2000)
             .attr("d", idealLine(userPoints));
+
+      });
+      
 
 }

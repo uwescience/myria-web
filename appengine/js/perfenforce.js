@@ -4,14 +4,16 @@ localStorage.setItem("tier", tierNumber);
 }
 
 function getTier(){
-	return localStorage.getItem("tier");
+	return +localStorage.getItem("tier");
 }
 
 function getSequenceValue() {
 	var inputs = document.getElementsByName("workloadSelection");
+	console.log(inputs)
 	for (var i = 0; i < inputs.length; i++) {
 	  if (inputs[i].checked) {
-	    return inputs[i].value;
+	  	console.log("checked")
+	    return i;
 	  }
 	}
 }
@@ -51,6 +53,7 @@ function recordPI(kp, ki){
 	localStorage.setItem("SA", "PI")
 	localStorage.setItem("PI-KP", document.getElementById("PI-KP-TEXTBOX").value);
 	localStorage.setItem("PI-KI", document.getElementById("PI-KI-TEXTBOX").value);
+	localStorage.setItem("PI-W", document.getElementById("PI-WINDOW-TEXTBOX").value);
 }
 
 function getKP(){
@@ -61,9 +64,20 @@ function getKI(){
 	return +localStorage.getItem("PI-KI");
 }
 
+function getW(){
+	return +localStorage.getItem("PI-W");
+}
+
 function printPI(){
 	console.log("PI-KP: " + localStorage.getItem("PI-KP"));
 	console.log("PI-KI: " + localStorage.getItem("PI-KI"));
+	console.log("PI-W: " + localStorage.getItem("PI-W"));
+}
+
+function updatePITextboxes(){
+	document.getElementById("PI-KP-TEXTBOX").value = getKP()
+	document.getElementById("PI-KI-TEXTBOX").value = getKI()
+	document.getElementById("PI-WINDOW-TEXTBOX").value = getW()
 }
 
 

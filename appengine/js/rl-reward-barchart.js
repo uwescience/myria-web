@@ -64,8 +64,14 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
       .attr("height", function(d) { return height_rl - y_rl(d.rewardRatio); });
 
 
-function updateDataBar() {
+function updateRLAwardChart() {
     console.log("updating graph bar...");
+
+    $.when(getRequest('/perfenforce/scaling-algorithm-state')).done(function(scalingState){
+      console.log("SCALING STATE")
+      console.log(scalingState.RLActiveStates)
+
+    });
 
     x_rl.domain(userData.map(function(d) { return d.cluster; }));
 
@@ -80,5 +86,4 @@ function updateDataBar() {
       .attr("y", function(d) { return y_rl(d.rewardRatio); })
       .attr("height", function(d) { return height_rl - y_rl(d.rewardRatio); });
 
-  
 }
