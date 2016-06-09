@@ -25,8 +25,9 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
     .attr("transform", 
           "translate(" + margin_rl.left_rl + "," + margin_rl.top_rl + ")");
 
-d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl) {
-  x_rl.domain(data_rl.map(function(d) { return d.cluster; }));
+  userData = []
+
+  x_rl.domain(userData.map(function(d) { return d.cluster; }));
   y_rl.domain([0, 2.0]);
 
   svg_rl.append("g")
@@ -54,7 +55,7 @@ d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl
       .text("Ratio Reward");
 
   svg_rl.selectAll("bar")
-      .data(data_rl)
+      .data(userData)
     .enter().append("rect")
       .style("fill", "steelblue")
       .attr("x", function(d) { return x_rl(d.cluster); })
@@ -62,27 +63,22 @@ d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl
       .attr("y", function(d) { return y_rl(d.rewardRatio); })
       .attr("height", function(d) { return height_rl - y_rl(d.rewardRatio); });
 
-});
 
 function updateDataBar() {
-  //Get the data again
-  d3.csv("../perfenforce_data/rl-reward-histogram.csv", function(error_rl, data_rl) {
-    
     console.log("updating graph bar...");
 
-    x_rl.domain(data_rl.map(function(d) { return d.cluster; }));
+    x_rl.domain(userData.map(function(d) { return d.cluster; }));
 
     svg_rl.select("g.x.axis") // change the x axis
-            .transition(1500)
+            .transition(2000)
             .call(xAxis_rl);
 
-    svg_rl.selectAll("rect").data(data_rl)   // change the bar
-            .transition(1500)
+    svg_rl.selectAll("rect").data(userData)   // change the bar
+            .transition(2000)
       .attr("x", function(d) { return x_rl(d.cluster); })
       .attr("width", x_rl.rangeBand())
       .attr("y", function(d) { return y_rl(d.rewardRatio); })
       .attr("height", function(d) { return height_rl - y_rl(d.rewardRatio); });
 
-    
-  });
+  
 }
