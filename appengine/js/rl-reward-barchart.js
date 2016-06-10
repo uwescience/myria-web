@@ -25,7 +25,19 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
     .attr("transform", 
           "translate(" + margin_rl.left_rl + "," + margin_rl.top_rl + ")");
 
-  userData = []
+    configs = [4,6,8,10,12]
+    userData = []
+    for (i = 0; i < configs.length; i++)
+    {
+        obj = {}
+        obj.cluster = configs[i]
+        obj.rewardRatio = 0
+
+        if(obj.rewardRatio >= 0)
+        {
+          userData.push(obj)
+        }
+    }
 
   x_rl.domain(userData.map(function(d) { return d.cluster; }));
   y_rl.domain([0, 2.0]);
@@ -71,7 +83,24 @@ function updateRLAwardChart() {
       console.log("SCALING STATE")
       console.log(scalingState.RLActiveStates)
 
+      configs = [4,6,8,10,12]
+      userData = []
+      for (i = 0; i < scalingState.RLActiveStates.length; i++)
+      {
+          obj = {}
+          obj.cluster = configs[i]
+          obj.rewardRatio = scalingState.RLActiveStates[i]
+
+          if(obj.rewardRatio >= 0)
+          {
+            userData.push(obj)
+          }
+      }
+      
+
     });
+
+    console.log(userData)
 
     x_rl.domain(userData.map(function(d) { return d.cluster; }));
 

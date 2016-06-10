@@ -4,7 +4,6 @@ host = ''
 
 var ithQuery = 0
 
-
 function getRequest(command)
 {
   return $.ajax({
@@ -12,7 +11,7 @@ function getRequest(command)
                 url: host + ":8753" + command,
                 dataType: 'json',
                 global: false,
-                async: true,
+                async: false,
                 success: function(data) {
             		return data;
         		}
@@ -64,8 +63,9 @@ function createScalingAlgorithmObj()
 	}
 	else if(scalingAlgorithmObj.name == "PI")
 	{
-	scalingAlgorithmObj.kp = getKI()
-	scalingAlgorithmObj.ki = getKP()
+	scalingAlgorithmObj.kp = getKP()
+	scalingAlgorithmObj.ki = getKI()
+	scalingAlgorithmObj.w = getW()
 	}
 	else if(scalingAlgorithmObj.name == "OML")
 	{

@@ -76,9 +76,6 @@ actualLinePath =  svg.append("path")
     .attr("class", "lineActual")
     .attr("d", actualLine(userPoints))
 
-// this won't be necessary if running on coordinator
-host = ''
-
 function updateActualIdealLineGraph() {
 
       var newDataPoint = {}

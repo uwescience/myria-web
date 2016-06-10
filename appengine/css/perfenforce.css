@@ -27,7 +27,7 @@
 }
 /**/
 
-/*bar chart*/
+/*rl bar chart*/
 .bar {
   fill: steelblue;
 }
@@ -36,3 +36,17 @@
   fill: brown;
 }
 /**/
+
+
+/* pi error */
+.lineCurrentError {
+  fill: none;
+  stroke: purple;
+  stroke-width: 1.5px;
+}
+
+.lineErrorSum {
+  fill: none;
+  stroke: red;
+  stroke-width: 1.5px;
+}

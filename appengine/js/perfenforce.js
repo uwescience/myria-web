@@ -65,6 +65,7 @@ function getKI(){
 }
 
 function getW(){
+	console.log("WINDOW " + localStorage.getItem("PI-W"))
 	return +localStorage.getItem("PI-W");
 }
 
