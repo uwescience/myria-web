@@ -23,95 +23,94 @@
     <li class="active"><a href="#">Demo</a></li>
   </ol>
   <h1>Replay Mode</h1>
-  <div class="container">
+   <div class="col-md-12">
     <div class="row top-buffer">
-      <div class="col-md-12">
-        <h3>Selected SLA</h3>
-        <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
-        <div class="panel-body" ng-init="wizard.loadQueries()">
+      <div class="col-md-8">
+        <h3>1) Selected SLA</h3>
+        <div ng-app='tiersDemo' ng-controller="WizardController as wizard">
+          <div ng-init="wizard.loadQueries()">
             <div class="row-md-12">
-                <div class="col-md-7" ng-init='tier=wizard.getTierWizard()'>
-                    <!-- Tier panel start -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Tier #{[{ tier.name }]}</div>
-                        <!-- Tier data -->
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Query Template</th>
-                                    <th>Runtime (seconds)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                  <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
-                                    <td>
-                                        <span ng-repeat="query in queryGroup">
-                                            {[{ query.template }]}<br />
-                                        </span>
-                                    </td>
-                                    <td>{[{ queryGroup.runtime }]}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Tier panel end -->
+              <div class="col-md-12" ng-init='tier=wizard.getTierWizard()'>
+                <!-- Tier panel start -->
+                <div class="panel panel-default">
+                  <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                  <!-- Tier data -->
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Query Template</th>
+                        <th>Runtime (seconds)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                        <td>
+                          <span ng-repeat="query in queryGroup">
+                            {[{ query.template }]}<br />
+                          </span>
+                        </td>
+                        <td>{[{ queryGroup.runtime }]}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
+                <!-- Tier panel end -->
+              </div>
             </div>
+          </div>
         </div>
       </div>
-      </div>
+      <!-- Other column here -->
+      <div class="col-md-3 col-md-offset-1">
+        <h3>3) Tuning</h3>
+        <div class="row">
+              <div class="col-md-12">
+                  <label for="OML-LR">Learning Rate:</label>
+                  <input type="text" class="form-control" id="OML-LR-TEXTBOX">
+              </div>
+        </div>
+
+        <div class="row top-buffer">
+          <div class="col-md-12">
+            <a type="button" class="btn btn-success btn-block" onClick="recordOML();stepFake();updateActualIdealLineGraph();" style="float: left;">Next Query</a>
+          </div>
+        </div>
+        <div class="row top-buffer">
+          <div class="col-md-12">
+            Upcoming Query...
+          </div>
+        </div>
     </div>
-    <div class="row top-buffer">
-      <div class="col-md-12">
-        <h3>Workload Selection</h3>
+    <div class="row">
+      <div class="col-md-8">
+        <h3>2) Workload Selection</h3>
         <div class="btn-group" data-toggle="toggle">
-          <div class="row">
+          
+            <div class="row-md-12">
             <div class="col-md-12">
               <label><input type="radio" name="workloadSelection" checked="checked"> Random Workload (20 queries)</label>
             </div>
           </div>
-          <div class="row">
+          <div class="row-md-12">
             <div class="col-md-12">
               <label><input type="radio" name="workloadSelection"> Occasional Complex (20 queries)</label>
             </div>
           </div>
-          <div class="row">
+          <div class="row-md-12">
             <div class="col-md-12">
               <label><input type="radio" name="workloadSelection"> Simple to Complex (30 queries)</label></div>
             </div>
-            <div class="row">
+            <div class="row-md-12">
               <div class="col-md-12">
                 <label><input type="radio" name="workloadSelection"> Step-Wise Pattern (50 queries)</label>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="row top-buffer">
-        <div class="col-md-12">
-          <h3>Scaling Algorithm Tuning</h3>
-            <div class="row">
-              <div class="col-md-12">
-                <h4>Algorithm Selected: Online Machine Learning</h4>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="col-xs-4">
-                  <label for="OML-LR">Learning Rate:</label>
-                  <input type="text" class="form-control" id="OML-LR-TEXTBOX">
-                </div>
-              </div>
-              </div>
-              <div class="row">
-              <div class="col-md-12">
-                <a type="button" class="btn btn-primary" onClick="recordOML();stepFake();updateActualIdealLineGraph();" style="float: left;">Step</a>
-              </div>
-              </div>
-            
-          <h3>Graphs</h3>
-            <!-- Adding table or something for results-->
-            <!-- Adding graph for ideal vs actual -->
+        <div class="col-md-3 col-md-offset-1">
+        <div class="row">
+          <div class="col-md-12">
+            <h3>Graphs</h3>
             <div class="row">
               <div class="col-md-6 col-height">
               <div class="span6" id="idealactual"></div>
@@ -120,15 +119,10 @@
             <!--NEW GRAPH HERE -->
             
             </div>
-            <!-- Adding graph for reward values -->
-            <!-- Button to reset values -->
-            <div class="row">
-              <div class="col-md-12">
-                <a type="button" class="btn btn-primary" href="perfenforce-demo" style="float: left;">Go Back: Select an SLA</a>
-              </div>
             </div>
-   
+          </div>
         </div>
+      </div>
       </div>
     </div>
     <script>  updateOMLTextboxes();</script>

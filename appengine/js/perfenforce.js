@@ -19,6 +19,11 @@ function getScalingAlgorithm(){
 	return localStorage.getItem("SA");
 }
 
+function updateNextQueryLabel(){
+	//getRequest for description
+	
+}
+
 // RL functions
 function recordRL(alpha, beta){
 	localStorage.setItem("SA", "RL")

@@ -21,12 +21,12 @@ var yAxis_pi = d3.svg.axis()
     .tickFormat(d3.format('d'));
 
 var currentError_pi = d3.svg.line()
-    .x(function(d) { return x(d.queryID); })
-    .y(function(d) { return y(d.PIControlProportionalErrorValue); });
+    .x(function(d) { return x_pi(d.queryID); })
+    .y(function(d) { return y_pi(d.PIControlProportionalErrorValue); });
 
 var errorSum_pi = d3.svg.line()
-    .x(function(d) { return x(d.queryID); }) 
-    .y(function(d) { return y(d.PIControlIntegralErrorSum); });
+    .x(function(d) { return x_pi(d.queryID); }) 
+    .y(function(d) { return y_pi(d.PIControlIntegralErrorSum); });
 
 var svg_pi = d3.select("#piError").append("svg")
     .attr("width", width_pi + margin_pi.left_pi + margin_pi.right_pi)
@@ -56,7 +56,12 @@ svg_pi.append("g")
       .attr("x", 115)
       .text("Query ID");
 
-y_pi.domain(d3.extent(userPoints_pi, function(d) { return d.PIControlIntegralErrorSum; }));
+maxProportion = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlProportionalErrorValue;}))
+maxSum = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
+
+var maxNum = maxProportion >  maxSum ? maxProportion : maxSum;
+
+y_pi.domain(d3.extent([0,maxNum]));
 
 svg_pi.append("g")
     .attr("class", "y axis")
@@ -71,6 +76,8 @@ svg_pi.append("g")
 currentErrorPath = svg_pi.append("path")
     .attr("class", "lineCurrentError")
     .attr("d", currentError_pi(userPoints_pi));
+
+    console.log(currentError_pi(userPoints_pi))
 
 errorSumPath =  svg_pi.append("path")
     .attr("class", "lineErrorSum")
@@ -95,7 +102,15 @@ function updatePIErrorLines() {
             .transition(2000)
             .call(xAxis_pi);
 
-        y_pi.domain(d3.extent(userPoints_pi, function(d) { return d.PIControlIntegralErrorSum; }));
+        console.log(userPoints_pi);
+
+        maxProportion = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlProportionalErrorValue;}))
+        maxSum = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
+
+        var maxNum = maxProportion >  maxSum ? maxProportion : maxSum;
+
+        y_pi.domain(d3.extent([0,maxNum]));
+
         svg_pi.select("g.y.axis") // change the x axis
             .transition(2000)
             .call(yAxis_pi);
