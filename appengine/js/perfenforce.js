@@ -21,7 +21,12 @@ function getScalingAlgorithm(){
 
 function updateNextQueryLabel(){
 	//getRequest for description
-	
+
+}
+
+function makeThreeVisible(){
+	document.getElementById('step3Tuning').style.visibility='visible'
+	document.getElementById('step3Graphs').style.visibility='visible'
 }
 
 // RL functions

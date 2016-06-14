@@ -17,8 +17,7 @@ var xAxis_pi = d3.svg.axis()
 
 var yAxis_pi = d3.svg.axis()
     .scale(y_pi)
-    .orient("left").ticks(5)
-    .tickFormat(d3.format('d'));
+    .orient("left").ticks(5);
 
 var currentError_pi = d3.svg.line()
     .x(function(d) { return x_pi(d.queryID); })
@@ -57,11 +56,17 @@ svg_pi.append("g")
       .text("Query ID");
 
 maxProportion = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlProportionalErrorValue;}))
-maxSum = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
+        maxSum = Math.max.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
 
-var maxNum = maxProportion >  maxSum ? maxProportion : maxSum;
+        var maxNum = maxProportion >  maxSum ? maxProportion : maxSum;
 
-y_pi.domain(d3.extent([0,maxNum]));
+        minProportion = Math.min.apply(Math,userPoints_pi.map(function(o){return o.PIControlProportionalErrorValue;}))
+        minSum = Math.min.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
+
+        var maxNum = maxProportion >  maxSum ? maxProportion : maxSum
+         var minNum = minProportion <  minSum ? minProportion : minSum
+
+        y_pi.domain(d3.extent([minNum,maxNum]));
 
 svg_pi.append("g")
     .attr("class", "y axis")
@@ -109,7 +114,13 @@ function updatePIErrorLines() {
 
         var maxNum = maxProportion >  maxSum ? maxProportion : maxSum;
 
-        y_pi.domain(d3.extent([0,maxNum]));
+        minProportion = Math.min.apply(Math,userPoints_pi.map(function(o){return o.PIControlProportionalErrorValue;}))
+        minSum = Math.min.apply(Math,userPoints_pi.map(function(o){return o.PIControlIntegralErrorSum;}))
+
+        var maxNum = maxProportion >  maxSum ? maxProportion : maxSum
+         var minNum = minProportion <  minSum ? minProportion : minSum
+
+        y_pi.domain(d3.extent([minNum,maxNum]));
 
         svg_pi.select("g.y.axis") // change the x axis
             .transition(2000)

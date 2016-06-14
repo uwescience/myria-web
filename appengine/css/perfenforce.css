@@ -74,3 +74,34 @@ div {
        -moz-border-radius: 8px;
             border-radius: 8px;
 }
+
+
+.line4 {
+  fill: none;
+  stroke: blue;
+  stroke-width: 1.5px;
+}
+
+.line6 {
+  fill: none;
+  stroke: green;
+  stroke-width: 1.5px;
+}
+
+.line8 {
+  fill: none;
+  stroke: red;
+  stroke-width: 1.5px;
+}
+
+.line10 {
+  fill: none;
+  stroke: purple;
+  stroke-width: 1.5px;
+}
+
+.line12 {
+  fill: none;
+  stroke: orange;
+  stroke-width: 1.5px;
+}

@@ -27,7 +27,7 @@
    <div class="col-md-12">
     <div class="row top-buffer">
       <div class="col-md-8">
-        <h3>1) Selected SLA</h3>
+        <h3>Selected SLA</h3>
         <div ng-app='tiersDemo' ng-controller="WizardController as wizard">
           <div ng-init="wizard.loadQueries()">
             <div class="row-md-12">
@@ -62,8 +62,8 @@
         </div>
       </div>
       <!-- Other column here -->
-      <div class="col-md-3 col-md-offset-1">
-        <h3>3) Tuning</h3>
+      <div id="step3Tuning" class="col-md-3 col-md-offset-1" style="visibility: hidden">
+        <h3> Tuning</h3>
         <div class="row">
             <div class="col-md-12">
                 <label for="KP">KP:</label>
@@ -96,31 +96,31 @@
     </div>
     <div class="row">
       <div class="col-md-8">
-        <h3>2) Workload Selection</h3>
+        <h3> Workload Selection</h3>
         <div class="btn-group" data-toggle="toggle">
           
             <div class="row-md-12">
             <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection" checked="checked"> Random Workload (20 queries)</label>
+              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Random Workload (20 queries)</label>
             </div>
           </div>
           <div class="row-md-12">
             <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection"> Occasional Complex (20 queries)</label>
+              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Occasional Complex (20 queries)</label>
             </div>
           </div>
           <div class="row-md-12">
             <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection"> Simple to Complex (30 queries)</label></div>
+              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Simple to Complex (30 queries)</label></div>
             </div>
             <div class="row-md-12">
               <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection"> Step-Wise Pattern (50 queries)</label>
+                <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Step-Wise Pattern (50 queries)</label>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-md-3 col-md-offset-1">
+        <div id="step3Graphs" class="col-md-3 col-md-offset-1" style="visibility: hidden">
         <div class="row">
           <div class="col-md-12">
             <h3>Graphs</h3>
