@@ -43,7 +43,7 @@ function createInitializeScalingObj() {
 		initializeObject.tier = getTier()
 
 		var radioSelection = getSequenceValue();
-		initializeObject.path = "/mnt/myria/perfenforce_files/ScalingAlgorithms/Replay/Seq" + radioSelection + "/Reactive/"
+		initializeObject.path = "/mnt/myria/perfenforce_files/ScalingAlgorithms/Replay/Seq" + radioSelection + "/"
 
 		var scalingAlgorithmObj = createScalingAlgorithmObj()
 		initializeObject.scalingAlgorithm = scalingAlgorithmObj
@@ -69,7 +69,7 @@ function createScalingAlgorithmObj()
 	}
 	else if(scalingAlgorithmObj.name == "OML")
 	{
-	scalingAlgorithmObj.lr = getLearningRate()
+	scalingAlgorithmObj.lr = getLR()
 	}
 	return scalingAlgorithmObj
 }
@@ -89,7 +89,7 @@ function stepFake() {
 	// Make it block :( 
 	$.ajax({
                 type: 'POST',
-                url: host + ":8753/perfenforce/step-fake-reactive",
+                url: host + ":8753/perfenforce/step-fake",
                 headers: { 'Accept': 'application/json','Content-Type': 'application/json' },
                 dataType: 'json',
                 data: JSON.stringify(scalingAlgorithmObj),

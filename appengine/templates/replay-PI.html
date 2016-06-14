@@ -8,18 +8,58 @@
   <link rel="stylesheet" type="text/css" href="css/queryvis.css">
   <script type="text/javascript" src="js/perfenforce.js"></script>
   <script type="text/javascript" src="js/scaling_algorithms.js"></script>
+  <script type="text/javascript" src="js/angular.min.js"></script>
+  <script type="text/javascript" src="js/tiers.js"></script>
 {% endblock %}
 {% block editor_active %} class="active"{% endblock %}
 {% block content %}
   <script>
   printPI()
   </script>
+  <ol class="breadcrumb">
+    <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+    <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+    <li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
+    <li class="active"><a href="#">Demo</a></li>
+  </ol>
+
   <h1>Replay Mode</h1>
   <div class="container">
     <div class="row top-buffer">
       <div class="col-md-12">
-        <h3>Selected PSLA</h3>
-        <script>document.write("Tier Shown : " + getTier())</script> <!-- Show the real tier here-->
+        <h3>Selected SLA</h3>
+        <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
+        <div class="panel-body" ng-init="wizard.loadQueries()">
+            <div class="row-md-12">
+                <div class="col-md-7" ng-init='tier=wizard.getTierWizard()'>
+                    <!-- Tier panel start -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                        <!-- Tier data -->
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Query Template</th>
+                                    <th>Runtime (seconds)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                  <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                                    <td>
+                                        <span ng-repeat="query in queryGroup">
+                                            {[{ query.template }]}<br />
+                                        </span>
+                                    </td>
+                                    <td>{[{ queryGroup.runtime }]}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Tier panel end -->
+                </div>
+            </div>
+        </div>
+      </div>
       </div>
     </div>
     <div class="row top-buffer">

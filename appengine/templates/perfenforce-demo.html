@@ -17,27 +17,28 @@
 localStorage.clear();
 </script>
 
-<h1>Select a Tier</h1>
+<ol class="breadcrumb">
+  <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+  <li class="active">Select a Service Tier</li>
+  <li class="active">Select a Scaling Algorithm</li>
+  <li class="active">Demo</li>
+</ol>
+
+<h1>Select a Mode</h1>
 <div class="container">
   <div class="row top-buffer">
-  	<div class="col-md-12">
+  	<div class="col-md-4 col-md-offset-4">
   		<!-- Indicates a successful or positive action -->
-		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(0)">Tier 1 Select</a>
+		<a type="button" class="btn btn-default btn-xlarge btn-block" href="tier-selection">Replay</a>
   	</div>	
   </div>
   <div class="row top-buffer">
-  	<div class="col-md-12">
+  	<div class="col-md-4 col-md-offset-4">
   		<!-- Indicates a successful or positive action -->
-		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(1)">Tier 2 Select</a>
+		<a type="button" class="btn btn-default btn-xlarge btn-block disabled" href="tier-selection">Live</a>
   	</div>	
   </div>
-  <div class="row top-buffer">
-  	<div class="col-md-12">
-  		<!-- Indicates a successful or positive action -->
-		<a type="button" class="btn btn-success" href="scaling-algorithms" onClick="tierSelect(2)">Tier 3 Select</a>
-  	</div>	
   </div>
-</div>
 {% endblock %}
 
 {% block footer %}

@@ -1,9 +1,6 @@
 //general tier functions
-function tierSelect(tierNumber) {
-localStorage.setItem("tier", tierNumber);
-}
-
 function getTier(){
+	console.log("getting tier")
 	return +localStorage.getItem("tier");
 }
 
@@ -83,7 +80,7 @@ function updatePITextboxes(){
 
 
 // OML functions
-function recordOML(lr){
+function recordOML(){
 	localStorage.setItem("SA", "OML")
 	localStorage.setItem("OML-LR", document.getElementById("OML-LR-TEXTBOX").value);
 }
@@ -94,4 +91,8 @@ function getLR(){
 
 function printOML(){
 	console.log("OML-LR: " + localStorage.getItem("OML-LR"));
+}
+
+function updateOMLTextboxes(){
+	document.getElementById("OML-LR-TEXTBOX").value = getLR()
 }

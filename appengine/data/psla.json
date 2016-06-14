@@ -1,0 +1,175 @@
+{
+    "queries": [
+        {
+            "template": "SELECT (17 ATTR.) FROM (public:adhoc:lineitem) WHERE 1%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (9 ATTR.) FROM (\"public:adhoc:part\" ) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (9 ATTR.) FROM (\"public:adhoc:customer\" ) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (17 ATTR.) FROM (\"public:adhoc:date\" ) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (35 ATTR.) FROM (3 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  60,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (48 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  60,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 1%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  60,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (49 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  300,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  300,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 1,
+            "runtime":  600,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (49 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 2,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (58 ATTR.) FROM (5 TABLES) WHERE 1%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 2,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 2,
+            "runtime":  60,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (51 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 2,
+            "runtime":  300,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (1 ATTR.) FROM (\"public:adhoc:lineitem\" ) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 3,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (3 ATTR.) FROM (\"public:adhoc:lineitem\" ) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  300,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (26 ATTR.) FROM (2 TABLES) WHERE 100%",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 5,
+            "runtime":  10,
+            "queryFilePath": ""
+        }
+    ]
+}

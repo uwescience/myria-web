@@ -7,18 +7,58 @@
   <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="css/queryvis.css">
   <script type="text/javascript" src="js/perfenforce.js"></script>
+  <script type="text/javascript" src="js/scaling_algorithms.js"></script>
+  <script type="text/javascript" src="js/angular.min.js"></script>
+  <script type="text/javascript" src="js/tiers.js"></script>
 {% endblock %}
 {% block editor_active %} class="active"{% endblock %}
 {% block content %}
   <script>
   printOML()
   </script>
+  <ol class="breadcrumb">
+    <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+    <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+    <li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
+    <li class="active"><a href="#">Demo</a></li>
+  </ol>
   <h1>Replay Mode</h1>
   <div class="container">
     <div class="row top-buffer">
       <div class="col-md-12">
-        <h3>Selected PSLA</h3>
-        <script>document.write("Tier Shown : " + getTier())</script> <!-- Show the real tier here-->
+        <h3>Selected SLA</h3>
+        <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
+        <div class="panel-body" ng-init="wizard.loadQueries()">
+            <div class="row-md-12">
+                <div class="col-md-7" ng-init='tier=wizard.getTierWizard()'>
+                    <!-- Tier panel start -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                        <!-- Tier data -->
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Query Template</th>
+                                    <th>Runtime (seconds)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                  <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                                    <td>
+                                        <span ng-repeat="query in queryGroup">
+                                            {[{ query.template }]}<br />
+                                        </span>
+                                    </td>
+                                    <td>{[{ queryGroup.runtime }]}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Tier panel end -->
+                </div>
+            </div>
+        </div>
+      </div>
       </div>
     </div>
     <div class="row top-buffer">
@@ -27,7 +67,7 @@
         <div class="btn-group" data-toggle="toggle">
           <div class="row">
             <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection"> Random Workload (20 queries)</label>
+              <label><input type="radio" name="workloadSelection" checked="checked"> Random Workload (20 queries)</label>
             </div>
           </div>
           <div class="row">
@@ -50,11 +90,52 @@
       <div class="row top-buffer">
         <div class="col-md-12">
           <h3>Scaling Algorithm Tuning</h3>
-          
+            <div class="row">
+              <div class="col-md-12">
+                <h4>Algorithm Selected: Online Machine Learning</h4>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="col-xs-4">
+                  <label for="OML-LR">Learning Rate:</label>
+                  <input type="text" class="form-control" id="OML-LR-TEXTBOX">
+                </div>
+              </div>
+              </div>
+              <div class="row">
+              <div class="col-md-12">
+                <a type="button" class="btn btn-primary" onClick="recordOML();stepFake();updateActualIdealLineGraph();" style="float: left;">Step</a>
+              </div>
+              </div>
+            
           <h3>Graphs</h3>
+            <!-- Adding table or something for results-->
+            <!-- Adding graph for ideal vs actual -->
+            <div class="row">
+              <div class="col-md-6 col-height">
+              <div class="span6" id="idealactual"></div>
+            </div>
+
+            <!--NEW GRAPH HERE -->
+            
+            </div>
+            <!-- Adding graph for reward values -->
+            <!-- Button to reset values -->
+            <div class="row">
+              <div class="col-md-12">
+                <a type="button" class="btn btn-primary" href="perfenforce-demo" style="float: left;">Go Back: Select an SLA</a>
+              </div>
+            </div>
+   
         </div>
       </div>
     </div>
+    <script>  updateOMLTextboxes();</script>
   {% endblock %}
   {% block footer %}
+      <!-- D3 scripts -->
+      <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
+      <script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
+      <!-- end D3 scripts -->
   {% endblock %}

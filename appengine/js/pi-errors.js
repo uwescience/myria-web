@@ -56,7 +56,7 @@ svg_pi.append("g")
       .attr("x", 115)
       .text("Query ID");
 
-y_pi.domain(d3.extent([-20,20]));
+y_pi.domain(d3.extent(userPoints_pi, function(d) { return d.PIControlIntegralErrorSum; }));
 
 svg_pi.append("g")
     .attr("class", "y axis")
@@ -94,6 +94,11 @@ function updatePIErrorLines() {
         svg_pi.select("g.x.axis") // change the x axis
             .transition(2000)
             .call(xAxis_pi);
+
+        y_pi.domain(d3.extent(userPoints_pi, function(d) { return d.PIControlIntegralErrorSum; }));
+        svg_pi.select("g.y.axis") // change the x axis
+            .transition(2000)
+            .call(yAxis_pi);
 
         svg_pi.select(".lineCurrentError")   // change the line
             .transition(2000)

@@ -96,8 +96,6 @@ function updateRLAwardChart() {
             userData.push(obj)
           }
       }
-      
-
     });
 
     console.log(userData)

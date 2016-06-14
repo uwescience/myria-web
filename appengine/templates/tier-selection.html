@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<script type="text/javascript" src="js/perfenforce.js"></script>
+<script type="text/javascript" src="js/angular.min.js"></script>
+<script type="text/javascript" src="js/tiers.js"></script>
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+<script>
+localStorage.clear();
+</script>
+
+<ol class="breadcrumb">
+  <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+  <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+  <li class="active">Select a Scaling Algorithm</li>
+  <li class="active">Demo</li>
+</ol>
+
+<h1>Select a Tier</h1>
+
+<div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
+        <div class="panel-body" ng-init="wizard.loadQueries()">
+            <div class="row-md-12">
+                <div class="col-md-7" ng-repeat='tier in wizard.tiers'>
+                    <!-- Tier panel start -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                        <!-- Tier data -->
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Query Template</th>
+                                    <th>Runtime (seconds)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                  <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                                    <td>
+                                        <span ng-repeat="query in queryGroup">
+                                            {[{ query.template }]}<br />
+                                        </span>
+                                    </td>
+                                    <td>{[{ queryGroup.runtime }]}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="panel-body">
+                            <a type="button" class="btn btn-primary" href="scaling-algorithms" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+                        </div>
+                    </div>
+                    <!-- Tier panel end -->
+                </div>
+            </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
