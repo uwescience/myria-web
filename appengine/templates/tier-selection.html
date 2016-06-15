@@ -26,12 +26,12 @@ localStorage.clear();
   <li class="active">Demo</li>
 </ol>
 
-<h1>Select a Tier</h1>
-
+<h1>Select a Tier (SLA Summaries)</h1>
+<i>These SLAs were generated using the PSLAManager tool. The data is ingested, scanned and SLA summaries are generated using collected statistics.</i>
 <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
         <div class="panel-body" ng-init="wizard.loadQueries()">
             <div class="row-md-12">
-                <div class="col-md-7" ng-repeat='tier in wizard.tiers'>
+                <div class="col-md-6" ng-repeat='tier in wizard.tiers'>
                     <!-- Tier panel start -->
                     <div class="panel panel-default">
                         <div class="panel-heading">Tier #{[{ tier.name }]}</div>
@@ -45,12 +45,12 @@ localStorage.clear();
                             </thead>
                             <tbody>
                                   <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
-                                    <td>
-                                        <span ng-repeat="query in queryGroup">
+                                    <td width="90%">
+                                        <span ng-repeat="query in queryGroup" class="sla-size">
                                             {[{ query.template }]}<br />
                                         </span>
                                     </td>
-                                    <td>{[{ queryGroup.runtime }]}</td>
+                                    <td class="sla-size" width="10%">{[{ queryGroup.runtime }]}</td>
                                 </tr>
                             </tbody>
                         </table>

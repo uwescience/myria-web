@@ -3,7 +3,7 @@ var margin_rl = {top_rl: 10, right_rl: 200, bottom_rl: 30, left_rl: 50},
     height_rl = 180 - margin_rl.top_rl - margin_rl.bottom_rl;
 
 
-var x_rl = d3.scale.ordinal().rangeRoundBands([0, width_rl], .05);
+var x_rl = d3.scale.ordinal().rangeRoundBands([0, width_rl+100], .05);
 
 var y_rl = d3.scale.linear().range([height_rl, 0]);
 
@@ -48,7 +48,7 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
       .call(xAxis_rl)
     .append("text")
       .attr("y", 30)
-      .attr("x", 50)
+      .attr("x", 100)
       .text("Cluster Size")
     .selectAll("text")
       .style("text-anchor", "end")
@@ -83,7 +83,6 @@ function updateRLAwardChart() {
       console.log("SCALING STATE")
       console.log(scalingState.RLActiveStates)
 
-      configs = [4,6,8,10,12]
       userData = []
       for (i = 0; i < scalingState.RLActiveStates.length; i++)
       {

@@ -105,3 +105,56 @@ div {
   stroke: orange;
   stroke-width: 1.5px;
 }
+
+.queryStatusLabel {
+    font: bold 14px arial;
+}
+
+.sla-size {
+  font: normal 11px Helvetica;
+}
+
+.customBorderRed{
+  width: 100%;
+  background-color : #ff6666;
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
+.customBorderYellow{
+  width: 100%;
+  background-color : #ffd11a;
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
+.customBorderLightYellow{
+  width: 100%;
+  background-color : #ffe680;
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
+.customBorderOrange{
+  width: 100%;
+  background-color : #ffa64d;
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
+.customBorderWhite{
+  width: 100%;
+  background-color : #ffffff;
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}

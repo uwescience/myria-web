@@ -40,8 +40,8 @@ var userPoints  = []
 
 var firstObj = {}
 firstObj.queryID = "0"
-firstObj.actual = "0"
-firstObj.ideal = "0"
+firstObj.actual = configs[getTier()]
+firstObj.ideal = configs[getTier()]
 userPoints.push(firstObj)
 
 x.domain(d3.extent(userPoints, function(d) { return d.queryID; }));
@@ -80,6 +80,9 @@ function updateActualIdealLineGraph() {
 
       var newDataPoint = {}
       newDataPoint.queryID = ithQuery
+
+      console.log("DATA LINE")
+      console.log(userPoints)
 
       $.when(getRequest('/perfenforce/cluster-size'), getRequest('/perfenforce/current-query-ideal')).done(function(clusterSize, idealSize){
 

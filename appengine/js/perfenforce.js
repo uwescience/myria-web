@@ -1,3 +1,5 @@
+configs = [4,6,8,10,12]
+
 //general tier functions
 function getTier(){
 	console.log("getting tier")
