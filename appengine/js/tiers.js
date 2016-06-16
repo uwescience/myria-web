@@ -24,6 +24,8 @@
         this.allQueries = null;
         this.queryCache = [];
         this.executionLog = '';
+        this.step = 1;
+
 
 
         this.setTier = function (tier) {
@@ -41,6 +43,7 @@
 
             http.get('/data/psla.json').success(function (result) {
                 internal.allQueries = result.queries;
+                internal.step++;
             });
         };
 

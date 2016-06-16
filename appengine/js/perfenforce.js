@@ -25,7 +25,7 @@ function makeThreeVisible(){
 }
 
 // RL functions
-function recordRL(alpha, beta){
+function recordRL(){
 	localStorage.setItem("SA", "RL")
 	localStorage.setItem("RL-alpha", document.getElementById("RL-ALPHA-TEXTBOX").value);
 	localStorage.setItem("RL-beta", document.getElementById("RL-BETA-TEXTBOX").value);
@@ -37,6 +37,7 @@ function printRL(){
 }
 
 function getAlpha(){
+	
 	return +localStorage.getItem("RL-alpha");
 }
 

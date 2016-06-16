@@ -13,166 +13,77 @@
 	<script>
 	console.log(getTier())
 	</script>
-
 	<ol class="breadcrumb">
-	  <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
-	  <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
-	  <li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
-	  <li class="active">Demo</li>
+		<li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+		<li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+		<li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
+		<li class="active">Demo</li>
 	</ol>
-
-	<h1>Select a Scaling Algorithm</h1>
-	<div class="col-md-12">
-		<div class="row top-buffer">
-			<div class="col-md-12">
-				<!--table for inner scaling algorithm -->
-				<div class="container">
-					<div class="row-md-12">
-						<div class="col-md-6" >
-							<div class="row">
-								<div class="col-md-10">
-									<h2>Reinforcement Learning</h2>
-								</div>
-							</div>
-							<div class="row top-buffer">
-								<div class="col-md-6">
-									<label for="RL-ALPHA-TEXTBOX">Alpha: <input type="text" class="form-control" id="RL-ALPHA-TEXTBOX" value=".20">
-								</label>
-							</div>
-						</div>
-						<div class="row top-buffer">
-							<div class="col-md-6">
-								<label for="RL-BETA">Beta: <input type="text" class="form-control" id="RL-BETA-TEXTBOX" value=".20">
-							</label>
-						</div>
-					</div>
-					
-				</div>
-				<div class="row">
-					<div class="col-md-6">
-						<br>
-						<br>
-						In  <font color="blue"><b>Reinforcement Learning </b></font>, the  goal for PerfEnforce is to directly transition to the state with the highest reward. We define the reward function to be the real-to-SLA runtime ratio. We favor states with the closest reward function closest to 1.0. When the system transitions to a new state <i>s</i>, we denote the update as:
-						<br>
-						<center>
-						<img src="../img/rl-eq-alpha.png" width="50%" height="50%">
-						</center>
-						We observe that rewards for some states do not quickly adapt if the user's workload changes. As a hueristic, we intrduce a linear-drag update where each state not updated by alpha receives the following update:
-						<br>
-						<center>
-						<img src="../img/rl-eq-beta.png" width="53%" height="53%">
-						</center>
-						Where <i>beta</i>  &lt; <i>alpha</i>  and <i>z</i> represents number of VMs of state <i>x</i> . <i>y</i>  is the number of VMs in state <i>s</i> .
-					</div>
-				</div>
-			</div>
-			<div class="row top-buffer">
-				<div class="col-md-3  col-md-offset-4 ">
-					<!-- href="replay-RL"-->
-					<a type="button" class="btn btn-info btn-block" href="replay-RL" onClick="recordRL()">Go</a>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!--end table for inner scaling algorithm -->
-</div>
-<br>
-<br>
-<hr>
-<div class="row top-buffer">
-	<div class="col-md-12">
-		<!--table for inner scaling algorithm -->
-		<div class="container">
-			<div class="row-md-12">
-				<div class="col-md-6" >
-					<div class="row">
-						<div class="col-md-10">
-							<h2>Proportional-Integral Control</h2>
-						</div>
-					</div>
-					<div class="row top-buffer">
-						<div class="col-md-6">
-							<label for="PI-KP-TEXTBOX">Proportional Gain (KP): <input type="text" class="form-control" id="PI-KP-TEXTBOX" value="10">
-						</label>
-					</div>
-				</div>
-				<div class="row top-buffer">
-					<div class="col-md-6">
-						<label for="PI-KI-TEXTBOX">Integral Gain (KI): <input type="text" class="form-control" id="PI-KI-TEXTBOX" value="1">
-					</label>
-				</div>
-			</div>
-			<div class="row top-buffer">
-				<div class="col-md-6">
-					<label for="PI-WINDOW-TEXTBOX">Window: <input type="text" class="form-control" id="PI-WINDOW-TEXTBOX" value="1">
-				</label>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-6">
-			<br>
-			<br>
-			By using <font color="red"><b>Proportional-Integral Control</b></font>, we can regulate the system in order to ensure that it operates based on a given reference point. We use a controller to help PerfEnforce react baseed on the magnitude of the runtime error. At each time step, <i>t</i>, the controller produces an actuator value, <i>u(t)</i> representing the discrete number of VMs provisioned. To track errors, we use an average ratio of the real query runtime over the query runtime promised in the SLA over a window:
-			<br>
-			<center>
-			<img src="../img/pi-eq.png" width="53%" height="53%">
-			</center>
-		</div>
-	</div>
-</div>
-<div class="row top-buffer">
-	<div class="col-md-3  col-md-offset-4 ">
-		<!-- href="replay-RL"-->
-		<a type="button" class="btn btn-danger btn-block" href="replay-PI" onClick="recordPI()">Go</a>
-	</div>
-</div>
-</div>
-</div>
-<!--end table for inner scaling algorithm -->
-</div>
-<br>
-<br>
-<hr>
-<div class="row top-buffer">
-<div class="col-md-12">
-<!--table for inner scaling algorithm -->
-<div class="container">
-<div class="row-md-12">
-	<div class="col-md-6" >
-		<div class="row">
-			<div class="col-md-10">
-				<h2>Perceptron Learning</h2>
-			</div>
-		</div>
-		<div class="row top-buffer">
-			<div class="col-md-6">
-				<label for="OML-LR-TEXTBOX">Learning Rate: <input type="text" class="form-control" id="OML-LR-TEXTBOX" value=".4">
-			</label>
-		</div>
-	</div>
-	
-</div>
-<div class="row">
+	<h1>Cloud Provider Scaling Algorithm Implementations</h1>
+	<i>Once the user selects an SLA, it is up to the cloud provider to guarantee those runtimes. Below are different approaches the provider can enable in order to guarantee those runtimes.</i>
 	<div class="col-md-6">
-		<br>
-		<br>
-		In  <font color="green"><b>Perceptron Learning</b></font>, we use an approach that makes use of a predictive model. For each incoming query, PerfEnforce predicts the runtime for the query for each configuration and switches to the closest configuration where the ratio is closest to 1.0. To do this, PerfEnforce must build an offline model for a given cloud data analytics service. The perceptron algorithm works by adjusting weights for each new data point based on a tunable learning rate parameter. 
-	</div>
-</div>
-</div>
-<div class="row top-buffer">
-<div class="col-md-3  col-md-offset-4 ">
-	<!-- href="replay-RL"-->
-	<a type="button" class="btn btn-success btn-block" href="replay-OML" onClick="recordOML()">Go</a>
-</div>
-</div>
-</div>
-</div>
-<!--end table for inner scaling algorithm -->
-</div>
+		<div class="row">
+			<h2>Reinforcement Learning</h2>
+			<ul class="list-group">
+				<li class="list-group-item">Each cluster size represents a state. For each query, the goal is to transition to the state with the highest reward. The reward function is defined as the real-to-SLA runtime ratio. We favor states with the closest reward to 1.0. </li>
+				<li class="list-group-item">
+					Update function after running query at <b>current</b> state: 
+					<center><br>
+					<img src="../img/alpha.png" width="62%" height="62%">
+				</center></li>
+				<li class="list-group-item">Update function after running query for the rest of the states:<center>  <br>
+					<img src="../img/beta.png" width="70%" height="70%">
+				</center></li>
+			</ul>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-3  col-md-offset-4 ">
+				<!-- href="replay-RL"-->
+				<a type="button" class="btn btn-info btn-block" href="replay-RL">Go</a>
+			</div>
+		</div>
+		<hr>
+		<div class="row">
+			<h2>Proportional-Integral Control</h2>
+			<ul class="list-group">
+				<li class="list-group-item">We can regulate the system in order to ensure that it operates based on a given reference point, <i>r(t) = 1.0</i>. The system reacts based on the magnitude of the error. </li>
+				<li class="list-group-item"><center>
+					<img src="../img/error.png" width="45%" height="45%">
+				</center></li>
+				<li class="list-group-item"><center>
+					<img src="../img/y.png" width="50%" height="50%">
+				</center></li>
+				<li class="list-group-item"><center>
+					<img src="../img/ut.png" width="80%" height="80%">
+				</center></li>
+			</ul>
+			
+		</div>
+		<div class="row">
+			<div class="col-md-3  col-md-offset-4 ">
+				<!-- href="replay-RL"-->
+				<a type="button" class="btn btn-danger btn-block" href="replay-PI" onClick="recordPI()">Go</a>
+			</div>
+		</div>
+		<!--end table for inner scaling algorithm -->
 
-</div>
+		<hr>
+		<div class="row ">
+			<h2>Perceptron Learning</h2>
+			<ul class="list-group">
+				<li class="list-group-item">For each incoming query, PerfEnforce predicts the runtime for the query for each configuration and switches to the closest configuration where <img src="../img/pred.png" width="12%" height="12%"> is closest to 1.0 before running the query.</li>
+				<li class="list-group-item">To do this, we build an offline model for the given cloud service. The perceptron algorithm works by adjusting weights for each new data point based on a tunable <font color="green"><b>learning rate parameter.</b></font></li>
+			</ul>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-3  col-md-offset-4 ">
+				<!-- href="replay-RL"-->
+				<a type="button" class="btn btn-success btn-block" href="replay-OML" onClick="recordOML()">Go</a>
+			</div>
+		</div>
+	</div>
 {% endblock %}
 {% block footer %}
 {% endblock %}

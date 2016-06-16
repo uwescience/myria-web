@@ -62,17 +62,17 @@
       </div>
       <!-- Other column here -->
       <div id="step3Tuning" class="col-md-7" style="visibility: hidden">
-        <h3>Tuning</h3>
+        <h3>Tuning - Reinforcement Learning</h3>
         <div class="row">
           <div class="col-md-6 col-sm-offset-3">
             <label for="RL-ALPHA">RL ALPHA:</label>
-            <input type="text" class="form-control" id="RL-ALPHA-TEXTBOX">
+            <input type="text" class="form-control" id="RL-ALPHA-TEXTBOX"  value=".2">
           </div>
         </div>
         <div class="row">
           <div class="col-md-6 col-sm-offset-3">
             <label for="RL-BETA">RL BETA:</label>
-            <input type="text" class="form-control" id="RL-BETA-TEXTBOX">
+            <input type="text" class="form-control" id="RL-BETA-TEXTBOX"  value=".1">
           </div>
         </div>
         <div class="row top-buffer">
@@ -142,7 +142,6 @@
       </div>
     </div>
   </div>
-<script>  updateRLTextboxes();</script>
 {% endblock %}
 {% block footer %}
 <!-- D3 scripts -->

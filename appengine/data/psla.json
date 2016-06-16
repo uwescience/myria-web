@@ -1,7 +1,7 @@
 {
     "queries": [
         {
-            "template": "SELECT (17 ATTR.) FROM (public:adhoc:lineitem) WHERE 1%",
+            "template": "SELECT (17 attributes) FROM (lineitem) WHERE (1% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -10,7 +10,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (9 ATTR.) FROM (\"public:adhoc:part\" ) WHERE 100%",
+            "template": "SELECT (9 attributes) FROM (part) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -19,7 +19,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (9 ATTR.) FROM (\"public:adhoc:customer\" ) WHERE 100%",
+            "template": "SELECT (9 attributes) FROM (customer) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -28,7 +28,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (17 ATTR.) FROM (\"public:adhoc:date\" ) WHERE 100%",
+            "template": "SELECT (17 attributes) FROM (date) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -37,7 +37,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (35 ATTR.) FROM (3 TABLES) WHERE 100%",
+            "template": "SELECT (35 attributes) FROM (3 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -46,7 +46,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (48 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "template": "SELECT (48 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -55,7 +55,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 1%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (1% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -64,7 +64,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (49 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "template": "SELECT (49 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -73,7 +73,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -82,7 +82,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -91,7 +91,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (49 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "template": "SELECT (49 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -100,7 +100,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (58 ATTR.) FROM (5 TABLES) WHERE 1%",
+            "template": "SELECT (58 attributes) FROM (5 TABLES) WHERE (1% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -109,7 +109,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -118,7 +118,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (51 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "template": "SELECT (51 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -127,7 +127,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (1 ATTR.) FROM (\"public:adhoc:lineitem\" ) WHERE 100%",
+            "template": "SELECT (1 attributes) FROM (lineitem) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -136,7 +136,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (3 ATTR.) FROM (\"public:adhoc:lineitem\" ) WHERE 100%",
+            "template": "SELECT (3 attributes) FROM (lineitem) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -145,7 +145,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 10%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -154,7 +154,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 ATTR.) FROM (5 TABLES) WHERE 100%",
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
@@ -163,7 +163,7 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (26 ATTR.) FROM (2 TABLES) WHERE 100%",
+            "template": "SELECT (26 attributes) FROM (2 TABLES) WHERE (100% of data selected)",
             "editorTemplate": [
                 ""
             ],
