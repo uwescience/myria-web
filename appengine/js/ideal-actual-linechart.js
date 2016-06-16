@@ -38,12 +38,6 @@ var actualLinePath = null;
 
 var userPoints  = []
 
-var firstObj = {}
-firstObj.queryID = "0"
-firstObj.actual = configs[getTier()]
-firstObj.ideal = configs[getTier()]
-userPoints.push(firstObj)
-
 x.domain(d3.extent(userPoints, function(d) { return d.queryID; }));
 
 svg.append("g")
@@ -75,14 +69,12 @@ idealLinePath = svg.append("path")
 actualLinePath =  svg.append("path")
     .attr("class", "lineActual")
     .attr("d", actualLine(userPoints))
+  
 
 function updateActualIdealLineGraph() {
 
       var newDataPoint = {}
       newDataPoint.queryID = ithQuery
-
-      console.log("DATA LINE")
-      console.log(userPoints)
 
       $.when(getRequest('/perfenforce/cluster-size'), getRequest('/perfenforce/current-query-ideal')).done(function(clusterSize, idealSize){
 
@@ -90,6 +82,7 @@ function updateActualIdealLineGraph() {
         newDataPoint.ideal = idealSize[0]
 
         userPoints.push(newDataPoint)
+
 
         x.domain(d3.extent(userPoints, function(d) { return d.queryID; }))
         svg.select("g.x.axis") // change the x axis

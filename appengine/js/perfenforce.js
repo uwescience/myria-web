@@ -2,13 +2,11 @@ configs = [4,6,8,10,12]
 
 //general tier functions
 function getTier(){
-	console.log("getting tier")
 	return +localStorage.getItem("tier");
 }
 
 function getSequenceValue() {
 	var inputs = document.getElementsByName("workloadSelection");
-	console.log(inputs)
 	for (var i = 0; i < inputs.length; i++) {
 	  if (inputs[i].checked) {
 	  	console.log("checked")
@@ -21,11 +19,6 @@ function getScalingAlgorithm(){
 	return localStorage.getItem("SA");
 }
 
-function updateNextQueryLabel(){
-	//getRequest for description
-
-}
-
 function makeThreeVisible(){
 	document.getElementById('step3Tuning').style.visibility='visible'
 	document.getElementById('step3Graphs').style.visibility='visible'
@@ -36,7 +29,6 @@ function recordRL(alpha, beta){
 	localStorage.setItem("SA", "RL")
 	localStorage.setItem("RL-alpha", document.getElementById("RL-ALPHA-TEXTBOX").value);
 	localStorage.setItem("RL-beta", document.getElementById("RL-BETA-TEXTBOX").value);
-	printRL();
 }
 
 function printRL(){
@@ -74,7 +66,6 @@ function getKI(){
 }
 
 function getW(){
-	console.log("WINDOW " + localStorage.getItem("PI-W"))
 	return +localStorage.getItem("PI-W");
 }
 

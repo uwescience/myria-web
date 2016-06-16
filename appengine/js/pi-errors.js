@@ -38,12 +38,6 @@ var errorSumPath = null;
 
 var userPoints_pi  = []
 
-var firstObj_pi = {}
-firstObj_pi.queryID = "0"
-firstObj_pi.PIControlProportionalErrorValue = "0"
-firstObj_pi.PIControlIntegralErrorSum = "0"
-userPoints_pi.push(firstObj_pi)
-
 x_pi.domain(d3.extent(userPoints_pi, function(d) { return d.queryID; }));
 
 svg_pi.append("g")
@@ -98,9 +92,10 @@ function updatePIErrorLines() {
         newDataPoint_pi.PIControlProportionalErrorValue = scalingState.PIControlProportionalErrorValue
         newDataPoint_pi.PIControlIntegralErrorSum = scalingState.PIControlIntegralErrorSum
 
-        console.log(newDataPoint_pi)
-
         userPoints_pi.push(newDataPoint_pi)
+
+        console.log("pi new point")
+        console.log(newDataPoint_pi)
 
         x_pi.domain(d3.extent(userPoints_pi, function(d) { return d.queryID; }))
         svg_pi.select("g.x.axis") // change the x axis

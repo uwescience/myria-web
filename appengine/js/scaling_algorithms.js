@@ -49,6 +49,8 @@ function createInitializeScalingObj() {
 		var scalingAlgorithmObj = createScalingAlgorithmObj()
 		initializeObject.scalingAlgorithm = scalingAlgorithmObj
 
+
+
 		return initializeObject
 }
 
@@ -100,8 +102,6 @@ function setupNextQuery(){
 
         var upcomingQueryLabel = document.getElementById("upcomingQueryLabel")
         var upcomingQuerySLALabel = document.getElementById("upcomingQuerySLA")
-        console.log("Upcoming Query " )
-        console.log(currentQuery[0]) 
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
         upcomingQueryLabel.innerHTML = currentQuery[0].description;
         upcomingQueryLabel.className = "queryStatusLabel" + getLabelColor(currentQuery[0].description)
@@ -118,14 +118,12 @@ function setupNextQuery(){
 
         var previousQueryLabel = document.getElementById("previousQueryLabel")
         var previousQuerySLALabel = document.getElementById("previousQuerySLA")
-        var previousQueryActualLabel = document.getElementById("previousQueryActual")
-        console.log("Previous Query ")
-        console.log(previousQuery[0]) 
+        var previousQueryActualLabel = document.getElementById("previousQueryActual") 
         if (previousQuery[0].description != null && typeof previousQuery[0]!='undefined'){
          previousQueryLabel.innerHTML = previousQuery[0].description;
          previousQueryLabel.className = "queryStatusLabel" +  getLabelColor(previousQuery[0].description)
          previousQuerySLALabel.innerHTML = "SLA: " + previousQuery[0].slaRuntime;
-         previousQueryActualLabel.innerHTML = "Actual Runtime: " + (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])];
+         previousQueryActualLabel.innerHTML = "Actual Runtime: " + (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])] + " at " + clusterSize[0] + " workers";
         }
         else
         {
@@ -162,28 +160,104 @@ function radioButtonPress()
     ithQuery = 0
     document.getElementById("nextButton").disabled = false;
     makeThreeVisible();
-    clearGraphs();
+
+    
     initializeScaling();
+    
     setupNextQuery();
+    clearGraphs();
+
+    hideCharts()
 }
 
 function clearGraphs()
 {
     userPoints = []
     var firstObj = {}
-    firstObj.queryID = "0"
+    firstObj.queryID = 0
     firstObj.actual = configs[getTier()]
-    firstObj.ideal = configs[getTier()]
+    firstObj.ideal = firstObj.actual
     userPoints.push(firstObj)
+
+    if(getScalingAlgorithm() == "PI")
+    {
+        userPoints_pi  = []
+
+        var firstObj_pi = {}
+        firstObj_pi.queryID = "0"
+        firstObj_pi.PIControlProportionalErrorValue = "0"
+        firstObj_pi.PIControlIntegralErrorSum = "0"
+        userPoints_pi.push(firstObj_pi)
+    }
+}
+
+function hideCharts()
+{
+    document.getElementById('idealactual').style.visibility='hidden'
+    if(getScalingAlgorithm() == "RL")
+    {
+    document.getElementById('rl-barchart').style.visibility='hidden'
+    }
+    else if (getScalingAlgorithm() == "PI")
+    {   
+    document.getElementById('piError').style.visibility='hidden'
+    }
+    else if (getScalingAlgorithm() == "OML"){
+    
+    }      
+}
+
+function showCharts()
+{
+    document.getElementById('idealactual').style.visibility='visible'
+    if(getScalingAlgorithm() == "RL")
+    {
+    document.getElementById('rl-barchart').style.visibility='visible'
+    }
+    else if (getScalingAlgorithm() == "PI")
+    {   
+    document.getElementById('piError').style.visibility='visible'
+    }
+    else if (getScalingAlgorithm() == "OML"){
+    
+    } 
 }
 
 function nextButtonPress()
 {
-    recordRL();
+    showCharts();
+    
+    recordMetrics();
+    
     stepFake();
+
     updateActualIdealLineGraph();
+    if(getScalingAlgorithm() == "RL")
+    {
     updateRLAwardChart();
+    }
+    else if (getScalingAlgorithm() == "PI")
+    { 
+    updatePIErrorLines();   
+    }
+
     setupNextQuery();
+}
+
+function recordMetrics()
+{
+    if(getScalingAlgorithm() == "RL")
+    {
+    recordRL();
+    }
+    else if (getScalingAlgorithm() == "PI")
+    {   
+    recordPI();
+    }
+    else if (getScalingAlgorithm() == "OML"){
+    recordOML();
+    }         
+
 }
 
 
