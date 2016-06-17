@@ -46,8 +46,8 @@ svg.append("g")
       .call(xAxis)
     .append("text")
       .attr("y", 28)
-      .attr("x", 70)
-      .text("Number of Queries Ran");
+      .attr("x", 100)
+      .text("Query ID");
 
 
 y.domain(d3.extent([0,12]));
@@ -57,7 +57,7 @@ svg.append("g")
     .call(yAxis)
   .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 0- 20)
+    .attr("y", 0- 22)
     .attr("x",0 - (height / 2))
     .style("text-anchor", "middle")
     .text("Cluster Size");
@@ -74,7 +74,7 @@ actualLinePath =  svg.append("path")
 
 legend = svg.append("g")
     .attr("class","legend")
-    .attr("transform","translate(200,-25)")
+    .attr("transform","translate(200,-30)")
     .style("font-size","10px")
     .call(d3.legend)
   

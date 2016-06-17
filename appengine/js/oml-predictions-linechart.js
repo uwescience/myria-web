@@ -1,5 +1,5 @@
 var margin_oml = {top_oml: 50, right_oml: 200, bottom_oml: 30, left_oml: 50},
-    width_oml = 300 - margin_oml.left_oml - margin_oml.right_oml,
+    width_oml = 310 - margin_oml.left_oml - margin_oml.right_oml,
     height_oml = 160 - margin_oml.top_oml - margin_oml.bottom_oml;
 
 var x_oml = d3.scale.linear()
@@ -66,7 +66,7 @@ svg_oml.append("g")
       .call(xAxis_oml)
     .append("text")
       .attr("y", 28)
-      .attr("x", 115)
+      .attr("x", 110)
       .text("Query ID");
 
 maxArray = []
@@ -91,23 +91,34 @@ svg_oml.append("g")
 
 workers_4_path = svg_oml.append("path")
     .attr("class", "line4")
-    .attr("d", workers_4_function(userPoints_oml));
+    .attr("d", workers_4_function(userPoints_oml))
+    .attr("data-legend",function(d) { return "4 Workers"});
 
 workers_6_path = svg_oml.append("path")
     .attr("class", "line6")
-    .attr("d", workers_6_function(userPoints_oml));
+    .attr("d", workers_6_function(userPoints_oml))
+    .attr("data-legend",function(d) { return "6 Workers"});
 
 workers_8_path = svg_oml.append("path")
     .attr("class", "line8")
-    .attr("d", workers_8_function(userPoints_oml));
+    .attr("d", workers_8_function(userPoints_oml))
+    .attr("data-legend",function(d) { return "8 Workers"});
 
 workers_10_path = svg_oml.append("path")
     .attr("class", "line10")
-    .attr("d", workers_10_function(userPoints_oml));
+    .attr("d", workers_10_function(userPoints_oml))
+    .attr("data-legend",function(d) { return "10 Workers"});
 
 workers_12_path = svg_oml.append("path")
     .attr("class", "line12")
-    .attr("d", workers_12_function(userPoints_oml));
+    .attr("d", workers_12_function(userPoints_oml))
+    .attr("data-legend",function(d) { return "12 Workers"});
+
+legend = svg_oml.append("g")
+    .attr("class","legend")
+    .attr("transform","translate(180,-35)")
+    .style("font-size","9px")
+    .call(d3.legend)
 
 function updateOMLPredictionLines() {
       console.log("UPDAING??")
