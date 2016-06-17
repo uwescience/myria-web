@@ -121,6 +121,7 @@ div {
   opacity: 0.8;
   border: 1px solid #1a0000;
   border-radius: 4px;
+  font: normal 14px Helvetica;
 }
 
 .customBorderYellow{
@@ -130,6 +131,7 @@ div {
   opacity: 0.8;
   border: 1px solid #1a0000;
   border-radius: 4px;
+  font: normal 14px Helvetica;
 }
 
 .customBorderLightYellow{
@@ -139,6 +141,7 @@ div {
   opacity: 0.8;
   border: 1px solid #1a0000;
   border-radius: 4px;
+  font: normal 14px Helvetica;
 }
 
 .customBorderOrange{
@@ -148,6 +151,7 @@ div {
   opacity: 0.8;
   border: 1px solid #1a0000;
   border-radius: 4px;
+  font: normal 14px Helvetica;
 }
 
 .customBorderWhite{
@@ -182,3 +186,7 @@ border: 1px solid #808080;
   fill:white;
   stroke:black;
   opacity:0.8;}
+
+.panel-default{
+  border-color:rgba(53, 29, 29, 0.49);
+}

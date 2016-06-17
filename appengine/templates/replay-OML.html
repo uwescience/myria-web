@@ -7,14 +7,14 @@
   <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="css/queryvis.css">
   <script type="text/javascript" src="js/perfenforce.js"></script>
-  <script type="text/javascript" src="js/scaling_algorithms.js"></script>
   <script type="text/javascript" src="js/angular.min.js"></script>
   <script type="text/javascript" src="js/tiers.js"></script>
+  
 {% endblock %}
 {% block editor_active %} class="active"{% endblock %}
 {% block content %}
   <script>
-  printOML()
+  printRL();
   </script>
   <ol class="breadcrumb">
     <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
@@ -23,9 +23,10 @@
     <li class="active"><a href="#">Replay Mode</a></li>
   </ol>
   <h1>Replay Mode</h1>
-   <div class="col-md-12">
-    <div class="row top-buffer">
-      <div class="col-md-8">
+  <div class="col-md-12">
+    <!-- row 1-->
+    <div class="row">
+      <div class="col-md-6">
         <h3> Selected SLA</h3>
         <div ng-app='tiersDemo' ng-controller="WizardController as wizard">
           <div ng-init="wizard.loadQueries()">
@@ -44,12 +45,12 @@
                     </thead>
                     <tbody>
                       <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
-                        <td>
-                          <span ng-repeat="query in queryGroup">
+                        <td width="90%">
+                          <span ng-repeat="query in queryGroup" class="sla-size">
                             {[{ query.template }]}<br />
                           </span>
-                        </td>
-                        <td>{[{ queryGroup.runtime }]}</td>
+                        </td >
+                        <td class="sla-size" width="10%">{[{ queryGroup.runtime }]}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -60,79 +61,128 @@
           </div>
         </div>
       </div>
-      <!-- Other column here -->
-      <div id="step3Tuning" class="col-md-3 col-md-offset-1" style="visibility: hidden">
-        <h3>Tuning</h3>
-        <div class="row">
-              <div class="col-md-12">
-                  <label for="OML-LR">Learning Rate:</label>
-                  <input type="text" class="form-control" id="OML-LR-TEXTBOX">
-              </div>
-        </div>
+
+      <div id="step3Graphs" class="col-md-6" style="visibility: hidden">
 
         <div class="row top-buffer">
           <div class="col-md-12">
-            <a type="button" class="btn btn-success btn-block" onClick="recordOML();stepFake();updateActualIdealLineGraph();updateOMLPredictionLines();" style="float: left;">Next Query</a>
-          </div>
-        </div>
-        <div class="row top-buffer">
-          <div class="col-md-12">
-            Upcoming Query...
-          </div>
-        </div>
-    </div>
-    <div class="row">
-      <div class="col-md-8">
-        <h3> Workload Selection</h3>
-        <div class="btn-group" data-toggle="toggle">
-          
-            <div class="row-md-12">
-            <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Random Workload (20 queries)</label>
-            </div>
-          </div>
-          <div class="row-md-12">
-            <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Occasional Complex (20 queries)</label>
-            </div>
-          </div>
-          <div class="row-md-12">
-            <div class="col-md-12">
-              <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Simple to Complex (30 queries)</label></div>
-            </div>
-            <div class="row-md-12">
-              <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection" onclick="makeThreeVisible()"> Step-Wise Pattern (50 queries)</label>
+            <h3>Graphs</h3>
+            <div class="row">
+              <div class="col-md-6">
+                <div  id="idealactual"></div>
+              </div>
+              <div class="col-md-6">
+                <div id="omlPredictions"></div>
               </div>
             </div>
           </div>
         </div>
-        <div id="step3Graphs" class="col-md-3 col-md-offset-1" style="visibility: hidden">
-        <div class="row">
-          <div class="col-md-12">
-            <h3>Graphs</h3>
-            <div class="row">
-              <div class="col-md-6 col-height">
-              <div class="span6" id="idealactual"></div>
-            </div>
-            <div class="col-md-6 col-height">
-              <div class="span6" id="omlPredictions"></div>
-            </div>
-           
-            
-            </div>
+      </div>
+    </div>
+    <div class="row">
+      <div id="step3Tuning" class="col-md-6">
+        <div class="col-md-4">
+          <h4>Tuning</h4>
+          <div class="row">
+              <div class="col-md-12">
+                  <label for="OML-LR">Learning Rate:</label>
+                  <input type="text" class="form-control" id="OML-LR-TEXTBOX" value="3.0">
+              </div>
+        </div>
+        </div>
+        <div class="col-md-8">
+          <h4> Workload Selection</h4>
+          <div class="btn-group" data-toggle="toggle" class="queryStatusLabel">
+            <div class="col-md-12">
+              <div class="row-md-12">
+                <div class="col-md-12">
+                  <label><input type="radio" name="workloadSelection" onClick="radioButtonPress()" > Random Workload (20 queries)</label>
+                </div>
+              </div>
+              <div class="row-md-12">
+                <div class="col-md-12">
+                  <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Occasional Complex (20 queries)</label>
+                </div>
+              </div>
+              <div class="row-md-12">
+                <div class="col-md-12">
+                  <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Simple to Complex (30 queries)</label>
+                </div>
+              </div>
+              <div class="row-md-12">
+                <div class="col-md-12">
+                  <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Step-Wise Pattern (50 queries)</label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div class="col-md-5 col-sm-offset-1"  id="upcomingQuery" style="visibility: hidden">
+        
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Next Query</h4>
+            <label id="upcomingQueryLabel" class="queryStatusLabel"></label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <label id="upcomingQuerySLA" class="queryStatusLabel"></label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6  col-sm-offset-3">
+            <button type="button" class="btn btn-info btn-block" id="nextButton" onClick="nextButtonPress()">Run Query</button>
+          </div>
+          
+        </div>
+        <br>
+        
       </div>
     </div>
-    <script>  updateOMLTextboxes();</script>
-  {% endblock %}
-  {% block footer %}
-      <!-- D3 scripts -->
-      <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
-      <script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
-      <script type="text/javascript" src="js/oml-predictions-linechart.js"></script>
-      <!-- end D3 scripts -->
-  {% endblock %}
+    <div class="row">
+      <div class="col-md-6">
+        <br>
+        <h3> Select Replay Action</h3>
+        <br>
+        <div class="row">
+          <div class="col-md-3 col-sm-offset-1">
+            <button type="button" class="btn btn-secondary" id="stepChoiceButton" onClick="showStepGraphsAndDisable()">Run Step by Step</button>
+          </div>
+          <div class="col-md-3 col-sm-offset-1">
+            <button type="button" class="btn btn-secondary" id="workloadChoiceButton" onClick="runStepsAndDisable()">Run Workload</button>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-md-5 col-sm-offset-1" id="previousQueryHeader" style="visibility: hidden">
+        <div class="row">
+        <h4>Previous Queries Log</h4>
+        <div id="previousQueryList" class="queryStatusLabel"  style="visibility: hidden">
+          <ul>
+            <li>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row" style="visibility: hidden" id="restart">
+        <div class="col-md-6 col-sm-offset-3" >
+          <button type="button" class="btn btn-secondary btn-block"  onClick="radioButtonPress()">Restart Workload</button>
+        
+        </div>
+      </div>
+        
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block footer %}
+  <!-- D3 scripts -->
+  <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
+  <script type="text/javascript" src="js/d3.legend.js"></script>
+  <script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
+  <script type="text/javascript" src="js/oml-predictions-linechart.js"></script>
+  <script type="text/javascript" src="js/scaling_algorithms.js"></script>
+  <!-- end D3 scripts -->
+{% endblock %}

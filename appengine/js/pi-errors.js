@@ -1,6 +1,6 @@
-var margin_pi = {top_pi: 10, right_pi: 200, bottom_pi: 30, left_pi: 50},
-    width_pi = 400 - margin_pi.left_pi - margin_pi.right_pi,
-    height_pi = 180 - margin_pi.top_pi - margin_pi.bottom_pi;
+var margin_pi = {top_pi: 50, right_pi: 200, bottom_pi: 30, left_pi: 40},
+    width_pi = 300 - margin_pi.left_pi - margin_pi.right_pi,
+    height_pi = 160 - margin_pi.top_pi - margin_pi.bottom_pi;
 
 var x_pi = d3.scale.linear()
         .domain([0,50])
@@ -74,13 +74,19 @@ svg_pi.append("g")
 
 currentErrorPath = svg_pi.append("path")
     .attr("class", "lineCurrentError")
-    .attr("d", currentError_pi(userPoints_pi));
-
-    console.log(currentError_pi(userPoints_pi))
+    .attr("d", currentError_pi(userPoints_pi))
+    .attr("data-legend",function(d) { return "Proportional Error"});
 
 errorSumPath =  svg_pi.append("path")
     .attr("class", "lineErrorSum")
     .attr("d", errorSum_pi(userPoints_pi))
+    .attr("data-legend",function(d) { return "Integral Sum Error"})
+
+legend_pi = svg_pi.append("g")
+    .attr("class","legend")
+    .attr("transform","translate(150,-25)")
+    .style("font-size","10px")
+    .call(d3.legend)
 
 function updatePIErrorLines() {
 

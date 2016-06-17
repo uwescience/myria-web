@@ -23,9 +23,9 @@ function initializeScaling()
 {
     ithQuery = 0
 	var initializeScalingObj = createInitializeScalingObj()
-
+    console.log("Initialize")
     console.log(initializeScalingObj)
-
+    
  	// call the initialize POST function
 	$.ajax({
                 type: 'POST',
@@ -51,13 +51,15 @@ function createInitializeScalingObj() {
 		var scalingAlgorithmObj = createScalingAlgorithmObj()
 		initializeObject.scalingAlgorithm = scalingAlgorithmObj
 
-
+        console.log(initializeObject)
 
 		return initializeObject
 }
 
 function createScalingAlgorithmObj()
 {
+    recordMetrics();
+
 	scalingAlgorithmObj = {}
 	scalingAlgorithmObj.name = getScalingAlgorithm()
 
@@ -107,7 +109,7 @@ function setupNextQuery(){
         var upcomingQuerySLALabel = document.getElementById("upcomingQuerySLA")
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
         upcomingQueryLabel.innerHTML = currentQuery[0].description;
-        upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
+        upcomingQueryLabel.className = getLabelColor(currentQuery[0].description)
         upcomingQuerySLALabel.innerHTML = "Expected Runtime: " + currentQuery[0].slaRuntime;
         }
         else
@@ -156,6 +158,10 @@ function radioButtonPress()
     document.getElementById("nextButton").disabled = false;
     document.getElementById("stepChoiceButton").disabled = false;
     document.getElementById("workloadChoiceButton").disabled = false;
+    if(getScalingAlgorithm() == "PI")
+    {
+    document.getElementById("PI-WINDOW-TEXTBOX").readOnly = false;
+    }
     clearGraphs();
 
     document.getElementById('step3Graphs').style.visibility='hidden'
@@ -188,6 +194,20 @@ function clearGraphs()
         firstObj_pi.PIControlIntegralErrorSum = "0"
         userPoints_pi.push(firstObj_pi)
     }
+
+    if(getScalingAlgorithm() == "OML")
+    {
+        console.log("oml clear")
+
+        userPoints_oml  = []
+
+        var firstObj_oml = {}
+        firstObj_oml.queryID = "0"
+        firstObj_oml.OMLPredictions = [0,0,0,0,0]
+        userPoints_oml.push(firstObj_oml)
+
+        console.log(userPoints_oml)
+    }
 }
 
 function hideCharts()
@@ -202,7 +222,7 @@ function hideCharts()
     document.getElementById('piError').style.visibility='hidden'
     }
     else if (getScalingAlgorithm() == "OML"){
-    
+    document.getElementById('omlPredictions').style.visibility='hidden'
     }      
 }
 
@@ -218,14 +238,14 @@ function showCharts()
     document.getElementById('piError').style.visibility='visible'
     }
     else if (getScalingAlgorithm() == "OML"){
-    
+    document.getElementById('omlPredictions').style.visibility='visible'
     } 
 }
 
 function nextButtonPress()
 {
         showCharts()
-        recordMetrics();
+        
         stepFake();
 
         updateGraphs();
@@ -247,16 +267,22 @@ function updateGraphs()
         { 
         updatePIErrorLines();   
         }
+        else if (getScalingAlgorithm() == "OML")
+        { 
+        updateOMLPredictionLines();   
+        }
 }
 
 function recordMetrics()
 {
+    console.log("RECORDING")
     if(getScalingAlgorithm() == "RL")
-    {console.log("record ml")
+    {
     recordRL();
     }
     else if (getScalingAlgorithm() == "PI")
     {   
+        console.log("RECORDING PI")
     recordPI();
     }
     else if (getScalingAlgorithm() == "OML"){
@@ -283,7 +309,7 @@ function stepFake() {
 
 function addRuntimeToList(queryDesc, runtime, sla, id)
 {
-  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Runtime performance: ' + runtime + '<br>Expected Runtime: ' + sla+ ' </p></li>');
+  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Expected Runtime: ' + sla+ ' </p></li>');
 }
 
 function showStepGraphsAndDisable()
@@ -301,12 +327,21 @@ function showStepGraphsAndDisable()
     document.getElementById('restart').style.visibility='visible'
     document.getElementById("stepChoiceButton").disabled = true;
     document.getElementById("workloadChoiceButton").disabled = true;
+     if(getScalingAlgorithm() == "PI")
+    {
+    document.getElementById("PI-WINDOW-TEXTBOX").readOnly = true;
+    }
     }
 
 }
 
 function runStepsAndDisable()
 {
+    //start as before (since we'll be pressing button several times after)
+    recordMetrics();
+    initializeScaling();
+    setupNextQuery();
+    
     if(typeof getSequenceValue()=="undefined")
     {
         alert("please select a workload")
@@ -319,14 +354,23 @@ function runStepsAndDisable()
     document.getElementById('restart').style.visibility='visible'
     document.getElementById("stepChoiceButton").disabled = true;
     document.getElementById("workloadChoiceButton").disabled = true;
+
+    if(getScalingAlgorithm() == "PI")
+    {
+    document.getElementById("PI-WINDOW-TEXTBOX").readOnly = true;
     }
+
+
     //run all queries
     while (true)
     {
+
         nextButtonPress()
         if(document.getElementById("nextButton").disabled == true)
         {
             break;
         }
     }
+    }
+    
 }

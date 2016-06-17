@@ -1,6 +1,6 @@
-var margin = {top: 20, right: 200, bottom: 30, left: 30},
+var margin = {top: 50, right: 200, bottom: 30, left: 30},
     width = 300 - margin.left - margin.right,
-    height = 180 - margin.top - margin.bottom;
+    height = 160 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
         .domain([0,50])
@@ -74,7 +74,7 @@ actualLinePath =  svg.append("path")
 
 legend = svg.append("g")
     .attr("class","legend")
-    .attr("transform","translate(200,0)")
+    .attr("transform","translate(200,-25)")
     .style("font-size","10px")
     .call(d3.legend)
   

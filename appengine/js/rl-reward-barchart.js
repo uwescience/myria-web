@@ -1,9 +1,9 @@
-var margin_rl = {top_rl: 10, right_rl: 200, bottom_rl: 30, left_rl: 50},
-    width_rl = 400 - margin_rl.left_rl - margin_rl.right_rl,
-    height_rl = 180 - margin_rl.top_rl - margin_rl.bottom_rl;
+var margin_rl = {top_rl: 50, right_rl: 200, bottom_rl: 30, left_rl: 40},
+    width_rl = 300 - margin_rl.left_rl - margin_rl.right_rl,
+    height_rl = 160 - margin_rl.top_rl - margin_rl.bottom_rl;
 
 
-var x_rl = d3.scale.ordinal().rangeRoundBands([0, width_rl+100], .05);
+var x_rl = d3.scale.ordinal().rangeRoundBands([0, width_rl+200], .05);
 
 var y_rl = d3.scale.linear().range([height_rl, 0]);
 
@@ -40,7 +40,7 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
 
 
   x_rl.domain(userData.map(function(d) { return d.cluster; }));
-  y_rl.domain([0, 5.0]);
+  y_rl.domain([0, 3.0]);
 
   svg_rl.append("g")
       .attr("class", "x axis")
@@ -48,7 +48,7 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
       .call(xAxis_rl)
     .append("text")
       .attr("y", 30)
-      .attr("x", 100)
+      .attr("x", 80)
       .text("Cluster Size")
     .selectAll("text")
       .style("text-anchor", "end")

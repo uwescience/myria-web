@@ -52,7 +52,7 @@ function updateRLTextboxes(){
 }
 
 // PI functions
-function recordPI(kp, ki){
+function recordPI(){
 	localStorage.setItem("SA", "PI")
 	localStorage.setItem("PI-KP", document.getElementById("PI-KP-TEXTBOX").value);
 	localStorage.setItem("PI-KI", document.getElementById("PI-KI-TEXTBOX").value);

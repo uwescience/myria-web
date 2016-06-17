@@ -1,6 +1,6 @@
-var margin_oml = {top_oml: 10, right_oml: 200, bottom_oml: 30, left_oml: 50},
-    width_oml = 400 - margin_oml.left_oml - margin_oml.right_oml,
-    height_oml = 180 - margin_oml.top_oml - margin_oml.bottom_oml;
+var margin_oml = {top_oml: 50, right_oml: 200, bottom_oml: 30, left_oml: 50},
+    width_oml = 300 - margin_oml.left_oml - margin_oml.right_oml,
+    height_oml = 160 - margin_oml.top_oml - margin_oml.bottom_oml;
 
 var x_oml = d3.scale.linear()
         .domain([0,50])
@@ -110,7 +110,7 @@ workers_12_path = svg_oml.append("path")
     .attr("d", workers_12_function(userPoints_oml));
 
 function updateOMLPredictionLines() {
-
+      console.log("UPDAING??")
       var newDataPoint_oml = {}
       newDataPoint_oml.queryID = ithQuery
 
