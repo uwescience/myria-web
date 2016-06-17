@@ -90,10 +90,10 @@ function updateRLAwardChart() {
           obj.cluster = configs[i]
           obj.rewardRatio = scalingState.RLActiveStates[i]
 
-          if(obj.rewardRatio < 0)
-          {obj.rewardRatio = 0
+          if(obj.rewardRatio > 0)
+          {userData.push(obj)
           }
-          userData.push(obj)
+          
       }
     });
 

@@ -46,8 +46,8 @@ svg.append("g")
       .call(xAxis)
     .append("text")
       .attr("y", 28)
-      .attr("x", 115)
-      .text("Query ID");
+      .attr("x", 70)
+      .text("Number of Queries Ran");
 
 
 y.domain(d3.extent([0,12]));
@@ -64,11 +64,19 @@ svg.append("g")
 
 idealLinePath = svg.append("path")
     .attr("class", "lineIdeal")
-    .attr("d", idealLine(userPoints));
+    .attr("d", idealLine(userPoints))
+    .attr("data-legend",function(d) { return "ideal"});
 
 actualLinePath =  svg.append("path")
     .attr("class", "lineActual")
     .attr("d", actualLine(userPoints))
+    .attr("data-legend",function(d) { return "actual"});
+
+legend = svg.append("g")
+    .attr("class","legend")
+    .attr("transform","translate(200,0)")
+    .style("font-size","10px")
+    .call(d3.legend)
   
 
 function updateActualIdealLineGraph() {

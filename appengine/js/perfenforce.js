@@ -26,6 +26,7 @@ function makeThreeVisible(){
 
 // RL functions
 function recordRL(){
+	console.log("RECORD")
 	localStorage.setItem("SA", "RL")
 	localStorage.setItem("RL-alpha", document.getElementById("RL-ALPHA-TEXTBOX").value);
 	localStorage.setItem("RL-beta", document.getElementById("RL-BETA-TEXTBOX").value);

@@ -108,7 +108,7 @@ function setupNextQuery(){
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
         upcomingQueryLabel.innerHTML = currentQuery[0].description;
         upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
-        upcomingQuerySLALabel.innerHTML = "SLA: " + currentQuery[0].slaRuntime;
+        upcomingQuerySLALabel.innerHTML = "Expected Runtime: " + currentQuery[0].slaRuntime;
         }
         else
         {
@@ -116,6 +116,7 @@ function setupNextQuery(){
         upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
         upcomingQuerySLALabel.innerHTML = "";
         document.getElementById("nextButton").disabled = true;
+        
         }
         // for previous query
         if ( typeof previousQuery[0]!="undefined" && previousQuery[0].description!=null ){
@@ -151,14 +152,18 @@ function radioButtonPress()
 {
     console.log("radio button press")
     ithQuery = 0
+    
     document.getElementById("nextButton").disabled = false;
     document.getElementById("stepChoiceButton").disabled = false;
     document.getElementById("workloadChoiceButton").disabled = false;
     clearGraphs();
-    hideCharts();
+
+    document.getElementById('step3Graphs').style.visibility='hidden'
     document.getElementById('upcomingQuery').style.visibility='hidden'
     document.getElementById('previousQueryList').style.visibility='hidden'
     document.getElementById('previousQueryHeader').style.visibility='hidden'
+
+    document.getElementById('restart').style.visibility='hidden'
     document.getElementById('previousQueryList').innerHTML = '<ul><li></li></ul>';
     initializeScaling();
     setupNextQuery();
@@ -223,7 +228,16 @@ function nextButtonPress()
         recordMetrics();
         stepFake();
 
-        // update graphs
+        updateGraphs();
+
+        //prepare upcoming
+        setupNextQuery();
+
+}
+
+function updateGraphs()
+{
+    // update graphs
         updateActualIdealLineGraph();
         if(getScalingAlgorithm() == "RL")
         {
@@ -233,16 +247,12 @@ function nextButtonPress()
         { 
         updatePIErrorLines();   
         }
-
-        //prepare upcoming
-        setupNextQuery();
-
 }
 
 function recordMetrics()
 {
     if(getScalingAlgorithm() == "RL")
-    {
+    {console.log("record ml")
     recordRL();
     }
     else if (getScalingAlgorithm() == "PI")
@@ -273,7 +283,7 @@ function stepFake() {
 
 function addRuntimeToList(queryDesc, runtime, sla, id)
 {
-  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Runtime performance: ' + runtime + '<br>SLA: ' + sla+ ' </p></li>');
+  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Runtime performance: ' + runtime + '<br>Expected Runtime: ' + sla+ ' </p></li>');
 }
 
 function showStepGraphsAndDisable()
@@ -287,7 +297,8 @@ function showStepGraphsAndDisable()
     document.getElementById('upcomingQuery').style.visibility='visible'
     document.getElementById('previousQueryList').style.visibility='visible'
     document.getElementById('previousQueryHeader').style.visibility='visible'
-
+    document.getElementById('step3Graphs').style.visibility='visible'
+    document.getElementById('restart').style.visibility='visible'
     document.getElementById("stepChoiceButton").disabled = true;
     document.getElementById("workloadChoiceButton").disabled = true;
     }
@@ -304,7 +315,8 @@ function runStepsAndDisable()
 
     document.getElementById('previousQueryList').style.visibility='visible'
     document.getElementById('previousQueryHeader').style.visibility='visible'
-
+    document.getElementById('step3Graphs').style.visibility='visible'
+    document.getElementById('restart').style.visibility='visible'
     document.getElementById("stepChoiceButton").disabled = true;
     document.getElementById("workloadChoiceButton").disabled = true;
     }
