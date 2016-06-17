@@ -107,7 +107,7 @@ div {
 }
 
 .queryStatusLabel {
-    font: bold 14px arial;
+    font: bold 14px Helvetica;
 }
 
 .sla-size {
@@ -157,4 +157,19 @@ div {
   opacity: 0.8;
   border: 1px solid #1a0000;
   border-radius: 4px;
+}
+
+ul {
+  padding: 0;
+}
+li {
+  margin: 0;
+  list-style-type: none;
+}
+
+#previousQueryList
+{
+  height: 150px;
+  overflow: auto;
+  border: 1px solid black;
 }

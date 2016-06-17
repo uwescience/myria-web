@@ -7,7 +7,6 @@
   <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
   <link rel="stylesheet" type="text/css" href="css/queryvis.css">
   <script type="text/javascript" src="js/perfenforce.js"></script>
-
   <script type="text/javascript" src="js/angular.min.js"></script>
   <script type="text/javascript" src="js/tiers.js"></script>
 {% endblock %}
@@ -20,12 +19,13 @@
     <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
     <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
     <li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
-    <li class="active"><a href="#">Demo</a></li>
+    <li class="active"><a href="#">Replay Mode</a></li>
   </ol>
   <h1>Replay Mode</h1>
   <div class="col-md-12">
-    <div class="row top-buffer">
-      <div class="col-md-5">
+    <!-- row 1-->
+    <div class="row">
+      <div class="col-md-6">
         <h3> Selected SLA</h3>
         <div ng-app='tiersDemo' ng-controller="WizardController as wizard">
           <div ng-init="wizard.loadQueries()">
@@ -60,72 +60,7 @@
           </div>
         </div>
       </div>
-      <!-- Other column here -->
-      <div id="step3Tuning" class="col-md-7" style="visibility: hidden">
-        <h3>Tuning - Reinforcement Learning</h3>
-        <div class="row">
-          <div class="col-md-6 col-sm-offset-3">
-            <label for="RL-ALPHA">RL ALPHA:</label>
-            <input type="text" class="form-control" id="RL-ALPHA-TEXTBOX"  value=".2">
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6 col-sm-offset-3">
-            <label for="RL-BETA">RL BETA:</label>
-            <input type="text" class="form-control" id="RL-BETA-TEXTBOX"  value=".1">
-          </div>
-        </div>
-        <div class="row top-buffer">
-          <div class="col-md-6 col-sm-offset-3">
-            <button type="button" class="btn btn-info btn-block" id="nextButton" onClick="nextButtonPress()" style="float: left;">Next Query</button>
-          </div>
-        </div>
-        <div class="row top-buffer">
-          <div  class="col-md-6">
-            <label class="queryStatusLabel" ><b>Previous Query...</b></label>
-            <label id="previousQueryLabel" class="queryStatusLabel"></label>
-            <br>
-            <label id="previousQuerySLA" class="queryStatusLabel"></label>
-            <br>
-            <label id="previousQueryActual" class="queryStatusLabel"></label>
-          </div>
-          <div  class="col-md-6">
-            <label class="queryStatusLabel"><b>Upcoming Query...</b></label>
-            <label id="upcomingQueryLabel" class="queryStatusLabel"></label>
-            <label id="upcomingQuerySLA" class="queryStatusLabel"></label>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-5">
-        <h3> Workload Selection</h3>
-        <div class="btn-group" data-toggle="toggle">
-          <div class="col-md-12">
-            <div class="row-md-12">
-              <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection" onclick="radioButtonPress()"> Random Workload (20 queries)</label>
-              </div>
-            </div>
-            <div class="row-md-12">
-              <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection" onclick="radioButtonPress()"> Occasional Complex (20 queries)</label>
-              </div>
-            </div>
-            <div class="row-md-12">
-              <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection" onclick="radioButtonPress()"> Simple to Complex (30 queries)</label>
-              </div>
-            </div>
-            <div class="row-md-12">
-              <div class="col-md-12">
-                <label><input type="radio" name="workloadSelection" onclick="radioButtonPress()"> Step-Wise Pattern (50 queries)</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="step3Graphs" class="col-md-7" style="visibility: hidden">
+      <div id="step3Graphs" class="col-md-6" style="visibility: hidden">
         <div class="row">
           <div class="col-md-12">
             <h3>Graphs</h3>
@@ -141,15 +76,103 @@
         </div>
       </div>
     </div>
+    <div class="row">
+      <div id="step3Tuning" class="col-md-6">
+        <h3>Reinforcement Learning Tuning</h3>
+        <div class="row">
+          <div class="col-md-6 col-sm-offset-1">
+            <label for="RL-ALPHA">Alpha:</label>
+            <input type="text" class="form-control" id="RL-ALPHA-TEXTBOX"  value=".2">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 col-sm-offset-1">
+            <label for="RL-BETA">Beta:</label>
+            <input type="text" class="form-control" id="RL-BETA-TEXTBOX"  value=".1">
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-offset-1"  id="upcomingQuery" style="visibility: hidden">
+        
+        <div class="row">
+          <div class="col-md-12">
+          <h4>Next Query...</h4>
+          <label id="upcomingQueryLabel" class="queryStatusLabel"></label>
+        </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+          <label id="upcomingQuerySLA" class="queryStatusLabel"></label>
+          </div>
+        </div>
+      <div class="row">
+        <div class="col-md-12">
+        <button type="button" class="btn btn-info btn-block" id="nextButton" onClick="nextButtonPress()">Run Query</button>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <h3> Workload Selection</h3>
+        <div class="btn-group" data-toggle="toggle">
+          <div class="col-md-12 col-sm-offset-1">
+            <div class="row-md-12">
+              <div class="col-md-12">
+                <label><input type="radio" name="workloadSelection" onClick="radioButtonPress()"> Random Workload (20 queries)</label>
+              </div>
+            </div>
+            <div class="row-md-12">
+              <div class="col-md-12">
+                <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Occasional Complex (20 queries)</label>
+              </div>
+            </div>
+            <div class="row-md-12">
+              <div class="col-md-12">
+                <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Simple to Complex (30 queries)</label>
+              </div>
+            </div>
+            <div class="row-md-12">
+              <div class="col-md-12">
+                <label><input type="radio" name="workloadSelection"  onClick="radioButtonPress()"> Step-Wise Pattern (50 queries)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-sm-offset-2" id="previousQueryHeader" style="visibility: hidden">
+        <h3>Previous Queries</h3>
+        <div id="previousQueryList" class="queryStatusLabel"  style="visibility: hidden">
+          <ul>
+            <li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <br>
+        <h3> Select Replay Action</h3>
+        <br>
+        <div class="row">
+          <div class="col-md-3 col-sm-offset-1">
+            <button type="button" class="btn btn-secondary" id="stepChoiceButton" onClick="showStepGraphsAndDisable()">Run Step by Step</button>
+          </div>
+          <div class="col-md-3 col-sm-offset-1">
+            <button type="button" class="btn btn-secondary" id="workloadChoiceButton" onClick="runStepsAndDisable()">Run Workload</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </div>
 {% endblock %}
 {% block footer %}
-<!-- D3 scripts -->
-<script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
-
-<script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
-<script type="text/javascript" src="js/rl-reward-barchart.js"></script>
-<script type="text/javascript" src="js/scaling_algorithms.js"></script>
-
-<!-- end D3 scripts -->
+  <!-- D3 scripts -->
+  <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
+  <script type="text/javascript" src="js/ideal-actual-linechart.js"></script>
+  <script type="text/javascript" src="js/rl-reward-barchart.js"></script>
+  <script type="text/javascript" src="js/scaling_algorithms.js"></script>
+  <!-- end D3 scripts -->
 {% endblock %}

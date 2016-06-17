@@ -24,6 +24,8 @@ function initializeScaling()
     ithQuery = 0
 	var initializeScalingObj = createInitializeScalingObj()
 
+    console.log(initializeScalingObj)
+
  	// call the initialize POST function
 	$.ajax({
                 type: 'POST',
@@ -82,6 +84,7 @@ function setupNextQuery(){
     ithQuery = ithQuery + 1
 
 
+
     var scalingAlgorithmObj = createScalingAlgorithmObj()
 
     // Make it block :( 
@@ -104,7 +107,7 @@ function setupNextQuery(){
         var upcomingQuerySLALabel = document.getElementById("upcomingQuerySLA")
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
         upcomingQueryLabel.innerHTML = currentQuery[0].description;
-        upcomingQueryLabel.className = "queryStatusLabel" + getLabelColor(currentQuery[0].description)
+        upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
         upcomingQuerySLALabel.innerHTML = "SLA: " + currentQuery[0].slaRuntime;
         }
         else
@@ -114,23 +117,12 @@ function setupNextQuery(){
         upcomingQuerySLALabel.innerHTML = "";
         document.getElementById("nextButton").disabled = true;
         }
-
-
-        var previousQueryLabel = document.getElementById("previousQueryLabel")
-        var previousQuerySLALabel = document.getElementById("previousQuerySLA")
-        var previousQueryActualLabel = document.getElementById("previousQueryActual") 
-        if (previousQuery[0].description != null && typeof previousQuery[0]!='undefined'){
-         previousQueryLabel.innerHTML = previousQuery[0].description;
-         previousQueryLabel.className = "queryStatusLabel" +  getLabelColor(previousQuery[0].description)
-         previousQuerySLALabel.innerHTML = "SLA: " + previousQuery[0].slaRuntime;
-         previousQueryActualLabel.innerHTML = "Actual Runtime: " + (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])] + " at " + clusterSize[0] + " workers";
+        // for previous query
+        if ( typeof previousQuery[0]!="undefined" && previousQuery[0].description!=null ){
+            console.log("adding to previous list")
+            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime)
         }
-        else
-        {
-         previousQueryLabel.innerHTML = "";
-         previousQuerySLALabel.innerHTML = "";
-         previousQueryActualLabel.innerHTML = "";
-        }
+
     });
 }
 
@@ -157,17 +149,19 @@ function getLabelColor(labelText)
 
 function radioButtonPress()
 {
+    console.log("radio button press")
     ithQuery = 0
     document.getElementById("nextButton").disabled = false;
-    makeThreeVisible();
-
-    
-    initializeScaling();
-    
-    setupNextQuery();
+    document.getElementById("stepChoiceButton").disabled = false;
+    document.getElementById("workloadChoiceButton").disabled = false;
     clearGraphs();
-
-    hideCharts()
+    hideCharts();
+    document.getElementById('upcomingQuery').style.visibility='hidden'
+    document.getElementById('previousQueryList').style.visibility='hidden'
+    document.getElementById('previousQueryHeader').style.visibility='hidden'
+    document.getElementById('previousQueryList').innerHTML = '<ul><li></li></ul>';
+    initializeScaling();
+    setupNextQuery();
 }
 
 function clearGraphs()
@@ -225,23 +219,24 @@ function showCharts()
 
 function nextButtonPress()
 {
-    showCharts();
-    
-    recordMetrics();
-    
-    stepFake();
+        showCharts()
+        recordMetrics();
+        stepFake();
 
-    updateActualIdealLineGraph();
-    if(getScalingAlgorithm() == "RL")
-    {
-    updateRLAwardChart();
-    }
-    else if (getScalingAlgorithm() == "PI")
-    { 
-    updatePIErrorLines();   
-    }
+        // update graphs
+        updateActualIdealLineGraph();
+        if(getScalingAlgorithm() == "RL")
+        {
+        updateRLAwardChart();
+        }
+        else if (getScalingAlgorithm() == "PI")
+        { 
+        updatePIErrorLines();   
+        }
 
-    setupNextQuery();
+        //prepare upcoming
+        setupNextQuery();
+
 }
 
 function recordMetrics()
@@ -273,4 +268,53 @@ function stepFake() {
                     return data;
                 }
             });
+}
+
+
+function addRuntimeToList(queryDesc, runtime, sla, id)
+{
+  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Runtime performance: ' + runtime + '<br>SLA: ' + sla+ ' </p></li>');
+}
+
+function showStepGraphsAndDisable()
+{
+    if(typeof getSequenceValue()=="undefined")
+    {
+        alert("please select a workload")
+    }
+    else  {
+    
+    document.getElementById('upcomingQuery').style.visibility='visible'
+    document.getElementById('previousQueryList').style.visibility='visible'
+    document.getElementById('previousQueryHeader').style.visibility='visible'
+
+    document.getElementById("stepChoiceButton").disabled = true;
+    document.getElementById("workloadChoiceButton").disabled = true;
+    }
+
+}
+
+function runStepsAndDisable()
+{
+    if(typeof getSequenceValue()=="undefined")
+    {
+        alert("please select a workload")
+    }
+    else  {
+
+    document.getElementById('previousQueryList').style.visibility='visible'
+    document.getElementById('previousQueryHeader').style.visibility='visible'
+
+    document.getElementById("stepChoiceButton").disabled = true;
+    document.getElementById("workloadChoiceButton").disabled = true;
+    }
+    //run all queries
+    while (true)
+    {
+        nextButtonPress()
+        if(document.getElementById("nextButton").disabled == true)
+        {
+            break;
+        }
+    }
 }
