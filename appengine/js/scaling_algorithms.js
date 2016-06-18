@@ -4,6 +4,7 @@ host = ''
 
 var ithQuery = 0
 var configs = [4,6,8,10,12]
+var prevClusterSize = 0
 
 function getRequest(command)
 {
@@ -39,6 +40,8 @@ function initializeScaling()
                     return data;
                 }
             });
+
+    prevClusterSize = configs[getTier()]
 }
 
 function createInitializeScalingObj() {
@@ -109,7 +112,7 @@ function setupNextQuery(){
         var upcomingQuerySLALabel = document.getElementById("upcomingQuerySLA")
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
         upcomingQueryLabel.innerHTML = currentQuery[0].description;
-        upcomingQueryLabel.className = getLabelColor(currentQuery[0].description)
+        upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
         upcomingQuerySLALabel.innerHTML = "Expected Runtime: " + currentQuery[0].slaRuntime;
         }
         else
@@ -123,7 +126,8 @@ function setupNextQuery(){
         // for previous query
         if ( typeof previousQuery[0]!="undefined" && previousQuery[0].description!=null ){
             console.log("adding to previous list")
-            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime)
+            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, clusterSize[0])
+            prevClusterSize = clusterSize[0]
         }
 
     });
@@ -307,9 +311,16 @@ function stepFake() {
 }
 
 
-function addRuntimeToList(queryDesc, runtime, sla, id)
+function addRuntimeToList(queryDesc, runtime, sla, clusterSize)
 {
-  $("#previousQueryList ul").prepend('<li><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Expected Runtime: ' + sla+ ' </p></li>');
+   if(runtime > sla)
+   {
+    $("#previousQueryList ul").prepend('<li class="customBorderPink"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size: ' + clusterSize +'<br>Expected Runtime: ' + sla+ ' </p></li>');
+    }
+    else
+    {
+        $("#previousQueryList ul").prepend('<li class="customBorderGreen"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size: ' + clusterSize + '<br>Expected Runtime: ' + sla+ ' </p></li>');
+    }
 }
 
 function showStepGraphsAndDisable()

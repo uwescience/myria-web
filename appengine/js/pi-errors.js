@@ -84,7 +84,7 @@ errorSumPath =  svg_pi.append("path")
 
 legend_pi = svg_pi.append("g")
     .attr("class","legend")
-    .attr("transform","translate(150,-25)")
+    .attr("transform","translate(150,-30)")
     .style("font-size","10px")
     .call(d3.legend)
 

@@ -163,6 +163,24 @@ div {
   border-radius: 4px;
 }
 
+.customBorderGreen{
+  width: 100%;
+  background-color : #ffffff;
+  color: #339900;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
+.customBorderPink{
+  width: 100%;
+  background-color : #ffffff;
+  color: #FF3333;
+  opacity: 0.8;
+  border: 1px solid #1a0000;
+  border-radius: 4px;
+}
+
 ul {
   padding: 0;
 }
