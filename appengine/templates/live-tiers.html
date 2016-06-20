@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block extra_head %}
+    <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+    <link href="css/github.css" type="text/css" rel="stylesheet" />
+    <link href="css/select2.css" type="text/css" rel="stylesheet" />
+    <link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+    <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="css/queryvis.css">
+    <script type="text/javascript" src="js/perfenforce.js"></script>
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/tiers.js"></script>
+{% endblock %}
+{% block editor_active %} class="active"{% endblock %}
+{% block content %}
+    <script>
+    localStorage.clear();
+    </script>
+    <ol class="breadcrumb">
+        <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+        <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+        <li class="active">Live Mode</li>
+    </ol>
+    <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
+        <div class="col-md-3" >
+            <div class="panel panel-default" ng-show="wizard.step === 1">
+                <div class="panel-heading">Upload data</div>
+                <div class="panel-body">
+                    <!-- Upload button -->
+                    <button type="button" ng-click="wizard.loadQueries()" class="btn btn-primary"><span class="glyphicon glyphicon-open"></span> Upload TPCH-SSB Dataset</button>
+                </div>
+            </div>
+        </div>
+        <div class="container"  ng-show="wizard.step === 2" >
+            <h1>Select a Service Level Agreement (SLA) Tier</h1>
+            <i>The following SLAs were generated based on the performance estimates of queries based on your dataset.</i>
+            <div class="panel-body">
+                <div class="row-md-12">
+                    <div class="col-md-6"  ng-repeat='tier in wizard.tiers'>
+                        <!-- Tier panel start -->
+                        <div class="panel panel-default">
+                            <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                            <!-- Tier data -->
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Query Template</th>
+                                        <th>Runtime (seconds)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                                        <td width="90%">
+                                            <span ng-repeat="query in queryGroup" class="sla-size">
+                                                {[{ query.template }]}<br />
+                                            </span>
+                                        </td>
+                                        <td class="sla-size" width="10%">{[{ queryGroup.runtime }]}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="panel-body">
+                                <a type="button" class="btn btn-primary" href="live" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+                            </div>
+                        </div>
+                        <!-- Tier panel end -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block footer %}
+{% endblock %}

@@ -91,20 +91,20 @@
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (26 attributes) FROM (2 TABLES) WHERE (100% of data selected)",
+            "template": "SELECT (49 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
             "editorTemplate": [
                 ""
             ],
-            "tier": 5,
+            "tier": 2,
             "runtime":  10,
             "queryFilePath": ""
         },
         {
-            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
+            "template": "SELECT (58 attributes) FROM (5 TABLES) WHERE (1% of data selected)",
             "editorTemplate": [
                 ""
             ],
-            "tier": 5,
+            "tier": 2,
             "runtime":  10,
             "queryFilePath": ""
         },
@@ -113,10 +113,63 @@
             "editorTemplate": [
                 ""
             ],
-            "tier": 5,
+            "tier": 2,
+            "runtime":  60,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (51 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 2,
             "runtime":  300,
             "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (1 attributes) FROM (lineitem) WHERE (100% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 3,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (3 attributes) FROM (lineitem) WHERE (100% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (10% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  10,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (60 attributes) FROM (5 TABLES) WHERE (100% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 4,
+            "runtime":  300,
+            "queryFilePath": ""
+        },
+        {
+            "template": "SELECT (26 attributes) FROM (2 TABLES) WHERE (100% of data selected)",
+            "editorTemplate": [
+                ""
+            ],
+            "tier": 5,
+            "runtime":  10,
+            "queryFilePath": ""
         }
-        
     ]
 }

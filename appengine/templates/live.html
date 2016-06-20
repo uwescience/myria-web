@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+<link href="css/github.css" type="text/css" rel="stylesheet" />
+<link href="css/select2.css" type="text/css" rel="stylesheet" />
+<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<script type="text/javascript" src="js/perfenforce.js"></script>
+<script type="text/javascript" src="js/codemirror.js"></script>
+
+{% endblock %}
+
+{% block editor_active %} class="active"{% endblock %}
+
+{% block content %}
+<ol class="breadcrumb">
+    <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+    <li class="active"><a href="live-tiers">Select a Service Tier</a></li>
+    <li class="active"><a href="live">Live Mode</a></li>
+</ol>
+<h1>Live Mode - Perceptron Learning</h1>
+<div class="container">
+  <div class="row helperBorder" style="height:100%">
+    <div class="col-md-6 helperBorder">
+    <h4>Write a Query...</h4>
+    <textarea id="queryEditor"></textarea> 
+    </div> 
+  </div>
+  <div class="row top-buffer helperBorder">
+    <div class="col-md-4 helperBorder">
+      <div class="row">
+        <button type="button" id="slaButton" class="btn btn-primary" onclick="getSLA()"><span class="glyphicon glyphicon-question-sign"></span> Find SLA</button>
+      </div>
+      <div class="row">
+        <button type="button" id="executeButton" class="btn btn-primary" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
+      </div>
+    </div>  
+  </div>
+  <div class="row top-buffer helperBorder">
+    <div class="col-md-4 helperBorder">
+      <div class="row">
+        <label id="runningInfo"></label>
+      </div>
+      <div class="row">
+        <label id="slaInfo"></label>
+      </div>
+    </div> 
+  </div>
+</div>
+  <div class="row top-buffer helperBorder">
+    <div class="col-md-12">
+      PICTURE HERE
+    </div>  
+  </div>
+  </div>
+
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript" src="js/live.js"></script>
+{% endblock %}

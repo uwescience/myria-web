@@ -126,7 +126,17 @@ function setupNextQuery(){
         // for previous query
         if ( typeof previousQuery[0]!="undefined" && previousQuery[0].description!=null ){
             console.log("adding to previous list")
+            
+            if(getScalingAlgorithm() == "OML")
+            {
             addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, clusterSize[0])
+            }
+            else
+            {
+                console.log("Using cluster size NOW")
+                addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime, clusterSize[0])
+            }
+
             prevClusterSize = clusterSize[0]
         }
 
@@ -252,10 +262,19 @@ function nextButtonPress()
         
         stepFake();
 
-        updateGraphs();
-
-        //prepare upcoming
-        setupNextQuery();
+        if(getScalingAlgorithm() == "OML")
+        {
+            updateGraphs();
+            //prepare upcoming
+            setupNextQuery();
+        }
+        else
+        {
+            //prepare upcoming
+            setupNextQuery();
+            updateGraphs();
+            
+        }
 
 }
 
@@ -315,11 +334,11 @@ function addRuntimeToList(queryDesc, runtime, sla, clusterSize)
 {
    if(runtime > sla)
    {
-    $("#previousQueryList ul").prepend('<li class="customBorderPink"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size: ' + clusterSize +'<br>Expected Runtime: ' + sla+ ' </p></li>');
+    $("#previousQueryList ul").prepend('<li class="customBorderPink"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size Ran: ' + clusterSize +'<br>Expected Runtime: ' + sla+ ' </p></li>');
     }
     else
     {
-        $("#previousQueryList ul").prepend('<li class="customBorderGreen"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size: ' + clusterSize + '<br>Expected Runtime: ' + sla+ ' </p></li>');
+        $("#previousQueryList ul").prepend('<li class="customBorderGreen"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br> Cluster Size Ran: ' + clusterSize + '<br>Expected Runtime: ' + sla+ ' </p></li>');
     }
 }
 

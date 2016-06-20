@@ -457,6 +457,31 @@ class ReplayOML(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('replay-OML.html')
         self.response.out.write(template.render(template_vars))
 
+class LiveTiers(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'replay-RL'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('live-tiers.html')
+        self.response.out.write(template.render(template_vars))
+
+
+class LiveOML(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'replay-RL'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('live.html')
+        self.response.out.write(template.render(template_vars))
+
 class Plan(MyriaHandler):
 
     def post(self):
@@ -661,6 +686,8 @@ class Application(webapp2.WSGIApplication):
             ('/replay-RL',ReplayRL),
             ('/replay-PI',ReplayPI),
             ('/replay-OML',ReplayOML),
+            ('/live-tiers', LiveTiers),
+            ('/live', LiveOML)
         ]
 
         # Connection to Myria. Thread-safe

@@ -17,7 +17,7 @@
 .lineIdeal {
   fill: none;
   stroke: orange;
-  stroke-width: 1.5px;
+  stroke-width: 3.0px;
 }
 
 .col-height {
@@ -159,25 +159,22 @@ div {
   background-color : #ffffff;
   color: #000000;
   opacity: 0.8;
-  border: 1px solid #1a0000;
   border-radius: 4px;
 }
 
 .customBorderGreen{
   width: 100%;
   background-color : #ffffff;
-  color: #339900;
+  color: #000000;
   opacity: 0.8;
-  border: 1px solid #1a0000;
   border-radius: 4px;
 }
 
 .customBorderPink{
   width: 100%;
   background-color : #ffffff;
-  color: #FF3333;
+  color: #000000;
   opacity: 0.8;
-  border: 1px solid #1a0000;
   border-radius: 4px;
 }
 
@@ -207,4 +204,11 @@ border: 1px solid #808080;
 
 .panel-default{
   border-color:rgba(53, 29, 29, 0.49);
+}
+
+.helperBorder{
+  color: #000000;
+  opacity: 0.8;
+  border: 1px solid black;
+  border-radius: 4px;
 }

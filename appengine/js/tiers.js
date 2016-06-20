@@ -18,7 +18,7 @@
     });
 
     app.controller('WizardController', ['$http', 'filterFilter', 'orderByFilter', function (http, filter, orderBy) {
-        this.tiers = [{ "id": 1,"name": "1", "cost": "0.16" }, { "id": 2, "name": "2", "cost": "0.24" }, { "id": 3, "name": "3", "cost": "0.32"},{ "id": 4, "name": "4", "cost": "0.55" },{ "id": 5, "name": "5", "cost": ".64" }]
+        this.tiers = [{ "id": 1,"name": "1", "cost": "0.16" }, { "id": 5, "name": "2", "cost": ".64" }]
 
         this.tier = 0;
         this.allQueries = null;
@@ -35,7 +35,16 @@
 
         this.getTierWizard = function (tier) {
             currentTier = localStorage.getItem("tier");
-            return this.tiers[currentTier]
+            if(currentTier == 0)
+            {
+                return this.tiers[0]
+            }
+            else
+            {
+                return this.tiers[1]
+            }
+
+            //return this.tiers[currentTier]
         };
 
         this.loadQueries = function () {
