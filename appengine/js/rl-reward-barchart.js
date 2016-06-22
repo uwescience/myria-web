@@ -40,7 +40,7 @@ var svg_rl = d3.select("#rl-barchart").append("svg")
 
 
   x_rl.domain(userData.map(function(d) { return d.cluster; }));
-  y_rl.domain([0, 3.0]);
+  y_rl.domain([0, 1.5]);
 
   svg_rl.append("g")
       .attr("class", "x axis")

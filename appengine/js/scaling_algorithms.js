@@ -131,12 +131,12 @@ function setupNextQuery(){
             addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, clusterSize[0])
             }
             else if(getScalingAlgorithm() == "RL"){
-                console.log("Using cluster size NOW")
+                
                 addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime, clusterSize[0]) 
             }
             else
             {
-                console.log("Using cluster size NOW")
+              
                 addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, prevClusterSize)
             }
 
@@ -290,19 +290,29 @@ function nextButtonPress()
                 }
               });
         }
-        else
+        else if(getScalingAlgorithm() == "RL")
         {
             //prepare upcoming
             setupNextQuery();
             updateGraphs();
             
         }
+        else
+        {
+            updateGraphs();
+            //prepare upcoming
+            setupNextQuery();
+            
+            
+        }
+
+
 
 }
 
 function updateGraphs()
 {
-    // update graphs
+            // update graphs
         updateActualIdealLineGraph();
         if(getScalingAlgorithm() == "RL")
         {

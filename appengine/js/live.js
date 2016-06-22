@@ -31,7 +31,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById('queryEditor'), {
             viewportMargin: Infinity,
         });
 
-editor.getDoc().setValue('SELECT * FROM "public:adhoc:lineitem" AS L;');
+editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 7;');
 
 editorLanguage = "MyriaL"
 var multiway_join_checked = false;
@@ -107,6 +107,10 @@ function getSLA()
     var executeButton = document.getElementById('executeButton')
     if (executeButton !== null)
     {
+      document.getElementById('slaInfo').innerHTML = ""
+      document.getElementById('runningInfo').innerHTML = ""
+      document.getElementById('picture').innerHTML = ""
+
        querySQL = editor.getValue();
        var request = new FormData();                     
         request.append('querySQL', querySQL);
@@ -155,7 +159,7 @@ function runQuery()
       console.log("Tier " + getTier())
 
      
-      document.getElementById('picture').innerHTML = "cluster size is now " + clusterSize
+      document.getElementById('picture').innerHTML = "Cluster is running on " + clusterSize + " workers"
       executePlan()
     });    
 

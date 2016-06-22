@@ -1,4 +1,4 @@
-var margin = {top: 50, right: 200, bottom: 30, left: 30},
+var margin = {top: 50, right: 240, bottom: 30, left: 30},
     width = 300 - margin.left - margin.right,
     height = 160 - margin.top - margin.bottom;
 
@@ -88,7 +88,8 @@ function updateActualIdealLineGraph() {
 
       $.when(getRequest('/perfenforce/cluster-size'), getRequest('/perfenforce/current-query-ideal')).done(function(clusterSize, idealSize){
 
-        newDataPoint.actual = clusterSize[0]
+        console.log("NEW POINT " + prevClusterSize)
+        newDataPoint.actual = prevClusterSize
         newDataPoint.ideal = idealSize[0]
 
         userPoints.push(newDataPoint)
