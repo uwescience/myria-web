@@ -1,5 +1,5 @@
 
-host = ""
+host = "http://"
 
 
 var editor_templates = {
@@ -31,7 +31,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById('queryEditor'), {
             viewportMargin: Infinity,
         });
 
-editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 7;');
+editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 1;');
 
 editorLanguage = "MyriaL"
 var multiway_join_checked = false;

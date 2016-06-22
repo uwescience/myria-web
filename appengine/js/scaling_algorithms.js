@@ -1,6 +1,6 @@
 
 // this won't be necessary if running on coordinator
-host = ''
+host = 'http://'
 
 var ithQuery = 0
 var configs = [4,6,8,10,12]
@@ -128,7 +128,7 @@ function setupNextQuery(){
             
             if(getScalingAlgorithm() == "OML")
             {
-            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, clusterSize[0])
+            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, prevClusterSize)
             }
             else if(getScalingAlgorithm() == "RL"){
                 
