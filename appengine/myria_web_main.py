@@ -409,6 +409,18 @@ class TierSelection(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('tier-selection.html')
         self.response.out.write(template.render(template_vars))
 
+class MockQueryEditor(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'tier-selection'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('mock-query-editor.html')
+        self.response.out.write(template.render(template_vars))
+
 class ScalingAlgorithms(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
@@ -640,6 +652,77 @@ class Execute(MyriaHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
 
+class ExecuteJSON(MyriaHandler):
+
+    def post(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+        print "TESTING "
+        query = self.request.get("query")
+        language = self.request.get("language")
+        profile = self.request.get("profile", False)
+        jsonQuery = self.request.get("jsonQuery")
+
+       # cached_logicalplan = str(
+       #    get_logical_plan(query, language, self.app.connection))
+
+        try:
+            # Generate physical plan
+            # physicalplan = get_physical_plan(
+            #    query, language, self.app.connection)
+
+            # Get the Catalog needed to get schemas for compiling the query
+            catalog = MyriaCatalog(conn)
+
+            # .. and compile
+            #compiled = compile_to_json(
+            #    query, cached_logicalplan, physicalplan, catalog)
+            
+            
+            
+            #json_data=open(os.path.expanduser(jsonQuery))
+            compiled = json.loads(jsonQuery)
+
+            #compiled['profilingMode'] = profile
+
+            # Issue the query
+            query_status = conn.submit_query(compiled)
+            query_url = 'http://%s:%d/execute?query_id=%d' %\
+                (self.app.hostname, self.app.port, query_status['queryId'])
+            self.response.status = 201
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.headers['Content-Location'] = query_url
+            self.response.write(json.dumps(query_status))
+            return
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            return
+        except requests.ConnectionError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write(
+                'Error 503 (Unavailable): \
+                 Unable to connect to REST server to issue query')
+            return
+
+    def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+
+        query_id = self.request.get("queryId")
+
+        if not query_id:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): missing query_id")
+            return
+
+        query_status = conn.get_query_status(query_id)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(query_status))
+
 
 class Dot(MyriaHandler):
 
@@ -677,17 +760,20 @@ class Application(webapp2.WSGIApplication):
             ('/optimize', Optimize),
             ('/compile', Compile),
             ('/execute', Execute),
+            ('/executejson', ExecuteJSON),
             ('/dot', Dot),
             ('/examples', Examples),
             ('/demo3', Demo3),
             ('/perfenforce-demo',PerfenforceDemo),
             ('/tier-selection',TierSelection),
+            ('/mock-query-editor', MockQueryEditor),
             ('/scaling-algorithms',ScalingAlgorithms),
             ('/replay-RL',ReplayRL),
             ('/replay-PI',ReplayPI),
             ('/replay-OML',ReplayOML),
             ('/live-tiers', LiveTiers),
-            ('/live', LiveOML)
+            ('/live', LiveOML),
+
         ]
 
         # Connection to Myria. Thread-safe
@@ -703,7 +789,7 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-myriax_host = 'localhost' #os.environ.get('MYRIAX_REST_HOST', 'localhost')
+myriax_host = '' #os.environ.get('MYRIAX_REST_HOST', 'localhost')
 # Google App Engine will just serve the app...
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')

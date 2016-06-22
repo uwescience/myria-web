@@ -18,6 +18,7 @@
     <ol class="breadcrumb">
         <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
         <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+        <li class="active">Begin the Query Session</a></li>
         <li class="active">Select a Scaling Algorithm</li>
         <li class="active">Replay Mode</li>
     </ol>
@@ -60,7 +61,7 @@
                                 </tbody>
                             </table>
                             <div class="panel-body">
-                                <a type="button" class="btn btn-primary" href="scaling-algorithms" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+                                <a type="button" class="btn btn-primary" href="mock-query-editor" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
                             </div>
                         </div>
                         <!-- Tier panel end -->

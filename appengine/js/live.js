@@ -1,8 +1,6 @@
 
 host = ""
 
-// NOTE : modified version of editor.js
-
 
 var editor_templates = {
   //*/
@@ -33,12 +31,58 @@ var editor = CodeMirror.fromTextArea(document.getElementById('queryEditor'), {
             viewportMargin: Infinity,
         });
 
-editor.getDoc().setValue('T1 = [from scan(lineitem) as l where $0=1 emit *];  \nsink(T1);');
+editor.getDoc().setValue('SELECT * FROM "public:adhoc:lineitem" AS L;');
 
 editorLanguage = "MyriaL"
 var multiway_join_checked = false;
 var push_sql_checked = true;
-var latest_plan_sql = null;
+var query = null;
+
+initialize();
+
+function initialize()
+{
+    ithQuery = 0
+    initializeObject = {}
+    initializeObject.tier = getTier()
+    initializeObject.path = "/mnt/myria/perfenforce_files/ScalingAlgorithms/Live/"
+    scalingAlgorithmObj = {}
+    scalingAlgorithmObj.name = "OML"
+    scalingAlgorithmObj.lr = .04
+    initializeObject.scalingAlgorithm = scalingAlgorithmObj
+
+    console.log("Initialize")
+    console.log(initializeObject)
+    
+    // call the initialize POST function
+    $.ajax({
+                type: 'POST',
+                url: host + ":8753/perfenforce/initializeScaling",
+                dataType: 'json',
+                headers: { 'Accept': 'application/json','Content-Type': 'application/json' },
+                data: JSON.stringify(initializeObject),
+                global: false,
+                async: false,
+                success: function (data) {
+                    return data;
+                }
+            });
+}
+
+function getRequest(command)
+{
+  return $.ajax({
+                type: 'GET',
+                url: host + ":8753" + command,
+                dataType: 'json',
+                global: false,
+                async: false,
+                success: function(data) {
+                return data;
+            }
+            });
+}
+
 
 function handleerrors(request, display) {
   request.done(function (result) {
@@ -56,109 +100,163 @@ function handleerrors(request, display) {
   });
 }
 
-function compilePlan() {
-  getplan(); // make sure the plan matches the query
-  var query = editor.getValue();
-  
-  var request = $.post(host + ":8080/optimize", {
-    query: query,
-    language: editorLanguage,
-    multiway_join: multiway_join_checked,
-    push_sql: push_sql_checked,
-  });
-  handleerrors(request, "#optimized");
-
-  var request = $.post(host + ":8080/compile", {
-      query: query,
-      language: editorLanguage,
-      multiway_join: multiway_join_checked,
-      push_sql: push_sql_checked,
-  });
-  request.success(function (queryStatus) {
-    try {
-      var fragments = queryStatus.plan.fragments;
-      var i = 0;
-      _.map(fragments, function (frag) {
-        frag.fragmentIndex = i++;
-        return frag;
-      });
-    } catch (err) {
-      throw err;
-    }
-  });
-  request.success(function (queryStatus) {
-    latest_plan_sql = queryStatus.plan.fragments;
-     querySQL = latest_plan_sql[0].operators[0].sql
-
-    // call the initialize POST function
-    $.ajax({
-                type: 'POST',    
-                url: host + ":8753/perfenforce/predict",
-                data:'queryString='+ querySQL,
-                global: false,
-                async: false,
-                success: function (data) {
-                    return data;
-                }
-            });
-
-  });
-
-}
-
-function getplan() {
-  var query = editor.getValue();
-  console.log(query)
-  var request = $.post(host + ":8080/plan", {
-    query: query,
-    language: editorLanguage,
-    multiway_join: multiway_join_checked,
-    push_sql: push_sql_checked
-  });
-  
-    handleerrors(request, "#runningInfo");
-}
 
 function getSLA()
 {
-    compilePlan()
-    //send query to get SLA "SETUP"... with json plan? -- don't run the query
-    //assume these are at the scans?
-    
-	document.getElementById('executeButton').disabled = false;
+    // cases for live or mock version
+    var executeButton = document.getElementById('executeButton')
+    if (executeButton !== null)
+    {
+       querySQL = editor.getValue();
+       var request = new FormData();                     
+        request.append('querySQL', querySQL);
+        request.append('path', '/mnt/myria/perfenforce_files/ScalingAlgorithms/Live/');
+
+       //send predict with query value
+       $.ajax({
+                type: 'POST',    
+                url: host + ":8753/perfenforce/predict",
+                data:request,
+                contentType : false,
+                global: false,
+                async: false,
+                processData: false,
+                success: function (data) {
+                           //get the current query and update the label
+                    $.when(getRequest('/perfenforce/get-current-query')).done(function(currentQuery){
+                      console.log(currentQuery)
+                      document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime;
+                    });
+                }
+            });
+
+      document.getElementById('executeButton').disabled = false;
+    }
+
+    var questionElem = document.getElementById('scalingQuestion');
+    if (questionElem !== null)
+    {
+      document.getElementById('slaInfo').innerHTML = "Expected Runtime (from SLA): 10 seconds"
+      document.getElementById('executeButtonMock').disabled = false;
+      
+    }
 }
 
 function runQuery()
 {
-    // intercept it here (replace with the correct size)
-    executePlan()
+  
+    // intercept it here and recompile
+    var executeButton = document.getElementById('executeButton')
+    if (executeButton !== null)
+    {
+
+    $.when(getRequest('/perfenforce/cluster-size')).done(function(clusterSize){
+      console.log("Cluster size " + clusterSize)
+      console.log("Tier " + getTier())
+
+     
+      document.getElementById('picture').innerHTML = "cluster size is now " + clusterSize
+      executePlan()
+    });    
+
     document.getElementById('executeButton').disabled = true;
+  }
+  else
+  {
+    document.getElementById('scalingQuestion').style.visibility='visible'
+  }
 }
 
 function executePlan()
 {
-  console.log(push_sql_checked)
-  var query = editor.getValue();
-  var request = $.ajax(host + ":8080/execute", {
-    type: 'POST',
-    data: {
-      query: query,
-      language: editorLanguage,
-      multiway_join: multiway_join_checked,
-      push_sql: push_sql_checked
-    },
-    statusCode: {
-      200: displayQueryStatus,
-      201: displayQueryStatus,
-      202: displayQueryStatus
-    }
-  });
-  request.error(function (jqXHR, textStatus, errorThrown) {
-    var pre = document.createElement('pre');
-    $('#runningInfo').empty().append(pre);
-    //multiline($(pre), jqXHR.responseText);
-  });
+  //need to create plan
+  var clusterSize = 0
+  var workerArray = [];
+  $.when(getRequest('/perfenforce/cluster-size')).done(function(clusterSize){
+      for (i = 1; i<= clusterSize; i++)
+      {
+         workerArray.push(i)
+      }
+  
+
+  querySQL = editor.getValue();
+  querySQL = querySQL.replace("lineitem", "lineitem" + clusterSize)
+  json_plan = {}
+  json_plan.rawQuery = querySQL
+  json_plan.logicalRa = ""
+  json_plan.plan = {}
+  json_plan.plan.type = "SubQuery"
+  json_plan.plan.fragments = []
+  fragmentsObj = {}
+  fragmentsObj.overrideWorkers = workerArray
+  fragmentsObj.operators = []
+  dbQueryScan = {}
+  dbQueryScan.opType = "DbQueryScan"
+  dbQueryScan.opId = 0
+  dbQueryScan.opName = "scan"
+  dbQueryScan.schema = {}
+  dbQueryScan.schema.columnTypes = []
+  dbQueryScan.schema.columnNames = []
+  dbQueryScan.sql = querySQL
+  sinkRoot = {}
+  sinkRoot.opType = "SinkRoot"
+  sinkRoot.opId = 1
+  sinkRoot.opName= "MyriaSink"
+  sinkRoot.argChild = 0
+  fragmentsObj.operators.push(dbQueryScan)
+  fragmentsObj.operators.push(sinkRoot)
+  json_plan.plan.fragments.push(fragmentsObj)
+  
+  console.log(JSON.stringify(json_plan))
+
+  var request = $.post("http://localhost:27080/executejson", {
+                  query: query,
+                    language: "MyriaL",
+                    jsonQuery: JSON.stringify(json_plan)
+  }).success(function(newStatus) {
+                        documentQueryStatus(newStatus);
+                    });
+});
 }
+
+documentQueryStatus = function (result) {
+            var start_time = result['startTime'];
+            var end_time = result['finishTime'];
+            var elapsed = result['elapsedNanos'] / 1e9;
+            var status = result['status'];
+            var query_id = result['queryId'];
+
+            document.getElementById('runningInfo').innerHTML = (" status:" + status + " seconds elapsed: " + (elapsed));
+
+            if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED') {
+                setTimeout(function () {
+                    $.get("http://localhost:27080/executejson", {
+                      queryId: query_id,
+                      language: 'MyriaL'
+                      }).success(function(newStatus) {
+                        documentQueryStatus(newStatus);
+                    })
+                }, 1000);
+            }
+            else if (status == "SUCCESS")
+            {
+              var request = new FormData();                     
+              request.append('dataPointRuntime', elapsed);
+               // Make it block :( 
+              $.ajax({
+                type: 'POST',    
+                url: host + ":8753/perfenforce/add-data-point",
+                data:request,
+                contentType : false,
+                global: false,
+                async: false,
+                processData: false,
+                success: function (data) {
+                    return data;
+                }
+              });
+            }
+        };
 
 function displayQueryError(error, query_id) {
   var pre = document.createElement('pre');
@@ -193,7 +291,7 @@ function displayQueryStatus(query_status) {
   html += t.row({name: 'Status', val: status});
   html += t.time_row({name: 'Start', val: query_status['startTime']});
   html += t.time_row({name: 'End', val: query_status['finishTime']});
-  //html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
+  html += t.row({name: 'Elapsed', val: query_status['elapsedNanos']/1000000000});
   html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
 
   if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {

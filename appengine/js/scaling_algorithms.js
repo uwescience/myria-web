@@ -85,8 +85,7 @@ function createScalingAlgorithmObj()
 }
 
 function setupNextQuery(){
-    console.log("ITH " + ithQuery)
-    ithQuery = ithQuery + 1
+
 
 
 
@@ -111,7 +110,7 @@ function setupNextQuery(){
         var upcomingQueryLabel = document.getElementById("upcomingQueryLabel")
         var upcomingQuerySLALabel = document.getElementById("upcomingQuerySLA")
         if ( typeof currentQuery[0]!="undefined" && currentQuery[0].description!=null ){
-        upcomingQueryLabel.innerHTML = currentQuery[0].description;
+        upcomingQueryLabel.innerHTML = formatQuery(currentQuery[0].description);
         upcomingQueryLabel.className = "queryStatusLabel customBorderWhite"
         upcomingQuerySLALabel.innerHTML = "Expected Runtime: " + currentQuery[0].slaRuntime;
         }
@@ -131,10 +130,14 @@ function setupNextQuery(){
             {
             addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, clusterSize[0])
             }
+            else if(getScalingAlgorithm() == "RL"){
+                console.log("Using cluster size NOW")
+                addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime, clusterSize[0]) 
+            }
             else
             {
                 console.log("Using cluster size NOW")
-                addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime, clusterSize[0])
+                addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, prevClusterSize)
             }
 
             prevClusterSize = clusterSize[0]
@@ -258,6 +261,9 @@ function showCharts()
 
 function nextButtonPress()
 {
+        console.log("ITH " + ithQuery)
+        ithQuery = ithQuery + 1
+        
         showCharts()
         
         stepFake();
@@ -267,6 +273,22 @@ function nextButtonPress()
             updateGraphs();
             //prepare upcoming
             setupNextQuery();
+
+            var request = new FormData();                     
+            request.append('dataPointRuntime', 0);
+               // Make it block :( 
+              $.ajax({
+                type: 'POST',    
+                url: host + ":8753/perfenforce/add-data-point",
+                data:request,
+                contentType : false,
+                global: false,
+                async: false,
+                processData: false,
+                success: function (data) {
+                    return data;
+                }
+              });
         }
         else
         {
@@ -334,12 +356,34 @@ function addRuntimeToList(queryDesc, runtime, sla, clusterSize)
 {
    if(runtime > sla)
    {
-    $("#previousQueryList ul").prepend('<li class="customBorderPink"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br>Actual Cluster Size Ran: ' + clusterSize +'<br>Expected Runtime: ' + sla+ ' </p></li>');
+    $("#previousQueryList ul").prepend(
+            '<li><p>QueryID:'+ ((ithQuery)) 
+                //+ '<br>Query: ' + formatQuery(queryDesc) 
+                + '<br>Actual Runtime: <font color="red">' + runtime + '</font>' 
+                + '<br>Expected Runtime: ' + sla
+                + '<br>Cluster Size Ran: ' + clusterSize 
+                + '</p></li>');
     }
     else
     {
-        $("#previousQueryList ul").prepend('<li class="customBorderGreen"><p>QueryID: '+ ((ithQuery)-1) + '<br>Query: ' + queryDesc + '<br>Actual Runtime: ' + runtime + '<br> Cluster Size Ran: ' + clusterSize + '<br>Expected Runtime: ' + sla+ ' </p></li>');
+        $("#previousQueryList ul").prepend(
+            '<li><p>QueryID:'+ ((ithQuery)) 
+                //+ '<br>Query: ' + queryDesc 
+                + '<br>Actual Runtime: <font color="green">' + runtime + '</font>'
+                + '<br>Expected Runtime: ' + sla
+                + '<br>Cluster Size Ran: ' + clusterSize 
+                + '</p></li>');
     }
+}
+
+function formatQuery(queryString)
+{
+
+    firstLine = queryString.substring(0,queryString.indexOf("FROM"))
+    secondLine = queryString.substring(queryString.indexOf("FROM"),queryString.indexOf("WHERE"))
+    thirdLine = queryString.substring(queryString.indexOf("WHERE"))
+
+    return firstLine + '<br>' + secondLine + '<br>' + thirdLine;
 }
 
 function showStepGraphsAndDisable()

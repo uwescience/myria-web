@@ -16,34 +16,16 @@
 	<ol class="breadcrumb">
 		<li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
 		<li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+		<li class="active"><a href="mock-query-editor">Begin the Query Session</a></li>
 		<li class="active"><a href="scaling-algorithms">Select a Scaling Algorithm</a></li>
 		<li class="active">Replay Mode</li>
 	</ol>
 	<h1>Cloud Provider Scaling Algorithms</h1>
 	<i>Once the user selects an SLA, it is up to the cloud provider to guarantee those runtimes. Below are different approaches the provider can enable in order to guarantee those runtimes.</i>
 	<div class="col-md-6 col-md-offset-3">
-		<div class="row">
-			<h2>Reinforcement Learning</h2>
-			<ul class="list-group">
-				<li class="list-group-item">Each cluster size represents a state. For each query, the goal is to transition to the state with the highest reward. The reward function is defined as the real-to-SLA runtime ratio. We favor states with the closest reward to 1.0. </li>
-				<li class="list-group-item">
-					Update function after running query at <b>current</b> state:
-					<center><br>
-					<img src="../img/alpha.png" width="62%" height="62%">
-				</center></li>
-				<li class="list-group-item">Update function after running query for the rest of the states:<center>  <br>
-					<img src="../img/beta.png" width="70%" height="70%">
-				</center></li>
-			</ul>
-		</div>
+
 		
-		<div class="row">
-			<div class="col-md-6  col-md-offset-3 ">
-				<!-- href="replay-RL"-->
-				<a type="button" class="btn btn-info btn-block" href="replay-RL"  onClick="localStorage.setItem('SA', 'RL')">Go</a>
-			</div>
-		</div>
-		<hr>
+		
 		<div class="row">
 			<h2>Proportional-Integral Control</h2>
 			<ul class="list-group">
@@ -82,6 +64,32 @@
 				<a type="button" class="btn btn-success btn-block" href="replay-OML" onClick="localStorage.setItem('SA', 'OML')">Go</a>
 			</div>
 		</div>
+		<hr>
+		<div class="row">
+			<h2>Reinforcement Learning</h2>
+			<ul class="list-group">
+				<li class="list-group-item">Each cluster size represents a state. For each query, the goal is to transition to the state with the highest reward. The reward function is defined as the real-to-SLA runtime ratio. We favor states with the closest reward to 1.0. </li>
+				<li class="list-group-item">
+					Reinforcement Learning Intuition - EXAMPLE
+				</li>
+				<li class="list-group-item">
+					Update function after running query at <b>current</b> state:
+					<center><br>
+					<img src="../img/alpha.png" width="62%" height="62%">
+				</center></li>
+				<li class="list-group-item">Update function after running query for the rest of the states:<center>  <br>
+					<img src="../img/beta.png" width="70%" height="70%">
+				</center></li>
+			</ul>
+		</div>
+
+		<div class="row">
+			<div class="col-md-6  col-md-offset-3 ">
+				<!-- href="replay-RL"-->
+				<a type="button" class="btn btn-info btn-block" href="replay-RL"  onClick="localStorage.setItem('SA', 'RL')">Go</a>
+			</div>
+		</div>
+		
 	</div>
 {% endblock %}
 {% block footer %}

@@ -20,7 +20,9 @@
 <ol class="breadcrumb">
         <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
         <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
-        <li class="active"><a href="#">Live Mode</a></li>
+        <li class="active"><a href="mock-query-editor">Begin the Query Session</a></li>
+        <li class="active">Select a Scaling Algorithm</li>
+        <li class="active">Replay Mode</li>
     </ol>
 <h1>Begin Query Session</h1>
 <div class="container">
@@ -34,7 +36,7 @@
   <div class="row">
       <div class="col-md-6 lightbeige" style="margin-left: 5mm">
         <button type="button" id="slaButton" class="btn btn-primary" onclick="getSLA()"><span class="glyphicon glyphicon-question-sign"></span> Find SLA</button>
-         <button type="button" id="executeButton" class="btn btn-primary" style="margin-left: 90mm" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
+         <button type="button" id="executeButtonMock" class="btn btn-primary" style="margin-left: 90mm" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
       </div>
       
     </div>  
@@ -47,13 +49,23 @@
       <div class="row">
         <label id="runningInfo"></label>
       </div>
-      <div class="row">
-        <label id="picture"></label>
-      </div>
     </div> 
   </div>
 </div>
-  
+  <div class="row top-buffer ">
+    <div class="col-md-6  " style="margin-left: 5mm">
+      <div class="row" style="visibility: hidden" id="scalingQuestion">
+        <div class="col-md-8   col-md-offset-2">
+          <div class="row">
+          <center><label>How can the cloud provider guarantee these runtimes?</label></center>
+           </div>
+           <div class="row">
+             <center><a type="button" id="executeButtonMock" class="btn btn-danger"  href="scaling-algorithms">See Scaling Techniques <span class="glyphicon glyphicon-arrow-right"></span></a></center>
+           </div>
+        </div>
+      </div>
+    </div>  
+  </div>
   </div>
 
 {% endblock %}

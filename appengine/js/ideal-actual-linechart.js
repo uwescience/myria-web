@@ -38,11 +38,7 @@ var actualLinePath = null;
 
 var userPoints  = []
 
-var firstObj = {}
-firstObj.queryID = 0
-firstObj.actual = configs[getTier()]
-firstObj.ideal = firstObj.actual
-userPoints.push(firstObj)
+
 
 x.domain(d3.extent(userPoints, function(d) { return d.queryID; }));
 
