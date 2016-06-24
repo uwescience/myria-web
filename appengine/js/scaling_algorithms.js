@@ -273,6 +273,8 @@ function nextButtonPress()
             updateGraphs();
             //prepare upcoming
             setupNextQuery();
+            
+            
 
             var request = new FormData();                     
             request.append('dataPointRuntime', 0);
@@ -292,9 +294,10 @@ function nextButtonPress()
         }
         else if(getScalingAlgorithm() == "RL")
         {
+            updateGraphs();
             //prepare upcoming
             setupNextQuery();
-            updateGraphs();
+            
             
         }
         else

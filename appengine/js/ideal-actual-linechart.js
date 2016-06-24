@@ -89,7 +89,15 @@ function updateActualIdealLineGraph() {
       $.when(getRequest('/perfenforce/cluster-size'), getRequest('/perfenforce/current-query-ideal')).done(function(clusterSize, idealSize){
 
         console.log("NEW POINT " + prevClusterSize)
+        if(getScalingAlgorithm() == "OML" || getScalingAlgorithm() == "RL")
+        {
+            console.log("OML READ " + clusterSize[0])
+            newDataPoint.actual = clusterSize[0]
+        }
+        else
+        {
         newDataPoint.actual = prevClusterSize
+        }
         newDataPoint.ideal = idealSize[0]
 
         userPoints.push(newDataPoint)
