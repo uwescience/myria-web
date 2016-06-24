@@ -128,7 +128,7 @@ function setupNextQuery(){
             
             if(getScalingAlgorithm() == "OML")
             {
-            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(prevClusterSize)], previousQuery[0].slaRuntime, prevClusterSize)
+            addRuntimeToList(previousQuery[0].description, (previousQuery[0].runtimes)[configs.indexOf(clusterSize[0])], previousQuery[0].slaRuntime, clusterSize[0])
             }
             else if(getScalingAlgorithm() == "RL"){
                 

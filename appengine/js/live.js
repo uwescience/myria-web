@@ -31,7 +31,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById('queryEditor'), {
             viewportMargin: Infinity,
         });
 
-editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 3;');
+editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 7;');
 
 editorLanguage = "MyriaL"
 var multiway_join_checked = false;
