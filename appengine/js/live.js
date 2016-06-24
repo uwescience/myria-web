@@ -132,7 +132,7 @@ function getSLA()
                            //get the current query and update the label
                     $.when(getRequest('/perfenforce/get-current-query')).done(function(currentQuery){
                       console.log(currentQuery)
-                      document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime;
+                      document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime + " seconds";
                       currentSLA = currentQuery.slaRuntime;
                     });
                 }
