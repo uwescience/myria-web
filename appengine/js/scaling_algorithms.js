@@ -1,6 +1,6 @@
 
 // this won't be necessary if running on coordinator
-host = 'http://'
+host = ''
 
 var ithQuery = 0
 var configs = [4,6,8,10,12]
@@ -364,8 +364,11 @@ function stepFake() {
 
 function addRuntimeToList(queryDesc, runtime, sla, clusterSize)
 {
+
+
    if(runtime > sla)
    {
+
     $("#previousQueryList ul").prepend(
             '<li><p>QueryID:'+ ((ithQuery)) 
                 //+ '<br>Query: ' + formatQuery(queryDesc) 

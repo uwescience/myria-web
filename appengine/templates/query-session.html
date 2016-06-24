@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+  <link href="css/github.css" type="text/css" rel="stylesheet" />
+  <link href="css/select2.css" type="text/css" rel="stylesheet" />
+  <link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+  <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="css/queryvis.css">
+  <script type="text/javascript" src="js/perfenforce.js"></script>
+  <script type="text/javascript" src="js/codemirror.js"></script>
+  <script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
+  <script type="text/javascript" src="js/d3.legend.js"></script>
+{% endblock %}
+{% block editor_active %} class="active"{% endblock %}
+{% block content %}
+  <ol class="breadcrumb">
+    <li class="active"><a href="perfenforce-demo">Start Page</a></li>
+    <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
+    <li class="active"><a href="query-session">Begin the Query Session</a></li>
+     <li class="active"><a href="scaling-algorithms">Scaling Algorithms</a></li>
+    <li class="active">Replay</li>
+  </ol>
+  <h1>Query Session</h1>
+  <div class="container">
+    <div class="row " style="height:100%">
+      <div class="col-md-6 ">
+        <h4>Write a Query...</h4>
+        <textarea id="queryEditor"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 lightbeige" style="margin-left: 5mm">
+        <button type="button" id="slaButton" class="btn btn-primary" onclick="getSLA()"><span class="glyphicon glyphicon-eye-open"></span> See SLA Runtime</button>
+        <button type="button" id="executeButton" class="btn btn-primary" style="margin-left: 80mm" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
+      </div>
+      
+    </div>
+    
+    <div class="row top-buffer " style = "height:100px">
+      <div class="col-md-6 helperBorder " style="margin-left: 5mm">
+        Query Information
+        <div class="row">
+          <center><label id="slaInfo"></label></center>
+        </div>
+        <div class="row">
+          <center><label id="runningInfo"></label></center>
+        </div>
+        <div class="row">
+          <center><label id="picture"></label></center>
+        </div>
+      </div>
+    </div>
+    <div class="row top-buffer" id="previousLog" style="visibility: hidden">
+      <div class="col-md-6  " style="margin-left: 5mm">
+        Previous Queries Log
+        <div id="previousQueryList" class="queryStatusLabel"  style="visibility: hidden">
+          <ul>
+            <li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+      <div class= "row top-buffer"  style="margin-left: 5mm" >
+        <button data-toggle="collapse" class="btn btn-secondary" id="scalingInfo" data-target="#demo" style="visibility: hidden" >How can the cloud provider guarantee these runtimes?</button>
+
+        <div id="demo" class="collapse">
+          <div class="row top-buffer">
+          <div id="scalingImg"  style="margin-left: 5mm">
+            <img src="../img/scaling.png" width="30%" height="30%">
+           </div></div>
+           <div class="row ">
+           <a type="button" id="executeButtonMock" class="btn btn-primary btn-large"  href="scaling-algorithms"  style="margin-left: 25mm">See Scaling Techniques </a>
+        </div></div>
+      </div>
+   
+  </div>
+{% endblock %}
+{% block footer %}
+  <script type="text/javascript" src="js/live.js"></script>
+{% endblock %}

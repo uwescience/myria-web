@@ -1,5 +1,5 @@
 
-host = "http://"
+host = ""
 
 
 var editor_templates = {
@@ -31,12 +31,15 @@ var editor = CodeMirror.fromTextArea(document.getElementById('queryEditor'), {
             viewportMargin: Infinity,
         });
 
-editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 1;');
+editor.getDoc().setValue('SELECT *' + '\n' +'FROM "public:adhoc:lineitem" AS L' + '\n' + 'WHERE l_linenumber = 7;');
 
 editorLanguage = "MyriaL"
 var multiway_join_checked = false;
 var push_sql_checked = true;
 var query = null;
+var currentQueryText = null;
+var currentSLA = 0;
+var currentClusterSize = 0;
 
 initialize();
 
@@ -48,7 +51,7 @@ function initialize()
     initializeObject.path = "/mnt/myria/perfenforce_files/ScalingAlgorithms/Live/"
     scalingAlgorithmObj = {}
     scalingAlgorithmObj.name = "OML"
-    scalingAlgorithmObj.lr = .04
+    scalingAlgorithmObj.lr = .08
     initializeObject.scalingAlgorithm = scalingAlgorithmObj
 
     console.log("Initialize")
@@ -130,19 +133,12 @@ function getSLA()
                     $.when(getRequest('/perfenforce/get-current-query')).done(function(currentQuery){
                       console.log(currentQuery)
                       document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime;
+                      currentSLA = currentQuery.slaRuntime;
                     });
                 }
             });
 
       document.getElementById('executeButton').disabled = false;
-    }
-
-    var questionElem = document.getElementById('scalingQuestion');
-    if (questionElem !== null)
-    {
-      document.getElementById('slaInfo').innerHTML = "Expected Runtime (from SLA): 10 seconds"
-      document.getElementById('executeButtonMock').disabled = false;
-      
     }
 }
 
@@ -159,15 +155,13 @@ function runQuery()
       console.log("Tier " + getTier())
 
      
-      document.getElementById('picture').innerHTML = "Cluster is running on " + clusterSize + " workers"
+      document.getElementById('picture').innerHTML = 'Cluster is using <font color="blue">' + clusterSize + '</font> workers'
+      currentClusterSize  = clusterSize
       executePlan()
     });    
 
     document.getElementById('executeButton').disabled = true;
-  }
-  else
-  {
-    document.getElementById('scalingQuestion').style.visibility='visible'
+    
   }
 }
 
@@ -183,6 +177,7 @@ function executePlan()
       }
   
 
+  currentQueryText = editor.getValue();
   querySQL = editor.getValue();
   querySQL = querySQL.replace("lineitem", "lineitem" + clusterSize)
   json_plan = {}
@@ -230,7 +225,7 @@ documentQueryStatus = function (result) {
             var status = result['status'];
             var query_id = result['queryId'];
 
-            document.getElementById('runningInfo').innerHTML = (" status:" + status + " seconds elapsed: " + (elapsed));
+            document.getElementById('runningInfo').innerHTML = (" status: " + status + " <br> seconds elapsed: " + (elapsed));
 
             if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED') {
                 setTimeout(function () {
@@ -259,8 +254,37 @@ documentQueryStatus = function (result) {
                     return data;
                 }
               });
+
+              
+              addRuntimeToList(currentQueryText, elapsed, currentSLA, currentClusterSize)
+              document.getElementById('scalingInfo').style.visibility='visible'
+              document.getElementById('previousLog').style.visibility='visible'
+              document.getElementById('previousQueryList').style.visibility='visible'
             }
         };
+
+function addRuntimeToList(queryDesc, runtime, sla, clusterSize)
+{
+   if(runtime > sla)
+   {
+
+    $("#previousQueryList ul").prepend(
+            '<li><p>Query: ' + queryDesc
+                + '<br>Actual Runtime: <font color="red">' + runtime + '</font>' 
+                + '<br>Expected Runtime: ' + sla
+                + '<br>Cluster Size Ran: ' + clusterSize 
+                + '</p></li>');
+    }
+    else
+    {
+        $("#previousQueryList ul").prepend(
+            '<li><p>Query: ' + queryDesc 
+                + '<br>Actual Runtime: <font color="green">' + runtime + '</font>'
+                + '<br>Expected Runtime: ' + sla
+                + '<br>Cluster Size Ran: ' + clusterSize 
+                + '</p></li>');
+    }
+}
 
 function displayQueryError(error, query_id) {
   var pre = document.createElement('pre');

@@ -16,11 +16,11 @@
     localStorage.clear();
     </script>
     <ol class="breadcrumb">
-        <li class="active"><a href="perfenforce-demo">Select a Demo Mode</a></li>
+        <li class="active"><a href="perfenforce-demo">Start Page</a></li>
         <li class="active"><a href="tier-selection">Select a Service Tier</a></li>
         <li class="active">Begin the Query Session</a></li>
-        <li class="active">Select a Scaling Algorithm</li>
-        <li class="active">Replay Mode</li>
+        <li class="active">Scaling Algorithms</li>
+        <li class="active">Replay</li>
     </ol>
     <div class="container" ng-app='tiersDemo' ng-controller="WizardController as wizard">
         <div class="col-md-3" >
@@ -61,7 +61,7 @@
                                 </tbody>
                             </table>
                             <div class="panel-body">
-                                <a type="button" class="btn btn-primary" href="mock-query-editor" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+                                <a type="button" class="btn btn-primary" href="query-session" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
                             </div>
                         </div>
                         <!-- Tier panel end -->

@@ -409,6 +409,18 @@ class TierSelection(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('tier-selection.html')
         self.response.out.write(template.render(template_vars))
 
+class QuerySession(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'query-session'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('query-session.html')
+        self.response.out.write(template.render(template_vars))
+
 class MockQueryEditor(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
@@ -767,6 +779,7 @@ class Application(webapp2.WSGIApplication):
             ('/perfenforce-demo',PerfenforceDemo),
             ('/tier-selection',TierSelection),
             ('/mock-query-editor', MockQueryEditor),
+            ('/query-session', QuerySession),
             ('/scaling-algorithms',ScalingAlgorithms),
             ('/replay-RL',ReplayRL),
             ('/replay-PI',ReplayPI),
