@@ -802,7 +802,7 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-myriax_host = '' #os.environ.get('MYRIAX_REST_HOST', 'localhost')
+myriax_host = 'localhost' #os.environ.get('MYRIAX_REST_HOST', 'localhost')
 # Google App Engine will just serve the app...
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')

@@ -208,7 +208,7 @@ function executePlan()
   
   console.log(JSON.stringify(json_plan))
 
-  var request = $.post("http://localhost:27080/executejson", {
+  var request = $.post(host + ":8080/executejson", {
                   query: query,
                     language: "MyriaL",
                     jsonQuery: JSON.stringify(json_plan)
@@ -229,7 +229,7 @@ documentQueryStatus = function (result) {
 
             if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED') {
                 setTimeout(function () {
-                    $.get("http://localhost:27080/executejson", {
+                    $.get(host + ":8080/executejson", {
                       queryId: query_id,
                       language: 'MyriaL'
                       }).success(function(newStatus) {
