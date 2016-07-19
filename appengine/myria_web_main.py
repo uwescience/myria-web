@@ -25,7 +25,7 @@ from examples import examples
 from examples import loading_examples
 from demo3_examples import demo3_examples
 from pagination import Pagination, QUERIES_PER_PAGE
-
+from google.appengine.api import urlfetch
 import myria
 
 DEFAULT_MYRIAX_REST_PORT = 8753
@@ -199,6 +199,8 @@ class MyriaPage(MyriaHandler):
         return connection_string
 
     def base_template_vars(self):
+        url = "http://169.254.169.254/latest/meta-data/public-hostname"
+        result = urlfetch.fetch(url)
         if self.app.ssl:
             uri_scheme = "https"
         else:
@@ -206,8 +208,8 @@ class MyriaPage(MyriaHandler):
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
-                'jupyterNotebook': "{s}://{h}:{p}"
-                    .format(s=uri_scheme,h=self.app.hostname, p="8888"),
+                'jupyterNotebook': "{s}://{h}:{p}".format(
+                    s=uri_scheme, h=result.content, p="8888"),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -376,6 +378,7 @@ class Editor(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
+
 
 class Demo3(MyriaPage):
     def get(self):
