@@ -22,6 +22,7 @@ from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.backends.myria.catalog import MyriaCatalog
 from examples import examples
+from examples import loading_examples
 from demo3_examples import demo3_examples
 from pagination import Pagination, QUERIES_PER_PAGE
 
@@ -205,6 +206,8 @@ class MyriaPage(MyriaHandler):
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
+                'jupyterNotebook': "{s}://{h}:{p}"
+                    .format(s=uri_scheme,h=self.app.hostname, p="8888"),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -345,6 +348,8 @@ class Examples(MyriaPage):
         example_set = self.request.get('subset') or 'default'
         if example_set == 'demo3':
             examples_to_use = demo3_examples
+        elif example_set == 'loadExamples':
+            examples_to_use = loading_examples
         else:
             examples_to_use = examples
 
@@ -371,7 +376,6 @@ class Editor(MyriaPage):
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
-
 
 class Demo3(MyriaPage):
     def get(self):

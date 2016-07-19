@@ -260,7 +260,6 @@ function updateExamples(restored) {
   var language = editorLanguage;
   var doUpdateExamples = function (data) {
     var examplesList = $('#examples-list');
-
     examplesList.empty();
     if (data.length === 0) {
       examplesList.append('No ' + language + ' examples found');
@@ -307,6 +306,51 @@ function updateExamples(restored) {
   });
 }
 
+function updateLoadExamples(restored) {
+  var doUpdateLoadExamples = function (data) {
+    var examplesList = $('#loadexamples-list');
+
+    examplesList.empty();
+
+    for (var i = 0; i < data.length; ++i) {
+      var str = data[i][1],
+        delimiter = '\n',
+        allTokens = str.split(delimiter),
+        tokens = allTokens.slice(0, 2),
+        result = tokens.join(delimiter);
+      var numLines = str.split(/\r\n|\r|\n/).length;
+      var heading = $('<h5>').text(data[i][0]),
+        program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
+      $('<a href="#" class="list-group-item loadexample"></a>')
+        .append(heading)
+        .append(program)
+        .attr('data-code', data[i][1])
+        .appendTo(examplesList);
+      updateExamplesHeight();
+    }
+    $(".loadexample").click(function (e) {
+      e.preventDefault();
+      resetResults();
+      var example_query = this.getAttribute('data-code');
+      editor.setValue(example_query);
+      optimizeplan();
+    });
+    
+    $('#editor-tabs a[href="#loadexamples"]').tab('show');
+    if (!restored) {
+      $(".loadexample").first().click();
+    }
+  };
+
+  $.ajax("examples", {
+    type: 'GET',
+    data: {
+      subset: $('#loadexamples-list').attr('subset')
+    },
+    success: doUpdateLoadExamples
+  });
+}
+
 function resetEditor(newLanguage, saveOld) {
   saveOld = saveOld || false;
   var languages = [ 'datalog', 'myrial', 'sql' ];
@@ -342,7 +386,7 @@ function resetEditor(newLanguage, saveOld) {
   };
   editor.setOption('mode', modes[newLanguage]);
 
-  updateExamples(restored);
+  updateLoadExamples(restored);
 }
 
 /**
@@ -478,12 +522,16 @@ function restoreState() {
 updateExamplesHeight = function () {
   // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
   $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
+  $('#loadexamples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
 };
 
 $(function () {
   resetResults();
 
   editor.on("change", resetResults);
+
+  $("#load-tab").click(updateLoadExamples);
+  $("#query-tab").click(updateExamples);
 
   $(".planner").click(function () {
     $('#editor-tabs a[href="#queryplan"]').tab('show');

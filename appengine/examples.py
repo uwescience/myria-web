@@ -37,10 +37,6 @@ def get_example(name):
     with open(path) as fh:
         return fh.read().strip()
 
-load_twitterk_data = '''T1 = load("https://s3-us-west-2.amazonaws.com/uwdb/sampleData/TwitterK.csv",
-csv(schema(a:int, b:int),skip=0));
-store(T1, TwitterK, [a, b]);'''
-
 justx = '''T1 = scan(TwitterK);
 T2 = [from T1 emit $0 as x];
 store(T2, JustX);'''
@@ -83,7 +79,6 @@ comp = [from CC emit CC.$1 as id, count(CC.$0) as cnt];
 store(comp, TwitterCC);'''
 
 myria_examples = [
-    ('Load TwitterK data', load_twitterk_data),
     ('Projection', justx),
     ('Aggregation', aggregation),
     ('Calculate all two hops in the TwitterK relation using a simple join', twohops),
@@ -104,3 +99,74 @@ store(InDegree, public:adhoc:InDegree);'''),
 examples = { 'datalog' : datalog_examples,
              'myrial' : myria_examples,
              'sql' : sql_examples }
+
+
+
+load_twitterk_data = '''T1 = load("s3://uwdb/sampleData/TwitterK.csv",
+csv(schema(a:int,b:int),skip=0));
+store(T1, TwitterK, [a, b]);'''
+
+load_iris_data = '''T1 = load("s3://uwdb/sampleData/Iris.csv",
+csv(schema(sepal_length:float,
+          sepal_width:float,
+          petal_length:float,
+          petal_width:float,
+          class:string),skip=0));
+store(T1, Iris, [class]);'''
+
+load_census_income_data = '''T1 = load("s3://uwdb/sampleData/Census_Income.csv",
+csv(schema(age:int,
+          workclass:string,
+          fnlwgt:int,
+          education:string,
+          education-num:int,
+          marital-status:string,
+          occupation:string,
+          relationship:string,
+          race:string,
+          sex:string,
+          capital-gain:int,
+          capital-loss:int,
+          hours-per-week:int,
+          native-country:string,
+          income:string),skip=0));
+store(T1, Census, [age]);'''
+
+load_car_evaluation_data = '''T1 = load("s3://uwdb/sampleData/Car_Evaluation.tsv",
+csv(schema(buying:string,
+          maint:string,
+          doors:int,
+          persons:int,
+          lug_boot:string,
+          safety:string,
+          evaluation:string),skip=0,delimiter='\t'));
+store(T1, Car, [evaluation]);'''
+
+load_forestfires_data = '''T1 = load("s3://uwdb/sampleData/Forest_Fires.csv",
+csv(schema(X:int,
+          Y:int,
+          month:string,
+          day:string,
+          FFMC:float,
+          DMC:float,
+          DC:int,
+          ISI:float,
+          temp:float,
+          RH:int,
+          wind:float,
+          rain:float,
+          area:float),skip=1));
+store(T1, ForestFires, [X, Y]);'''
+
+loading_statements = [
+  ('Load Twitter Data', load_twitterk_data),
+  ('Load Iris Data', load_iris_data),
+  ('Load Census Income Data', load_census_income_data),
+  ('Load Car Evaluation Data', load_car_evaluation_data),
+  ('Load Forest Fires Data', load_forestfires_data)
+]
+
+loading_examples = { 'datalog' : loading_statements,
+                     'myrial' : loading_statements,
+                     'sql' : loading_statements }
+
