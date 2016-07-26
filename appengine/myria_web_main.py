@@ -75,7 +75,7 @@ def get_plan(query, language, plan_type, connection,
     if language is None:
         language = "datalog"
     language = language.strip().lower()
-
+    print 'HUHU: ', language
     if multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
@@ -303,6 +303,22 @@ class Profile(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('visualization.html')
         self.response.out.write(template.render(template_vars))
 
+class istcdemo(MyriaPage):
+
+    def get(self):
+        connection = self.app.connection
+
+        tsnedata = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"Diversities50_tsne"})
+        bc_full = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"BC_complete"})
+        template_vars = self.base_template_vars()
+        template_vars['data'] = json.dumps(tsnedata).encode('utf8')
+        template_vars['bc_full'] = json.dumps(bc_full).encode('utf8')
+
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('istcdemo.html')
+        self.response.out.write(template.render(template_vars))
 
 class Datasets(MyriaPage):
 
@@ -583,7 +599,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo3', Demo3)
+            ('/demo3', Demo3),
+            ('/istcdemo', istcdemo)
         ]
 
         # Connection to Myria. Thread-safe
@@ -599,7 +616,8 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
+#myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
+myriax_host = 'ec2-52-39-96-185.us-west-2.compute.amazonaws.com'
 # Google App Engine will just serve the app...
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')

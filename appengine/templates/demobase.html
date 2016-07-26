@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Screen 3: Genomic Data Processing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+
+<!-- BEGIN mobile bookmark icons -->
+<!-- See: http://mathiasbynens.be/notes/touch-icons#sizes -->
+<link rel="apple-touch-icon-precomposed" sizes="152x152" href="apple-touch-icon-152x152-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="apple-touch-icon-144x144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="120x120" href="apple-touch-icon-120x120-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="apple-touch-icon-114x114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="76x76" href="apple-touch-icon-76x76-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="apple-touch-icon-72x72-precomposed.png">
+<link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png">
+<!-- END mobile bookmark icons -->
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//vega.github.io/vega/vega.js"></script>
+<script src="//vega.github.io/vega-lite/vega-lite.js"></script>
+<script src="//vega.github.io/vega-editor/vendor/vega-embed.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+    {% autoescape false %}
+    var myriaConnection = '{{ myriaConnection }}';
+    var connectionString = '{{ connectionString }}';
+    {% endautoescape %}
+</script>
+    <style media="screen">
+    /* Add space between vega-embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+  </style>
+{% block extra_head %}{% endblock %}
+
+<link href="css/layout.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+	<span id="top"></span>
+	<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		            <span class="sr-only">Toggle navigation</span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+	            </button>
+				<a class="navbar-brand" href="http://myria.cs.washington.edu/"><img src="img/myria-logo.svg" height="40px" alt="Myria logo"></a>
+			</div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li{% block editor_active %}{% endblock %}><a href="/editor">Editor</a></li>
+					<li{% block queries_active %}{% endblock %}><a href="/queries">Queries</a></li>
+					<li{% block datasets_active %}{% endblock %}><a href="/datasets">Datasets</a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="https://github.com/uwescience/myria-web/issues/new" target="_blank">Report an issue</a></li>
+					<li>
+						<a href="{{ myriaConnection }}/workers" target="_blank">{{connectionString}}</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div id="page-body" class="container {% block extra_container_class %}{% endblock %}">
+	  {% block content %}{% endblock %}
+	</div>
+
+	{% block extra_body %}{% endblock %}
+
+	<a class="back-to-top" href="#top">Back to top</a>
+
+	<div class="spacer">
+		<div id="footer">
+	    	<div class="container">
+	    		<p class="text-muted credit">
+	    			<a href="http://myria.cs.washington.edu/">Myria Project</a> at the <a href="http://www.washington.edu/">University of Washington</a>, 2014
+	    			<span class="pull-right">Using <a href="https://github.com/uwescience/myria-web/commit/{{version}}">{{ version|truncate(10, True) }}</a> from branch <a href="https://github.com/uwescience/myria-web/tree/{{ branch }}">{{ branch }}</a>.</span>
+	    		</p>
+			</div>
+	    </div>
+	</div>
+
+	<script src="js/jquery-2.1.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.panzoom.min.js"></script>
+	<script src="js/jquery.timeago.js"></script>
+	<script src="js/lodash.min.js"></script>
+	<script src="js/main.js"></script>
+
+	{% block footer %}{% endblock %}
+</body>
+</html>

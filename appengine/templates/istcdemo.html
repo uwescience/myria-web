@@ -1,0 +1,124 @@
+{% extends "demobase.html" %}
+
+<!--{% block queries_active %} class="active"{% endblock %}-->
+
+{% block extra_head %}
+	<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+{% endblock %}
+
+{% block extra_container_class %}my-fluid-container{% endblock %}
+
+{% block content %}
+
+{% endblock %}
+{% block extra_body %}
+<div id="diversity"></div>
+<div id="skew"></div>
+<div id="simpson"></div>
+
+{% endblock %}
+{% block footer %}
+	<script src="js/d3.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/colorbrewer.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/operatorvis.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/querystats.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
+
+	<script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
+<script>
+  // Assign the specification to a local variable vlSpec.
+  var data = {{ data | safe }};
+  var bc_full = {{ bc_full | safe }};
+
+  var vlSpec_skew = {
+    "data": {
+      "values": data
+    },
+    "mark": "point",
+    "encoding": {
+      "x": {
+      "field": "CTDPRS", "type": "quantitative",
+      "axis": {"title": "Depth"}
+      },
+      "y": {
+      "field": "EntropySkew", "type": "quantitative"
+      }
+    }
+  };
+
+  var embedSpec_skew = {
+    mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+    spec: vlSpec_skew
+    // You can add more vega-embed configuration properties here.
+    // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+  };
+
+  // Embed the visualization in the container with id `vis`
+  vg.embed("#skew", embedSpec_skew, function(error, result) {
+    // Callback receiving the View instance and parsed Vega spec
+    // result.view is the View, which resides under the '#vis' element
+  })
+
+    var vlSpec_entropy = {
+    "data": {
+      "values": data
+    },
+    "mark": "point",
+    "encoding": {
+      "x": {
+      "field": "CTDPRS", "type": "quantitative",
+      "axis": {"title": "Depth"}
+      },
+      "y": {
+      "field": "Simpson", "type": "quantitative"
+      }
+    }
+  };
+
+  var embedSpec_entropy = {
+    mode: "vega-lite",
+    spec: vlSpec_entropy
+  };
+
+  vg.embed("#simpson", embedSpec_entropy, function(error, result) {
+  });
+
+  var vlSpec_bc = {
+    "data": {
+      "values": bc_full
+    },
+    "mark": "circle",
+    "encoding": {
+        "y": {
+          "field": "asample",
+          "type": "nominal"
+        },
+        "x": {
+          "field": "bsample",
+          "type": "nominal"
+        },
+        "size": {
+          "field": "BCdis",
+          "type": "quantitative"
+        }
+  }
+  };
+  var embedSpec_bc = {
+    mode: "vega-lite",
+    spec: vlSpec_bc
+  };
+
+  vg.embed("#diversity", embedSpec_bc, function(error, result) {
+  });
+
+
+  </script>
+{% endblock %}
