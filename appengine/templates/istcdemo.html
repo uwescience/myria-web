@@ -97,7 +97,7 @@ plot(data, "CTDPRS", "Simpson");
 function update(){
     var data = {{ data | safe }};
     var xattr = document.getElementById('xattr').value;
-    var wyattr = document.getElementById('yattr').value;
+    var yattr = document.getElementById('yattr').value;
     plot(data, xattr, yattr);
 }
 </script>
