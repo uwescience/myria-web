@@ -639,7 +639,7 @@ def main():
     appfull = Cascade([static_app, app])
 
     from paste import httpserver
-    httpserver.serve(appfull)
+    httpserver.serve(appfull,port=8123)
 
 if __name__ == '__main__':
     main()
