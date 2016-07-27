@@ -133,7 +133,6 @@ function UrlExists(url, cb) {
 }
 
 function redirectToJupyterNotebook(jupyterPage) {
-  console.log(jupyterPage)
   UrlExists(jupyterPage, function(status) {
     if (status === 200) {
       window.location = jupyterPage
