@@ -13,6 +13,9 @@ handlers:
   expiration: "7d"
   static_files: static/\1
   upload: static/apple.*\.png
+- url: /jupyter_not_found
+  static_files: jupyter_not_found.txt
+  upload: jupyter_not_found.txt
 - url: /css
   static_dir: css
 - url: /fonts
@@ -40,3 +43,4 @@ libraries:
 env_variables:
   MYRIAX_REST_HOST: localhost
   MYRIAX_REST_PORT: 8753
+  MYRIA_JUPYTER_PORT: 8888

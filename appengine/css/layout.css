@@ -102,6 +102,19 @@ input[type=range].zoom-range {
   overflow: auto;
 }
 
+#loadexamples-list .list-group-item {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#loadexamples-list pre {
+  font-size: 10px;
+}
+
+#loadexamples-list {
+  overflow: auto;
+}
+
 #myria_svg {
   width: 100%;
 }

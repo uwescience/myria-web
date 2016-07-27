@@ -3,8 +3,8 @@ var updateCalendarWarning = function() {
   var calId = "cs.washington.edu_i1gk4il65dj31mcfgid1t9t1o8@group.calendar.google.com";
 
   var now = new Date(),
-      soon = (new Date()).addHours(6),
-      later = (new Date()).addDays(2);
+    soon = (new Date()).addHours(6),
+    later = (new Date()).addDays(2);
 
   // warn if there are experiments running
   $.ajax({
@@ -14,15 +14,13 @@ var updateCalendarWarning = function() {
       "timeMin": (now).toISOString(),
       "timeMax": (later).toISOString(),
       "timeZone": "UTC",
-      "items": [
-        {
-          "id": calId
-        }
-      ]
+      "items": [{
+        "id": calId
+      }]
     }),
     contentType: "application/json; charset=utf-8",
     dataType: "json",
-    success: function(data){
+    success: function(data) {
       var message = '',
         start = later,
         end = now;
@@ -70,13 +68,13 @@ var updateCalendarWarning = function() {
 $(function() {
   jQuery.timeago.settings.allowFuture = true;
 
-  Date.prototype.addHours= function(h){
-    this.setHours(this.getHours()+h);
+  Date.prototype.addHours = function(h) {
+    this.setHours(this.getHours() + h);
     return this;
   };
 
-  Date.prototype.addDays= function(d){
-    this.setHours(this.getHours()+24*d);
+  Date.prototype.addDays = function(d) {
+    this.setHours(this.getHours() + 24 * d);
     return this;
   };
 
@@ -110,7 +108,9 @@ $(function() {
 
   $('.back-to-top').click(function(event) {
     event.preventDefault();
-    $('html, body').animate({scrollTop: 0}, duration);
+    $('html, body').animate({
+      scrollTop: 0
+    }, duration);
     return false;
   });
 
@@ -118,3 +118,26 @@ $(function() {
 
   $("abbr.timeago").timeago();
 });
+
+
+function UrlExists(url, cb) {
+  jQuery.ajax({
+    url: url,
+    dataType: 'jsonp',
+    type: 'GET',
+    complete: function(xhr) {
+      if (typeof cb === 'function')
+        cb.apply(this, [xhr.status]);
+    }
+  });
+}
+
+function redirectToJupyterNotebook(jupyterPage) {
+  UrlExists(jupyterPage, function(status) {
+    if (status === 200) {
+      window.location = jupyterPage
+    } else {
+      window.location = "/jupyter_not_found";
+    }
+  });
+}

@@ -91,14 +91,19 @@
 
         <div class="col-md-5">
             <ul class="nav nav-tabs nav-justified" id="editor-tabs">
-                <li class="active"><a href="#examples" data-toggle="tab">Examples</a></li>
+                <li class="active" id="load-tab"><a href="#loadexamples" data-toggle="tab">Load Data</a></li>
+                <li id="query-tab"><a href="#examples" data-toggle="tab">Queries</a></li>
                 <li><a href="#datasets" data-toggle="tab">Datasets</a></li>
                 <li><a href="#queryplan" data-toggle="tab">Query Plan</a></li>
                 <li><a href="#result" data-toggle="tab">Results</a></li>
             </ul>
 
             <div class="tab-content">
-                <div class="tab-pane fade in active" id="examples">
+                <div class="tab-pane fade in active" id="loadexamples">
+                    <h4>Click on any of these examples to load them into the editor.</h4>
+                    <div class="list-group" id="loadexamples-list" subset="loadExamples"> </div>
+                </div>
+                 <div class="tab-pane fade" id="examples">
                     <h4>Click on any of these examples to load them into the editor.</h4>
                     <div class="list-group" id="examples-list" subset={{subset}}> </div>
                 </div>
