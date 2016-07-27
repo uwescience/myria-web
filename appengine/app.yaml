@@ -43,3 +43,4 @@ libraries:
 env_variables:
   MYRIAX_REST_HOST: localhost
   MYRIAX_REST_PORT: 8753
+  MYRIA_JUPYTER_PORT: 8888

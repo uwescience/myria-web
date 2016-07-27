@@ -102,11 +102,11 @@ examples = { 'datalog' : datalog_examples,
 
 
 
-load_twitterk_data = '''T1 = load("s3://uwdb/sampleData/TwitterK.csv",
+load_twitterk_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/TwitterK.csv",
 csv(schema(a:int,b:int),skip=0));
 store(T1, TwitterK, [a, b]);'''
 
-load_iris_data = '''T1 = load("s3://uwdb/sampleData/Iris.csv",
+load_iris_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/Iris.csv",
 csv(schema(sepal_length:float,
           sepal_width:float,
           petal_length:float,
@@ -114,7 +114,7 @@ csv(schema(sepal_length:float,
           class:string),skip=0));
 store(T1, Iris, [class]);'''
 
-load_census_income_data = '''T1 = load("s3://uwdb/sampleData/Census_Income.csv",
+load_census_income_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/Census_Income.csv",
 csv(schema(age:int,
           workclass:string,
           fnlwgt:int,
@@ -132,7 +132,7 @@ csv(schema(age:int,
           income:string),skip=0));
 store(T1, Census, [age]);'''
 
-load_car_evaluation_data = '''T1 = load("s3://uwdb/sampleData/Car_Evaluation.tsv",
+load_car_evaluation_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/Car_Evaluation.tsv",
 csv(schema(buying:string,
           maint:string,
           doors:string,
@@ -142,7 +142,7 @@ csv(schema(buying:string,
           evaluation:string),skip=0,delimiter='\\t'));
 store(T1, Car, [evaluation]);'''
 
-load_forestfires_data = '''T1 = load("s3://uwdb/sampleData/Forest_Fires.csv",
+load_forestfires_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/Forest_Fires.csv",
 csv(schema(X:int,
           Y:int,
           _month:string,
