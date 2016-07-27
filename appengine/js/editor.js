@@ -1,5 +1,5 @@
 // put all the underscore templates here
-var max_dataset_size = 10*1000*1000;
+var max_dataset_size = 10 * 1000 * 1000;
 var editor_templates = {
   //*/
   urls: {
@@ -29,12 +29,12 @@ var editorLanguage = 'myrial',
   editorState = {};
 
 function handleerrors(request, display) {
-  request.done(function (result) {
+  request.done(function(result) {
     var formatted = result.split("\n").join("<br>");
     $(display).html(formatted);
   });
 
-  request.fail(function (jqXHR, textStatus, errorThrown) {
+  request.fail(function(jqXHR, textStatus, errorThrown) {
     if (textStatus == 'timeout') {
       $(display).text("Server is not responding");
       return;
@@ -58,7 +58,7 @@ function getplan() {
     type: 'logical',
     language: editorLanguage
   });
-  request.success(function (dot) {
+  request.success(function(dot) {
     var result = Viz(dot, "svg");
     $('#relational_svg').html(result);
     $('svg').width('100%');
@@ -81,16 +81,16 @@ function optimizeplan() {
   handleerrors(request, "#optimized");
 
   var request = $.post("compile", {
-      query: query,
-      language: editorLanguage,
-      multiway_join: multiway_join_checked,
-      push_sql: push_sql_checked
+    query: query,
+    language: editorLanguage,
+    multiway_join: multiway_join_checked,
+    push_sql: push_sql_checked
   });
-  request.success(function (queryStatus) {
+  request.success(function(queryStatus) {
     try {
       var fragments = queryStatus.plan.fragments;
       var i = 0;
-      _.map(fragments, function (frag) {
+      _.map(fragments, function(frag) {
         frag.fragmentIndex = i++;
         return frag;
       });
@@ -117,7 +117,7 @@ function optimizeplan() {
       $('#physical-plan').collapse('hide');
       throw err;
     }
-  }).fail(function (jqXHR, textStatus, errorThrown) {
+  }).fail(function(jqXHR, textStatus, errorThrown) {
     $("#optimized").text(jqXHR.responseText);
     $('#myria_svg').empty().height('auto');
     $('a[href="#queryplan"]').off('shown.bs.tab');
@@ -159,38 +159,65 @@ function displayQueryStatus(query_status) {
   var status = query_status['status'];
   var html = '';
 
-  html += t.row({name: 'Status', val: status});
-  html += t.time_row({name: 'Start', val: query_status['startTime']});
-  html += t.time_row({name: 'End', val: query_status['finishTime']});
-  html += t.row({name: 'Elapsed', val: customFullTimeFormat(query_status['elapsedNanos'], false)});
-  html = t.table({myriaConnection: myriaConnection, query_id: query_id, content: html});
+  html += t.row({
+    name: 'Status',
+    val: status
+  });
+  html += t.time_row({
+    name: 'Start',
+    val: query_status['startTime']
+  });
+  html += t.time_row({
+    name: 'End',
+    val: query_status['finishTime']
+  });
+  html += t.row({
+    name: 'Elapsed',
+    val: customFullTimeFormat(query_status['elapsedNanos'], false)
+  });
+  html = t.table({
+    myriaConnection: myriaConnection,
+    query_id: query_id,
+    content: html
+  });
 
   if (status === 'SUCCESS') {
     // Populate the datasets created table
     $.ajax({
-      dataType: "json",
-      url: myriaConnection + "/dataset",
-      data: {queryId: query_id},
-      async: false})
-    .done(function(datasets) {
+        dataType: "json",
+        url: myriaConnection + "/dataset",
+        data: {
+          queryId: query_id
+        },
+        async: false
+      })
+      .done(function(datasets) {
         if (datasets.length > 0) {
           var d_html = "";
-          _.each(datasets, function(d) { d_html += t.dataset_row(d);});
-          html += t.dataset_table({content: d_html});
+          _.each(datasets, function(d) {
+            d_html += t.dataset_row(d);
+          });
+          html += t.dataset_table({
+            content: d_html
+          });
         }
-    });
+      });
   }
 
   if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {
-      html += t.prof_link({query_id: query_id});
+    html += t.prof_link({
+      query_id: query_id
+    });
   } else if (status === 'ERROR') {
-    html += t.err_msg({message: query_status['message'] || '(missing)'});
+    html += t.err_msg({
+      message: query_status['message'] || '(missing)'
+    });
   }
   $("#query-information").html(html);
   $("abbr.timeago").timeago();
 
   if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
-    setTimeout(function () {
+    setTimeout(function() {
       checkQueryStatus(query_id);
     }, 1000);
   }
@@ -199,14 +226,14 @@ function displayQueryStatus(query_status) {
 function displayQueryError(error, query_id) {
   var pre = document.createElement('pre');
   multiline($('#query-information').empty().append(pre),
-      "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
-  setTimeout(function () {
+    "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
+  setTimeout(function() {
     checkQueryStatus(query_id);
   }, 1000);
 }
 
 function checkQueryStatus(query_id) {
-  var errFunc = function (error) {
+  var errFunc = function(error) {
     displayQueryError(error, query_id);
   };
   $.ajax("execute", {
@@ -241,7 +268,7 @@ function executeplan() {
       202: displayQueryStatus
     }
   });
-  request.error(function (jqXHR, textStatus, errorThrown) {
+  request.error(function(jqXHR, textStatus, errorThrown) {
     var pre = document.createElement('pre');
     $('#query-information').empty().append(pre);
     multiline($(pre), jqXHR.responseText);
@@ -258,7 +285,7 @@ function resetResults() {
 
 function updateExamples(restored) {
   var language = editorLanguage;
-  var doUpdateExamples = function (data) {
+  var doUpdateExamples = function(data) {
     var examplesList = $('#examples-list');
     examplesList.empty();
     if (data.length === 0) {
@@ -273,7 +300,9 @@ function updateExamples(restored) {
           result = tokens.join(delimiter);
         var numLines = str.split(/\r\n|\r|\n/).length;
         var heading = $('<h5>').text(data[i][0]),
-          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
+          program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({
+            remaining: allTokens.length - 2
+          }) : ''));
         $('<a href="#" class="list-group-item example"></a>')
           .append(heading)
           .append(program)
@@ -282,7 +311,7 @@ function updateExamples(restored) {
         updateExamplesHeight();
       }
       /* Restore the click functionality on the examples. */
-      $(".example").click(function (e) {
+      $(".example").click(function(e) {
         e.preventDefault();
         resetResults();
         var example_query = this.getAttribute('data-code');
@@ -307,7 +336,7 @@ function updateExamples(restored) {
 }
 
 function updateLoadExamples(restored) {
-  var doUpdateLoadExamples = function (data) {
+  var doUpdateLoadExamples = function(data) {
     var examplesList = $('#loadexamples-list');
 
     examplesList.empty();
@@ -320,7 +349,9 @@ function updateLoadExamples(restored) {
         result = tokens.join(delimiter);
       var numLines = str.split(/\r\n|\r|\n/).length;
       var heading = $('<h5>').text(data[i][0]),
-        program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({remaining: allTokens.length - 2}) : ''));
+        program = $('<pre>').text(result + (numLines > 2 ? editor_templates.trim_example({
+          remaining: allTokens.length - 2
+        }) : ''));
       $('<a href="#" class="list-group-item loadexample"></a>')
         .append(heading)
         .append(program)
@@ -328,14 +359,14 @@ function updateLoadExamples(restored) {
         .appendTo(examplesList);
       updateExamplesHeight();
     }
-    $(".loadexample").click(function (e) {
+    $(".loadexample").click(function(e) {
       e.preventDefault();
       resetResults();
       var example_query = this.getAttribute('data-code');
       editor.setValue(example_query);
       optimizeplan();
     });
-    
+
     $('#editor-tabs a[href="#loadexamples"]').tab('show');
     if (!restored) {
       $(".loadexample").first().click();
@@ -353,7 +384,7 @@ function updateLoadExamples(restored) {
 
 function resetEditor(newLanguage, saveOld) {
   saveOld = saveOld || false;
-  var languages = [ 'datalog', 'myrial', 'sql' ];
+  var languages = ['datalog', 'myrial', 'sql'];
   if (!newLanguage || !_.contains(languages, newLanguage)) {
     console.log("Unable to reset editor to new language " + newLanguage);
     return;
@@ -381,7 +412,10 @@ function resetEditor(newLanguage, saveOld) {
   editorLanguage = newLanguage;
   var modes = {
     'datalog': 'prolog',
-    'myrial': {name: 'myrial', singleLineStringErrors: false},
+    'myrial': {
+      name: 'myrial',
+      singleLineStringErrors: false
+    },
     'sql': 'text/x-sql'
   };
   editor.setOption('mode', modes[newLanguage]);
@@ -426,7 +460,7 @@ function resizeEditor() {
 }
 
 function initializeDatasetSearch() {
-  var dataToRelKeyString = function (d) {
+  var dataToRelKeyString = function(d) {
     return d.userName + ':' + d.programName + ':' + d.relationName;
   };
 
@@ -438,22 +472,23 @@ function initializeDatasetSearch() {
       dataType: 'json',
       quietMillis: 100,
       cache: true,
-      data: function (term) {
+      data: function(term) {
         return {
           q: term
         };
       },
-      results: function (data) {
+      results: function(data) {
         return {
           results: data,
           more: false
         };
       }
     },
-    formatResult: function (d, container, query) {
+    formatResult: function(d, container, query) {
       var stringParts = dataToRelKeyString(d).split('');
       var queryParts = query.term.toLowerCase().split('');
-      var i = 0, j = 0,
+      var i = 0,
+        j = 0,
         result = '',
         bold = false;
       while (i < stringParts.length) {
@@ -477,20 +512,30 @@ function initializeDatasetSearch() {
     id: dataToRelKeyString,
     formatSelection: dataToRelKeyString,
     dropdownCssClass: "bigdrop",
-    escapeMarkup: function (m) {
+    escapeMarkup: function(m) {
       return m;
     }
-  }).on("change", function (e) {
+  }).on("change", function(e) {
     var t = editor_templates.dataset;
     var rel = $(".dataset-search").select2("data"),
       url = myriaConnection + "/dataset/user-" + rel.userName + "/program-" + rel.programName + "/relation-" + rel.relationName;
-    $.getJSON(url, function (data) {
+    $.getJSON(url, function(data) {
       var html = '';
-      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function (d) {
-        html += t.row({name: d[0], type: d[1]});
+      _.each(_.zip(data.schema.columnNames, data.schema.columnTypes), function(d) {
+        html += t.row({
+          name: d[0],
+          type: d[1]
+        });
       });
-      html = t.table({content: html});
-      $("#dataset-information").html(t.dslink({url: url, user: rel.userName, program: rel.programName, name: rel.relationName}) + html);
+      html = t.table({
+        content: html
+      });
+      $("#dataset-information").html(t.dslink({
+        url: url,
+        user: rel.userName,
+        program: rel.programName,
+        name: rel.relationName
+      }) + html);
     });
   });
 }
@@ -519,13 +564,13 @@ function restoreState() {
   resetEditor(editorLanguage, false);
 }
 
-updateExamplesHeight = function () {
+updateExamplesHeight = function() {
   // the height of the footer and header + nav is estimated, so is the height of the tabbar and the description
   $('#examples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
   $('#loadexamples-list').height(_.max([$(window).height() - 250, $('#editor-column').height() - 100]));
 };
 
-$(function () {
+$(function() {
   resetResults();
 
   editor.on("change", resetResults);
@@ -533,16 +578,16 @@ $(function () {
   $("#load-tab").click(updateLoadExamples);
   $("#query-tab").click(updateExamples);
 
-  $(".planner").click(function () {
+  $(".planner").click(function() {
     $('#editor-tabs a[href="#queryplan"]').tab('show');
     optimizeplan();
   });
   $(".compiler").click(compileplan);
   $(".executor").click(executeplan);
-  $(".language-menu").change(function () {
+  $(".language-menu").change(function() {
     resetEditor($(".language-menu option:selected").val(), true);
   });
-  $(".example").click(function () {
+  $(".example").click(function() {
     resetResults();
     var example_query = $(this).text();
     editor.setValue(example_query);
@@ -560,7 +605,7 @@ $(function () {
   window.onbeforeunload = saveState;
   setInterval(saveState, 2000);
 
-  $(window).resize(function () {
+  $(window).resize(function() {
     updateExamplesHeight();
   });
 });

@@ -25,7 +25,6 @@ from examples import examples
 from examples import loading_examples
 from demo3_examples import demo3_examples
 from pagination import Pagination, QUERIES_PER_PAGE
-from google.appengine.api import urlfetch
 import myria
 
 DEFAULT_MYRIAX_REST_PORT = 8753
@@ -208,7 +207,8 @@ class MyriaPage(MyriaHandler):
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
                 'jupyterNotebook': "{s}://{h}:{p}".format(
-                    s=uri_scheme, h=self.app.hostname, p=self.app.jupyter_port),
+                    s=uri_scheme, h=self.app.hostname,
+                    p=self.app.jupyter_port),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -577,7 +577,7 @@ class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='localhost',
                  port=DEFAULT_MYRIAX_REST_PORT,
-                 jupyter_port = DEFAULT_MYRIA_JUPYTER_PORT,
+                 jupyter_port=DEFAULT_MYRIA_JUPYTER_PORT,
                  ssl=False):
         routes = [
             ('/', RedirectToEditor),
@@ -614,9 +614,10 @@ myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')
                else DEFAULT_MYRIAX_REST_PORT)
 jupyter_port = (int(os.environ.get('MYRIA_JUPYTER_PORT'))
-               if os.environ.get('MYRIA_JUPYTER_PORT')
-               else DEFAULT_MYRIA_JUPYTER_PORT)
-app = Application(hostname=myriax_host, port=myriax_port, jupyter_port=jupyter_port)
+                if os.environ.get('MYRIA_JUPYTER_PORT')
+                else DEFAULT_MYRIA_JUPYTER_PORT)
+app = Application(hostname=myriax_host, port=myriax_port,
+                  jupyter_port=jupyter_port)
 
 
 # ...but if we run this file directly, then paste will
