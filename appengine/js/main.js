@@ -118,3 +118,30 @@ $(function() {
 
   $("abbr.timeago").timeago();
 });
+
+
+function UrlExists(url, cb){
+    jQuery.ajax({
+        url:      url,
+        dataType: 'jsonp',
+        type:     'GET',
+        complete:  function(xhr){
+            if(typeof cb === 'function')
+               cb.apply(this, [xhr.status]);
+        }
+    });
+}
+
+function redirectToJupyterNotebook(jupyterPage)
+{
+  console.log(jupyterPage)
+  UrlExists(jupyterPage, function(status){
+    if(status === 200){
+      window.location= jupyterPage
+    }
+    else
+    {
+       window.location= "/jupyter_not_found";
+    }
+  });
+}

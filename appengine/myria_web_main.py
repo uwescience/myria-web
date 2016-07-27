@@ -199,21 +199,24 @@ class MyriaPage(MyriaHandler):
         return connection_string
 
     def base_template_vars(self):
-        try:
-            url = "http://169.254.169.254/latest/meta-data/public-hostname"
-            result = urlfetch.fetch(url).content
-        except:
-            result = "localhost"
-
         if self.app.ssl:
             uri_scheme = "https"
         else:
             uri_scheme = "http"
+
+        try:
+            meta = "http://169.254.169.254/latest/meta-data/public-hostname"
+            hostname = urlfetch.fetch(meta).content
+            jupyterURL = "{s}://{h}:{p}".format(
+                s=uri_scheme, h=hostname, p="8888")
+        except:
+            jupyterURL = "{s}://{h}:{p}".format(
+                s=uri_scheme, h="localhost", p="8888")
+
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
-                'jupyterNotebook': "{s}://{h}:{p}".format(
-                    s=uri_scheme, h=result, p="8888"),
+                'jupyterNotebook': jupyterURL,
                 'version': VERSION,
                 'branch': BRANCH}
 

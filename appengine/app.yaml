@@ -13,6 +13,9 @@ handlers:
   expiration: "7d"
   static_files: static/\1
   upload: static/apple.*\.png
+- url: /jupyter_not_found
+  static_files: jupyter_not_found.txt
+  upload: jupyter_not_found.txt
 - url: /css
   static_dir: css
 - url: /fonts
