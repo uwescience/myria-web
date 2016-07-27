@@ -13,11 +13,15 @@
 {% endblock %}
 {% block extra_body %}
 <div>
+    <h4>Add custom plotting variables</h4>
+    <p>You can choose from: </p>
+    <p id="valid_attrs"></p>
     <p>xAttribute: <input name="xattr" type="text" id="xattr"/></p>
     <p>yAttribute: <input name="yattr" type="text" id="yattr"/></p>
     <input type="button" value="Update" onclick="update()">
 </div>
 <div id="plot"></div>
+<h4>Dissimilarity between samples: </h4>
 <div id="diversity"></div>
 {% endblock %}
 {% block footer %}
@@ -62,8 +66,6 @@ function plot(data, xattr, yattr){
     vg.embed("#plot", embedSpec, function(error, result){});
 };
 
-
-var data = {{ data | safe }};
 var bc_full = {{ bc_full | safe }};
   var vlSpec_bc = {
     "data": {
@@ -87,12 +89,15 @@ var bc_full = {{ bc_full | safe }};
   vg.embed("#diversity", embedSpec_bc, function(error, result) {
   });
 
+var data = {{ data | safe }};
+var valid_attrs = Object.keys(data[0]).join();
+document.getElementById("valid_attrs").innerHTML = valid_attrs ;
 plot(data, "CTDPRS", "Simpson");
 
 function update(){
     var data = {{ data | safe }};
-    var xattr = document.getElementById('xattr').value
-    var yattr = document.getElementById('yattr').value
+    var xattr = document.getElementById('xattr').value;
+    var wyattr = document.getElementById('yattr').value;
     plot(data, xattr, yattr);
 }
 </script>

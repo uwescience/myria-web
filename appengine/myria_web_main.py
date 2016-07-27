@@ -307,7 +307,8 @@ class istcdemo(MyriaPage):
 
     def get(self):
         connection = self.app.connection
-        tsnedata = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"Diversities50_tsne"})
+        relname = "Diversities50_tsne" if self.request.get("relname") is "" else self.request.get("relname")
+        tsnedata = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"{relname}".format(relname=relname)})
         bc_full = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"BC_complete"})
         template_vars = self.base_template_vars()
         template_vars['data'] = json.dumps(tsnedata).encode('utf8')
