@@ -307,7 +307,6 @@ class istcdemo(MyriaPage):
 
     def get(self):
         connection = self.app.connection
-
         tsnedata = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"Diversities50_tsne"})
         bc_full = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"BC_complete"})
         template_vars = self.base_template_vars()

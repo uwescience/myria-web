@@ -12,10 +12,13 @@
 
 {% endblock %}
 {% block extra_body %}
+<div>
+    <p>xAttribute: <input name="xattr" type="text" id="xattr"/></p>
+    <p>yAttribute: <input name="yattr" type="text" id="yattr"/></p>
+    <input type="button" value="Update" onclick="update()">
+</div>
+<div id="plot"></div>
 <div id="diversity"></div>
-<div id="skew"></div>
-<div id="simpson"></div>
-
 {% endblock %}
 {% block footer %}
 	<script src="js/d3.min.js" type="text/javascript" charset="utf-8"></script>
@@ -34,82 +37,47 @@
 
 	<script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
-  // Assign the specification to a local variable vlSpec.
-  var data = {{ data | safe }};
-  var bc_full = {{ bc_full | safe }};
 
-  var vlSpec_skew = {
+function plot(data, xattr, yattr){
+    var vlSpec = {
     "data": {
       "values": data
     },
     "mark": "point",
     "encoding": {
       "x": {
-      "field": "CTDPRS", "type": "quantitative",
-      "axis": {"title": "Depth"}
+      "field": xattr, "type": "quantitative"
       },
       "y": {
-      "field": "EntropySkew", "type": "quantitative"
+      "field": yattr, "type": "quantitative"
       }
     }
-  };
+    };
 
-  var embedSpec_skew = {
-    mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
-    spec: vlSpec_skew
-    // You can add more vega-embed configuration properties here.
-    // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
-  };
-
-  // Embed the visualization in the container with id `vis`
-  vg.embed("#skew", embedSpec_skew, function(error, result) {
-    // Callback receiving the View instance and parsed Vega spec
-    // result.view is the View, which resides under the '#vis' element
-  })
-
-    var vlSpec_entropy = {
-    "data": {
-      "values": data
-    },
-    "mark": "point",
-    "encoding": {
-      "x": {
-      "field": "CTDPRS", "type": "quantitative",
-      "axis": {"title": "Depth"}
-      },
-      "y": {
-      "field": "Simpson", "type": "quantitative"
-      }
-    }
-  };
-
-  var embedSpec_entropy = {
+    var embedSpec= {
     mode: "vega-lite",
-    spec: vlSpec_entropy
-  };
+    spec: vlSpec
+    };
 
-  vg.embed("#simpson", embedSpec_entropy, function(error, result) {
-  });
+    vg.embed("#plot", embedSpec, function(error, result){});
+};
 
+
+var data = {{ data | safe }};
+var bc_full = {{ bc_full | safe }};
   var vlSpec_bc = {
     "data": {
       "values": bc_full
     },
-    "mark": "circle",
-    "encoding": {
-        "y": {
-          "field": "asample",
-          "type": "nominal"
-        },
-        "x": {
-          "field": "bsample",
-          "type": "nominal"
-        },
-        "size": {
-          "field": "BCdis",
-          "type": "quantitative"
-        }
-  }
+
+     "mark": "text",
+  "encoding": {
+    "row": {"field": "asample", "type": "nominal", "axis": {"title":"Sample Name"}},
+    "column": {"field": "bsample", "type": "nominal", "axis": {"labelAngle": -90, "offset":20 ,"title":"Sample Name"}},
+    "color": {"field": "BCdis", "type": "quantitative"},
+    "text": {"field": "BCDis", "type": "nominal"}
+  },
+  "config": {"mark": {"applyColorToBackground": true} , "scale": {"textBandWidth": 20}}
   };
   var embedSpec_bc = {
     mode: "vega-lite",
@@ -119,6 +87,13 @@
   vg.embed("#diversity", embedSpec_bc, function(error, result) {
   });
 
+plot(data, "CTDPRS", "Simpson");
 
-  </script>
+function update(){
+    var data = {{ data | safe }};
+    var xattr = document.getElementById('xattr').value
+    var yattr = document.getElementById('yattr').value
+    plot(data, xattr, yattr);
+}
+</script>
 {% endblock %}
