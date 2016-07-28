@@ -3,7 +3,7 @@
 <!--{% block queries_active %} class="active"{% endblock %}-->
 
 {% block extra_head %}
-	<link rel="stylesheet" type="text/css" href="css/queryvis.css">
+<link rel="stylesheet" type="text/css" href="css/queryvis.css">
 {% endblock %}
 
 {% block extra_container_class %}my-fluid-container{% endblock %}
@@ -14,10 +14,8 @@
 {% block extra_body %}
 <div>
     <h4>Add custom plotting variables</h4>
-    <p>You can choose from: </p>
-    <p id="valid_attrs"></p>
-    <p>xAttribute: <input name="xattr" type="text" id="xattr"/></p>
-    <p>yAttribute: <input name="yattr" type="text" id="yattr"/></p>
+
+    <p>x-axis: <select id="x_select" onchange="update()"> </select> y-axis: <select id="y_select" onchange="update()"> </select></p>
     <input type="button" value="Update" onclick="update()">
 </div>
 <div id="plot"></div>
@@ -25,21 +23,21 @@
 <div id="diversity"></div>
 {% endblock %}
 {% block footer %}
-	<script src="js/d3.min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/colorbrewer.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/operatorvis.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/querystats.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
-	<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/d3.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/colorbrewer.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/d3.selection.popover.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/d3.selection.tooltip.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/chroma.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/graph.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/networkvis.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/fragmentvis.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/fragmentoverview.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/operatorvis.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/querystats.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/colorlegend.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/viz.js" type="text/javascript" charset="utf-8"></script>
 
-	<script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
 
 function plot(data, xattr, yattr){
@@ -67,38 +65,64 @@ function plot(data, xattr, yattr){
 };
 
 var bc_full = {{ bc_full | safe }};
-  var vlSpec_bc = {
-    "data": {
-      "values": bc_full
-    },
+bc_full = bc_full.concat({"asample":"SS0158", "bsample":"SS0158", "BCdis":0.0})
+var vlSpec_bc = {
+"data": {
+"values": bc_full
+},
 
-     "mark": "text",
-  "encoding": {
-    "row": {"field": "asample", "type": "nominal", "axis": {"title":"Sample Name"}},
-    "column": {"field": "bsample", "type": "nominal", "axis": {"labelAngle": -90, "offset":20 ,"title":"Sample Name"}},
-    "color": {"field": "BCdis", "type": "quantitative"},
-    "text": {"field": "BCDis", "type": "nominal"}
-  },
-  "config": {"mark": {"applyColorToBackground": true} , "scale": {"textBandWidth": 20}}
-  };
-  var embedSpec_bc = {
-    mode: "vega-lite",
-    spec: vlSpec_bc
-  };
+"mark": "text",
+"encoding": {
+"row": {
+"field": "asample", "type": "nominal",
+"axis": {"title":"Sample Name"},
+"sort": "none"
+},
+"column": {
+"field": "bsample", "type": "nominal",
+"axis": {"labelAngle": -90, "offset":20 ,"title":"Sample Name"},
+"sort":"none"},
+"color": {"field": "BCdis", "type": "quantitative"},
+"text": {"field": "none", "type": "nominal"}
+},
+"config": {"mark": {"applyColorToBackground": true} , "scale": {"textBandWidth": 12, "bandSize": 12}}
+};
+var embedSpec_bc = {
+mode: "vega-lite",
+spec: vlSpec_bc
+};
 
-  vg.embed("#diversity", embedSpec_bc, function(error, result) {
-  });
+vg.embed("#diversity", embedSpec_bc, function(error, result) {
+});
 
 var data = {{ data | safe }};
-var valid_attrs = Object.keys(data[0]).join();
-document.getElementById("valid_attrs").innerHTML = valid_attrs ;
+
+var x_select = document.getElementById("x_select");
+var y_select = document.getElementById("y_select");
+keys = Object.keys(data[0]);
+for (k in keys)
+{
+var o = document.createElement("option");
+o.value = keys[k];
+o.text = keys[k];
+x_select.appendChild(o);
+}
+for (k in keys)
+{
+var o = document.createElement("option");
+o.value = keys[k];
+o.text = keys[k];
+y_select.appendChild(o);
+}
+
 plot(data, "CTDPRS", "Simpson");
 
 function update(){
     var data = {{ data | safe }};
-    var xattr = document.getElementById('xattr').value;
-    var yattr = document.getElementById('yattr').value;
+    var xattr = document.getElementById('x_select').value;
+    var yattr = document.getElementById('y_select').value;
     plot(data, xattr, yattr);
 }
+
 </script>
 {% endblock %}
