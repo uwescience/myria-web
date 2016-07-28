@@ -616,8 +616,8 @@ class Application(webapp2.WSGIApplication):
         webapp2.WSGIApplication.__init__(
             self, routes, debug=debug, config=None)
 
-#myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
-myriax_host = 'ec2-52-39-96-185.us-west-2.compute.amazonaws.com'
+myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
+#myriax_host = 'ec2-52-39-96-185.us-west-2.compute.amazonaws.com'
 # Google App Engine will just serve the app...
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')
@@ -638,8 +638,12 @@ def main():
     # look for css, js, html before webapp URLs
     appfull = Cascade([static_app, app])
 
+    webserver_port = (int(os.environ.get('MYRIAWEB_SERVE_PORT'))
+                      if os.environ.get('MYRIAWEB_SERVE_PORT')
+                      else 8124)
+
     from paste import httpserver
-    httpserver.serve(appfull,port=8123)
+    httpserver.serve(appfull, port=webserver_port)
 
 if __name__ == '__main__':
     main()
