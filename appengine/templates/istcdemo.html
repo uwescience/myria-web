@@ -38,90 +38,114 @@
 
 <script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
-
-function plot(data, xattr, yattr){
+function plot(data, xattr, yattr) {
     var vlSpec = {
-    "data": {
-      "values": data
-    },
-    "mark": "point",
-    "encoding": {
-      "x": {
-      "field": xattr, "type": "quantitative"
-      },
-      "y": {
-      "field": yattr, "type": "quantitative"
-      }
-    }
+        "data": {
+            "values": data
+        },
+        "mark": "point",
+        "encoding": {
+            "x": {
+                "field": xattr,
+                "type": "quantitative"
+            },
+            "y": {
+                "field": yattr,
+                "type": "quantitative"
+            }
+        }
     };
 
-    var embedSpec= {
-    mode: "vega-lite",
-    spec: vlSpec
+    var embedSpec = {
+        mode: "vega-lite",
+        spec: vlSpec
     };
 
-    vg.embed("#plot", embedSpec, function(error, result){});
+    vg.embed("#plot", embedSpec, function(error, result) {});
 };
 
 var bc_full = {{ bc_full | safe }};
-bc_full = bc_full.concat({"asample":"SS0158", "bsample":"SS0158", "BCdis":0.0})
+bc_full = bc_full.concat({
+    "asample": "SS0158",
+    "bsample": "SS0158",
+    "BCdis": 0.0
+})
 var vlSpec_bc = {
-"data": {
-"values": bc_full
-},
+    "data": {
+        "values": bc_full
+    },
 
-"mark": "text",
-"encoding": {
-"row": {
-"field": "asample", "type": "nominal",
-"axis": {"title":"Sample Name"},
-"sort": "none"
-},
-"column": {
-"field": "bsample", "type": "nominal",
-"axis": {"labelAngle": -90, "offset":20 ,"title":"Sample Name"},
-"sort":"none"},
-"color": {"field": "BCdis", "type": "quantitative"},
-"text": {"field": "none", "type": "nominal"}
-},
-"config": {"mark": {"applyColorToBackground": true} , "scale": {"textBandWidth": 12, "bandSize": 12}}
+    "mark": "text",
+    "encoding": {
+        "row": {
+            "field": "asample",
+            "type": "nominal",
+            "axis": {
+                "title": "Sample Name"
+            },
+            "sort": "none"
+        },
+        "column": {
+            "field": "bsample",
+            "type": "nominal",
+            "axis": {
+                "labelAngle": -90,
+                "offset": 20,
+                "title": "Sample Name"
+            },
+            "sort": "none"
+        },
+        "color": {
+            "field": "BCdis",
+            "type": "quantitative"
+        },
+        "text": {
+            "field": "none",
+            "type": "nominal"
+        }
+    },
+    "config": {
+        "mark": {
+            "applyColorToBackground": true
+        },
+        "scale": {
+            "textBandWidth": 12,
+            "bandSize": 12
+        }
+    }
 };
 var embedSpec_bc = {
-mode: "vega-lite",
-spec: vlSpec_bc
+    mode: "vega-lite",
+    spec: vlSpec_bc
 };
 
-vg.embed("#diversity", embedSpec_bc, function(error, result) {
-});
+vg.embed("#diversity", embedSpec_bc, function(error, result) {});
 
 var data = {{ data | safe }};
 
 var x_select = document.getElementById("x_select");
 var y_select = document.getElementById("y_select");
 keys = Object.keys(data[0]);
-for (k in keys)
-{
-var o = document.createElement("option");
-o.value = keys[k];
-o.text = keys[k];
-x_select.appendChild(o);
+for (k in keys) {
+    var o = document.createElement("option");
+    o.value = keys[k];
+    o.text = keys[k];
+    x_select.appendChild(o);
 }
-for (k in keys)
-{
-var o = document.createElement("option");
-o.value = keys[k];
-o.text = keys[k];
-y_select.appendChild(o);
+for (k in keys) {
+    var o = document.createElement("option");
+    o.value = keys[k];
+    o.text = keys[k];
+    y_select.appendChild(o);
 }
 
 plot(data, "CTDPRS", "Simpson");
 
-function update(){
+function update() {
     var data = {{ data | safe }};
     var xattr = document.getElementById('x_select').value;
     var yattr = document.getElementById('y_select').value;
     plot(data, xattr, yattr);
 }
-
 </script>
 {% endblock %}
