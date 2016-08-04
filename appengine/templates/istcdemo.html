@@ -20,10 +20,11 @@
 </div>
 <div id="plot"></div>
 <h4>Dissimilarity between samples: </h4>
+
 <table>
 <tr>
     <td><div id="diversity"></div></td>
-    <td><div id="plot_hist"></div></td>
+    <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select><div id="plot_hist"></div></td>
 </tr>
 </table>
 
@@ -195,6 +196,7 @@ var data = {{ data | safe }};
 
 var x_select = document.getElementById("x_select");
 var y_select = document.getElementById("y_select");
+var var_select = document.getElementById("var_select");
 keys = Object.keys(data[0]);
 for (k in keys) {
     var o = document.createElement("option");
@@ -208,6 +210,12 @@ for (k in keys) {
     o.text = keys[k];
     y_select.appendChild(o);
 }
+for (k in keys) {
+    var o = document.createElement("option");
+    o.value = keys[k];
+    o.text = keys[k];
+    var_select.appendChild(o);
+}
 
 plot(data, "CTDPRS", "Simpson");
 plot_hist(data, sort_map, "CTDPRS");
@@ -216,6 +224,10 @@ function update() {
     var xattr = document.getElementById('x_select').value;
     var yattr = document.getElementById('y_select').value;
     plot(data, xattr, yattr);
+}
+
+function update_hist(){
+    plot_hist(data, sort_map, document.getElementById('var_select').value);
 }
 </script>
 {% endblock %}
