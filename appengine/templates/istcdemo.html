@@ -13,20 +13,22 @@
 
 {% endblock %}
 {% block extra_body %}
-<div>
+<div style="margin:4px; padding:4px">
     <h4>Add custom plotting variables</h4>
 
     <p>x-axis: <select id="x_select" onchange="update()"> </select> y-axis: <select id="y_select" onchange="update()"> </select></p>
+    <div id="plot"></div>
 </div>
-<div id="plot"></div>
-<h4>Dissimilarity between samples: </h4>
 
-<table>
-<tr>
-    <td><div id="diversity"></div></td>
-    <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select><div id="plot_hist"></div></td>
-</tr>
-</table>
+<div id="bcdiv" style="margin:4px; padding:4px">
+    <h4>Dissimilarity between samples: </h4>
+    <table>
+    <tr>
+        <td><div id="diversity"></div></td>
+        <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select><div id="plot_hist"></div></td>
+    </tr>
+    </table>
+</div>
 
 
 {% endblock %}
