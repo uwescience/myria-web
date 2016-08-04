@@ -89,9 +89,7 @@ function plot_hist(data, sort_map, yattr) {
             "y": {
                 "field": "Library",
                 "type": "ordinal",
-                "axis": {
-                    "title": "Sample Name"
-                },
+                "axis": false,
                 "sort": {"op":"mean", "field": "sortindex"}
             },
             "x": {
@@ -99,7 +97,7 @@ function plot_hist(data, sort_map, yattr) {
                 "type": "quantitative",
                 "axis": {
                     "orient":"top",
-                    "offset":20
+                    "offset":18
                 }
             }
         },
@@ -153,7 +151,8 @@ var vlSpec_bc = {
             "field": "asample",
             "type": "nominal",
             "axis": {
-                "title": "Sample Name"
+                "orient":"right",
+                "title":"Sample"
             },
             "sort": {"op":"mean", "field": "sortindexa"}
         },
@@ -163,7 +162,7 @@ var vlSpec_bc = {
             "axis": {
                 "labelAngle": -90,
                 "offset": 20,
-                "title": "Sample Name"
+                "title": "Sample"
             },
             "sort": {"op":"mean", "field": "sortindexb"}
         },
