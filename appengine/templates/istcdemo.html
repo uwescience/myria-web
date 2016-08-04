@@ -14,10 +14,24 @@
 {% endblock %}
 {% block extra_body %}
 <div style="margin:4px; padding:4px">
-    <h4>Add custom plotting variables</h4>
-
-    <p>x-axis: <select id="x_select" onchange="update()"> </select> y-axis: <select id="y_select" onchange="update()"> </select></p>
-    <div id="plot"></div>
+<table>
+    <h2>Screen 3: Genomic Data Processing</h2>
+    <tr>
+        <h4>MetaData Visualizer:</h4>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <p>x-axis: <select id="x_select" onchange="update()"> </select> y-axis: <select id="y_select" onchange="update()"> </select></p>
+                <div id="plot"></div>
+            </div>
+        </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <p>x-axis: <select id="x_select2" onchange="update2()"> </select> y-axis: <select id="y_select2" onchange="update2()"> </select></p>
+                <div id="plot2"></div>
+            </div>
+        </td>
+    </tr>
+</table>
 </div>
 
 <div id="bcdiv" style="margin:4px; padding:4px">
@@ -49,7 +63,7 @@
 
 <script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
-function plot(data, xattr, yattr) {
+function plot(data, xattr, yattr, divname) {
     var vlSpec = {
         "data": {
             "values": data
@@ -72,7 +86,7 @@ function plot(data, xattr, yattr) {
         spec: vlSpec
     };
 
-    vg.embed("#plot", embedSpec, function(error, result) {});
+    vg.embed(divname, embedSpec, function(error, result) {});
 };
 
 function plot_hist(data, sort_map, yattr) {
@@ -194,37 +208,32 @@ var embedSpec_bc = {
 vg.embed("#diversity", embedSpec_bc, function(error, result) {});
 
 var data = {{ data | safe }};
+var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2"];
 
-var x_select = document.getElementById("x_select");
-var y_select = document.getElementById("y_select");
-var var_select = document.getElementById("var_select");
-keys = Object.keys(data[0]);
-for (k in keys) {
-    var o = document.createElement("option");
-    o.value = keys[k];
-    o.text = keys[k];
-    x_select.appendChild(o);
-}
-for (k in keys) {
-    var o = document.createElement("option");
-    o.value = keys[k];
-    o.text = keys[k];
-    y_select.appendChild(o);
-}
-for (k in keys) {
-    var o = document.createElement("option");
-    o.value = keys[k];
-    o.text = keys[k];
-    var_select.appendChild(o);
+for (dd in select_dds) {
+    var s = document.getElementById(select_dds[dd]);
+    keys = Object.keys(data[0]);
+    for (k in keys) {
+        var o = document.createElement("option");
+        o.value = keys[k];
+        o.text = keys[k];
+        s.appendChild(o);
+    }
 }
 
-plot(data, "CTDPRS", "Simpson");
+plot(data, "CTDPRS", "Simpson", "#plot");
+plot(data, "CTDPRS", "EntropySkew", "#plot2");
 plot_hist(data, sort_map, "CTDPRS");
-function update() {
-    var data = {{ data | safe }};
-    var xattr = document.getElementById('x_select').value;
-    var yattr = document.getElementById('y_select').value;
-    plot(data, xattr, yattr);
+function _update(x,y,d) {
+    plot({{ data | safe }}, document.getElementById(x).value, document.getElementById(y).value, d);
+}
+
+function update(){
+    _update('x_select','y_select','#plot');
+}
+
+function update2(){
+    _update('x_select2','y_select2','#plot2');
 }
 
 function update_hist(){
