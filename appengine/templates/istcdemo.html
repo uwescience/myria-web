@@ -216,7 +216,9 @@ function update2(){
 }
 
 function update_hist(){
-    plot_bc(bc_full, sort_map);
+    if (default_sorting == false)
+        plot_bc(bc_full, sort_map);
+        default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
 }
 
@@ -249,6 +251,7 @@ function sort_everything(){
     console.log(sort_map);
     plot_bc(bc_full, sort_map);
     plot_hist(data, sort_map, sort_field);
+    default_sorting = false;
 }
 
 // Initialization
@@ -265,6 +268,8 @@ for (dd in select_dds) {
         s.appendChild(o);
     }
 }
+
+var default_sorting = true;
 
 var bc_full = {{ bc_full | safe }};
 bc_full = bc_full.concat({
