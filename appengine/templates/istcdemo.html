@@ -92,6 +92,7 @@ function plot(data, xattr, yattr, divname) {
 };
 
 function plot_hist(data, sort_map, yattr) {
+    document.getElementById('var_select').value = yattr;
     for(var i = 0; i< data.length; i++){
         data[i]["sortindex"] = sort_map[data[i]["Library"]];
     }
@@ -272,7 +273,12 @@ bc_full = bc_full.concat({
     "BCdis": 0.0
 });
 
+document.getElementById('x_select').value = "CTDPRS";
+document.getElementById('y_select').value = "Simpson";
 plot(data, "CTDPRS", "Simpson", "#plot");
+
+document.getElementById('x_select2').value = "CTDPRS";
+document.getElementById('y_select2').value = "EntropySkew";
 plot(data, "CTDPRS", "EntropySkew", "#plot2");
 var sort_map = {
         'S0156':1, 'S0037':2, 'S0154':3, 'S0009':4, 'S0028':5,
