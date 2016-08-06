@@ -37,7 +37,7 @@
 <div id="bcdiv" style="margin:4px; padding:4px">
     <h4>Dissimilarity between samples: </h4>
     <table>
-        <tr>Add a filter: <input id="filter_text" type="text" value="row['CTDPRS']>15"></tr> <br/><button id="filter" onclick="filter()">Update</button>
+        <tr>Add a filter: <input id="filter_text" type="text" value="row['CTDPRS']>15"></tr> <button id="filter" onclick="filter()">Update</button>
     <tr>
         <td><div id="diversity"></div></td>
         <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
@@ -145,7 +145,7 @@ function plot_hist(data, sort_map, yattr) {
     vg.embed("#plot_hist", embedSpec, function(error, result) {});
 };
 
-function plot_bc(bc_full, sort_map, filter){
+function plot_bc(data, bc_full, sort_map, filter){
     for(var i = 0; i< bc_full.length; i++){
         sampa = bc_full[i]["asample"];
         sampb = bc_full[i]["bsample"];
@@ -160,9 +160,27 @@ function plot_bc(bc_full, sort_map, filter){
         bc_full[i]["sortindexb"] = sort_map[bc_full[i]["bsample"]];
     }
 
+    function applyfilter(row){
+        var filter_text = document.getElementById('filter_text').value;
+        if (filter_text == '')
+            return 1==1;
+        else
+            return eval(filter_text);
+    }
+
+    data = data.filter(applyfilter);
+    filtered_samples = [];
+    for(d in data)
+        filtered_samples.push(data[d]['Library']);
+    bc_filtered = [];
+    console.log(filtered_samples);
+    for(d in bc_full)
+        if (filtered_samples.indexOf(bc_full[d]['asample']) != -1 && filtered_samples.indexOf(bc_full[d]['bsample']) !=-1)
+            bc_filtered.push(bc_full[d]);
+
     var vlSpec_bc = {
         "data": {
-            "values": bc_full
+            "values": bc_filtered
         },
         "mark": "text",
         "encoding": {
@@ -227,7 +245,7 @@ function update2(){
 
 function update_hist(){
     if (default_sorting == false)
-        plot_bc(bc_full, sort_map);
+        plot_bc(data, bc_full, sort_map);
         default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
 }
@@ -259,12 +277,19 @@ function sort_everything(){
     for(var i=0; i<sorted_data.length; i++)
         sort_map[sorted_data[i]["sample"]] = i+1;
     console.log(sort_map);
-    plot_bc(bc_full, sort_map);
+    plot_bc(data, bc_full, sort_map);
     plot_hist(data, sort_map, sort_field);
     default_sorting = false;
 }
 
 function filter(){
+    var data = {{ data | safe }};
+    var bc_full = {{ bc_full | safe }};
+    bc_full = bc_full.concat({
+        "asample": "S0158",
+        "bsample": "S0158",
+        "BCdis": 0.0
+    });
     var sort_map = {
             'S0156':1, 'S0037':2, 'S0154':3, 'S0009':4, 'S0028':5,
             'S0043':6, 'S0015':7, 'S0045':8, 'S0027':9, 'S0026':10,
@@ -280,7 +305,7 @@ function filter(){
 
     default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
-    plot_bc(bc_full, sort_map);
+    plot_bc(data, bc_full, sort_map);
 }
 
 // Initialization
@@ -327,6 +352,6 @@ var sort_map = {
         'S0151':46, 'S0036':47, 'S0011':48, 'S0042':49, 'S0010':50
 };
 plot_hist(data, sort_map, "CTDPRS");
-plot_bc(bc_full, sort_map);
+plot_bc(data, bc_full, sort_map);
 </script>
 {% endblock %}
