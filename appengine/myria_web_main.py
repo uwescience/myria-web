@@ -6,7 +6,7 @@ import requests
 from threading import Lock
 import urllib
 import webapp2
-
+import sys
 import jinja2
 
 from raco import RACompiler
@@ -643,6 +643,7 @@ def main():
                       else 8124)
 
     from paste import httpserver
+    sys.setrecursionlimit(1500)
     httpserver.serve(appfull, port=webserver_port)
 
 if __name__ == '__main__':
