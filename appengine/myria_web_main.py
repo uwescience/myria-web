@@ -312,10 +312,12 @@ class istcdemo(MyriaPage):
         connection = self.app.connection
         relname = "SampleToEnvironmental_All" if self.request.get("relname") is "" else self.request.get("relname")
         env_data = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"{relname}".format(relname=relname)})
+        tsne_clusters = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"tsne_clusters"})
         bc_full = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"BC_complete"})
         template_vars = self.base_template_vars()
         template_vars['data'] = json.dumps(env_data).encode('utf8')
         template_vars['bc_full'] = json.dumps(bc_full).encode('utf8')
+        template_vars['tsne_clusters'] = json.dumps(tsne_clusters).encode('utf8')
 
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
