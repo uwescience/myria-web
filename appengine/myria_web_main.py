@@ -75,7 +75,6 @@ def get_plan(query, language, plan_type, connection,
     if language is None:
         language = "datalog"
     language = language.strip().lower()
-    print 'HUHU: ', language
     if multiway_join:
         target_algebra = MyriaHyperCubeAlgebra(catalog)
     else:
@@ -643,7 +642,6 @@ def main():
                       else 8124)
 
     from paste import httpserver
-    sys.setrecursionlimit(1500)
     httpserver.serve(appfull, port=webserver_port)
 
 if __name__ == '__main__':
