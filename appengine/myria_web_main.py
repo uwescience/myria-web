@@ -310,11 +310,11 @@ class istcdemo(MyriaPage):
 
     def get(self):
         connection = self.app.connection
-        relname = "Diversities50_tsne" if self.request.get("relname") is "" else self.request.get("relname")
-        tsnedata = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"{relname}".format(relname=relname)})
+        relname = "SampleToEnvironmental_All" if self.request.get("relname") is "" else self.request.get("relname")
+        env_data = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"{relname}".format(relname=relname)})
         bc_full = connection.download_dataset({"userName":"public", "programName":"adhoc","relationName":"BC_complete"})
         template_vars = self.base_template_vars()
-        template_vars['data'] = json.dumps(tsnedata).encode('utf8')
+        template_vars['data'] = json.dumps(env_data).encode('utf8')
         template_vars['bc_full'] = json.dumps(bc_full).encode('utf8')
 
         # Actually render the page: HTML content
