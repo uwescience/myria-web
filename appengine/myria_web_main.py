@@ -22,13 +22,13 @@ from raco.viz import get_dot
 from raco.myrial.keywords import get_keywords
 from raco.backends.myria.catalog import MyriaCatalog
 from examples import examples
+from examples import loading_examples
 from demo3_examples import demo3_examples
 from pagination import Pagination, QUERIES_PER_PAGE
-
 import myria
 
 DEFAULT_MYRIAX_REST_PORT = 8753
-
+DEFAULT_MYRIA_JUPYTER_PORT = 8888
 # We need a (global) lock on the Myrial parser because yacc is not Threadsafe.
 # .. see uwescience/datalogcompiler#39
 # ..    (https://github.com/uwescience/datalogcompiler/issues/39)
@@ -201,9 +201,13 @@ class MyriaPage(MyriaHandler):
             uri_scheme = "https"
         else:
             uri_scheme = "http"
+
         return {'connectionString': self.get_connection_string(),
                 'myriaConnection': "{s}://{h}:{p}".format(
                     s=uri_scheme, h=self.app.hostname, p=self.app.port),
+                'jupyterNotebook': "{s}://{h}:{p}".format(
+                    s=uri_scheme, h=self.app.hostname,
+                    p=self.app.jupyter_port),
                 'version': VERSION,
                 'branch': BRANCH}
 
@@ -360,6 +364,8 @@ class Examples(MyriaPage):
         example_set = self.request.get('subset') or 'default'
         if example_set == 'demo3':
             examples_to_use = demo3_examples
+        elif example_set == 'loadExamples':
+            examples_to_use = loading_examples
         else:
             examples_to_use = examples
 
@@ -585,7 +591,9 @@ class Dot(MyriaHandler):
 class Application(webapp2.WSGIApplication):
     def __init__(self, debug=True,
                  hostname='localhost',
-                 port=DEFAULT_MYRIAX_REST_PORT, ssl=False):
+                 port=DEFAULT_MYRIAX_REST_PORT,
+                 jupyter_port=DEFAULT_MYRIA_JUPYTER_PORT,
+                 ssl=False):
         routes = [
             ('/', RedirectToEditor),
             ('/editor', Editor),
@@ -607,6 +615,7 @@ class Application(webapp2.WSGIApplication):
             hostname=hostname, port=port, ssl=ssl)
         self.hostname = hostname
         self.port = port
+        self.jupyter_port = jupyter_port
         self.ssl = ssl
 
         # Quiet logging for production
@@ -621,7 +630,11 @@ myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
 myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
                if os.environ.get('MYRIAX_REST_PORT')
                else DEFAULT_MYRIAX_REST_PORT)
-app = Application(hostname=myriax_host, port=myriax_port)
+jupyter_port = (int(os.environ.get('MYRIA_JUPYTER_PORT'))
+                if os.environ.get('MYRIA_JUPYTER_PORT')
+                else DEFAULT_MYRIA_JUPYTER_PORT)
+app = Application(hostname=myriax_host, port=myriax_port,
+                  jupyter_port=jupyter_port)
 
 
 # ...but if we run this file directly, then paste will
