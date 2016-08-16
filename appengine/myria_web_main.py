@@ -626,15 +626,11 @@ class Application(webapp2.WSGIApplication):
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
 #myriax_host = 'ec2-52-39-96-185.us-west-2.compute.amazonaws.com'
 # Google App Engine will just serve the app...
-myriax_port = (int(os.environ.get('MYRIAX_REST_PORT'))
-               if os.environ.get('MYRIAX_REST_PORT')
-               else DEFAULT_MYRIAX_REST_PORT)
-jupyter_port = (int(os.environ.get('MYRIA_JUPYTER_PORT'))
-                if os.environ.get('MYRIA_JUPYTER_PORT')
-                else DEFAULT_MYRIA_JUPYTER_PORT)
+myriax_port = int(os.environ.get('MYRIAX_REST_PORT', DEFAULT_MYRIAX_REST_PORT))
+jupyter_port = int(os.environ.get('MYRIA_JUPYTER_PORT', DEFAULT_MYRIA_JUPYTER_PORT))
+
 app = Application(hostname=myriax_host, port=myriax_port,
                   jupyter_port=jupyter_port)
-
 
 # ...but if we run this file directly, then paste will
 # serve the app
@@ -649,14 +645,8 @@ def main():
     # look for css, js, html before webapp URLs
     appfull = Cascade([static_app, app])
 
-    webserver_port = (int(os.environ.get('MYRIAWEB_SERVE_PORT'))
-                      if os.environ.get('MYRIAWEB_SERVE_PORT')
-                      else 8124)
-
-    webserver_host = (os.environ.get('MYRIAWEB_SERVE_HOST')
-                      if os.environ.get('MYRIAWEB_SERVE_HOST')
-                      else "127.0.0.1")
-
+    webserver_port = os.environ.get('MYRIAWEB_SERVE_PORT', 8124)
+    webserver_host = os.environ.get('MYRIAWEB_SERVE_HOST', '127.0.0.1')
     from paste import httpserver
     httpserver.serve(appfull, port=webserver_port, host=webserver_host)
 
