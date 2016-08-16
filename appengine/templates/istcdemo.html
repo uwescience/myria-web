@@ -223,17 +223,8 @@ function plot_hist(data, sort_map, yattr) {
 
 function plot_bc(data, bc_full, sort_map, filter){
     for(var i = 0; i< bc_full.length; i++){
-        sampa = bc_full[i]["asample"];
-        sampb = bc_full[i]["bsample"];
-        if(sampa.length>5)
-            sampa = sampa.substring(1,6);
-        if(sampb.length>5)
-            sampb = sampb.substring(1,6);
-        bc_full[i]["asample"] = sampa;
-        bc_full[i]["bsample"] = sampb;
-
-        bc_full[i]["sortindexa"] = sort_map[bc_full[i]["asample"]];
-        bc_full[i]["sortindexb"] = sort_map[bc_full[i]["bsample"]];
+        bc_full[i]["sortindexa"] = sort_map[bc_full[i]["a"]];
+        bc_full[i]["sortindexb"] = sort_map[bc_full[i]["b"]];
     }
 
     function applyfilter(row){
@@ -251,7 +242,7 @@ function plot_bc(data, bc_full, sort_map, filter){
     bc_filtered = [];
     console.log(filtered_samples);
     for(d in bc_full)
-        if (filtered_samples.indexOf(bc_full[d]['asample']) != -1 && filtered_samples.indexOf(bc_full[d]['bsample']) !=-1)
+        if (filtered_samples.indexOf(bc_full[d]['a']) != -1 && filtered_samples.indexOf(bc_full[d]['b']) !=-1)
             bc_filtered.push(bc_full[d]);
 
     var vlSpec_bc = {
@@ -261,7 +252,7 @@ function plot_bc(data, bc_full, sort_map, filter){
         "mark": "text",
         "encoding": {
             "row": {
-                "field": "asample",
+                "field": "a",
                 "type": "nominal",
                 "axis": {
                     "orient":"right",
@@ -270,7 +261,7 @@ function plot_bc(data, bc_full, sort_map, filter){
                 "sort": {"op":"mean", "field": "sortindexa"}
             },
             "column": {
-                "field": "bsample",
+                "field": "b",
                 "type": "nominal",
                 "axis": {
                     "labelAngle": -90,
@@ -280,7 +271,7 @@ function plot_bc(data, bc_full, sort_map, filter){
                 "sort": {"op":"mean", "field": "sortindexb"}
             },
             "color": {
-                "field": "BCdis",
+                "field": "d",
                 "type": "quantitative",
                 "legend":{"orient":"left"}
             },
@@ -320,7 +311,7 @@ function update2(){
 }
 
 function update_time(){
-    plot_timeseries({{ data | safe }}, document.getElementById('time_select').value);
+    plot_timeseries(data, document.getElementById('time_select').value);
 }
 
 function update_hist(){
@@ -359,11 +350,10 @@ function sort_everything(){
 }
 
 function filter(){
-    var data = {{ data | safe }};
-    var bc_full = {{ bc_full | safe }};
-    var sort_map = {};
-    for(var i=0; i<data.length; i++)
-        sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
+    d = init();
+    data = d[0];
+    bc_full = d[1];
+    sort_map = d[2];
     default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
     plot_bc(data, bc_full, sort_map);
@@ -371,11 +361,20 @@ function filter(){
 
 
 // Initialization
-var data = {{ data | safe }};
-var bc_full = {{ bc_full | safe }};
-var sort_map = {};
-for(var i=0; i<data.length; i++)
-    sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
+function init(){
+    var data = {{ data | safe }};
+    var bc_full = {{ bc_full | safe }};
+    var sort_map = {};
+    for(var i=0; i<data.length; i++)
+        sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
+    return [data, bc_full, sort_map];
+}
+
+d = init();
+data = d[0];
+bc_full = d[1];
+sort_map = d[2];
+
 var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2", "time_select"];
 
 for (dd in select_dds) {
