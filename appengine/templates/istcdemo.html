@@ -310,10 +310,9 @@ function sort_everything(){
 function filter(){
     var data = {{ data | safe }};
     var bc_full = {{ bc_full | safe }};
-    var clusters = {{ tsne_clusters | safe }};
     var sort_map = {};
-    for(var i=0; i<clusters.length; i++)
-        sort_map[clusters[i]["sampleid"]] = clusters[i]["clusterid"];
+    for(var i=0; i<data.length; i++)
+        sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
     default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
     plot_bc(data, bc_full, sort_map);
@@ -323,10 +322,9 @@ function filter(){
 // Initialization
 var data = {{ data | safe }};
 var bc_full = {{ bc_full | safe }};
-var clusters = {{ tsne_clusters | safe }};
 var sort_map = {};
-for(var i=0; i<clusters.length; i++)
-    sort_map[clusters[i]["sampleid"]] = clusters[i]["clusterid"];
+for(var i=0; i<data.length; i++)
+    sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
 var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2"];
 
 for (dd in select_dds) {
