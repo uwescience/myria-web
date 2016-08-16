@@ -331,10 +331,12 @@ for (dd in select_dds) {
     var s = document.getElementById(select_dds[dd]);
     keys = Object.keys(data[0]);
     for (k in keys) {
-        var o = document.createElement("option");
-        o.value = keys[k];
-        o.text = keys[k];
-        s.appendChild(o);
+        if (typeof(data[0][keys[k]]) != "string"){
+            var o = document.createElement("option");
+            o.value = keys[k];
+            o.text = keys[k];
+            s.appendChild(o);
+        }
     }
 }
 
