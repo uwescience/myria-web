@@ -13,6 +13,7 @@
 
 {% endblock %}
 {% block extra_body %}
+<div id="vis-tooltip" class="vg-tooltip"></div>
 <div style="margin:4px; padding:4px">
 <table>
     <h2>Screen 3: Genomic Data Processing</h2>
@@ -148,8 +149,24 @@ function plot(data, xattr, yattr, divname) {
         mode: "vega-lite",
         spec: vlSpec
     };
-
-    vg.embed(divname, embedSpec, function(error, result) {});
+    var options = {
+      showAllFields: false,
+      fields: [
+        {
+          field: xattr
+        },
+        {
+          field: yattr
+        },
+        {
+          field: "sampleid",
+          title: "Sample"
+        }],
+      colorTheme: "dark"
+    };
+    vg.embed(divname, embedSpec, function(error, result) {
+        vl.tooltip(result.view, vlSpec, options);
+    });
 };
 
 function plot_timeseries(data, yattr) {
@@ -193,14 +210,30 @@ function plot_timeseries(data, yattr) {
         mode: "vega-lite",
         spec: vlSpec
     };
-
-    vg.embed("#time_series", embedSpec, function(error, result) {});
+    var options = {
+      showAllFields: false,
+      fields: [
+        {
+          field: "Date"
+        },
+        {
+          field: yattr
+        },
+        {
+          field: "sampleid",
+          title: "Sample"
+        }],
+      colorTheme: "dark"
+    };
+    vg.embed("#time_series", embedSpec, function(error, result) {
+        vl.tooltip(result.view, vlSpec, options);
+    });
 };
 
 function plot_hist(data, sort_map, yattr) {
     document.getElementById('var_select').value = yattr;
     for(var i = 0; i< data.length; i++){
-        data[i]["sortindex"] = sort_map[data[i]["Library"]];
+        data[i]["sortindex"] = data.length - sort_map[data[i]["Library"]] + 1;
     }
 
     function applyfilter(row){
@@ -217,7 +250,7 @@ function plot_hist(data, sort_map, yattr) {
         "data": {
             "values": data
         },
-        "mark": "bar",
+        "mark": "circle",
         "encoding": {
             "y": {
                 "field": "Library",
@@ -231,6 +264,9 @@ function plot_hist(data, sort_map, yattr) {
                 "axis": {
                     "orient":"top",
                     "offset":18
+                },
+                "scale":{
+                    "zero":false
                 }
             }
         },
@@ -246,13 +282,26 @@ function plot_hist(data, sort_map, yattr) {
         mode: "vega-lite",
         spec: vlSpec
     };
-
-    vg.embed("#plot_hist", embedSpec, function(error, result) {});
+    var options = {
+      showAllFields: false,
+      fields: [
+        {
+          field: "sampleid",
+          title: "Sample"
+        },
+        {
+          field: yattr
+        }],
+      colorTheme: "dark"
+    };
+    vg.embed("#plot_hist", embedSpec, function(error, result) {
+        vl.tooltip(result.view, vlSpec, options);
+    });
 };
 
 function plot_bc(data, bc_full, sort_map, filter){
     for(var i = 0; i< bc_full.length; i++){
-        bc_full[i]["sortindexa"] = sort_map[bc_full[i]["a"]];
+        bc_full[i]["sortindexa"] = bc_full.length - sort_map[bc_full[i]["a"]] +1;
         bc_full[i]["sortindexb"] = sort_map[bc_full[i]["b"]];
     }
 
@@ -323,8 +372,26 @@ function plot_bc(data, bc_full, sort_map, filter){
         mode: "vega-lite",
         spec: vlSpec_bc
     };
-
-    vg.embed("#diversity", embedSpec_bc, function(error, result) {});
+    var options = {
+      showAllFields: false,
+      fields: [
+        {
+          field: "a",
+          title: "Sample a"
+        },
+        {
+          field: "b",
+          title: "Sample b"
+        },
+        {
+          field: "d",
+          title: "Bray-Curtis dissimilarity"
+        }],
+      colorTheme: "dark"
+    };
+    vg.embed("#diversity", embedSpec_bc, function(error, result) {
+        vl.tooltip(result.view, vlSpec_bc, options);
+    });
 }
 
 function _update(x,y,d) {
@@ -434,7 +501,7 @@ document.getElementById('y_select2').value = "entropy";
 plot(data, "depth", "entropy", "#plot2");
 document.getElementById('time_select').value = "simp";
 plot_timeseries(data, "simp");
-plot_hist(data, sort_map, "depth");
+plot_hist(data, sort_map, "entropy");
 plot_bc(data, bc_full, sort_map);
 </script>
 {% endblock %}
