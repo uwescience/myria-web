@@ -28,6 +28,11 @@
                 <p>x-axis: <select id="x_select2" onchange="update2()"> </select></p>
             </div>
         </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <h4>Time series:</h4>
+            </div>
+        </td>
     </tr>
     <tr>
         <td>
@@ -40,6 +45,11 @@
                 <p>y-axis: <select id="y_select2" onchange="update2()"> </select></p>
             </div>
         </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <p>y-axis: <select id="time_select" onchange="update_time()"> </select></p>
+            </div>
+        <td>
     </tr>
     <tr>
         <td>
@@ -52,6 +62,11 @@
                 <div id="plot2"></div>
             </div>
         </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <div id="time_series"></div>
+            </div>
+        </td>
     </tr>
 </table>
 </div>
@@ -59,10 +74,17 @@
 <div id="bcdiv" style="margin:4px; padding:4px">
     <h4>Dissimilarity between samples: </h4>
     <table>
-        <tr>Add a filter: <input id="filter_text" type="text" value="row['depth']<30"></tr> <button id="filter" onclick="filter()">Update</button>
+        <tr>
+            <td>
+                Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
+            </td>
+            <td>
+                Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
+            </td>
+        </tr>
     <tr>
         <td><div id="diversity"></div></td>
-        <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
+        <td>
             <div id="plot_hist"></div>
         </td>
     </tr>
@@ -112,6 +134,38 @@ function plot(data, xattr, yattr, divname) {
     };
 
     vg.embed(divname, embedSpec, function(error, result) {});
+};
+
+function plot_timeseries(data, yattr) {
+    for(var i=0; i<data.length; i++){
+        data[i]["jsdate"] = Math.floor(new Date(data[i]["Date"]).getTime()/8.64e7) - 14610;
+        //8.64e7 is the number of milliseconds in a day
+    }
+
+    var vlSpec = {
+        "data": {
+            "values": data
+        },
+        "mark": "circle",
+        "encoding": {
+            "x": {
+                "field": "jsdate",
+                "type": "quantitative",
+                "axis": {"title": "Number of days since 1-1-2010."}
+            },
+            "y": {
+                "field": yattr,
+                "type": "quantitative"
+            }
+        }
+    };
+
+    var embedSpec = {
+        mode: "vega-lite",
+        spec: vlSpec
+    };
+
+    vg.embed("#time_series", embedSpec, function(error, result) {});
 };
 
 function plot_hist(data, sort_map, yattr) {
@@ -228,7 +282,7 @@ function plot_bc(data, bc_full, sort_map, filter){
             "color": {
                 "field": "BCdis",
                 "type": "quantitative",
-                "legend":false
+                "legend":{"orient":"left"}
             },
             "text": {
                 "field": "none",
@@ -263,6 +317,10 @@ function update(){
 
 function update2(){
     _update('x_select2','y_select2','#plot2');
+}
+
+function update_time(){
+    plot_timeseries({{ data | safe }}, document.getElementById('time_select').value);
 }
 
 function update_hist(){
@@ -303,10 +361,9 @@ function sort_everything(){
 function filter(){
     var data = {{ data | safe }};
     var bc_full = {{ bc_full | safe }};
-    var clusters = {{ tsne_clusters | safe }};
     var sort_map = {};
-    for(var i=0; i<clusters.length; i++)
-        sort_map[clusters[i]["sampleid"]] = clusters[i]["clusterid"];
+    for(var i=0; i<data.length; i++)
+        sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
     default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
     plot_bc(data, bc_full, sort_map);
@@ -316,20 +373,21 @@ function filter(){
 // Initialization
 var data = {{ data | safe }};
 var bc_full = {{ bc_full | safe }};
-var clusters = {{ tsne_clusters | safe }};
 var sort_map = {};
-for(var i=0; i<clusters.length; i++)
-    sort_map[clusters[i]["sampleid"]] = clusters[i]["clusterid"];
-var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2"];
+for(var i=0; i<data.length; i++)
+    sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
+var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2", "time_select"];
 
 for (dd in select_dds) {
     var s = document.getElementById(select_dds[dd]);
     keys = Object.keys(data[0]);
     for (k in keys) {
-        var o = document.createElement("option");
-        o.value = keys[k];
-        o.text = keys[k];
-        s.appendChild(o);
+        if (typeof(data[0][keys[k]]) != "string"){
+            var o = document.createElement("option");
+            o.value = keys[k];
+            o.text = keys[k];
+            s.appendChild(o);
+        }
     }
 }
 
@@ -342,6 +400,7 @@ plot(data, "depth", "simp", "#plot");
 document.getElementById('x_select2').value = "depth";
 document.getElementById('y_select2').value = "entropy";
 plot(data, "depth", "entropy", "#plot2");
+plot_timeseries(data, "simp");
 plot_hist(data, sort_map, "depth");
 plot_bc(data, bc_full, sort_map);
 </script>
