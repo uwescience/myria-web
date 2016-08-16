@@ -653,8 +653,12 @@ def main():
                       if os.environ.get('MYRIAWEB_SERVE_PORT')
                       else 8124)
 
+    webserver_host = (os.environ.get('MYRIAWEB_SERVE_HOST')
+                      if os.environ.get('MYRIAWEB_SERVE_HOST')
+                      else "127.0.0.1")
+
     from paste import httpserver
-    httpserver.serve(appfull, port=webserver_port)
+    httpserver.serve(appfull, port=webserver_port, host=webserver_host)
 
 if __name__ == '__main__':
     main()
