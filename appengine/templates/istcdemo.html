@@ -273,7 +273,7 @@ function plot_bc(data, bc_full, sort_map, filter){
             "color": {
                 "field": "d",
                 "type": "quantitative",
-                "legend":{"orient":"left"}
+                "legend":{"orient":"left", "title": "Bray-Curtis dissimilarity"}
             },
             "text": {
                 "field": "none",
@@ -380,6 +380,7 @@ var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2"
 for (dd in select_dds) {
     var s = document.getElementById(select_dds[dd]);
     keys = Object.keys(data[0]);
+    keys.sort();
     for (k in keys) {
         if (typeof(data[0][keys[k]]) != "string"){
             var o = document.createElement("option");
