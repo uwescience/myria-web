@@ -59,10 +59,17 @@
 <div id="bcdiv" style="margin:4px; padding:4px">
     <h4>Dissimilarity between samples: </h4>
     <table>
-        <tr>Add a filter: <input id="filter_text" type="text" value="row['depth']<30"></tr> <button id="filter" onclick="filter()">Update</button>
+        <tr>
+            <td>
+                Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
+            </td>
+            <td>
+                Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
+            </td>
+        </tr>
     <tr>
         <td><div id="diversity"></div></td>
-        <td>Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
+        <td>
             <div id="plot_hist"></div>
         </td>
     </tr>
