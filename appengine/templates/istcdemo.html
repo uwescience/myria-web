@@ -18,6 +18,7 @@
     <h2>Screen 3: Genomic Data Processing</h2>
     <tr>
         <h4>MetaData Visualizer:</h4>
+        Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
         <td>
             <div style="margin:4px; padding:4px">
                 <p>x-axis: <select id="x_select" onchange="update()"> </select></p>
@@ -76,7 +77,7 @@
     <table>
         <tr>
             <td>
-                Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
+                Darker colors imply more distance
             </td>
             <td>
                 Choose another variable: <select id="var_select" onchange="update_hist()"> </select> <button id="sort_fields" onclick="sort_everything()">Sort</button>
@@ -111,6 +112,16 @@
 <script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
 function plot(data, xattr, yattr, divname) {
+    function applyfilter(row){
+        var filter_text = document.getElementById('filter_text').value;
+        if (filter_text == '')
+            return 1==1;
+        else
+            return eval(filter_text);
+    }
+
+    data = data.filter(applyfilter);
+
     var vlSpec = {
         "data": {
             "values": data
@@ -141,6 +152,16 @@ function plot_timeseries(data, yattr) {
         data[i]["jsdate"] = Math.floor(new Date(data[i]["Date"]).getTime()/8.64e7) - 14610;
         //8.64e7 is the number of milliseconds in a day
     }
+
+    function applyfilter(row){
+        var filter_text = document.getElementById('filter_text').value;
+        if (filter_text == '')
+            return 1==1;
+        else
+            return eval(filter_text);
+    }
+
+    data = data.filter(applyfilter);
 
     var vlSpec = {
         "data": {
@@ -357,6 +378,9 @@ function filter(){
     default_sorting = true;
     plot_hist(data, sort_map, document.getElementById('var_select').value);
     plot_bc(data, bc_full, sort_map);
+    update();
+    update2();
+    update_time();
 }
 
 
@@ -400,6 +424,7 @@ plot(data, "depth", "simp", "#plot");
 document.getElementById('x_select2').value = "depth";
 document.getElementById('y_select2').value = "entropy";
 plot(data, "depth", "entropy", "#plot2");
+document.getElementById('time_select').value = "simp";
 plot_timeseries(data, "simp");
 plot_hist(data, sort_map, "depth");
 plot_bc(data, bc_full, sort_map);
