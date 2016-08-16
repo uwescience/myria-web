@@ -121,7 +121,6 @@ function plot(data, xattr, yattr, divname) {
     }
 
     data = data.filter(applyfilter);
-
     var vlSpec = {
         "data": {
             "values": data
@@ -130,11 +129,17 @@ function plot(data, xattr, yattr, divname) {
         "encoding": {
             "x": {
                 "field": xattr,
-                "type": "quantitative"
+                "type": "quantitative",
+                "scale":{
+                    "zero":false
+                }
             },
             "y": {
                 "field": yattr,
-                "type": "quantitative"
+                "type": "quantitative",
+                "scale":{
+                    "zero":false
+                }
             }
         }
     };
@@ -176,7 +181,10 @@ function plot_timeseries(data, yattr) {
             },
             "y": {
                 "field": yattr,
-                "type": "quantitative"
+                "type": "quantitative",
+                "scale":{
+                    "zero":false
+                }
             }
         }
     };
