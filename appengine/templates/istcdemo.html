@@ -28,6 +28,11 @@
                 <p>x-axis: <select id="x_select2" onchange="update2()"> </select></p>
             </div>
         </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <h4>Time series:</h4>
+            </div>
+        </td>
     </tr>
     <tr>
         <td>
@@ -40,6 +45,11 @@
                 <p>y-axis: <select id="y_select2" onchange="update2()"> </select></p>
             </div>
         </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <p>y-axis: <select id="time_select" onchange="update_time()"> </select></p>
+            </div>
+        <td>
     </tr>
     <tr>
         <td>
@@ -50,6 +60,11 @@
         <td>
             <div style="margin:4px; padding:4px">
                 <div id="plot2"></div>
+            </div>
+        </td>
+        <td>
+            <div style="margin:4px; padding:4px">
+                <div id="time_series"></div>
             </div>
         </td>
     </tr>
@@ -119,6 +134,38 @@ function plot(data, xattr, yattr, divname) {
     };
 
     vg.embed(divname, embedSpec, function(error, result) {});
+};
+
+function plot_timeseries(data, yattr) {
+    for(var i=0; i<data.length; i++){
+        data[i]["jsdate"] = Math.floor(new Date(data[i]["Date"]).getTime()/8.64e7) - 14610;
+        //8.64e7 is the number of milliseconds in a day
+    }
+
+    var vlSpec = {
+        "data": {
+            "values": data
+        },
+        "mark": "circle",
+        "encoding": {
+            "x": {
+                "field": "jsdate",
+                "type": "quantitative",
+                "axis": {"title": "Number of days since 1-1-2010."}
+            },
+            "y": {
+                "field": yattr,
+                "type": "quantitative"
+            }
+        }
+    };
+
+    var embedSpec = {
+        mode: "vega-lite",
+        spec: vlSpec
+    };
+
+    vg.embed("#time_series", embedSpec, function(error, result) {});
 };
 
 function plot_hist(data, sort_map, yattr) {
@@ -272,6 +319,10 @@ function update2(){
     _update('x_select2','y_select2','#plot2');
 }
 
+function update_time(){
+    plot_timeseries({{ data | safe }}, document.getElementById('time_select').value);
+}
+
 function update_hist(){
     if (default_sorting == false)
         plot_bc(data, bc_full, sort_map);
@@ -325,7 +376,7 @@ var bc_full = {{ bc_full | safe }};
 var sort_map = {};
 for(var i=0; i<data.length; i++)
     sort_map[data[i]["sampleid"]] = data[i]["clusterid"];
-var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2"];
+var select_dds = ["x_select", "y_select", "var_select", "x_select2", "y_select2", "time_select"];
 
 for (dd in select_dds) {
     var s = document.getElementById(select_dds[dd]);
@@ -349,6 +400,7 @@ plot(data, "depth", "simp", "#plot");
 document.getElementById('x_select2').value = "depth";
 document.getElementById('y_select2').value = "entropy";
 plot(data, "depth", "entropy", "#plot2");
+plot_timeseries(data, "simp");
 plot_hist(data, sort_map, "depth");
 plot_bc(data, bc_full, sort_map);
 </script>
