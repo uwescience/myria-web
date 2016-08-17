@@ -17,4 +17,4 @@
 	url = https://github.com/dateutil/dateutil.git
 [submodule "submodules/six"]
 	path = submodules/six
-	url = https://github.com/kelp404/six.git
+	url = https://github.com/gsutil-mirrors/six.git
