@@ -513,10 +513,6 @@ class Execute(MyriaHandler):
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
 
-        cached_logicalplan = str(
-            get_logical_plan(query, language, self.app.connection,
-                             push_sql=push_sql))
-
         if query.startswith('--spark'):
             try:
                 myriaconn = self.app.connection
@@ -563,6 +559,10 @@ class Execute(MyriaHandler):
                      Unable to connect to REST server to issue query')
                 return
 
+        cached_logicalplan = str(
+            get_logical_plan(query, language, self.app.connection,
+                             push_sql=push_sql))
+        
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
