@@ -17,8 +17,14 @@ from raco.backends.myria.myria import (MyriaLeftDeepTreeAlgebra,
                                        MyriaHyperCubeAlgebra,
                                        compile_to_json)
 from raco.backends.logical import OptLogicalAlgebra
+from raco.backends.spark.connection import SparkConnection
+from raco.backends.spark.catalog import SparkCatalog
+from raco.backends.spark.algebra import SparkAlgebra
+from raco.compile import optimize
+from raco.backends.federated.catalog import FederatedCatalog
+from raco.backends.federated import FederatedAlgebra
 
-from raco.viz import get_dot
+import raco.viz as rv
 from raco.myrial.keywords import get_keywords
 from raco.backends.myria.catalog import MyriaCatalog
 from examples import examples
@@ -511,6 +517,52 @@ class Execute(MyriaHandler):
             get_logical_plan(query, language, self.app.connection,
                              push_sql=push_sql))
 
+        if query.startswith('--spark'):
+            try:
+                myriaconn = self.app.connection
+                sparkconn = self.app.sparkconnection
+
+                myriacatalog = MyriaCatalog(myriaconn)
+                sparkcatalog = SparkCatalog(sparkconn)
+
+                myrial_code = query
+
+                catalog = FederatedCatalog([myriacatalog, sparkcatalog])
+                parser = MyrialParser.Parser()
+                processor = MyrialInterpreter.StatementProcessor(catalog, True)
+                statement_list = parser.parse(myrial_code)
+                processor.evaluate(statement_list)
+
+                algebras = [MyriaLeftDeepTreeAlgebra(), SparkAlgebra()]
+                falg = FederatedAlgebra(algebras, catalog)
+
+                federated_plan = processor.get_physical_plan(target_alg=falg)
+
+                physical_plan_spark = optimize(federated_plan, SparkAlgebra())
+                print physical_plan_spark
+                sparkconn.execute_query(physical_plan_spark)
+                # Issue the query
+
+                # query_url = 'http://%s:%d/execute?query_id=%d' %\
+                #     (self.app.hostname, self.app.port, query_status['queryId'])
+                self.response.status = 201
+                self.response.headers['Content-Type'] = 'application/json'
+                # self.response.headers['Content-Location'] = query_url
+                self.response.write("Submitted")
+                return
+            except myria.MyriaError as e:
+                self.response.headers['Content-Type'] = 'text/plain'
+                self.response.status = 400
+                self.response.write("Error 400 (Bad Request): %s" % str(e))
+                return
+            except requests.ConnectionError as e:
+                self.response.headers['Content-Type'] = 'text/plain'
+                self.response.status = 503
+                self.response.write(
+                    'Error 503 (Unavailable): \
+                     Unable to connect to REST server to issue query')
+                return
+
         try:
             # Generate physical plan
             physicalplan = get_physical_plan(
@@ -580,7 +632,7 @@ class Dot(MyriaHandler):
             multiway_join=multiway_join, push_sql=push_sql)
 
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write(get_dot(plan))
+        self.response.write(rv.get_dot(plan))
 
     def post(self):
         "The same as get(), here because there may be long programs"
@@ -616,6 +668,8 @@ class Application(webapp2.WSGIApplication):
         self.port = port
         self.jupyter_port = jupyter_port
         self.ssl = ssl
+        self.sparkmaster = open("/root/spark-ec2/cluster-url").read().strip()
+        self.sparkconnection = SparkConnection(self.sparkmaster)
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
