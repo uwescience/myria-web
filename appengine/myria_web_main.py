@@ -513,7 +513,7 @@ class Execute(MyriaHandler):
         multiway_join = self.get_boolean_request_param("multiway_join")
         push_sql = self.get_boolean_request_param("push_sql")
 
-        if query.startswith('--spark'):
+        if query.startswith('--@localspark'):
             try:
                 myriaconn = self.app.connection
                 sparkconn = self.app.sparkconnection
@@ -668,8 +668,8 @@ class Application(webapp2.WSGIApplication):
         self.port = port
         self.jupyter_port = jupyter_port
         self.ssl = ssl
-        self.sparkmaster = open("/root/spark-ec2/cluster-url").read().strip()
-        self.sparkconnection = SparkConnection(self.sparkmaster)
+        self.sparkmaster = os.environ.get('sparkurl', 'localhost')
+        self.sparkconnection = SparkConnection("spark://{masterHostname}:7077".format(masterHostname=self.sparkmaster))
 
         # Quiet logging for production
         logging.getLogger().setLevel(logging.WARN)
@@ -678,7 +678,6 @@ class Application(webapp2.WSGIApplication):
             self, routes, debug=debug, config=None)
 
 myriax_host = os.environ.get('MYRIAX_REST_HOST', 'localhost')
-#myriax_host = 'ec2-52-39-96-185.us-west-2.compute.amazonaws.com'
 # Google App Engine will just serve the app...
 myriax_port = int(os.environ.get('MYRIAX_REST_PORT', DEFAULT_MYRIAX_REST_PORT))
 jupyter_port = int(os.environ.get('MYRIA_JUPYTER_PORT', DEFAULT_MYRIA_JUPYTER_PORT))
