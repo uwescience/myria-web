@@ -143,7 +143,6 @@ function plot(data, xattr, yattr, divname, extra_result) {
         newp[xattr] = extra_result['average'];
         newp['entropyskew'] = extra_result['entropy'];
         data.push(newp);
-        console.log(data[data.length -1]);
     }
 
     var vlSpec = {
@@ -501,11 +500,9 @@ function aggregate(){
     agg_samples_over = document.getElementById('agg_text').value;
     x_field = document.getElementById('x_select2').value;
     q = "sample_data = scan(SampleToEnvironmental_All); kmercnts = scan(kmercnt_11_forward_Pkmer);filtered = select sum(k.cnt) as cnt, k.kmer from sample_data s, kmercnts k where k.sampleid = s.sampleid and " + x_field + agg_samples_over + ";filtered_sum = select sum(cnt) as sum_cnt from filtered;filtered_norm = select k.kmer, k.cnt/s.sum_cnt as norm_cnt from filtered k, filtered_sum s;entropy = select 22 + sum(norm_cnt*log(norm_cnt)/log(2)) as entropy from filtered_norm; avg_depth = select avg(depth) as average from sample_data where " + x_field + agg_samples_over + "; ent_depth = select entropy, average from avg_depth,entropy; store(ent_depth, agg_ent);";
-    console.log(q);
     function wait_for_completion(qid){
         $.getJSON('/execute', {'queryId':  qid}, function(result) {
                 if (result.status == 'RUNNING'){
-                    console.log('running');
                     document.getElementById('query_status').innerHTML += '...'
                     setTimeout(function () {wait_for_completion(qid);},10000);
                 }
@@ -513,7 +510,6 @@ function aggregate(){
                     document.getElementById('query_status').innerHTML = 'Finished.'
                     url = "http://"+ {{ hostname | safe }} + ":" + {{ port | safe}} + "/dataset/user-public/program-adhoc/relation-agg_ent/data";
                     $.getJSON(url, {'format': 'json'}, function(d){
-                        console.log(d);
                         document.getElementById('x_select2').value = "depth";
                         document.getElementById('y_select2').value = "entropyskew";
                         plot(data, "depth", "entropyskew", "#plot2", d[0]);
