@@ -19,7 +19,7 @@
     <h2>Screen 3: Genomic Data Processing</h2>
     <tr>
         <h4>MetaData Visualizer:</h4>
-        Add a filter: <input id="filter_text" type="text" value="depth<30"> <button id="filter" onclick="filter()">Update</button>
+        Add a filter: <input id="filter_text" type="text" value="Station<8"> <button id="filter" onclick="filter()">Update</button>
         <td>
             <div style="margin:4px; padding:4px">
                 <p>x-axis: <select id="x_select" onchange="update()"> </select></p>
@@ -499,10 +499,10 @@ function aggregate(){
     default_sorting = true;
     agg_samples_over = document.getElementById('agg_text').value;
     x_field = document.getElementById('x_select2').value;
-    q = "sample_data = scan(SampleToEnvironmental_All); kmercnts = scan(kmercnt_11_forward_Pkmer);filtered = select sum(k.cnt) as cnt, k.kmer from sample_data s, kmercnts k where k.sampleid = s.sampleid and " + x_field + agg_samples_over + ";filtered_sum = select sum(cnt) as sum_cnt from filtered;filtered_norm = select k.kmer, k.cnt/s.sum_cnt as norm_cnt from filtered k, filtered_sum s;entropy = select 22 + sum(norm_cnt*log(norm_cnt)/log(2)) as entropy from filtered_norm; avg_depth = select avg(depth) as average from sample_data where " + x_field + agg_samples_over + "; ent_depth = select entropy, average from avg_depth,entropy; store(ent_depth, agg_ent);";
+    q = "sample_data = scan(SampleToEnvironmental_All); kmercnts = scan(kmercnt_11_forward_Pkmer);filtered = select sum(k.cnt) as cnt, k.kmer from sample_data s, kmercnts k where k.sampleid = s.sampleid and " + x_field + agg_samples_over + ";filtered_sum = select sum(cnt) as sum_cnt from filtered;filtered_norm = select k.kmer, k.cnt/s.sum_cnt as norm_cnt from filtered k, filtered_sum s;entropy = select 22 + sum(norm_cnt*log(norm_cnt)/log(2)) as entropy from filtered_norm; avg_depth = select avg("+x_field+") as average from sample_data where " + x_field + agg_samples_over + "; ent_depth = select entropy, average from avg_depth,entropy; store(ent_depth, agg_ent);";
     function wait_for_completion(qid){
         $.getJSON('/execute', {'queryId':  qid}, function(result) {
-                if (result.status == 'RUNNING'){
+                if (result.status == 'RUNNING' || result.status == 'ACCEPTED'){
                     document.getElementById('query_status').innerHTML += '...'
                     setTimeout(function () {wait_for_completion(qid);},10000);
                 }
