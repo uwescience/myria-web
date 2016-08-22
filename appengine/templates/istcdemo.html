@@ -283,13 +283,12 @@ function plot_hist(data, sort_map, yattr) {
         "data": {
             "values": data
         },
-        "mark": "circle",
+        "mark": "line",
         "encoding": {
             "y": {
-                "field": "Library",
+                "field": "sortindex",
                 "type": "ordinal",
-                "axis": false,
-                "sort": {"op":"mean", "field": "sortindex"}
+                "axis": false
             },
             "x": {
                 "field": yattr,
@@ -328,7 +327,7 @@ function plot_hist(data, sort_map, yattr) {
       colorTheme: "dark"
     };
     vg.embed("#plot_hist", embedSpec, function(error, result) {
-        vl.tooltip(result.view, vlSpec, options);
+        //vl.tooltip(result.view, vlSpec, options);
     });
 };
 
