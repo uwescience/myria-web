@@ -19,7 +19,7 @@
     <h2>Screen 3: Genomic Data Processing</h2>
     <tr>
         <h4>MetaData Visualizer:</h4>
-        Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
+        Add a filter: <input id="filter_text" type="text" value="depth<30"> <button id="filter" onclick="filter()">Update</button>
         <td>
             <div style="margin:4px; padding:4px">
                 <p>x-axis: <select id="x_select" onchange="update()"> </select></p>
@@ -71,6 +71,15 @@
         </td>
     </tr>
 </table>
+<table>
+    <tr>
+    <td>
+        <div style="margin:4px; padding:4px">
+            Aggregate samples with: <input id="agg_text" type="text" value="depth<30"> <button id="aggcon" onclick="aggregate()">Fetch aggregate</button>
+        </div>
+    </td>
+</tr>
+</table>
 </div>
 
 <div id="bcdiv" style="margin:4px; padding:4px">
@@ -115,6 +124,9 @@
 function plot(data, xattr, yattr, divname) {
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -177,6 +189,9 @@ function plot_timeseries(data, yattr) {
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -238,6 +253,9 @@ function plot_hist(data, sort_map, yattr) {
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -307,6 +325,9 @@ function plot_bc(data, bc_full, sort_map, filter){
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
