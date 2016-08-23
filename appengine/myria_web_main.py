@@ -1,7 +1,7 @@
 from distutils.util import strtobool
 import json
 import logging
-import os
+import os, traceback
 import requests
 from threading import Lock
 import urllib
@@ -547,6 +547,7 @@ class Execute(MyriaHandler):
                 self.response.write("Submitted")
                 return
             except myria.MyriaError as e:
+                traceback.print_exc()
                 self.response.headers['Content-Type'] = 'text/plain'
                 self.response.status = 400
                 self.response.write("Error 400 (Bad Request): %s" % str(e))
