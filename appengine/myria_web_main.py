@@ -543,7 +543,7 @@ class Execute(MyriaHandler):
 
                 # query_url = 'http://%s:%d/execute?query_id=%d' %\
                 #     (self.app.hostname, self.app.port, query_status['queryId'])
-                self.response.status = 201
+                self.response.status = 206
                 self.response.headers['Content-Type'] = 'application/json'
                 # self.response.headers['Content-Location'] = query_url
                 self.response.write(str(r) + " Tuples written to: " + result_name)
