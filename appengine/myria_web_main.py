@@ -546,7 +546,7 @@ class Execute(MyriaHandler):
                 self.response.status = 201
                 self.response.headers['Content-Type'] = 'application/json'
                 # self.response.headers['Content-Location'] = query_url
-                self.response.write(r + " Tuples written to: " + result_name)
+                self.response.write(str(r) + " Tuples written to: " + result_name)
                 return
             except myria.MyriaError as e:
                 traceback.print_exc()
