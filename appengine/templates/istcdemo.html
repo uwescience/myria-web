@@ -19,7 +19,7 @@
     <h2>Screen 3: Genomic Data Processing</h2>
     <tr>
         <h4>MetaData Visualizer:</h4>
-        Add a filter: <input id="filter_text" type="text" value="row['depth']<30"> <button id="filter" onclick="filter()">Update</button>
+        Add a filter: <input id="filter_text" type="text" value="Station<8"> <button id="filter" onclick="filter()">Update</button>
         <td>
             <div style="margin:4px; padding:4px">
                 <p>x-axis: <select id="x_select" onchange="update()"> </select></p>
@@ -71,6 +71,15 @@
         </td>
     </tr>
 </table>
+<table>
+    <tr>
+        <td>
+            <div style="margin:4px; padding:4px">
+                Aggregate Entropy Skew for x-axis: <input id="agg_text" type="text" value="<10"> <button id="aggcon" onclick="aggregate()">Fetch aggregate</button> <p id="query_status"></p>
+            </div>
+        </td>
+    </tr>
+</table>
 </div>
 
 <div id="bcdiv" style="margin:4px; padding:4px">
@@ -112,9 +121,12 @@
 
 <script type="text/javascript" src="js/queryvis.js" charset="utf-8"></script>
 <script>
-function plot(data, xattr, yattr, divname) {
+function plot(data, xattr, yattr, divname, extra_result) {
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -122,6 +134,17 @@ function plot(data, xattr, yattr, divname) {
     }
 
     data = data.filter(applyfilter);
+
+    if (extra_result !== undefined){
+        for (r in data)
+            data[r]['color'] = 'Sample';
+        newp = {};
+        newp['color'] = 'Aggregate';
+        newp[xattr] = extra_result['average'];
+        newp['entropyskew'] = extra_result['entropy'];
+        data.push(newp);
+    }
+
     var vlSpec = {
         "data": {
             "values": data
@@ -144,6 +167,10 @@ function plot(data, xattr, yattr, divname) {
             }
         }
     };
+
+    if (extra_result !== undefined){
+        vlSpec['encoding']['color'] = {"field": "color", "type": "nominal"};
+    }
 
     var embedSpec = {
         mode: "vega-lite",
@@ -177,6 +204,9 @@ function plot_timeseries(data, yattr) {
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -238,6 +268,9 @@ function plot_hist(data, sort_map, yattr) {
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -250,13 +283,12 @@ function plot_hist(data, sort_map, yattr) {
         "data": {
             "values": data
         },
-        "mark": "circle",
+        "mark": "line",
         "encoding": {
             "y": {
-                "field": "Library",
+                "field": "sortindex",
                 "type": "ordinal",
-                "axis": false,
-                "sort": {"op":"mean", "field": "sortindex"}
+                "axis": false
             },
             "x": {
                 "field": yattr,
@@ -295,7 +327,7 @@ function plot_hist(data, sort_map, yattr) {
       colorTheme: "dark"
     };
     vg.embed("#plot_hist", embedSpec, function(error, result) {
-        vl.tooltip(result.view, vlSpec, options);
+        //vl.tooltip(result.view, vlSpec, options);
     });
 };
 
@@ -307,6 +339,9 @@ function plot_bc(data, bc_full, sort_map, filter){
 
     function applyfilter(row){
         var filter_text = document.getElementById('filter_text').value;
+        keys = Object.keys(data[0]);
+        for (k in keys)
+            filter_text = filter_text.replace(keys[k], "row[\'"+ keys[k] +"\']");
         if (filter_text == '')
             return 1==1;
         else
@@ -318,7 +353,6 @@ function plot_bc(data, bc_full, sort_map, filter){
     for(d in data)
         filtered_samples.push(data[d]['Library']);
     bc_filtered = [];
-    console.log(filtered_samples);
     for(d in bc_full)
         if (filtered_samples.indexOf(bc_full[d]['a']) != -1 && filtered_samples.indexOf(bc_full[d]['b']) !=-1)
             bc_filtered.push(bc_full[d]);
@@ -439,7 +473,6 @@ function sort_everything(){
     var sort_map = {};
     for(var i=0; i<sorted_data.length; i++)
         sort_map[sorted_data[i]["sample"]] = i+1;
-    console.log(sort_map);
     plot_bc(data, bc_full, sort_map);
     plot_hist(data, sort_map, sort_field);
     default_sorting = false;
@@ -456,6 +489,37 @@ function filter(){
     update();
     update2();
     update_time();
+}
+
+function aggregate(){
+    d = init();
+    data = d[0];
+    sort_map = d[2];
+    default_sorting = true;
+    agg_samples_over = document.getElementById('agg_text').value;
+    x_field = document.getElementById('x_select2').value;
+    q = "sample_data = scan(SampleToEnvironmental_All); kmercnts = scan(kmercnt_11_forward_Pkmer);filtered = select sum(k.cnt) as cnt, k.kmer from sample_data s, kmercnts k where k.sampleid = s.sampleid and " + x_field + agg_samples_over + ";filtered_sum = select sum(cnt) as sum_cnt from filtered;filtered_norm = select k.kmer, k.cnt/s.sum_cnt as norm_cnt from filtered k, filtered_sum s;entropy = select 22 + sum(norm_cnt*log(norm_cnt)/log(2)) as entropy from filtered_norm; avg_depth = select avg("+x_field+") as average from sample_data where " + x_field + agg_samples_over + "; ent_depth = select entropy, average from avg_depth,entropy; store(ent_depth, agg_ent);";
+    function wait_for_completion(qid){
+        $.getJSON('/execute', {'queryId':  qid}, function(result) {
+                if (result.status == 'RUNNING' || result.status == 'ACCEPTED'){
+                    document.getElementById('query_status').innerHTML += '...'
+                    setTimeout(function () {wait_for_completion(qid);},10000);
+                }
+                else{
+                    document.getElementById('query_status').innerHTML = 'Finished.'
+                    url = "http://"+ {{ hostname | safe }} + ":" + {{ port | safe}} + "/dataset/user-public/program-adhoc/relation-agg_ent/data";
+                    $.getJSON(url, {'format': 'json'}, function(d){
+                        document.getElementById('x_select2').value = "depth";
+                        document.getElementById('y_select2').value = "entropyskew";
+                        plot(data, "depth", "entropyskew", "#plot2", d[0]);
+                    });
+                }
+        });
+    };
+    $.post( "/execute", { query: q, language: "myrial", profile: false, push_sql: false, multiway_join: false}, function( d ) {
+        document.getElementById('query_status').innerHTML = 'Running...'
+        wait_for_completion(d['queryId']);
+    });
 }
 
 
@@ -497,11 +561,11 @@ document.getElementById('y_select').value = "simp";
 plot(data, "depth", "simp", "#plot");
 
 document.getElementById('x_select2').value = "depth";
-document.getElementById('y_select2').value = "entropy";
-plot(data, "depth", "entropy", "#plot2");
+document.getElementById('y_select2').value = "entropyskew";
+plot(data, "depth", "entropyskew", "#plot2");
 document.getElementById('time_select').value = "simp";
 plot_timeseries(data, "simp");
-plot_hist(data, sort_map, "entropy");
+plot_hist(data, sort_map, "entropyskew");
 plot_bc(data, bc_full, sort_map);
 </script>
 {% endblock %}

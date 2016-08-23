@@ -322,6 +322,8 @@ class istcdemo(MyriaPage):
         template_vars = self.base_template_vars()
         template_vars['data'] = json.dumps(env_data).encode('utf8')
         template_vars['bc_full'] = json.dumps(bc_full).encode('utf8')
+        template_vars['hostname'] = json.dumps(self.app.hostname)
+        template_vars['port'] = json.dumps(self.app.port)
         # Actually render the page: HTML content
         self.response.headers['Content-Type'] = 'text/html'
         # .. load and render the template
