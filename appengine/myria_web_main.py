@@ -538,7 +538,7 @@ class Execute(MyriaHandler):
 
                 physical_plan_spark = optimize(federated_plan, SparkAlgebra())
                 print physical_plan_spark
-                (r, result_name) = sparkconn.execute_query(physical_plan_spark)
+                r, result_name = sparkconn.execute_query(physical_plan_spark)
                 # Issue the query
 
                 # query_url = 'http://%s:%d/execute?query_id=%d' %\
