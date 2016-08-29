@@ -391,6 +391,17 @@ class Demo3(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
 
+class PerfEnforce(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'perfenforce'
+
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('perfenforce.html')
+        self.response.out.write(template.render(template_vars))
 
 class Plan(MyriaHandler):
 
@@ -591,7 +602,8 @@ class Application(webapp2.WSGIApplication):
             ('/execute', Execute),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo3', Demo3)
+            ('/demo3', Demo3),
+            ('/perfenforce', PerfEnforce)
         ]
 
         # Connection to Myria. Thread-safe
