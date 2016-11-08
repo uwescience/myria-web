@@ -22,7 +22,7 @@ from raco.backends.spark.catalog import SparkCatalog
 from raco.backends.spark.algebra import SparkAlgebra
 from raco.compile import optimize
 from raco.backends.federated.catalog import FederatedCatalog
-from raco.backends.federated import FederatedAlgebra
+from raco.backends.federated.algebra import FederatedAlgebra
 
 import raco.viz as rv
 from raco.myrial.keywords import get_keywords
@@ -521,7 +521,8 @@ class Execute(MyriaHandler):
                 sparkconn = self.app.sparkconnection
 
                 myriacatalog = MyriaCatalog(myriaconn)
-                sparkcatalog = SparkCatalog(sparkconn)
+                catalog_path = os.path.join(os.path.abspath('./'), 'catalog.py')
+                sparkcatalog = SparkCatalog.load_from_file(catalog_path)
 
                 myrial_code = query
 
@@ -531,14 +532,13 @@ class Execute(MyriaHandler):
                 statement_list = parser.parse(myrial_code)
                 processor.evaluate(statement_list)
 
-                algebras = [MyriaLeftDeepTreeAlgebra(), SparkAlgebra()]
+                algebras = [OptLogicalAlgebra(), MyriaLeftDeepTreeAlgebra(), SparkAlgebra()]
                 falg = FederatedAlgebra(algebras, catalog)
 
                 federated_plan = processor.get_physical_plan(target_alg=falg)
 
-                physical_plan_spark = optimize(federated_plan, SparkAlgebra())
-                print physical_plan_spark
-                r, result_name = sparkconn.execute_query(physical_plan_spark)
+                print federated_plan
+                r, result_name = sparkconn.execute_query(federated_plan)
                 # Issue the query
 
                 # query_url = 'http://%s:%d/execute?query_id=%d' %\
