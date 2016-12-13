@@ -398,7 +398,7 @@ class PerfEnforce(MyriaPage):
         template_vars = self.base_template_vars()
         template_vars['myrialKeywords'] = get_keywords()
         template_vars['subset'] = 'perfenforce'
-
+        
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('perfenforce.html')
         self.response.out.write(template.render(template_vars))

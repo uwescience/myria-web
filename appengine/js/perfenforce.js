@@ -76,6 +76,10 @@ function generatePSLA() {
         type = i == 0 ? "fact" : "dimension"
         tableDesc.type = type
 
+        if (type == "fact") {
+            factTable = tableDesc.relationKey.relationName
+        }
+
         source = {}
         source.dataType = "S3"
         source.s3Uri = relationS3Buckets[i].value
@@ -132,7 +136,7 @@ function generatePSLA() {
 
     $.ajax({
         type: 'POST',
-        url: "localhost:8753/perfenforce/preparePSLA",
+        url: myria_connection + "/perfenforce/preparePSLA",
         dataType: 'json',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         data: JSON.stringify(tablesList),
@@ -151,13 +155,20 @@ function generatePSLA() {
         }, 10000);
     }
 
-    //once finished, take to PSLA page
+    // this is where we want to load queries
+    loadQueries()
+    prepareDynamicTiers()
+    scrollTo("PSLA");
+}
+
+function scrollTo(hash) {
+    location.hash = "#" + hash;
 }
 
 function getRequest(command) {
     return $.ajax({
         type: 'GET',
-        url: "localhost:8753/" + command,
+        url: myria_connection + "/" + command,
         dataType: 'json',
         global: false,
         async: false,
@@ -167,16 +178,28 @@ function getRequest(command) {
     });
 }
 
+function loadQueries() {
+    console.log("load queries")
+
+    $.when(getRequest('/perfenforce/getCurrentQuery')).done(function (currentQuery) {
+                    console.log(currentQuery)
+                    document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime + " seconds";
+                    currentSLA = currentQuery.slaRuntime;
+                });
+
+    allQueries = result.queries;
+};
+
 /* in progress */
-function populateTiers() {
-    var app = angular.module('tiersDemo', []);
+function prepareDynamicTiers() {
+    var dynamicTiers = angular.module('tiers', []);
 
     // Switching out symbols to prevent conflict with Jinja
-    //app.config(function ($interpolateProvider) {
-    //    $interpolateProvider.startSymbol('{[{').endSymbol('}]}');
-    //});
+    dynamicTiers.config(function ($interpolateProvider) {
+        $interpolateProvider.startSymbol('{[{').endSymbol('}]}');
+    });
 
-    app.filter('keys', function () {
+    dynamicTiers.filter('keys', function () {
         return function (input) {
             if (!input) {
                 return [];
@@ -185,74 +208,103 @@ function populateTiers() {
         }
     });
 
-    app.controller('WizardController', ['$http', 'filterFilter', 'orderByFilter', function (http, filter, orderBy) {
-        this.tiers = [{ "id": 1, "name": "1", "cost": "0.16" }, { "id": 2, "name": "2", "cost": "0.16" }, { "id": 3, "name": "3", "cost": "0.16" }, { "id": 4, "name": "4", "cost": "0.16" }, { "id": 5, "name": "5", "cost": ".64" }]
+    dynamicTiers.value('allQueries', allQueries);
 
-        this.tier = 0;
-        this.allQueries = null;
-        this.queryCache = [];
-        this.executionLog = '';
-        this.step = 1;
 
-        this.setTier = function (tier) {
-            this.tier = tier;
-            localStorage.setItem("tier", tier - 1);
-        };
+    dynamicTiers.controller('WizardController', [
+        '$scope',
+        '$http',
+        'filterFilter',
+        'orderByFilter',
+        'allQueries',
+        function ($scope, http, filter, orderBy, allQueries) {
+            this.tiers = [{ "id": 1, "name": "1", "cost": "0.16" },
+            { "id": 2, "name": "2", "cost": "0.16" },
+            { "id": 3, "name": "3", "cost": "0.16" }]
 
-        this.getTierWizard = function (tier) {
-            currentTier = localStorage.getItem("tier");
-            return this.tiers[currentTier]
-        };
 
-        this.loadQueries = function () {
-            var internal = this;
-            // point to PSLA path here
-            http.get('/data/psla.json').success(function (result) {
-                internal.allQueries = result.queries;
-                internal.step++;
-            });
-        };
+            this.tier = 0;
+            this.allQueries = allQueries;
+            this.queryCache = [];
+            this.executionLog = '';
 
-        this.getQueriesForTier = function (tier) {
-            if (!this.allQueries)
-                return;
+            this.setTier = function (tier) {
+                console.log("setting tier to" + tier)
+                this.tier = tier;
+                localStorage.setItem("tier", tier - 1);
+                selectTier(tier);
+                scrollTo("query-session");
+            };
 
-            if (this.queryCache[tier])
-                return this.queryCache[tier];
+            this.getTierWizard = function (tier) {
+                currentTier = localStorage.getItem("tier");
+                return this.tiers[currentTier]
+            };
 
-            var filteredQueries = filter(this.allQueries, {
-                tier: tier
-            });
+            this.getQueriesForTier = function (tier) {
+                //console.log(allQueries)
+                if (!this.allQueries)
+                    return;
 
-            var orderedQueries = orderBy(filteredQueries, function (query) {
-                return query.runtime;
-            });
+                if (this.queryCache[tier])
+                    return this.queryCache[tier];
 
-            var groupedQueries = {};
-            for (var query in orderedQueries) {
-                var group = 'g' + orderedQueries[query].runtime;
+                var filteredQueries = filter(this.allQueries, {
+                    tier: tier
+                });
+                console.log(filteredQueries)
 
-                if (groupedQueries[group] == null)
-                    groupedQueries[group] = [];
+                var orderedQueries = orderBy(filteredQueries, function (query) {
+                    return query.runtime;
+                });
+                console.log(orderedQueries)
 
-                groupedQueries[group].push(orderedQueries[query]);
-                groupedQueries[group].runtime = orderedQueries[query].runtime;
-            }
+                var groupedQueries = {};
+                for (var query in orderedQueries) {
+                    var group = 'g' + orderedQueries[query].runtime;
 
-            this.queryCache[tier] = groupedQueries;
+                    if (groupedQueries[group] == null)
+                        groupedQueries[group] = [];
 
-            return groupedQueries;
-        };
+                    groupedQueries[group].push(orderedQueries[query]);
+                    groupedQueries[group].runtime = orderedQueries[query].runtime;
+                }
 
-        this.log = function (text) {
-            this.executionLog = text + '\n';
-        };
-    }]);
+                this.queryCache[tier] = groupedQueries;
+                return groupedQueries;
+            };
+
+            this.log = function (text) {
+                this.executionLog = text + '\n';
+            };
+        }]);
+
+    // Enable angular app
+    var section = document.getElementById('angular-section');
+    angular.bootstrap(section, ['tiers']);
+}
+
+function selectTier(tier) {
+
+var request = new FormData();
+        request.append('tier', tier);
+
+    $.ajax({
+        type: 'POST',
+        url: myria_connection + "/perfenforce/setTier",
+        dataType: 'json',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        data: request,
+        global: false,
+        async: true,
+        success: function (data) {
+            return data;
+        }
+    });
 }
 
 
-
-function getSLA() {
+function getQuerySLA() {
     var executeButton = document.getElementById('executeButton')
     if (executeButton !== null) {
         document.getElementById('slaInfo').innerHTML = ""
@@ -261,12 +313,12 @@ function getSLA() {
         querySQL = editor.getValue();
         var request = new FormData();
         request.append('querySQL', querySQL);
-        request.append('path', '/usr/local/myria/perfenforce_files/ScalingAlgorithms/Live/');
+        request.append('path', '/usr/local/myria/perfenforce_files/ScalingAlgorithms/');
 
         //send predict with query value
         $.ajax({
             type: 'POST',
-            url: host + ":8753/perfenforce/predict",
+            url: myria_connection + "/perfenforce/findSLA",
             data: request,
             contentType: false,
             global: false,
@@ -274,7 +326,7 @@ function getSLA() {
             processData: false,
             success: function (data) {
                 //get the current query and update the label
-                $.when(getRequest('/perfenforce/get-current-query')).done(function (currentQuery) {
+                $.when(getRequest('/perfenforce/getCurrentQuery')).done(function (currentQuery) {
                     console.log(currentQuery)
                     document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime + " seconds";
                     currentSLA = currentQuery.slaRuntime;
@@ -292,7 +344,7 @@ function runQuery() {
     var executeButton = document.getElementById('executeButton')
     if (executeButton !== null) {
 
-        $.when(getRequest('/perfenforce/cluster-size')).done(function (clusterSize) {
+        $.when(getRequest('/perfenforce/getClusterSize')).done(function (clusterSize) {
             console.log("Cluster size " + clusterSize)
             console.log("Tier " + getTier())
 
@@ -311,13 +363,13 @@ function executePlan() {
     //need to create plan
     var clusterSize = 0
     var workerArray = [];
-    $.when(getRequest('/perfenforce/cluster-size')).done(function (clusterSize) {
+    $.when(getRequest('/perfenforce/getClusterSize')).done(function (clusterSize) {
         for (i = 1; i <= clusterSize; i++) {
             workerArray.push(i)
         }
         currentQueryText = editor.getValue();
         querySQL = editor.getValue();
-        querySQL = querySQL.replace("lineitem", "lineitem" + clusterSize)
+        querySQL = querySQL.replace(factTable, factTable + clusterSize)
         json_plan = {}
         json_plan.rawQuery = querySQL
         json_plan.logicalRa = ""
@@ -346,7 +398,7 @@ function executePlan() {
 
         console.log(JSON.stringify(json_plan))
 
-        var request = $.post("http://localhost:27080/executejson", {
+        var request = $.post("/executejson", {
             query: query,
             language: "MyriaL",
             jsonQuery: JSON.stringify(json_plan)
@@ -368,7 +420,7 @@ documentQueryStatus = function (result) {
 
     if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED') {
         setTimeout(function () {
-            $.get("http://localhost:27080/executejson", {
+            $.get("/executejson", {
                 queryId: query_id,
                 language: 'MyriaL'
             }).success(function (newStatus) {
@@ -382,7 +434,7 @@ documentQueryStatus = function (result) {
         // Make it block :( 
         $.ajax({
             type: 'POST',
-            url: host + ":8753/perfenforce/add-data-point",
+            url: myria_connection + "/perfenforce/recordRealRuntime",
             data: request,
             contentType: false,
             global: false,
@@ -431,7 +483,7 @@ function checkQueryStatus(query_id) {
     var errFunc = function (error) {
         displayQueryError(error, query_id);
     };
-    $.ajax("http://localhost:27080/execute", {
+    $.ajax("/execute", {
         type: 'GET',
         data: {
             queryId: query_id,
@@ -487,7 +539,6 @@ function multiline(elt, text) {
 }
 
 //To initialize
-dimID = 0
 $(document).ready(function () {
     $("#pkTooltip").tooltip();
 });
