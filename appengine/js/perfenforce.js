@@ -149,16 +149,20 @@ function generatePSLA() {
 
     $('#startPSLA').button('loading');
 
-    while (getRequest('isDonePSLA') == 'false') {
-        setTimeout(function () {
+
+    console.log(!getRequest('/perfenforce/isDonePSLA').responseText)
+    while (!getRequest('/perfenforce/isDonePSLA').responseText) {
             console.log("not finished")
-        }, 10000);
     }
 
+    $('#startPSLA').button('reset');
+
+
     // this is where we want to load queries
+    scrollTo("PSLA");
     loadQueries()
     prepareDynamicTiers()
-    scrollTo("PSLA");
+    
 }
 
 function scrollTo(hash) {
@@ -168,7 +172,7 @@ function scrollTo(hash) {
 function getRequest(command) {
     return $.ajax({
         type: 'GET',
-        url: myria_connection + "/" + command,
+        url: myria_connection  + command,
         dataType: 'json',
         global: false,
         async: false,
@@ -181,10 +185,9 @@ function getRequest(command) {
 function loadQueries() {
     console.log("load queries")
 
-    $.when(getRequest('/perfenforce/getCurrentQuery')).done(function (currentQuery) {
-                    console.log(currentQuery)
-                    document.getElementById("slaInfo").innerHTML = "Expected Runtime (from SLA): " + currentQuery.slaRuntime + " seconds";
-                    currentSLA = currentQuery.slaRuntime;
+    result = null
+    $.when(getRequest('/perfenforce/getPSLA')).done(function (data) {
+                    result = data
                 });
 
     allQueries = result.queries;
@@ -285,22 +288,22 @@ function prepareDynamicTiers() {
 }
 
 function selectTier(tier) {
-
-var request = new FormData();
+        var request = new FormData();
         request.append('tier', tier);
 
-    $.ajax({
-        type: 'POST',
-        url: myria_connection + "/perfenforce/setTier",
-        dataType: 'json',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        data: request,
-        global: false,
-        async: true,
-        success: function (data) {
-            return data;
-        }
-    });
+        //send predict with query value
+        $.ajax({
+            type: 'POST',
+            url: myria_connection + "/perfenforce/setTier",
+            data: request,
+            contentType: false,
+            global: false,
+            async: false,
+            processData: false,
+            success: function (data) {
+                return data;
+            }
+        });
 }
 
 
@@ -542,3 +545,7 @@ function multiline(elt, text) {
 $(document).ready(function () {
     $("#pkTooltip").tooltip();
 });
+loadEditor(0);
+loadQueries();
+prepareDynamicTiers();
+scrollTo("PSLA");

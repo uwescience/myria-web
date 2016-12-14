@@ -110,14 +110,14 @@
 </div>
 </div>
 {% endblock %} {% block footer %}
-<script type="text/javascript" src="js/perfenforce.js"></script>
 <script type="text/javascript" src="js/codemirror.js"></script>
 <script type="text/javascript" src="js/myrial.js"></script>
 <script>
     {% autoescape false %}
     var myrialKeywords = {{ myrialKeywords }};
+    var myria_connection = "{{myriaConnection}}";
     {% endautoescape %}
-loadEditor(0);
+
 var editor = CodeMirror.fromTextArea(
     document.getElementById('querySessionEditor'), {
         mode: 'application/js',
@@ -132,8 +132,6 @@ editor.getDoc().setValue('SELECT *'
                         + 'WHERE l_linenumber = 7;');
 editorLanguage = "MyriaL"
 
-var myria_connection = {{myriaConnection}}
-
 var multiway_join_checked = false;
 var push_sql_checked = true;
 var query = null;
@@ -145,4 +143,6 @@ var factTable = null
 
 var currentSLA = 0;
 var currentClusterSize = 0;
-</script> {% endblock %}
+</script> 
+<script type="text/javascript" src="js/perfenforce.js"></script>
+{% endblock %}
