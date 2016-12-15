@@ -561,6 +561,54 @@ class Execute(MyriaHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
 
+class ExecuteJSON(MyriaHandler):
+
+    def post(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+        jsonQuery = self.request.get("jsonQuery")
+        try:
+            catalog = MyriaCatalog(conn)
+            compiled = json.loads(jsonQuery)
+
+            query_status = conn.submit_query(compiled)
+            query_url = 'http://%s:%d/execute?query_id=%d' %\
+                (self.app.hostname, self.app.port, query_status['queryId'])
+            self.response.status = 201
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.headers['Content-Location'] = query_url
+            self.response.write(json.dumps(query_status))
+            return
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            return
+        except requests.ConnectionError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write(
+                'Error 503 (Unavailable): \
+                 Unable to connect to REST server to issue query')
+            return
+
+    def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+
+        query_id = self.request.get("queryId")
+
+        if not query_id:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): missing query_id")
+            return
+
+        query_status = conn.get_query_status(query_id)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(query_status))
+
+
 
 class Dot(MyriaHandler):
 
@@ -600,6 +648,7 @@ class Application(webapp2.WSGIApplication):
             ('/optimize', Optimize),
             ('/compile', Compile),
             ('/execute', Execute),
+            ('/executejson', ExecuteJSON),
             ('/dot', Dot),
             ('/examples', Examples),
             ('/demo3', Demo3),
@@ -650,3 +699,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

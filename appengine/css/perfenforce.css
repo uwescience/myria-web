@@ -23,3 +23,25 @@
     text-decoration: none;
     margin-top: 500px;
 }
+
+#previousQueryList
+{
+  height: 100px;
+  overflow: auto;
+  border: 1px solid black;
+}
+
+ul {
+  padding: 0;
+}
+li {
+  margin: 0;
+  list-style-type: none;
+}
+
+
+.list-group-item{
+border: 1px solid #808080;
+}
+
+.top-buffer { margin-top:40px; }
