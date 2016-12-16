@@ -29,7 +29,7 @@ function addDimension() {
 	  <textarea cols="83" rows="2" class="form-control" name="relationSchema">schema(p_partkey:int, p_name:string, p_mfgr:string,p_category:string, p_brand:string, p_color:string, p_type:string, p_size:int, p_container:string)</textarea>\
 	  <br>\
       <label> Delimiter </label>\
-      <input type="text" class="form-control" value="," name="relationDelimiter">\
+      <input type="text" class="form-control" value="|" name="relationDelimiter">\
       <br>\
 	  <label>Primary Key Index <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="List the index of the primary key" id="dimPkTooltip"></label>\
       <input type="text" class="form-control" value="0" name="relationPrimaryKey">\
@@ -141,27 +141,47 @@ function generatePSLA() {
     });
 
     $('#startPSLA').button('loading');
-    while (!getRequest('/perfenforce/isDonePSLA').responseText) {
-    }
-    $('#startPSLA').button('reset');
-
-    document.getElementById('startPSLA').disabled = true;
-    document.getElementById('angular-section').style.visibility = 'visible'
-    scrollTo("PSLA");
-    loadQueries()
-    prepareDynamicTiers()
+    var interval = setInterval(function () {
+        $.when(getRequestText('/perfenforce/isDonePSLA')).done(function (data) {
+            if(data == true) {
+                $('#startPSLA').button('reset');
+                document.getElementById('startPSLA').disabled = true;
+                document.getElementById('angular-section').style.visibility = 'visible'
+                scrollTo("PSLA");
+                loadQueries()
+                prepareDynamicTiers()
+                clearInterval(interval);
+            }
+            $.when(getRequestText('/perfenforce/getDataPreparationStatus')).done(function (data) {
+                    document.getElementById('PSLAStatus').innerHTML = 'Status: ' + data
+                });
+        })
+    }, 10000);
 }
 
 function scrollTo(hash) {
     location.hash = "#" + hash;
 }
 
+
+function getRequestText(command) {
+    return $.ajax({
+        type: 'GET',
+        url: myria_connection + command,
+        global: false,
+        async: false,
+        success: function (data) {
+            return data;
+        }
+    });
+}
+
 function getRequest(command) {
     return $.ajax({
         type: 'GET',
         url: myria_connection + command,
-        dataType: 'json',
         global: false,
+        dataType: 'json',
         async: false,
         success: function (data) {
             return data;
@@ -264,6 +284,8 @@ function getQuerySLA() {
     document.getElementById('slaInfo').innerHTML = ""
     document.getElementById('clusterInfo').innerHTML = ""
     document.getElementById('runningInfo').innerHTML = ""
+
+    document.getElementById('PSLAStatus').innerHTML = ""
 
     querySQL = editor.getValue();
     var request = new FormData();

@@ -34,12 +34,17 @@
         </div>
         <div id="additionalDimensionTables"></div>
         <div id="tableNavigationButtons">
-            <!-- Button to add more dimension tables -->
-            <button type="button" class="btn btn-success-outline" onclick="addDimension()">Add Dimension Table</button>
-            <!-- Button to remove latest dimension table -->
-            <button type="button" class="btn btn-success-outline" onclick="removeDimension()">Remove Dimension Table</button>
-            <!-- Button to start generating PSLA-->
-            <button type="button" class="btn btn-primary" id="startPSLA" onclick="generatePSLA()" data-loading-text="<span class='glyphicon-left glyphicon glyphicon-refresh spinning'></span> Generating PSLA">Start PSLA Generation (will take a few mintues)</button>
+            <div class="row">
+                <!-- Button to add more dimension tables -->
+                <button type="button" class="btn btn-success-outline" onclick="addDimension()">Add Dimension Table</button>
+                <!-- Button to remove latest dimension table -->
+                <button type="button" class="btn btn-success-outline" onclick="removeDimension()">Remove Dimension Table</button>
+                <!-- Button to start generating PSLA-->
+                <button type="button" class="btn btn-primary" id="startPSLA" onclick="generatePSLA()" data-loading-text="<span class='glyphicon-left glyphicon glyphicon-refresh spinning'></span> Generating PSLA">Start PSLA Generation (will take a few mintues)</button>
+            </div>
+             <div class="row">
+                <label id="PSLAStatus"></label>
+            </div>
         </div>
     </div>
     <div id="angular-section" class="container col-md-10 page-anchor" ng-controller="WizardController as wizard" style="visibility: hidden">
