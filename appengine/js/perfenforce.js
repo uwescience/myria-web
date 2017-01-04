@@ -10,7 +10,10 @@ function loadEditor(relationCounter) {
         viewportMargin: Infinity,
         showTrailingSpace: true
     });
-    editor.setOption('mode', { name: 'myrial', singleLineStringErrors: false });
+    editor.setOption('mode', {
+        name: 'myrial',
+        singleLineStringErrors: false
+    });
 }
 
 function addDimension() {
@@ -74,6 +77,7 @@ function generatePSLA() {
 
         if (type == "fact") {
             factTable = tableDesc.relationKey.relationName
+            editor.getDoc().setValue('SELECT *' + '\n' + 'FROM "public:adhoc:{0}" AS L'.format(factTable));
         }
 
         source = {}
@@ -131,19 +135,22 @@ function generatePSLA() {
         type: 'POST',
         url: myria_connection + "/perfenforce/preparePSLA",
         dataType: 'json',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
         data: JSON.stringify(tablesList),
         global: false,
         async: true,
-        success: function (data) {
+        success: function(data) {
             return data;
         }
     });
 
     $('#startPSLA').button('loading');
-    var interval = setInterval(function () {
-        $.when(getRequestText('/perfenforce/isDonePSLA')).done(function (data) {
-            if(data == true) {
+    var interval = setInterval(function() {
+        $.when(getRequest('/perfenforce/isDonePSLA', 'String')).done(function(data) {
+            if (data == true) {
                 $('#startPSLA').button('reset');
                 document.getElementById('startPSLA').disabled = true;
                 document.getElementById('angular-section').style.visibility = 'visible'
@@ -152,9 +159,9 @@ function generatePSLA() {
                 prepareDynamicTiers()
                 clearInterval(interval);
             }
-            $.when(getRequestText('/perfenforce/getDataPreparationStatus')).done(function (data) {
-                    document.getElementById('PSLAStatus').innerHTML = 'Status: ' + data
-                });
+            $.when(getRequest('/perfenforce/getDataPreparationStatus', 'String')).done(function(data) {
+                document.getElementById('PSLAStatus').innerHTML = 'Status: ' + data
+            });
         })
     }, 10000);
 }
@@ -164,33 +171,21 @@ function scrollTo(hash) {
 }
 
 
-function getRequestText(command) {
+function getRequest(command, type) {
     return $.ajax({
         type: 'GET',
         url: myria_connection + command,
         global: false,
+        datatype: type,
         async: false,
-        success: function (data) {
-            return data;
-        }
-    });
-}
-
-function getRequest(command) {
-    return $.ajax({
-        type: 'GET',
-        url: myria_connection + command,
-        global: false,
-        dataType: 'json',
-        async: false,
-        success: function (data) {
+        success: function(data) {
             return data;
         }
     });
 }
 
 function loadQueries() {
-    $.when(getRequest('/perfenforce/getPSLA')).done(function (data) {
+    $.when(getRequest('/perfenforce/getPSLA', 'json')).done(function(data) {
         allQueries = data.queries;
     });
 };
@@ -199,12 +194,12 @@ function prepareDynamicTiers() {
     var dynamicTiers = angular.module('tiers', []);
 
     // Switching out symbols to prevent conflict with Jinja
-    dynamicTiers.config(function ($interpolateProvider) {
+    dynamicTiers.config(function($interpolateProvider) {
         $interpolateProvider.startSymbol('{[{').endSymbol('}]}');
     });
 
-    dynamicTiers.filter('keys', function () {
-        return function (input) {
+    dynamicTiers.filter('keys', function() {
+        return function(input) {
             if (!input) {
                 return [];
             }
@@ -218,13 +213,23 @@ function prepareDynamicTiers() {
         'filterFilter',
         'orderByFilter',
         'allQueries',
-        function (http, filter, orderBy, allQueries) {
-            this.tiers = [{ "id": 1, "name": "1", "cost": "0.52" },
-            { "id": 2, "name": "2", "cost": "0.78" },
-            { "id": 3, "name": "3", "cost": "1.04" }]
+        function(http, filter, orderBy, allQueries) {
+            this.tiers = [{
+                "id": 1,
+                "name": "1",
+                "cost": "0.52"
+            }, {
+                "id": 2,
+                "name": "2",
+                "cost": "0.78"
+            }, {
+                "id": 3,
+                "name": "3",
+                "cost": "1.04"
+            }]
             this.allQueries = allQueries;
 
-            this.setTier = function (tier) {
+            this.setTier = function(tier) {
                 var request = new FormData();
                 request.append('tier', tier);
                 $.ajax({
@@ -235,7 +240,7 @@ function prepareDynamicTiers() {
                     global: false,
                     async: false,
                     processData: false,
-                    success: function (data) {
+                    success: function(data) {
                         return data;
                     }
                 });
@@ -244,7 +249,7 @@ function prepareDynamicTiers() {
                 scrollTo("query");
             };
 
-            this.getQueriesForTier = function (tier) {
+            this.getQueriesForTier = function(tier) {
                 if (!this.allQueries)
                     return;
 
@@ -252,7 +257,7 @@ function prepareDynamicTiers() {
                     tier: tier
                 });
 
-                var orderedQueries = orderBy(filteredQueries, function (query) {
+                var orderedQueries = orderBy(filteredQueries, function(query) {
                     return query.runtime;
                 });
 
@@ -269,7 +274,8 @@ function prepareDynamicTiers() {
 
                 return groupedQueries;
             };
-        }]);
+        }
+    ]);
 
     // Enable angular application
     var section = document.getElementById('angular-section');
@@ -299,8 +305,8 @@ function getQuerySLA() {
         global: false,
         async: true,
         processData: false,
-        success: function (data) {
-            $.when(getRequest('/perfenforce/getCurrentQuery')).done(function (currentQuery) {
+        success: function(data) {
+            $.when(getRequest('/perfenforce/getCurrentQuery', 'json')).done(function(currentQuery) {
                 document.getElementById("slaInfo").innerHTML = "SLA for query: " + currentQuery.slaRuntime + " seconds";
                 currentSLA = currentQuery.slaRuntime;
                 document.getElementById('executeButton').disabled = false;
@@ -312,7 +318,7 @@ function getQuerySLA() {
 }
 
 function runQuery() {
-    $.when(getRequest('/perfenforce/getClusterSize')).done(function (clusterSize) {
+    $.when(getRequest('/perfenforce/getClusterSize', 'json')).done(function(clusterSize) {
         document.getElementById('clusterInfo').innerHTML = 'Myria is using <font color="blue">' + clusterSize + '</font> workers'
         currentClusterSize = clusterSize
         executePlan()
@@ -323,7 +329,7 @@ function runQuery() {
 function executePlan() {
     var clusterSize = 0
     var workerArray = [];
-    $.when(getRequest('/perfenforce/getClusterSize')).done(function (clusterSize) {
+    $.when(getRequest('/perfenforce/getClusterSize', 'json')).done(function(clusterSize) {
         for (i = 1; i <= clusterSize; i++) {
             workerArray.push(i)
         }
@@ -358,13 +364,13 @@ function executePlan() {
 
         var request = $.post("/executejson", {
             jsonQuery: JSON.stringify(json_plan)
-        }).success(function (newStatus) {
+        }).success(function(newStatus) {
             documentQueryStatus(newStatus);
         });
     });
 }
 
-documentQueryStatus = function (result) {
+documentQueryStatus = function(result) {
     var start_time = result['startTime'];
     var end_time = result['finishTime'];
     var elapsed = result['elapsedNanos'] / 1e9;
@@ -374,15 +380,14 @@ documentQueryStatus = function (result) {
     document.getElementById('runningInfo').innerHTML = ("Query Status: " + status + " <br> Seconds Elapsed: " + (elapsed));
 
     if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED') {
-        setTimeout(function () {
+        setTimeout(function() {
             $.get("/executejson", {
                 queryId: query_id
-            }).success(function (newStatus) {
+            }).success(function(newStatus) {
                 documentQueryStatus(newStatus);
             })
         }, 1000);
-    }
-    else if (status == "SUCCESS") {
+    } else if (status == "SUCCESS") {
         var request = new FormData();
         request.append('dataPointRuntime', elapsed);
         $.ajax({
@@ -393,7 +398,7 @@ documentQueryStatus = function (result) {
             global: false,
             async: false,
             processData: false,
-            success: function (data) {
+            success: function(data) {
                 return data;
             }
         });
@@ -404,24 +409,15 @@ documentQueryStatus = function (result) {
 function addRuntimeToList(queryText, runtime, sla, clusterSize) {
     if (runtime > sla) {
         $("#previousQueryList ul").prepend(
-            '<li><p>Query: ' + queryText
-            + '<br>Actual Runtime: <font color="red">' + runtime + '</font>'
-            + '<br>Expected Runtime: ' + sla
-            + '<br>Cluster Size Ran: ' + clusterSize
-            + '</p></li>');
-    }
-    else {
+            '<li><p>Query: ' + queryText + '<br>Actual Runtime: <font color="red">' + runtime + '</font>' + '<br>Expected Runtime: ' + sla + '<br>Cluster Size Ran: ' + clusterSize + '</p></li>');
+    } else {
         $("#previousQueryList ul").prepend(
-            '<li><p>Query: ' + queryText
-            + '<br>Actual Runtime: <font color="green">' + runtime + '</font>'
-            + '<br>Expected Runtime: ' + sla
-            + '<br>Cluster Size Ran: ' + clusterSize
-            + '</p></li>');
+            '<li><p>Query: ' + queryText + '<br>Actual Runtime: <font color="green">' + runtime + '</font>' + '<br>Expected Runtime: ' + sla + '<br>Cluster Size Ran: ' + clusterSize + '</p></li>');
     }
 }
 
 function checkQueryStatus(query_id) {
-    var errFunc = function (error) {
+    var errFunc = function(error) {
         displayQueryError(error, query_id);
     };
     $.ajax("/execute", {
@@ -439,7 +435,7 @@ function displayQueryError(error, query_id) {
     var pre = document.createElement('pre');
     multiline($('#runningInfo').empty().append(pre),
         "Error checking query status; it's probably done. Attempting to refresh\n" + error.responseText);
-    setTimeout(function () {
+    setTimeout(function() {
         checkQueryStatus(query_id);
     }, 1000);
 }
@@ -450,21 +446,41 @@ function displayQueryStatus(query_status) {
     var status = query_status['status'];
     var html = '';
 
-    html += t.row({ name: 'Query Status', val: status });
-    html += t.time_row({ name: 'Start', val: query_status['startTime'] });
-    html += t.time_row({ name: 'End', val: query_status['finishTime'] });
-    html += t.row({ name: 'Elapsed', val: query_status['elapsedNanos'] / 1000000000 });
-    html = t.table({ myriaConnection: myriaConnection, query_id: query_id, content: html });
+    html += t.row({
+        name: 'Query Status',
+        val: status
+    });
+    html += t.time_row({
+        name: 'Start',
+        val: query_status['startTime']
+    });
+    html += t.time_row({
+        name: 'End',
+        val: query_status['finishTime']
+    });
+    html += t.row({
+        name: 'Elapsed',
+        val: query_status['elapsedNanos'] / 1000000000
+    });
+    html = t.table({
+        myriaConnection: myriaConnection,
+        query_id: query_id,
+        content: html
+    });
 
     if (status === 'SUCCESS' && query_status['profilingMode'].indexOf('QUERY') > -1) {
-        html += t.prof_link({ query_id: query_id });
+        html += t.prof_link({
+            query_id: query_id
+        });
     } else if (status === 'ERROR') {
-        html += t.err_msg({ message: query_status['message'] || '(missing)' });
+        html += t.err_msg({
+            message: query_status['message'] || '(missing)'
+        });
     }
     $("#runningInfo").html(html);
 
     if (status === 'ACCEPTED' || status === 'RUNNING' || status === 'PAUSED' || status === 'KILLING') {
-        setTimeout(function () {
+        setTimeout(function() {
             checkQueryStatus(query_id);
         }, 1000);
     }
@@ -495,12 +511,10 @@ function multiline(elt, text) {
 }
 
 //To initialize
-$(document).ready(function () {
+$(document).ready(function() {
     $("#pkTooltip").tooltip();
 });
 loadEditor(0);
-var multiway_join_checked = false;
-var push_sql_checked = true;
 
 var dimID = 0
 var allQueries = null

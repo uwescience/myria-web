@@ -1,157 +1,151 @@
 {% extends "base.html" %} {% block extra_head %}
-<link href="css/codemirror.css" type="text/css" rel="stylesheet" />
-<link href="css/github.css" type="text/css" rel="stylesheet" />
-<link href="css/select2.css" type="text/css" rel="stylesheet" />
-<link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
-<link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="js/angular.min.js"></script>
-<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script> {% endblock %} {% block editor_active %} class="active"
-{%endblock %} {% block content %}
-<h1>PerfEnforce</h1>
-<h2>Schema Input</h2>
-<div>
-    <div id="schema-section" class="container col-md-10">
-        <a name="inputSchema"></a>
-        <div class="panel panel-danger">
-            <div class="panel-heading">Fact Table</div>
-            <div class="panel-body">
-                <label>Relation Name</label>
-                <input type="text" class="form-control" value="lineorder" name="relationName">
-                <br>
-                <label>S3 Bucket/Key</label>
-                <input type="text" class="form-control" value="s3://tpchssb/lineorderOUT.csv" name="relationS3Bucket">
-                <br>
-                <label>MyriaL CSV Statement</label>
-                <textarea cols="100" rows="2" class="form-control" name="relationSchema">schema(l_orderkey:int, l_linenumber:int, l_custkey:int, l_partkey:int, l_suppkey:int, l_orderdate:string, l_orderpriority:string, l_shippriority:int, l_quantity:float, l_extendedprice:float, l_ordtotalprice:float, l_discount:float, l_revenue:int, l_supplycost:int, l_tax:float, l_commitdate:long, l_shipmode:string)</textarea>
-                <br>
-                <label> Delimiter </label>
-                <input type="text" class="form-control" value="|" name="relationDelimiter">
-                <br>
-                <label>Primary Key Index <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="List the index of the primary key" id="pkTooltip"></label>
-                <input type="text" class="form-control" name="relationPrimaryKey" value="0,1">
-                <input type="text" class="form-control hidden" value="NA" name="relationForeignKey">
+    <link href="css/codemirror.css" type="text/css" rel="stylesheet" />
+    <link href="css/github.css" type="text/css" rel="stylesheet" />
+    <link href="css/select2.css" type="text/css" rel="stylesheet" />
+    <link href="css/select2-bootstrap.css" type="text/css" rel="stylesheet" />
+    <link href="css/perfenforce.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script> {% endblock %} {% block editor_active %} class="active"
+    {%endblock %} {% block content %}
+        <h1>PerfEnforce</h1>
+        <h2>Schema Input</h2>
+        <div>
+            <div id="schema-section" class="container col-md-10">
+                <a name="inputSchema"></a>
+                <div class="panel panel-danger">
+                    <div class="panel-heading">Fact Table</div>
+                    <div class="panel-body">
+                        <label>Relation Name</label>
+                        <input type="text" class="form-control" value="lineorder" name="relationName">
+                        <br>
+                        <label>S3 Bucket/Key</label>
+                        <input type="text" class="form-control" value="s3://tpchssb/lineorderOUT.csv" name="relationS3Bucket">
+                        <br>
+                        <label>MyriaL CSV Statement</label>
+                        <textarea cols="100" rows="2" class="form-control" name="relationSchema">schema(l_orderkey:int, l_linenumber:int, l_custkey:int, l_partkey:int, l_suppkey:int, l_orderdate:string, l_orderpriority:string, l_shippriority:int, l_quantity:float, l_extendedprice:float, l_ordtotalprice:float, l_discount:float, l_revenue:int, l_supplycost:int, l_tax:float, l_commitdate:long, l_shipmode:string)</textarea>
+                        <br>
+                        <label> Delimiter </label>
+                        <input type="text" class="form-control" value="|" name="relationDelimiter">
+                        <br>
+                        <label>Primary Key Index <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="List the index of the primary key" id="pkTooltip"></label>
+                        <input type="text" class="form-control" name="relationPrimaryKey" value="0,1">
+                        <input type="text" class="form-control hidden" value="NA" name="relationForeignKey">
+                    </div>
+                </div>
+                <div id="additionalDimensionTables"></div>
+                <div id="tableNavigationButtons">
+                    <div class="row">
+                        <!-- Button to add more dimension tables -->
+                        <button type="button" class="btn btn-success-outline" onclick="addDimension()">Add Dimension Table</button>
+                        <!-- Button to remove latest dimension table -->
+                        <button type="button" class="btn btn-success-outline" onclick="removeDimension()">Remove Dimension Table</button>
+                        <!-- Button to start generating PSLA-->
+                        <button type="button" class="btn btn-primary" id="startPSLA" onclick="generatePSLA()" data-loading-text="<span class='glyphicon-left glyphicon glyphicon-refresh spinning'></span> Generating PSLA">Start PSLA Generation (will take a few mintues)</button>
+                    </div>
+                    <div class="row">
+                        <label id="PSLAStatus"></label>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div id="additionalDimensionTables"></div>
-        <div id="tableNavigationButtons">
-            <div class="row">
-                <!-- Button to add more dimension tables -->
-                <button type="button" class="btn btn-success-outline" onclick="addDimension()">Add Dimension Table</button>
-                <!-- Button to remove latest dimension table -->
-                <button type="button" class="btn btn-success-outline" onclick="removeDimension()">Remove Dimension Table</button>
-                <!-- Button to start generating PSLA-->
-                <button type="button" class="btn btn-primary" id="startPSLA" onclick="generatePSLA()" data-loading-text="<span class='glyphicon-left glyphicon glyphicon-refresh spinning'></span> Generating PSLA">Start PSLA Generation (will take a few mintues)</button>
-            </div>
-             <div class="row">
-                <label id="PSLAStatus"></label>
-            </div>
-        </div>
-    </div>
-    <div id="angular-section" class="container col-md-10 page-anchor" ng-controller="WizardController as wizard" style="visibility: hidden">
-        <a name="PSLA"></a>
-        <h2>Select a Service Level Agreement (SLA) Tier</h2>
-        <i>The following SLAs were generated based on the performance estimates of queries based on your dataset.</i>
-        <div class="panel-body">
-            <div class="row-md-12">
-                <div class="col-md-8" ng-repeat='tier in wizard.tiers'>
-                    <!-- Tier panel start -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Tier #{[{ tier.name }]}</div>
-                        <!-- Tier data -->
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Query Template</th>
-                                    <th>Runtime (seconds)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
-                                    <td width="90%">
-                                        <span ng-repeat="query in queryGroup" class="sla-size">
-                                                {[{ query.template }]}<br />
-                                            </span>
-                                    </td>
-                                    <td class="sla-size" width="10%">{[{ queryGroup.runtime }]}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="panel-body">
-                            <a type="button" class="btn btn-primary tierButton" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+            <div id="angular-section" class="container col-md-10 page-anchor" ng-controller="WizardController as wizard" style="visibility: hidden">
+                <a name="PSLA"></a>
+                <h2>Select a Service Level Agreement (SLA) Tier</h2>
+                <i>The following SLAs were generated based on the performance estimates of queries based on your dataset.</i>
+                <div class="panel-body">
+                    <div class="row-md-12">
+                        <div class="col-md-8" ng-repeat='tier in wizard.tiers'>
+                            <!-- Tier panel start -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Tier #{[{ tier.name }]}</div>
+                                <!-- Tier data -->
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Query Template</th>
+                                            <th>Runtime (seconds)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="key in wizard.getQueriesForTier(tier.id) | keys" ng-init="queryGroup = wizard.getQueriesForTier(tier.id)[key]">
+                                            <td width="90%">
+                                                <span ng-repeat="query in queryGroup" class="sla-size">
+                                                    {[{ query.template }]}<br />
+                                                </span>
+                                            </td>
+                                            <td class="sla-size" width="10%">{[{ queryGroup.runtime }]}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="panel-body">
+                                    <a type="button" class="btn btn-primary tierButton" ng-click="wizard.setTier(tier.id)"><span class="glyphicon glyphicon-shopping-cart"></span> Purchase @ {[{ tier.cost | currency }]}/hour</a>
+                                </div>
+                            </div>
+                            <!-- Tier panel end -->
                         </div>
                     </div>
-                    <!-- Tier panel end -->
                 </div>
             </div>
+            <div id="query-section" class="container col-md-10 page-anchor" style="visibility: hidden">
+                <a name="query"></a>
+                <h2>Query Session</h2>
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>Write a Query...</h4>
+                        <textarea id="querySessionEditor"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <button type="button" id="slaButton" class="btn btn-primary" onclick="getQuerySLA()"><span class="glyphicon glyphicon-question-sign"></span> Find SLA</button>
+                        <button type="button" id="executeButton" class="btn btn-primary" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
+                    </div>
+                </div>
+                <div class="row top-buffer" style="margin-left:5px">
+                    <div class="col-md-8">
+                        <div class="row">
+                            <label id="slaInfo"></label>
+                        </div>
+                        <div class="row">
+                            <label id="clusterInfo"></label>
+                        </div>
+                        <div class="row">
+                            <label id="runningInfo"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row top-buffer" id="previousLog">
+                    <div class="col-md-8">
+                        Previous Queries Log
+                        <div id="previousQueryList" class="queryStatusLabel">
+                            <ul>
+                                <li>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-left:5px;margin-top:10px">
+                    <button type="button" id="restartButton" class="btn btn-danger" onclick="restart()">Start New PerfEnforce Session</button>
+                </div>
+            </div>
+            <div class="container col-md-10 page-anchor"></div>
         </div>
     </div>
-    <div id="query-section" class="container col-md-10 page-anchor" style="visibility: hidden">
-        <a name="query"></a>
-        <h2>Query Session</h2>
-        <div class="row">
-            <div class="col-md-8">
-                <h4>Write a Query...</h4>
-                <textarea id="querySessionEditor"></textarea>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-8">
-                <button type="button" id="slaButton" class="btn btn-primary" onclick="getQuerySLA()"><span class="glyphicon glyphicon-question-sign"></span> Find SLA</button>
-                <button type="button" id="executeButton" class="btn btn-primary" onclick="runQuery()" disabled><span class="glyphicon glyphicon-play"></span> Execute</button>
-            </div>
-        </div>
-        <div class="row top-buffer" style="margin-left:5px">
-            <div class="col-md-8">
-                <div class="row">
-                    <label id="slaInfo"></label>
-                </div>
-                <div class="row">
-                    <label id="clusterInfo"></label>
-                </div>
-                <div class="row">
-                    <label id="runningInfo"></label>
-                </div>
-            </div>
-        </div>
-        <div class="row top-buffer" id="previousLog">
-            <div class="col-md-8">
-                Previous Queries Log
-                <div id="previousQueryList" class="queryStatusLabel">
-                    <ul>
-                        <li>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="row" style="margin-left:5px;margin-top:10px">
-            <button type="button" id="restartButton" class="btn btn-danger" onclick="restart()">Start New PerfEnforce Session</button>
-        </div>
-    </div>
-    <div class="container col-md-10 page-anchor"></div>
-</div>
-</div>
 {% endblock %} {% block footer %}
 <script type="text/javascript" src="js/codemirror.js"></script>
 <script type="text/javascript" src="js/myrial.js"></script>
 <script>
-    {% autoescape false %}
-    var myrialKeywords = {{ myrialKeywords }};
-    var myria_connection = "{{myriaConnection}}";
-    {% endautoescape %}
-
+{% autoescape false %}
+var myrialKeywords = {{ myrialKeywords }};
+var myria_connection = "{{myriaConnection}}";
+{% endautoescape %}
 var editor = CodeMirror.fromTextArea(
-    document.getElementById('querySessionEditor'), {
-        mode: 'application/js',
-        lineNumbers: true,
-        lineWrapping: true,
-        viewportMargin: Infinity,
-    });
-editor.getDoc().setValue('SELECT *' 
-                        + '\n' 
-                        +'FROM "public:adhoc:lineorder" AS L' 
-                        + '\n' 
-                        + 'WHERE l_linenumber = 7;');
+document.getElementById('querySessionEditor'), {
+mode: 'application/js',
+lineNumbers: true,
+lineWrapping: true,
+viewportMargin: Infinity,
+});
 editorLanguage = "MyriaL"
 </script>
 <script type="text/javascript" src="js/perfenforce.js"></script> {% endblock %}
