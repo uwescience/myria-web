@@ -77,7 +77,9 @@ function generatePSLA() {
 
         if (type == "fact") {
             factTable = tableDesc.relationKey.relationName
-            editor.getDoc().setValue('SELECT *' + '\n' + 'FROM "public:adhoc:{0}" AS L'.format(factTable));
+            factName = 'public:adhoc:' + factTable
+            editorText = 'SELECT *' + '\n' + 'FROM "' + factName + '"'
+            editor.getDoc().setValue(editorText);
         }
 
         source = {}
@@ -147,9 +149,10 @@ function generatePSLA() {
         }
     });
 
+
     $('#startPSLA').button('loading');
     var interval = setInterval(function() {
-        $.when(getRequest('/perfenforce/isDonePSLA', 'String')).done(function(data) {
+        $.when(getRequest('/perfenforce/isDonePSLA')).done(function(data) {
             if (data == true) {
                 $('#startPSLA').button('reset');
                 document.getElementById('startPSLA').disabled = true;
@@ -159,7 +162,7 @@ function generatePSLA() {
                 prepareDynamicTiers()
                 clearInterval(interval);
             }
-            $.when(getRequest('/perfenforce/getDataPreparationStatus', 'String')).done(function(data) {
+            $.when(getRequest('/perfenforce/getDataPreparationStatus')).done(function(data) {
                 document.getElementById('PSLAStatus').innerHTML = 'Status: ' + data
             });
         })
@@ -171,12 +174,12 @@ function scrollTo(hash) {
 }
 
 
-function getRequest(command, type) {
+function getRequest(command) {
     return $.ajax({
         type: 'GET',
         url: myria_connection + command,
         global: false,
-        datatype: type,
+        datatype: 'json',
         async: false,
         success: function(data) {
             return data;
@@ -185,7 +188,8 @@ function getRequest(command, type) {
 }
 
 function loadQueries() {
-    $.when(getRequest('/perfenforce/getPSLA', 'json')).done(function(data) {
+    $.when(getRequest('/perfenforce/getPSLA')).done(function(data) {
+        data = JSON.parse(data)
         allQueries = data.queries;
     });
 };
@@ -306,7 +310,7 @@ function getQuerySLA() {
         async: true,
         processData: false,
         success: function(data) {
-            $.when(getRequest('/perfenforce/getCurrentQuery', 'json')).done(function(currentQuery) {
+            $.when(getRequest('/perfenforce/getCurrentQuery')).done(function(currentQuery) {
                 document.getElementById("slaInfo").innerHTML = "SLA for query: " + currentQuery.slaRuntime + " seconds";
                 currentSLA = currentQuery.slaRuntime;
                 document.getElementById('executeButton').disabled = false;
@@ -318,7 +322,7 @@ function getQuerySLA() {
 }
 
 function runQuery() {
-    $.when(getRequest('/perfenforce/getClusterSize', 'json')).done(function(clusterSize) {
+    $.when(getRequest('/perfenforce/getClusterSize')).done(function(clusterSize) {
         document.getElementById('clusterInfo').innerHTML = 'Myria is using <font color="blue">' + clusterSize + '</font> workers'
         currentClusterSize = clusterSize
         executePlan()
@@ -329,7 +333,7 @@ function runQuery() {
 function executePlan() {
     var clusterSize = 0
     var workerArray = [];
-    $.when(getRequest('/perfenforce/getClusterSize', 'json')).done(function(clusterSize) {
+    $.when(getRequest('/perfenforce/getClusterSize')).done(function(clusterSize) {
         for (i = 1; i <= clusterSize; i++) {
             workerArray.push(i)
         }
