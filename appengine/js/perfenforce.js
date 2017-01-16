@@ -1,6 +1,6 @@
 function loadEditor(relationCounter) {
     var elements = document.getElementsByName('relationSchema');
-    var editor = CodeMirror.fromTextArea(elements[relationCounter], {
+    var schemaEditor = CodeMirror.fromTextArea(elements[relationCounter], {
         indentUnit: 2,
         theme: 'github',
         autofocus: true,
@@ -10,10 +10,11 @@ function loadEditor(relationCounter) {
         viewportMargin: Infinity,
         showTrailingSpace: true
     });
-    editor.setOption('mode', {
+    schemaEditor.setOption('mode', {
         name: 'myrial',
         singleLineStringErrors: false
     });
+    schemaEditors.push(schemaEditor)
 }
 
 function addDimension() {
@@ -75,19 +76,12 @@ function generatePSLA() {
         type = (0 == i ? "fact" : "dimension")
         tableDesc.type = type
 
-        if (type == "fact") {
-            factTable = tableDesc.relationKey.relationName
-            factName = 'public:adhoc:' + factTable
-            editorText = 'SELECT *' + '\n' + 'FROM "' + factName + '"'
-            editor.getDoc().setValue(editorText);
-        }
-
         source = {}
         source.dataType = "S3"
         source.s3Uri = relationS3Buckets[i].value
         tableDesc.source = source
 
-        loadStatement = relationSchemas[i].value
+        loadStatement = schemaEditors[i].getValue()
         firstParen = loadStatement.indexOf("(")
         secondParen = loadStatement.indexOf(")")
         schemaList = loadStatement.substring(firstParen + 1, secondParen).split(',')
@@ -115,6 +109,13 @@ function generatePSLA() {
         schema.columnTypes = columnTypes
         schema.columnNames = columnNames
         tableDesc.schema = schema
+
+        if (type == "fact") {
+            factTable = tableDesc.relationKey.relationName
+            factName = 'public:adhoc:' + factTable
+            editorText = 'SELECT ' + columnNames[0] + '\n' + 'FROM "' + factName + '"'
+            editor.getDoc().setValue(editorText);
+        }
 
         tableDesc.delimiter = relationDelimiters[i].value
 
@@ -249,6 +250,7 @@ function prepareDynamicTiers() {
                     }
                 });
                 document.getElementsByClassName('tierButton').disabled = true;
+                document.getElementById('angular-section').style.visibility = 'hidden'
                 document.getElementById('query-section').style.visibility = 'visible'
                 scrollTo("query");
             };
@@ -518,6 +520,7 @@ function multiline(elt, text) {
 $(document).ready(function() {
     $("#pkTooltip").tooltip();
 });
+var schemaEditors = []
 loadEditor(0);
 
 var dimID = 0

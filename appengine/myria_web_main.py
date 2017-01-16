@@ -391,6 +391,7 @@ class Demo3(MyriaPage):
         template = JINJA_ENVIRONMENT.get_template('editor.html')
         self.response.out.write(template.render(template_vars))
 
+
 class PerfEnforce(MyriaPage):
     def get(self):
         # Actually render the page: HTML content
@@ -398,10 +399,10 @@ class PerfEnforce(MyriaPage):
         template_vars = self.base_template_vars()
         template_vars['myrialKeywords'] = get_keywords()
         template_vars['subset'] = 'perfenforce'
-        
         # .. load and render the template
         template = JINJA_ENVIRONMENT.get_template('perfenforce.html')
         self.response.out.write(template.render(template_vars))
+
 
 class Plan(MyriaHandler):
 
@@ -561,6 +562,7 @@ class Execute(MyriaHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
 
+
 class ExecuteJSON(MyriaHandler):
 
     def post(self):
@@ -568,7 +570,6 @@ class ExecuteJSON(MyriaHandler):
         conn = self.app.connection
         jsonQuery = self.request.get("jsonQuery")
         try:
-            catalog = MyriaCatalog(conn)
             compiled = json.loads(jsonQuery)
 
             query_status = conn.submit_query(compiled)
@@ -607,7 +608,6 @@ class ExecuteJSON(MyriaHandler):
         query_status = conn.get_query_status(query_id)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(query_status))
-
 
 
 class Dot(MyriaHandler):
@@ -699,4 +699,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
