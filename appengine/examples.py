@@ -103,59 +103,59 @@ examples = { 'datalog' : datalog_examples,
 
 
 load_twitterk_data = '''T1 = load("s3://uwdb/sampleData/TwitterK.csv",
-csv(schema(a:int,b:int)));
+        csv(schema(a:int,b:int)));
 store(T1, TwitterK);'''
 
 load_iris_data = '''T1 = load("s3://uwdb/sampleData/Iris.csv",
-csv(schema(sepal_length:float,
-          sepal_width:float,
-          petal_length:float,
-          petal_width:float,
-          class:string)));
+        csv(schema(sepal_length:float,
+                   sepal_width:float,
+                   petal_length:float,
+                   petal_width:float,
+                   class:string)));
 store(T1, Iris);'''
 
 load_census_income_data = '''T1 = load("s3://uwdb/sampleData/Census_Income.csv",
-csv(schema(age:int,
-          workclass:string,
-          fnlwgt:int,
-          education:string,
-          education_num:int,
-          marital_status:string,
-          occupation:string,
-          relationship:string,
-          race:string,
-          sex:string,
-          capital_gain:int,
-          capital_loss:int,
-          hours_per_week:int,
-          native_country:string,
-          income:string)));
+        csv(schema(age:int,
+                   workclass:string,
+                   fnlwgt:int,
+                   education:string,
+                   education_num:int,
+                   marital_status:string,
+                   occupation:string,
+                   relationship:string,
+                   race:string,
+                   sex:string,
+                   capital_gain:int,
+                   capital_loss:int,
+                   hours_per_week:int,
+                   native_country:string,
+                   income:string)));
 store(T1, Census);'''
 
 load_car_evaluation_data = '''T1 = load("s3://uwdb/sampleData/Car_Evaluation.tsv",
-csv(schema(buying:string,
-          maint:string,
-          doors:string,
-          persons:string,
-          lug_boot:string,
-          safety:string,
-          evaluation:string),delimiter='\\t'));
+        csv(schema(buying:string,
+                   maint:string,
+                   doors:string,
+                   persons:string,
+                   lug_boot:string,
+                   safety:string,
+                   evaluation:string),delimiter='\\t'));
 store(T1, Car);'''
 
 load_forestfires_data = '''T1 = load("https://uwdb.s3.amazonaws.com/sampleData/Forest_Fires.csv",
-csv(schema(X:int,
-          Y:int,
-          _month:string,
-          _day:string,
-          FFMC:float,
-          DMC:float,
-          DC:float,
-          ISI:float,
-          temp:float,
-          RH:int,
-          wind:float,
-          rain:float,
-          area:float),skip=1));
+        csv(schema(X:int,
+                   Y:int,
+                   _month:string,
+                   _day:string,
+                   FFMC:float,
+                   DMC:float,
+                   DC:float,
+                   ISI:float,
+                   temp:float,
+                   RH:int,
+                   wind:float,
+                   rain:float,
+                   area:float),skip=1));
 store(T1, ForestFires);'''
 
 loading_statements = [
