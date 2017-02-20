@@ -352,6 +352,11 @@ function executePlan() {
         fragmentsObj.overrideWorkers = workerArray
         fragmentsObj.operators = []
         dbQueryScan = {}
+        relationKey = {}
+        relationKey.relationName = factTable + clusterSize
+        relationKey.programName = "adhoc"
+        relationKey.userName = "public"
+        dbQueryScan.sourceRelationKeys = [relationKey]
         dbQueryScan.opType = "DbQueryScan"
         dbQueryScan.opId = 0
         dbQueryScan.opName = "scan"
