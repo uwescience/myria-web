@@ -235,13 +235,11 @@ function prepareDynamicTiers() {
             this.allQueries = allQueries;
 
             this.setTier = function(tier) {
-                var request = new FormData();
-                request.append('tier', tier);
                 $.ajax({
                     type: 'POST',
                     url: myria_connection + "/perfenforce/setTier",
-                    data: request,
-                    contentType: false,
+                    data: tier,
+                    contentType: 'text/plain',
                     global: false,
                     async: false,
                     processData: false,
@@ -300,14 +298,11 @@ function getQuerySLA() {
     document.getElementById('PSLAStatus').innerHTML = ""
 
     querySQL = editor.getValue();
-    var request = new FormData();
-    request.append('querySQL', querySQL);
-
     $.ajax({
         type: 'POST',
         url: myria_connection + "/perfenforce/findSLA",
-        data: request,
-        contentType: false,
+        data: querySQL,
+        contentType: 'text/plain',
         global: false,
         async: true,
         processData: false,
