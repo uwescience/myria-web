@@ -299,9 +299,9 @@ function getQuerySLA() {
 
     querySQL = editor.getValue();
     $.ajax({
-        type: 'POST',
+        type: 'GET',
         url: myria_connection + "/perfenforce/findSLA",
-        data: querySQL,
+        data: jQuery.param({querySQL: querySQL}),
         contentType: 'text/plain',
         global: false,
         async: true,
