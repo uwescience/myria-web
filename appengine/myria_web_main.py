@@ -392,6 +392,18 @@ class Demo3(MyriaPage):
         self.response.out.write(template.render(template_vars))
 
 
+class PerfEnforce(MyriaPage):
+    def get(self):
+        # Actually render the page: HTML content
+        self.response.headers['Content-Type'] = 'text/html'
+        template_vars = self.base_template_vars()
+        template_vars['myrialKeywords'] = get_keywords()
+        template_vars['subset'] = 'perfenforce'
+        # .. load and render the template
+        template = JINJA_ENVIRONMENT.get_template('perfenforce.html')
+        self.response.out.write(template.render(template_vars))
+
+
 class Plan(MyriaHandler):
 
     def post(self):
@@ -551,6 +563,53 @@ class Execute(MyriaHandler):
         self.response.write(json.dumps(query_status))
 
 
+class ExecuteJSON(MyriaHandler):
+
+    def post(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+        jsonQuery = self.request.get("jsonQuery")
+        try:
+            compiled = json.loads(jsonQuery)
+
+            query_status = conn.submit_query(compiled)
+            query_url = 'http://%s:%d/execute?query_id=%d' %\
+                (self.app.hostname, self.app.port, query_status['queryId'])
+            self.response.status = 201
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.headers['Content-Location'] = query_url
+            self.response.write(json.dumps(query_status))
+            return
+        except myria.MyriaError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): %s" % str(e))
+            return
+        except requests.ConnectionError as e:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 503
+            self.response.write(
+                'Error 503 (Unavailable): \
+                 Unable to connect to REST server to issue query')
+            return
+
+    def get(self):
+        self.response.headers.add_header("Access-Control-Allow-Origin", "*")
+        conn = self.app.connection
+
+        query_id = self.request.get("queryId")
+
+        if not query_id:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.status = 400
+            self.response.write("Error 400 (Bad Request): missing query_id")
+            return
+
+        query_status = conn.get_query_status(query_id)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(query_status))
+
+
 class Dot(MyriaHandler):
 
     def get(self):
@@ -589,9 +648,11 @@ class Application(webapp2.WSGIApplication):
             ('/optimize', Optimize),
             ('/compile', Compile),
             ('/execute', Execute),
+            ('/executejson', ExecuteJSON),
             ('/dot', Dot),
             ('/examples', Examples),
-            ('/demo3', Demo3)
+            ('/demo3', Demo3),
+            ('/perfenforce', PerfEnforce)
         ]
 
         # Connection to Myria. Thread-safe

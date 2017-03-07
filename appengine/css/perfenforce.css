@@ -1,0 +1,47 @@
+.glyphicon.spinning {
+    animation: spin 1s infinite linear;
+    -webkit-animation: spin2 1s infinite linear;
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+ 
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+ 
+.glyphicon-left {
+    margin-right: 7px;
+}
+
+.page-anchor {
+    line-height: 1em;
+    display: inline-block;
+    text-decoration: none;
+    margin-top: 500px;
+}
+
+#previousQueryList
+{
+  height: 100px;
+  overflow: auto;
+  border: 1px solid black;
+}
+
+ul {
+  padding: 0;
+}
+li {
+  margin: 0;
+  list-style-type: none;
+}
+
+
+.list-group-item{
+border: 1px solid #808080;
+}
+
+.top-buffer { margin-top:40px; }
