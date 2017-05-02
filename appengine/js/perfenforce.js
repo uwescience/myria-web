@@ -248,7 +248,7 @@ function prepareDynamicTiers() {
                     }
                 });
                 document.getElementsByClassName('tierButton').disabled = true;
-                document.getElementById('angular-section').style.visibility = 'hidden'
+                document.getElementById('angular-section').style.visibility = 'visible'
                 document.getElementById('query-section').style.visibility = 'visible'
                 scrollTo("query");
             };
@@ -394,12 +394,10 @@ documentQueryStatus = function(result) {
             })
         }, 1000);
     } else if (status == "SUCCESS") {
-        var request = new FormData();
-        request.append('dataPointRuntime', elapsed);
         $.ajax({
             type: 'POST',
             url: myria_connection + "/perfenforce/recordRealRuntime",
-            data: request,
+            data: elapsed,
             contentType: false,
             global: false,
             async: false,
